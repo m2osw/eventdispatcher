@@ -1,0 +1,9 @@
+
+
+
+* Break up all the files per class
+
+* See to have clients and servers for HTTP/HTTPS/HTTP2
+  (we already have such in libsnapwebsites, only it uses `snapuri`...)
+
+

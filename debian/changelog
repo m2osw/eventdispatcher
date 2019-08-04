@@ -1,0 +1,6 @@
+eventdispatcher (1.0.0.0~xenial) xenial; urgency=high
+
+  * Moving the snap_communitor.cpp/.h, the dispatcher, and TCP/UDP client and
+    server libraries to their own project.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun,  4 Aug 2019 13:48:27 -0800
