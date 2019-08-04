@@ -1,26 +1,22 @@
 /*
- * License:
- *    Copyright (c) 2013-2019  Made to Order Software Corp.  All Rights Reserved
+ * Copyright (c) 2013-2019  Made to Order Software Corp.  All Rights Reserved
  *
- *    https://snapwebsites.org/
- *    contact@m2osw.com
+ * https://snapwebsites.org/
+ * contact@m2osw.com
  *
- *    This program is free software; you can redistribute it and/or modify
- *    it under the terms of the GNU General Public License as published by
- *    the Free Software Foundation; either version 2 of the License, or
- *    (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *    This program is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *    GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- *    You should have received a copy of the GNU General Public License along
- *    with this program; if not, write to the Free Software Foundation, Inc.,
- *    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Authors:
- *    Alexis Wilke   alexis@m2osw.com
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #pragma once
 
@@ -32,13 +28,14 @@
  */
 
 
-#define    SNAPLOGGER_VERSION_MAJOR   @SNAPLOGGER_VERSION_MAJOR@
-#define    SNAPLOGGER_VERSION_MINOR   @SNAPLOGGER_VERSION_MINOR@
-#define    SNAPLOGGER_VERSION_PATCH   @SNAPLOGGER_VERSION_PATCH@
-#define    SNAPLOGGER_VERSION_STRING  "@SNAPLOGGER_VERSION_MAJOR@.@SNAPLOGGER_VERSION_MINOR@.@SNAPLOGGER_VERSION_PATCH@"
+#define    EVENTDISPATCHER_VERSION_MAJOR   @EVENTDISPATCHER_VERSION_MAJOR@
+#define    EVENTDISPATCHER_VERSION_MINOR   @EVENTDISPATCHER_VERSION_MINOR@
+#define    EVENTDISPATCHER_VERSION_PATCH   @EVENTDISPATCHER_VERSION_PATCH@
+#define    EVENTDISPATCHER_VERSION_STRING  "@EVENTDISPATCHER_VERSION_MAJOR@.@EVENTDISPATCHER_VERSION_MINOR@.@EVENTDISPATCHER_VERSION_PATCH@"
 
-namespace snaplogger
+namespace ed
 {
+
 
 
 int             get_major_version();

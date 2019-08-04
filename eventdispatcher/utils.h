@@ -23,13 +23,24 @@
  */
 
 
+// C++ lib
+//
+#include    <cstdint>
+#include    <string>
+#include    <vector>
+
+
 
 namespace ed
 {
 
 
 
-int64_t                      get_current_date();
+typedef std::vector<std::string>    string_list_t;
+
+
+std::int64_t                        get_current_date();
+std::int64_t                        get_current_date_ns();
 
 
 

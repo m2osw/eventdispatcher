@@ -18,12 +18,19 @@
 
 // self
 //
-#include "eventdispatcher/utils.h"
+#include    "eventdispatcher/utils.h"
+
+#include    "eventdispatcher/exception.h"
+
+
+// snaplogger lib
+//
+#include    <snaplogger/message.h>
 
 
 // last include
 //
-#include <snapdev/poison.h>
+#include    <snapdev/poison.h>
 
 
 
@@ -49,7 +56,7 @@ namespace ed
  *
  * \return The time in microseconds.
  */
-int64_t get_current_date()
+std::int64_t get_current_date()
 {
     timeval tv;
     if(gettimeofday(&tv, nullptr) != 0)
@@ -61,7 +68,7 @@ int64_t get_current_date()
             << " ("
             << strerror(err)
             << ")";
-        throw snap_communicator_runtime_error("gettimeofday() failed");
+        throw event_dispatcher_runtime_error("gettimeofday() failed");
     }
 
     return static_cast<int64_t>(tv.tv_sec) * static_cast<int64_t>(1000000)
@@ -77,7 +84,7 @@ int64_t get_current_date()
  *
  * \return The time in nanoseconds.
  */
-int64_t get_current_date_ns()
+std::int64_t get_current_date_ns()
 {
     timespec ts;
     if(clock_gettime(CLOCK_REALTIME_COARSE, &ts) != 0)
@@ -89,11 +96,11 @@ int64_t get_current_date_ns()
             << " ("
             << strerror(err)
             << ")";
-        throw snap_communicator_runtime_error("clock_gettime() failed");
+        throw event_dispatcher_runtime_error("clock_gettime() failed");
     }
 
-    return static_cast<int64_t>(tv.tv_sec) * static_cast<int64_t>(1000000000)
-         + static_cast<int64_t>(tv.tv_nsec);
+    return static_cast<int64_t>(ts.tv_sec) * static_cast<int64_t>(1000000000)
+         + static_cast<int64_t>(ts.tv_nsec);
 }
 
 

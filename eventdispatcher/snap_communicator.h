@@ -18,15 +18,14 @@
 
 // self
 //
-#include "eventdispatcher/snap_exception.h"
 #include "eventdispatcher/tcp_client_server.h"
 #include "eventdispatcher/udp_client_server.h"
-#include "snapwebsites/snap_string_list.h"
+#include "eventdispatcher/utils.h"
 
 
 // cppthread lib
 //
-#include "cppthreadd/snap_thread.h"
+#include "cppthread/thread.h"
 
 
 // snapdev lib

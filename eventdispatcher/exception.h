@@ -23,9 +23,10 @@
  * library.
  */
 
+
 // libexcept
 //
-#include "libexcept/snap_exception.h"
+#include "libexcept/exception.h"
 
 
 
@@ -34,15 +35,15 @@ namespace ed
 
 
 
-DECLARE_LOGIC_ERROR(event_dispatcher_parameter_error)
-DECLARE_LOGIC_ERROR(event_dispatcher_implementation_error)
+DECLARE_LOGIC_ERROR(event_dispatcher_parameter_error);
+DECLARE_LOGIC_ERROR(event_dispatcher_implementation_error);
 
-DECLARE_MAIN_EXCEPTION(event_dispatcher_exception)
+DECLARE_MAIN_EXCEPTION(event_dispatcher_exception);
 
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_initialization_error)
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_runtime_error)
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_unexpected_data)
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_invalid_message)
+DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_initialization_error);
+DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_runtime_error);
+DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_unexpected_data);
+DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_invalid_message);
 
 //class tcp_client_server_logic_error : public std::logic_error
 //{
