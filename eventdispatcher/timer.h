@@ -1,4 +1,3 @@
-// Event Dispatcher
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
 //
 // This program is free software; you can redistribute it and/or modify
@@ -16,19 +15,9 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
-/** \file
- * \brief Various useful functions and declarations.
- *
- * Some functions/declarations that are used throughout the library.
- */
-
-
-// C++ lib
+// self
 //
-#include    <cstdint>
-#include    <map>
-#include    <string>
-#include    <vector>
+#include "eventdispatcher/connection.h"
 
 
 
@@ -37,13 +26,24 @@ namespace ed
 
 
 
-typedef std::vector<std::string>            string_list_t;
-typedef std::map<std::string, std::string>  string_map_t;
+class timer
+    : public connection
+{
+public:
+    // timer is implemented using the timeout value on poll().
+    // we could have another implementation that makes use of
+    // the timerfd_create() function (in which case we'd be
+    // limited to a date timeout, although an interval would
+    // work too but require a little bit of work.)
+    //
+    typedef std::shared_ptr<timer>      pointer_t;
 
+                                timer(std::int64_t timeout_us);
 
-std::int64_t                        get_current_date();
-std::int64_t                        get_current_date_ns();
-
+    // snap_connection implementation
+    virtual int                 get_socket() const override;
+    virtual bool                valid_socket() const override;
+};
 
 
 

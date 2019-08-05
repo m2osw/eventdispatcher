@@ -43,7 +43,7 @@ include_directories(
 )
 
 add_subdirectory(eventdispatcher)
-add_subdirectory(tests          )
+#add_subdirectory(tests          )
 add_subdirectory(doc            )
 add_subdirectory(cmake          )
 #add_subdirectory(tools          )

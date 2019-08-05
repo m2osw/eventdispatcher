@@ -1,4 +1,3 @@
-// Event Dispatcher
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
 //
 // This program is free software; you can redistribute it and/or modify
@@ -16,19 +15,27 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
-/** \file
- * \brief Various useful functions and declarations.
- *
- * Some functions/declarations that are used throughout the library.
- */
-
-
-// C++ lib
+// self
 //
-#include    <cstdint>
-#include    <map>
-#include    <string>
-#include    <vector>
+#include "eventdispatcher/dispatcher_base.h"
+//#include "eventdispatcher/udp_client_server.h"
+//#include "eventdispatcher/utils.h"
+
+
+//// cppthread lib
+////
+//#include "cppthread/thread.h"
+//
+//
+//// snapdev lib
+////
+//#include "snapdev/not_used.h"
+//
+//
+//// C lib
+////
+//#include <signal.h>
+//#include <sys/signalfd.h>
 
 
 
@@ -37,15 +44,23 @@ namespace ed
 
 
 
-typedef std::vector<std::string>            string_list_t;
-typedef std::map<std::string, std::string>  string_map_t;
+class dispatcher_support
+{
+public:
+    virtual                     ~dispatcher_support();
+
+    void                        set_dispatcher(dispatcher_base::pointer_t d);
+    dispatcher_base::pointer_t  get_dispatcher() const;
+    bool                        dispatch_message(message & msg);
+
+    // new callback
+    virtual void                process_message(message const & message);
+
+private:
+    dispatcher_base::weak_t     f_dispatcher = dispatcher_base::weak_t();
+};
 
 
-std::int64_t                        get_current_date();
-std::int64_t                        get_current_date_ns();
 
-
-
-
-} // namespace ed
+} // namespace snap
 // vim: ts=4 sw=4 et

@@ -1,4 +1,3 @@
-// Event Dispatcher
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
 //
 // This program is free software; you can redistribute it and/or modify
@@ -16,19 +15,27 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
-/** \file
- * \brief Various useful functions and declarations.
- *
- * Some functions/declarations that are used throughout the library.
- */
-
-
-// C++ lib
+// self
 //
-#include    <cstdint>
-#include    <map>
-#include    <string>
-#include    <vector>
+#include "eventdispatcher/pipe_buffer_connection.h"
+#include "eventdispatcher/dispatcher_support.h"
+#include "eventdispatcher/connection_with_send_message.h"
+
+
+//// cppthread lib
+////
+//#include "cppthread/thread.h"
+//
+//
+//// snapdev lib
+////
+//#include "snapdev/not_used.h"
+//
+//
+//// C lib
+////
+//#include <signal.h>
+//#include <sys/signalfd.h>
 
 
 
@@ -37,13 +44,20 @@ namespace ed
 
 
 
-typedef std::vector<std::string>            string_list_t;
-typedef std::map<std::string, std::string>  string_map_t;
+class pipe_message_connection
+    : public pipe_buffer_connection
+    , public dispatcher_support
+    , public connection_with_send_message
+{
+public:
+    typedef std::shared_ptr<pipe_message_connection>    pointer_t;
 
+    // connection_with_send_message
+    virtual bool                send_message(message const & msg, bool cache = false) override;
 
-std::int64_t                        get_current_date();
-std::int64_t                        get_current_date_ns();
-
+    // snap_tcp_server_client_buffer_connection implementation
+    virtual void                process_line(std::string const & line) override;
+};
 
 
 

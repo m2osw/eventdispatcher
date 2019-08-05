@@ -32,6 +32,19 @@ configure_file(
 )
 
 add_library(${PROJECT_NAME} SHARED
+    connection.cpp
+    connection_with_send_message.cpp
+    dispatcher_base.cpp
+    dispatcher_support.cpp
+    file_changed.cpp
+    inter_thread_message_connection.cpp
+    message.cpp
+    pipe_buffer_connection.cpp
+    pipe_connection.cpp
+    pipe_message_connection.cpp
+    signal.cpp
+    thread_done_signal.cpp
+    timer.cpp
     utils.cpp
     version.cpp
 )

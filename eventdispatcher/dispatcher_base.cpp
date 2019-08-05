@@ -1,4 +1,3 @@
-// Event Dispatcher
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
 //
 // This program is free software; you can redistribute it and/or modify
@@ -14,36 +13,42 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#pragma once
+
+// to get the POLLRDHUP definition
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+
+// self
+//
+#include    "eventdispatcher/dispatcher_base.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
+
 
 /** \file
- * \brief Various useful functions and declarations.
+ * \brief Implementation of the dispatcher_base class.
  *
- * Some functions/declarations that are used throughout the library.
+ * This class is used to allow you to supply a dispatcher to the library.
  */
-
-
-// C++ lib
-//
-#include    <cstdint>
-#include    <map>
-#include    <string>
-#include    <vector>
-
-
 
 namespace ed
 {
 
 
 
-typedef std::vector<std::string>            string_list_t;
-typedef std::map<std::string, std::string>  string_map_t;
-
-
-std::int64_t                        get_current_date();
-std::int64_t                        get_current_date_ns();
-
+/** \brief The dispatcher base destructor.
+ *
+ * This destructor is virtual allowing clean derivation at all levels.
+ */
+dispatcher_base::~dispatcher_base()
+{
+}
 
 
 

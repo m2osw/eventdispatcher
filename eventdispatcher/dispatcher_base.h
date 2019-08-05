@@ -16,19 +16,16 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
-/** \file
- * \brief Various useful functions and declarations.
- *
- * Some functions/declarations that are used throughout the library.
- */
+// self
+//
+#include "eventdispatcher/message.h"
+#include "eventdispatcher/utils.h"
 
 
 // C++ lib
 //
-#include    <cstdint>
-#include    <map>
-#include    <string>
-#include    <vector>
+#include <memory>
+
 
 
 
@@ -37,13 +34,19 @@ namespace ed
 
 
 
-typedef std::vector<std::string>            string_list_t;
-typedef std::map<std::string, std::string>  string_map_t;
+class dispatcher_base
+{
+public:
+    typedef std::shared_ptr<dispatcher_base>    pointer_t;
+    typedef std::weak_ptr<dispatcher_base>      weak_t;
 
+    virtual                 ~dispatcher_base();
 
-std::int64_t                        get_current_date();
-std::int64_t                        get_current_date_ns();
+    virtual bool            get_commands(string_list_t & commands) = 0;
+    virtual bool            dispatch(message & msg) = 0;
 
+private:
+};
 
 
 
