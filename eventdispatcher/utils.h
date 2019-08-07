@@ -23,12 +23,22 @@
  */
 
 
+// snapdev lib
+//
+#include    <snapdev/raii_generic_deleter.h>
+
+
 // C++ lib
 //
 #include    <cstdint>
 #include    <map>
 #include    <string>
 #include    <vector>
+
+
+// C lib
+//
+#include    <netdb.h>
 
 
 
@@ -39,6 +49,24 @@ namespace ed
 
 typedef std::vector<std::string>            string_list_t;
 typedef std::map<std::string, std::string>  string_map_t;
+
+
+/** \brief Address info pointer which auto-frees the structures.
+ *
+ * This smart pointer is used so the addrinfo structure is automatically
+ * freed once done with the concerned variable.
+ *
+ * The pointer is exception safe as well.
+ */
+typedef std::unique_ptr<
+                  addrinfo
+                , snap::raii_pointer_deleter<
+                                      addrinfo
+                                    , decltype(&::freeaddrinfo)
+                                    , &::freeaddrinfo>> raii_addrinfo_t;
+
+
+constexpr int                       MAX_CONNECTIONS = 50;
 
 
 std::int64_t                        get_current_date();

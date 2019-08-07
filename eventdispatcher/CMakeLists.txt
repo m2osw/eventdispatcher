@@ -32,19 +32,55 @@ configure_file(
 )
 
 add_library(${PROJECT_NAME} SHARED
-    connection.cpp
-    connection_with_send_message.cpp
-    dispatcher_base.cpp
-    dispatcher_support.cpp
-    file_changed.cpp
-    inter_thread_message_connection.cpp
-    message.cpp
-    pipe_buffer_connection.cpp
-    pipe_connection.cpp
-    pipe_message_connection.cpp
-    signal.cpp
-    thread_done_signal.cpp
-    timer.cpp
+    # communicator
+
+        # message handling
+        dispatcher_base.cpp
+        dispatcher_support.cpp
+        message.cpp
+
+        # connections
+        connection.cpp
+        connection_with_send_message.cpp
+
+        fd_connection.cpp
+            fd_buffer_connection.cpp
+
+        file_changed.cpp
+
+        inter_thread_message_connection.cpp
+        thread_done_signal.cpp
+
+        pipe_connection.cpp
+            pipe_buffer_connection.cpp
+                pipe_message_connection.cpp
+
+        signal.cpp
+
+        tcp_client_connection.cpp
+
+        tcp_server_connection.cpp
+
+        timer.cpp
+
+        #snap_communicator_dispatcher.cpp
+        #snap_communicator.cpp
+
+    # tcp
+    tcp_base.cpp
+    tcp_private.cpp
+    tcp_bio_options.cpp
+    tcp_bio_client.cpp
+    tcp_bio_server.cpp
+    tcp_client.cpp
+    tcp_server.cpp
+
+    # udp
+    udp_base.cpp
+    udp_client.cpp
+    udp_server.cpp
+
+    # various
     utils.cpp
     version.cpp
 )

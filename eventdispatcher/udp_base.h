@@ -17,35 +17,21 @@
 #pragma once
 
 
-//#include "snapdispatcher/exception.h"
-
-
-// snapdev lib
+// self
 //
-#include <snapdev/raii_generic_deleter.h>
+#include    "eventdispatcher/utils.h"
 
 
 
-
-// C lib
-//
-#include <netdb.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
-
-
-namespace udp_client_server
+namespace ed
 {
+
 
 
 
 class udp_base
 {
 public:
-    typedef std::unique_ptr<struct addrinfo, snap::raii_pointer_deleter<struct addrinfo, decltype(&::freeaddrinfo), &::freeaddrinfo>> raii_addrinfo_t;
-
     int                 get_socket() const;
     int                 get_mtu_size() const;
     int                 get_mss_size() const;
@@ -56,7 +42,8 @@ protected:
                         udp_base(std::string const & addr, int port, int family);
 
     // TODO: convert the port + addr into a libaddr addr object?
-    //       (we use the f_addrinfo as is in the sendto() and bind() calls, though)
+    //       (we use the f_addrinfo as is in the sendto() and bind() calls
+    //       and use libaddr for the convertions already)
     //
     snap::raii_fd_t     f_socket = snap::raii_fd_t();
     int                 f_port = -1;
@@ -66,36 +53,6 @@ protected:
 };
 
 
-class udp_client
-    : public udp_base
-{
-public:
-    typedef std::shared_ptr<udp_client>     pointer_t;
 
-                        udp_client(std::string const & addr, int port, int family = AF_UNSPEC);
-                        ~udp_client();
-
-    int                 send(char const * msg, size_t size);
-
-private:
-};
-
-
-class udp_server
-    : public udp_base
-{
-public:
-    typedef std::shared_ptr<udp_server>     pointer_t;
-
-                        udp_server(std::string const & addr, int port, int family = AF_UNSPEC, std::string const * multicast_addr = nullptr);
-                        ~udp_server();
-
-    int                 recv(char * msg, size_t max_size);
-    int                 timed_recv( char * msg, size_t const max_size, int const max_wait_ms );
-    std::string         timed_recv( int const bufsize, int const max_wait_ms );
-
-private:
-};
-
-} // namespace udp_client_server
+} // namespace ed
 // vim: ts=4 sw=4 et

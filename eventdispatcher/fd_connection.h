@@ -18,11 +18,24 @@
 // self
 //
 #include "eventdispatcher/connection.h"
-
-
-// C lib
+//#include "eventdispatcher/udp_client_server.h"
+//#include "eventdispatcher/utils.h"
 //
-#include <sys/signalfd.h>
+//
+//// cppthread lib
+////
+//#include "cppthread/thread.h"
+//
+//
+//// snapdev lib
+////
+//#include "snapdev/not_used.h"
+//
+//
+//// C lib
+////
+//#include <signal.h>
+//#include <sys/signalfd.h>
 
 
 
@@ -31,33 +44,36 @@ namespace ed
 
 
 
-class signal
+class fd_connection
     : public connection
 {
 public:
-    typedef std::shared_ptr<signal>     pointer_t;
+    typedef std::shared_ptr<fd_connection>         pointer_t;
 
-                                signal(int posix_signal);
-    virtual                     ~signal() override;
+    enum class mode_t
+    {
+        FD_MODE_READ,
+        FD_MODE_WRITE,
+        FD_MODE_RW
+    };
+
+                                fd_connection(int fd, mode_t mode);
 
     void                        close();
-    void                        unblock_signal_on_destruction();
+    void                        mark_closed();
 
     // snap_connection implementation
-    virtual bool                is_signal() const override;
+    virtual bool                is_reader() const override;
+    virtual bool                is_writer() const override;
     virtual int                 get_socket() const override;
 
-    pid_t                       get_child_pid() const;
+    // new callbacks
+    virtual ssize_t             read(void * buf, size_t count);
+    virtual ssize_t             write(void const * buf, size_t count);
 
 private:
-    friend communicator;
-
-    void                        process();
-
-    int                         f_signal = 0;   // i.e. SIGHUP, SIGTERM...
-    int                         f_socket = -1;  // output of signalfd()
-    signalfd_siginfo            f_signal_info = signalfd_siginfo();
-    bool                        f_unblock = false;
+    int                         f_fd = -1;
+    mode_t                      f_mode = mode_t::FD_MODE_RW;
 };
 
 
