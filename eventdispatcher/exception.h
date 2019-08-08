@@ -47,47 +47,6 @@ DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_invalid_parameter
 DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_runtime_error);
 DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_unexpected_data);
 
-//class tcp_client_server_logic_error : public std::logic_error
-//{
-//public:
-//    tcp_client_server_logic_error(std::string const & errmsg) : logic_error(errmsg) {}
-//};
-//
-//class tcp_client_server_runtime_error : public std::runtime_error
-//{
-//public:
-//    tcp_client_server_runtime_error(std::string const & errmsg) : runtime_error(errmsg) {}
-//};
-//
-//class tcp_client_server_parameter_error : public tcp_client_server_logic_error
-//{
-//public:
-//    tcp_client_server_parameter_error(std::string const & errmsg) : tcp_client_server_logic_error(errmsg) {}
-//};
-//
-//class tcp_client_server_initialization_error : public tcp_client_server_runtime_error
-//{
-//public:
-//    tcp_client_server_initialization_error(std::string const & errmsg) : tcp_client_server_runtime_error(errmsg) {}
-//};
-//
-//class tcp_client_server_initialization_missing_error : public tcp_client_server_runtime_error
-//{
-//public:
-//    tcp_client_server_initialization_missing_error(std::string const & errmsg) : tcp_client_server_runtime_error(errmsg) {}
-//};
-
-//class udp_client_server_runtime_error : public std::runtime_error
-//{
-//public:
-//    udp_client_server_runtime_error(const std::string & errmsg) : std::runtime_error(errmsg) {}
-//};
-//
-//class udp_client_server_parameter_error : public std::logic_error
-//{
-//public:
-//    udp_client_server_parameter_error(const std::string & errmsg) : std::logic_error(errmsg) {}
-//};
 
 
 } // namespace ed
