@@ -135,6 +135,15 @@ udp_base::udp_base(std::string const & addr, int port, int family)
 }
 
 
+/** \brief Clean up the UDP base class.
+ *
+ * This function is here because it handles the creation of the virtual table.
+ */
+udp_base::~udp_base()
+{
+}
+
+
 /** \brief Retrieve a copy of the socket identifier.
  *
  * This function return the socket identifier as returned by the socket()

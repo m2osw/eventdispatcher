@@ -44,7 +44,7 @@ public:
     typedef std::vector<message>    vector_t;
     typedef string_map_t            parameters_t;
 
-    bool                    from_message(std::string const & message);
+    bool                    from_message(std::string const & msg);
     std::string             to_message() const;
 
     std::string const &     get_sent_from_server() const;
@@ -55,17 +55,19 @@ public:
     void                    set_server(std::string const & server);
     std::string const &     get_service() const;
     void                    set_service(std::string const & service);
-    void                    reply_to(message const & message);
+    void                    reply_to(message const & msg);
     std::string const &     get_command() const;
     void                    set_command(std::string const & command);
     message_version_t       get_message_version() const;
     bool                    check_version_parameter() const;
     void                    add_version_parameter();
     void                    add_parameter(std::string const & name, std::string const & value);
-    void                    add_parameter(std::string const & name, int32_t value);
-    void                    add_parameter(std::string const & name, uint32_t value);
-    void                    add_parameter(std::string const & name, int64_t value);
-    void                    add_parameter(std::string const & name, uint64_t value);
+    void                    add_parameter(std::string const & name, std::int32_t value);
+    void                    add_parameter(std::string const & name, std::uint32_t value);
+    void                    add_parameter(std::string const & name, long long value);
+    void                    add_parameter(std::string const & name, unsigned long long value);
+    void                    add_parameter(std::string const & name, std::int64_t value);
+    void                    add_parameter(std::string const & name, std::uint64_t value);
     bool                    has_parameter(std::string const & name) const;
     std::string             get_parameter(std::string const & name) const;
     std::int64_t            get_integer_parameter(std::string const & name) const;
@@ -82,7 +84,7 @@ private:
 };
 
 
-static void verify_message_name(
+void        verify_message_name(
                   std::string const & name
                 , bool can_be_empty = false
                 , bool can_be_lowercase = true);

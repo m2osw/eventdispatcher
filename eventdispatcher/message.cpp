@@ -984,6 +984,52 @@ void message::add_parameter(std::string const & name, uint32_t value)
  *
  * \sa verify_message_name()
  */
+void message::add_parameter(std::string const & name, long long value)
+{
+    verify_message_name(name);
+
+    f_parameters[name] = std::to_string(value);
+    f_cached_message.clear();
+}
+
+
+/** \brief Add an integer parameter to the message.
+ *
+ * Messages can include parameters (variables) such as a URI or a word.
+ *
+ * The value is not limited, although it probably should be limited to
+ * standard text as these messages are sent as text.
+ *
+ * The parameter name is verified by the verify_message_name() function.
+ *
+ * \param[in] name  The name of the parameter.
+ * \param[in] value  The value of this parameter.
+ *
+ * \sa verify_message_name()
+ */
+void message::add_parameter(std::string const & name, unsigned long long value)
+{
+    verify_message_name(name);
+
+    f_parameters[name] = std::to_string(value);
+    f_cached_message.clear();
+}
+
+
+/** \brief Add an integer parameter to the message.
+ *
+ * Messages can include parameters (variables) such as a URI or a word.
+ *
+ * The value is not limited, although it probably should be limited to
+ * standard text as these messages are sent as text.
+ *
+ * The parameter name is verified by the verify_message_name() function.
+ *
+ * \param[in] name  The name of the parameter.
+ * \param[in] value  The value of this parameter.
+ *
+ * \sa verify_message_name()
+ */
 void message::add_parameter(std::string const & name, int64_t value)
 {
     verify_message_name(name);

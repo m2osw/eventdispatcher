@@ -20,15 +20,15 @@ case $1 in
 	make -j${PROCESSORS} -C ../../../BUILD/contrib//${PROJECT_NAME} install
 	;;
 
-#"-t")
-#	(
-#		if make -j${PROCESSORS} -C ../../../BUILD/contrib//${PROJECT_NAME}
-#		then
-#			shift
-#			../../../BUILD/contrib//${PROJECT_NAME}/tests/unittest --progress $*
-#		fi
-#	) 2>&1 | less -SR
-#	;;
+"-t")
+	(
+		if make -j${PROCESSORS} -C ../../../BUILD/contrib//${PROJECT_NAME}
+		then
+			shift
+			../../../BUILD/contrib//${PROJECT_NAME}/tests/unittest --progress $*
+		fi
+	) 2>&1 | less -SR
+	;;
 
 "")
 	make -j${PROCESSORS} -C ../../../BUILD/contrib//${PROJECT_NAME}

@@ -102,6 +102,8 @@ include_directories(
     ${LIBEXCEPT_INCLUDE_DIRS}
     ${LIBUFTF8_INCLUDE_DIRS}
     ${SNAPLOGGER_INCLUDE_DIRS}
+    ${OPENSSL_INCLUDE_DIR}
+    ${LIBADDR_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -111,7 +113,11 @@ target_link_libraries(${PROJECT_NAME}
     ${LIBUFTF8_LIBRARIES}
     ${LOG4CPLUS_LIBRARIES}
     ${SNAPLOGGER_LIBRARIES}
+    ${OPENSSL_LIBRARIES}
+    ${LIBADDR_LIBRARIES}
 )
+
+message("Snap logger libraries = ${SNAPLOGGER_LIBRARIES}")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VERSION

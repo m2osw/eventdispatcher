@@ -20,22 +20,6 @@
 #include "eventdispatcher/connection.h"
 
 
-//// cppthread lib
-////
-//#include "cppthread/thread.h"
-//
-//
-//// snapdev lib
-////
-//#include "snapdev/not_used.h"
-//
-//
-//// C lib
-////
-//#include <signal.h>
-//#include <sys/signalfd.h>
-
-
 
 namespace ed
 {
@@ -44,7 +28,6 @@ namespace ed
 
 // WARNING: a snap_communicator object must be allocated and held in a shared pointer (see pointer_t)
 #pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Weffc++"
 #pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
 class communicator
     : public std::enable_shared_from_this<communicator>

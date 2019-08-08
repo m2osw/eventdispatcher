@@ -25,6 +25,7 @@
 set -e
 
 PROJECT_NAME=eventdispatcher
+PUBLISH_PROJECT=snapwebsites
 
 if test "$1" = "--help" -o "$1" = "-h"
 then
@@ -129,18 +130,18 @@ echo "</pre></body></html>" >>html/test_log.html
 
 # For publication, if that directory does not exist, you probably don't
 # have a website to display this data
-PUBLISH_DIR=/usr/clients/www/lcov.${PROJECT_NAME}.org/public_html
+PUBLISH_DIR=/usr/clients/www/lcov.${PUBLISH_PROJECT}.org/public_html
 if test -z "${TEST_NAME}" -a -d ${PUBLISH_DIR}
 then
     echo "***"
-    echo "*** publication to lcov.${PROJECT_NAME}.org ($end_date)"
+    echo "*** publication to lcov.${PUBLISH_PROJECT}.org/${PROJECT_NAME} ($end_date)"
     echo "***"
 
     # Create folder for this specific version
     mkdir -p ${PUBLISH_DIR}/${PROJECT_NAME}/${PROJECT_NAME}-$VERSION
 
     # Make sure we have the latest index
-    cp $SOURCE/dev/index.php ${PUBLISH_DIR}/${PROJECT_NAME}
+    cp $SOURCE/dev/index.php ${PUBLISH_DIR}/${PROJECT_NAME}/.
 
     # Copy coverage and statistics HTML results
     cp -r html/* ${PUBLISH_DIR}/${PROJECT_NAME}/${PROJECT_NAME}-$VERSION/.

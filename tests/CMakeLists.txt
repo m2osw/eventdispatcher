@@ -44,12 +44,12 @@ if( Catch2_FOUND )
     add_executable( ${PROJECT_NAME}
         main.cpp
 
-        example.cpp
+        message.cpp
         version.cpp
     )
 
     target_link_libraries( ${PROJECT_NAME}
-        snaplogger
+        eventdispatcher
     )
 
     add_test( unittests ${PROJECT_NAME} )

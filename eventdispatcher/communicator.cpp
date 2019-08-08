@@ -271,6 +271,26 @@ std::for_each(
 }
 
 
+/** \brief Set the Force Sort flag to \p status.
+ *
+ * This function can be called to force the run() function to sort (or not
+ * sort) the list of connections.
+ *
+ * Since the sort function is somewhat expensive, the sort changes the
+ * vector of connections in place. Then only a change of priority
+ * triggers a request for the vector to be sorted again.
+ *
+ * This function can be used in the event you need to force a trigger.
+ * It would be unlikely that you would call this function with false.
+ *
+ * \param[in] status  The new status of the force sort flag.
+ */
+void communicator::set_force_sort(bool status)
+{
+    f_force_sort = status;
+}
+
+
 /** \brief Run until all connections are removed.
  *
  * This function "blocks" until all the events added to this
