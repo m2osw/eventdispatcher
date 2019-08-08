@@ -304,6 +304,45 @@ void connection_with_send_message::msg_ready(message & msg)
 }
 
 
+/** \brief Do nothing at the moment.
+ *
+ * This message has no implementation by default at the moment. What we
+ * want to do is find a clean way to restart any service instantly.
+ *
+ * The RESTART message is expected to be used whenever a modification
+ * to some file or the system environment somehow affects your service
+ * in such a way that it requires a restart. For example, after an
+ * upgrade of eventdispatcher library, you should restart all the services
+ * that make use of  this library. For this reason, we have a RESTART
+ * message.
+ *
+ * The messages comes with one parameter named `reason` which describes
+ * why the RESTART was sent:
+ *
+ * \li upgrade -- something (library/tools) was upgraded
+ * \li config -- a congiguration file was updated
+ *
+ * \note
+ * There is currently some services that make use of a CONFIG message
+ * whenever their configuration changes. Pretty much all services do
+ * not support a live configuration change (because it initializes their
+ * objects from the configuration data once on startup and in many cases
+ * it would be very complicated to allow for changes to occur.)
+ * \note
+ * In those existing implementation, we really just do a restart anyway.
+ *
+ * \param[in] message  The READY message.
+ *
+ * \sa msg_help()
+ */
+void connection_with_send_message::msg_restart(message & msg)
+{
+    // pass the message so any additional info can be accessed.
+    //
+    ready(msg);
+}
+
+
 /** \brief Call you stop() function with false.
  *
  * This command means that someone is asking your daemon to stop.

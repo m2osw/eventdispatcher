@@ -1,9 +1,11 @@
 
 
 
-* Break up all the files per class
-
 * See to have clients and servers for HTTP/HTTPS/HTTP2
   (we already have such in libsnapwebsites, only it uses `snapuri`...)
+
+* Config describing allowed messages with their parameters and values for
+  such and a way to track which message was ever sent (i.e. a form of
+  message coverage) so we can verify that all messages were checked
 
 

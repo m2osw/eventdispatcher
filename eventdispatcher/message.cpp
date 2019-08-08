@@ -213,7 +213,7 @@ bool message::from_message(std::string const & original_message)
                 sent_from_service += *m;
             }
         }
-        if(m == '\0')
+        if(*m == '\0')
         {
             // invalid syntax from input message
             //
@@ -329,7 +329,7 @@ bool message::from_message(std::string const & original_message)
             // retrieve the parameter name at first
             //
             std::string param_value;
-            if(*m != '\0' && *m == '"')
+            if(*m == '"')
             {
                 // quoted parameter
                 //

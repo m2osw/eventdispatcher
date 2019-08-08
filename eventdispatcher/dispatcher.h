@@ -459,6 +459,9 @@ public:
      * \li QUITTING -- msg_quitting() -- calls stop(true);
      * \li READY -- msg_ready() -- calls ready() -- snapcommunicator always
      *              sends that message so it has to be supported
+     * \li RESTART -- msg_restart() -- calls restart() -- it is triggered
+     *                when a restart is required (i.e. the library was
+     *                upgraded, a configuration file was updated, etc.)
      * \li STOP -- msg_stop() -- calls stop(false);
      * \li UNKNOWN -- msg_log_unknown() -- in case we receive a message we
      *                don't understand
@@ -525,6 +528,13 @@ public:
             typename snap::dispatcher<T>::dispatcher_match m;
             m.f_expr = "READY";
             m.f_execute = &T::msg_ready;
+            //m.f_match = <default>;
+            f_matches.push_back(m);
+        }
+        {
+            typename snap::dispatcher<T>::dispatcher_match m;
+            m.f_expr = "RESTART";
+            m.f_execute = &T::msg_restart;
             //m.f_match = <default>;
             f_matches.push_back(m);
         }

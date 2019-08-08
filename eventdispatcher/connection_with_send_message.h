@@ -39,6 +39,7 @@ public:
     virtual void                msg_log(message & message);
     virtual void                msg_quitting(message & message);
     virtual void                msg_ready(message & message);
+    virtual void                msg_restart(message & message);
     virtual void                msg_stop(message & message);
     virtual void                msg_log_unknown(message & message);
     virtual void                msg_reply_with_unknown(message & message);
