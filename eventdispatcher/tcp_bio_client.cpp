@@ -613,6 +613,20 @@ tcp_bio_client::tcp_bio_client(
 }
 
 
+/** \brief Create a BIO client object from an actual BIO pointer.
+ *
+ * This function is called by the server whenever it accepts a new BIO
+ * connection. The server then can return the tcp_bio_client object instead
+ * of a BIO object.
+ *
+ * The BIO is saved directly in the f_impl class (the server is given access.)
+ */
+tcp_bio_client::tcp_bio_client()
+    : f_impl(new detail::tcp_bio_client_impl)
+{
+}
+
+
 ///** \brief Create a BIO client object from an actual BIO pointer.
 // *
 // * This function is called by the server whenever it accepts a new BIO

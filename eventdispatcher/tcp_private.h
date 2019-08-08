@@ -16,32 +16,13 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
-// self
-//
-//#include    "eventdispatcher/utils.h"
-
-
-//// addr lib
-////
-//#include "libaddr/addr.h"
-
-
 // C++ lib
 //
 #include <memory>
 
 
-//// C lib
-////
-//#include <arpa/inet.h>
-
-
 // OpenSSL lib
 //
-// BIO versions of the TCP client/server
-// TODO: move to an impl
-//#include <openssl/bio.h>
-//#include <openssl/err.h>
 #include <openssl/ssl.h>
 
 

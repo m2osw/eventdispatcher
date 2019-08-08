@@ -38,7 +38,7 @@ public:
                                  , int port
                                  , int family = AF_UNSPEC
                                  , std::string const * multicast_addr = nullptr);
-                        ~udp_server();
+    virtual             ~udp_server() override;
 
     int                 recv(char * msg, size_t max_size);
     int                 timed_recv(char * msg, size_t const max_size, int const max_wait_ms);

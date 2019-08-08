@@ -32,6 +32,8 @@ namespace ed
 class udp_base
 {
 public:
+    virtual             ~udp_base();
+
     int                 get_socket() const;
     int                 get_mtu_size() const;
     int                 get_mss_size() const;

@@ -33,6 +33,8 @@ configure_file(
 
 add_library(${PROJECT_NAME} SHARED
     # communicator
+    communicator.cpp
+    #communicator_dispatcher.cpp
 
         # message handling
         dispatcher_base.cpp
@@ -57,14 +59,23 @@ add_library(${PROJECT_NAME} SHARED
 
         signal.cpp
 
-        tcp_client_connection.cpp
+        timer.cpp
 
         tcp_server_connection.cpp
 
-        timer.cpp
+        tcp_server_client_connection.cpp
+            tcp_server_client_buffer_connection.cpp
+                tcp_server_client_message_connection.cpp
 
-        #snap_communicator_dispatcher.cpp
-        #snap_communicator.cpp
+        tcp_client_connection.cpp
+            tcp_client_buffer_connection.cpp
+                tcp_client_message_connection.cpp
+                    tcp_blocking_client_message_connection.cpp
+                #tcp_client_permanent_message_connection.cpp
+
+        udp_server_connection.cpp
+            udp_server_message_connection.cpp
+
 
     # tcp
     tcp_base.cpp

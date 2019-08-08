@@ -439,6 +439,33 @@ tcp_bio_client::pointer_t tcp_bio_server::accept()
 
     client->f_impl->f_bio = bio;
 
+    if(bio)
+    {
+        // TODO: somehow this does not seem to give us any information
+        //       about the cipher and other details...
+        //
+        //       this is because it is (way) too early, we did not even
+        //       receive the HELLO yet!
+        //
+        SSL * ssl(nullptr);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+        BIO_get_ssl(bio.get(), &ssl);
+#pragma GCC diagnostic pop
+        if(ssl != nullptr)
+        {
+            char const * cipher_name(SSL_get_cipher(ssl));
+            int cipher_bits(0);
+            SSL_get_cipher_bits(ssl, &cipher_bits);
+            SNAP_LOG_DEBUG
+                << "accepted BIO client with SSL cipher \""
+                << cipher_name
+                << "\" representing "
+                << cipher_bits
+                << " bits of encryption.";
+        }
+    }
+
     return client;
 }
 

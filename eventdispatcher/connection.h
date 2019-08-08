@@ -104,10 +104,12 @@ public:
     virtual void                connection_added();
     virtual void                connection_removed();
 
+protected:
+    std::int64_t                save_timeout_timestamp();
+
 private:
     friend communicator;
 
-    std::int64_t                save_timeout_timestamp();
     std::int64_t                get_saved_timeout_timestamp() const;
 
     std::string                 f_name = std::string();

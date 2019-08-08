@@ -19,12 +19,13 @@
 
 // snapwebsites lib
 //
-#include "eventdispatcher/snap_communicator.h"
+#include    "eventdispatcher/snap_communicator.h"
+#include    "eventdispatcher/utils.h"
 
 
 // snaplogger lib
 //
-#include "snaplogger/message.h"
+#include    <snaplogger/message.h>
 
 
 
@@ -41,7 +42,7 @@ namespace ed
  * your connection object.
  *
  * \code
- *      snap::dispatcher<my_connection>::dispatcher_match const my_messages[] =
+ *      ed::dispatcher<my_connection>::dispatcher_match const my_messages[] =
  *      {
  *          {
  *              "HELP"
@@ -148,7 +149,7 @@ public:
          * This type defines the execution function. We give it the message
          * on a match. If the command name is not a match, it is ignored.
          */
-        typedef void (T::*execute_func_t)(snap_communicator_message & msg);
+        typedef void (T::*execute_func_t)(message & msg);
 
         /** \brief The match function return types.
          *
@@ -184,7 +185,7 @@ public:
          * function could test other parameters from the message such
          * as the origination of the message.
          */
-        typedef match_t (*match_func_t)(QString const & expr, snap_communicator_message & msg);
+        typedef match_t (*match_func_t)(std::string const & expr, message & msg);
 
         /** \brief The default matching function.
          *
@@ -208,7 +209,7 @@ public:
          *
          * \return MATCH_TRUE if it is a match, MATCH_FALSE otherwise.
          */
-        static match_t one_to_one_match(QString const & expr, snap_communicator_message & msg)
+        static match_t one_to_one_match(std::string const & expr, message & msg)
         {
             return expr == msg.get_command()
                             ? match_t::MATCH_TRUE
@@ -226,10 +227,10 @@ public:
          *
          * \return Always returns MATCH_TRUE.
          */
-        static match_t always_match(QString const & expr, snap_communicator_message & msg)
+        static match_t always_match(std::string const & expr, message & msg)
         {
-            NOTUSED(expr);
-            NOTUSED(msg);
+            snap::NOTUSED(expr);
+            snap::NOTUSED(msg);
             return match_t::MATCH_TRUE;
         }
 
@@ -244,10 +245,10 @@ public:
          *
          * \return Always returns MATCH_CALLBACK.
          */
-        static match_t callback_match(QString const & expr, snap_communicator_message & msg)
+        static match_t callback_match(std::string const & expr, message & msg)
         {
-            NOTUSED(expr);
-            NOTUSED(msg);
+            snap::NOTUSED(expr);
+            snap::NOTUSED(msg);
             return match_t::MATCH_CALLBACK;
         }
 
@@ -296,7 +297,7 @@ public:
          *
          * The matching is done in the match() function.
          */
-        match_func_t        f_match = &snap::dispatcher<T>::dispatcher_match::one_to_one_match;
+        match_func_t        f_match = &::ed::dispatcher<T>::dispatcher_match::one_to_one_match;
 
         /** \brief Run the execution function if this is a match.
          *
@@ -332,7 +333,7 @@ public:
          *
          * \return true if the connection execute function was called.
          */
-        bool execute(T * connection, snap::snap_communicator_message & msg) const
+        bool execute(T * connection, ::ed::message & msg) const
         {
             match_t m(f_match(f_expr, msg));
             if(m == match_t::MATCH_TRUE
@@ -579,13 +580,14 @@ public:
      *
      * \return true if the message was dispatched, false otherwise.
      */
-    virtual bool dispatch(snap::snap_communicator_message & msg) override
+    virtual bool dispatch(::ed::message & msg) override
     {
         if(f_trace)
         {
-            SNAP_LOG_TRACE("dispatch message \"")
-                          (msg.to_message())
-                          ("\".");
+            SNAP_LOG_TRACE
+                << "dispatch message \""
+                << msg.to_message()
+                << "\".";
         }
 
         // go in order to execute matches
@@ -636,7 +638,7 @@ public:
      * \return true if the commands were all determined, false if some need
      *         help from the user of this dispatcher.
      */
-    virtual bool get_commands(snap_string_list & commands) override
+    virtual bool get_commands(string_list_t & commands) override
     {
         bool need_user_help(false);
         for(auto const & m : f_matches)
@@ -666,7 +668,7 @@ public:
                 //       and digits and the underscore it would work
                 //       with fromLatin1() too
                 //
-                commands << QString::fromUtf8(m.f_expr);
+                commands << m.f_expr;
             }
             else
             {
@@ -681,5 +683,5 @@ public:
 };
 
 
-} // namespace snap
+} // namespace ed
 // vim: ts=4 sw=4 et
