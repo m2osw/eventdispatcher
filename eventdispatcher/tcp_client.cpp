@@ -1,5 +1,7 @@
-// Event Dispatcher
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,10 +17,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-
-// make sure we use OpenSSL with multi-thread support
-// (TODO: move to .cpp once we have the impl!)
-#define OPENSSL_THREAD_DEFINES
+/** \file
+ * \brief Event dispatch class.
+ *
+ * Class used to handle events.
+ */
 
 
 // self
@@ -29,51 +32,23 @@
 #include    "eventdispatcher/utils.h"
 
 
-// addr lib
-//
-//#include "libaddr/addr.h"
-
-
 // snaplogger lib
 //
-#include "snaplogger/message.h"
+#include    <snaplogger/message.h>
 
 
-//// snapdev lib
-////
-//#include "snapdev/not_reached.h"
-//#include "snapdev/not_used.h"
-//#include "snapdev/raii_generic_deleter.h"
-//
-//
-//// C++
-////
-//#include <sstream>
-//#include <iomanip>
-//
-//
 //// C lib
 ////
-#include <netdb.h>
-#include <arpa/inet.h>
-//#include <poll.h>
-#include <string.h>
-//#include <sys/ioctl.h>
-//#include <sys/socket.h>
-//#include <sys/types.h>
-//#include <unistd.h>
+#include    <netdb.h>
+#include    <arpa/inet.h>
+#include    <string.h>
 
 
 // last include
 //
-#include "snapdev/poison.h"
+#include    <snapdev/poison.h>
 
 
-
-
-//#ifndef OPENSSL_THREADS
-//#error "OPENSSL_THREADS is not defined. Snap! requires support for multiple threads in OpenSSL."
-//#endif
 
 namespace ed
 {

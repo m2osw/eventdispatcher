@@ -1,5 +1,7 @@
-// Event Dispatcher
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,7 +28,7 @@
 
 // libexcept
 //
-#include "libexcept/exception.h"
+#include    "libexcept/exception.h"
 
 
 

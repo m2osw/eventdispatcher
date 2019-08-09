@@ -1,5 +1,8 @@
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
 //
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
+//
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
@@ -15,9 +18,18 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
+/** \file
+ * \brief Declaration of the communicator class.
+ *
+ * The communicator is the manager of the event dispatcher connections.
+ * It handles the run() function with a poll() loop listening to all the
+ * connections and calling your virtual connection functions.
+ */
+
+
 // self
 //
-#include "eventdispatcher/connection.h"
+#include    "eventdispatcher/connection.h"
 
 
 

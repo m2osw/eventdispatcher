@@ -1,5 +1,7 @@
-// Event Dispatcher
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,9 +17,16 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-// make sure we use OpenSSL with multi-thread support
-// (TODO: move to .cpp once we have the impl!)
-//#define OPENSSL_THREAD_DEFINES
+/** \file
+ * \brief Event dispatch class.
+ *
+ * Class used to handle events.
+ */
+
+// to get the POLLRDHUP definition
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 
 
 // self
@@ -35,38 +44,18 @@
 // snapdev lib
 //
 #include    <snapdev/not_reached.h>
-//#include "snapdev/not_used.h"
-//#include "snapdev/raii_generic_deleter.h"
-//
-//
-//// C++
-////
-//#include <sstream>
-//#include <iomanip>
 
 
 // C lib
 //
-//#include <netdb.h>
-//#include <netinet/tcp.h>
-#include <poll.h>
-//#include <string.h>
-//#include <sys/ioctl.h>
-//#include <sys/socket.h>
-//#include <sys/types.h>
-//#include <unistd.h>
+#include    <poll.h>
 
 
 // last include
 //
-#include "snapdev/poison.h"
+#include    <snapdev/poison.h>
 
 
-
-
-//#ifndef OPENSSL_THREADS
-//#error "OPENSSL_THREADS is not defined. Snap! requires support for multiple threads in OpenSSL."
-//#endif
 
 namespace ed
 {
@@ -375,18 +364,18 @@ int tcp_server::accept( int const max_wait_ms )
 
 // on newer system each input of select() must be a distinct fd_set...
 //        fd_set s;
-//        //
+//
 //        FD_ZERO(&s);
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wold-style-cast"
 //        FD_SET(f_socket, &s);
 //#pragma GCC diagnostic pop
-//        //
+//
 //        struct timeval timeout;
 //        timeout.tv_sec = max_wait_ms / 1000;
 //        timeout.tv_usec = (max_wait_ms % 1000) * 1000;
 //        int const retval = select(f_socket + 1, &s, nullptr, &s, &timeout);
-        //
+
         if( retval == -1 )
         {
             // error
@@ -402,15 +391,18 @@ int tcp_server::accept( int const max_wait_ms )
     }
 
     // accept the next connection
+    //
     struct sockaddr_in accepted_addr;
     socklen_t addr_len(sizeof(accepted_addr));
     memset(&accepted_addr, 0, sizeof(accepted_addr));
     f_accepted_socket = ::accept(f_socket, reinterpret_cast<struct sockaddr *>(&accepted_addr), &addr_len);
 
     // mark the new connection with the SO_KEEPALIVE flag
+    //
     if(f_accepted_socket != -1 && f_keepalive)
     {
         // if this fails, we ignore the error, but still log the event
+        //
         int optval(1);
         socklen_t const optlen(sizeof(optval));
         if(setsockopt(f_accepted_socket, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) != 0)

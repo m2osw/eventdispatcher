@@ -1,5 +1,8 @@
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
 //
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
+//
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
@@ -36,16 +39,12 @@
  * real slowness issues on small VPN servers.)
  */
 
-//// to get the POLLRDHUP definition
-//#ifndef _GNU_SOURCE
-//#define _GNU_SOURCE
-//#endif
-
 
 // self
 //
 #include    "eventdispatcher/tcp_client_permanent_message_connection.h"
 
+#include    "eventdispatcher/communicator.h"
 #include    "eventdispatcher/exception.h"
 #include    "eventdispatcher/tcp_server_client_message_connection.h"
 #include    "eventdispatcher/thread_done_signal.h"
@@ -58,9 +57,7 @@
 
 // snapdev lib
 //
-//#include "snapdev/not_reached.h"
 #include    <snapdev/not_used.h>
-//#include "snapdev/string_replace_many.h"
 
 
 // cppthread lib
@@ -71,34 +68,14 @@
 #include    <cppthread/thread.h>
 
 
-//// libaddr lib
-////
-//#include "libaddr/addr_parser.h"
-//
-//
-//// C++ lib
-////
-//#include <sstream>
-//#include <limits>
-//#include <atomic>
-
-
 // C lib
 //
-//#include <fcntl.h>
-//#include <poll.h>
-//#include <unistd.h>
-//#include <sys/eventfd.h>
-//#include <sys/inotify.h>
-//#include <sys/ioctl.h>
-//#include <sys/resource.h>
-#include <sys/socket.h>
-//#include <sys/time.h>
+#include    <sys/socket.h>
 
 
 // last include
 //
-#include <snapdev/poison.h>
+#include    <snapdev/poison.h>
 
 
 

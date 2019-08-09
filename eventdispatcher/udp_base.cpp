@@ -1,5 +1,8 @@
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
 //
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
+//
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
@@ -14,30 +17,36 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+/** \file
+ * \brief Event dispatch class.
+ *
+ * Class used to handle events.
+ */
+
 
 // self
 //
-#include "eventdispatcher/udp_base.h"
+#include    "eventdispatcher/udp_base.h"
 
-#include "eventdispatcher/exception.h"
+#include    "eventdispatcher/exception.h"
 
 
 // libaddr lib
 //
-#include <libaddr/iface.h>
+#include    <libaddr/iface.h>
 
 
 // C lib
 //
-#include <net/if.h>
-#include <netinet/ip.h>
-#include <netinet/udp.h>
-#include <sys/ioctl.h>
+#include    <net/if.h>
+#include    <netinet/ip.h>
+#include    <netinet/udp.h>
+#include    <sys/ioctl.h>
 
 
 // last include
 //
-#include "snapdev/poison.h"
+#include    <snapdev/poison.h>
 
 
 

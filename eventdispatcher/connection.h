@@ -1,5 +1,8 @@
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
 //
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
+//
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
@@ -14,6 +17,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
+
+/** \file
+ * \brief Declaration of the connection.
+ *
+ * The base class used to create connections. A connection must have a
+ * file descriptor which can be poll()'ed on. This is how the poll()
+ * function works. It's called a socket in the connection because the
+ * communicator was first created to work with network connections.
+ * Now it works with others too such as the signalfd and  file
+ * listener.
+ */
 
 // C++ lib
 //

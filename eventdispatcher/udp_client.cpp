@@ -1,5 +1,7 @@
-// Event Dispatcher
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,16 +17,21 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+/** \file
+ * \brief Event dispatch class.
+ *
+ * Class used to handle events.
+ */
 
 
 // self
 //
-#include "eventdispatcher/udp_client.h"
+#include    "eventdispatcher/udp_client.h"
 
 
 // last include
 //
-#include "snapdev/poison.h"
+#include    <snapdev/poison.h>
 
 
 

@@ -1,5 +1,7 @@
-// Snap Communicator -- classes to ease handling communication between processes
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,68 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-// to get the POLLRDHUP definition
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
-
-// self
-//
-#include "eventdispatcher/message.h"
-
-#include "eventdispatcher/exception.h"
-//#include "eventdispatcher/snap_communicator_dispatcher.h"
-
-
-// snaplogger lib
-//
-#include "snaplogger/message.h"
-
-
-// snapdev lib
-//
-//#include "snapdev/not_reached.h"
-//#include "snapdev/not_used.h"
-#include <snapdev/string_replace_many.h>
-
-
-// boost lib
-//
-#include <boost/algorithm/string.hpp>
-
-
-//// libaddr lib
-////
-//#include "libaddr/addr_parser.h"
-//
-//
-//// C++ lib
-////
-//#include <sstream>
-//#include <limits>
-//#include <atomic>
-//
-//
-//// C lib
-////
-//#include <fcntl.h>
-//#include <poll.h>
-//#include <unistd.h>
-//#include <sys/eventfd.h>
-//#include <sys/inotify.h>
-//#include <sys/ioctl.h>
-//#include <sys/resource.h>
-//#include <sys/syscall.h>
-//#include <sys/time.h>
-
-
-// last include
-//
-#include <snapdev/poison.h>
-
-
 
 /** \file
  * \brief Implementation of the Snap Communicator class.
@@ -98,6 +38,35 @@
  * at 16,768 and frankly over 1,000 we probably will start to have
  * real slowness issues on small VPN servers.)
  */
+
+
+// self
+//
+#include    "eventdispatcher/message.h"
+
+#include    "eventdispatcher/exception.h"
+
+
+// snaplogger lib
+//
+#include    <snaplogger/message.h>
+
+
+// snapdev lib
+//
+#include    <snapdev/string_replace_many.h>
+
+
+// boost lib
+//
+#include    <boost/algorithm/string.hpp>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
+
 
 namespace ed
 {

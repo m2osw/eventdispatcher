@@ -1,5 +1,8 @@
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
 //
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
+//
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
@@ -25,19 +28,19 @@
 
 // self
 //
-#include "eventdispatcher/dispatcher_support.h"
+#include    "eventdispatcher/dispatcher_support.h"
 
-#include "eventdispatcher/exception.h"
+#include    "eventdispatcher/exception.h"
 
 
 // snaplogger lib
 //
-#include "snaplogger/message.h"
+#include    <snaplogger/message.h>
 
 
 // last include
 //
-#include <snapdev/poison.h>
+#include    <snapdev/poison.h>
 
 
 

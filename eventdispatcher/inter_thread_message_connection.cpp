@@ -1,5 +1,8 @@
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
 //
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
+//
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
@@ -44,32 +47,32 @@
 
 // self
 //
-#include "eventdispatcher/inter_thread_message_connection.h"
+#include    "eventdispatcher/inter_thread_message_connection.h"
 
-#include "eventdispatcher/exception.h"
+#include    "eventdispatcher/exception.h"
 
 
 // cppthread lib
 //
-#include "cppthread/thread.h"
+#include    <cppthread/thread.h>
 
 
 // snapdev lib
 //
-#include "snapdev/not_reached.h"
+#include    <snapdev/not_reached.h>
 
 
 // C lib
 //
-#include <poll.h>
-#include <sys/eventfd.h>
-#include <sys/resource.h>
-#include <string.h>
+#include    <poll.h>
+#include    <sys/eventfd.h>
+#include    <sys/resource.h>
+#include    <string.h>
 
 
 // last include
 //
-#include <snapdev/poison.h>
+#include    <snapdev/poison.h>
 
 
 

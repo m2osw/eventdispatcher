@@ -1,24 +1,21 @@
+# Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
 #
-# License:
-#       Copyright (c) 2013-2019 Made to Order Software Corp.
+# https://snapwebsites.org/project/eventdispatcher
+# contact@m2osw.com
 #
-#       https://snapwebsites.org/projects/libutf8
-#       contact@m2osw.com
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 #
-#       This program is free software; you can redistribute it and/or modify
-#       it under the terms of the GNU General Public License as published by
-#       the Free Software Foundation; either version 2 of the License, or
-#       (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-#       This program is distributed in the hope that it will be useful,
-#       but WITHOUT ANY WARRANTY; without even the implied warranty of
-#       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#       GNU General Public License for more details.
-#
-#       You should have received a copy of the GNU General Public License
-#       along with this program; if not, write to the Free Software
-#       Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 ##
 ## eventdispatcher library
@@ -34,7 +31,6 @@ configure_file(
 add_library(${PROJECT_NAME} SHARED
     # communicator
     communicator.cpp
-    #communicator_dispatcher.cpp
 
         # message handling
         dispatcher_base.cpp
@@ -71,7 +67,7 @@ add_library(${PROJECT_NAME} SHARED
             tcp_client_buffer_connection.cpp
                 tcp_client_message_connection.cpp
                     tcp_blocking_client_message_connection.cpp
-                #tcp_client_permanent_message_connection.cpp
+                tcp_client_permanent_message_connection.cpp
 
         udp_server_connection.cpp
             udp_server_message_connection.cpp
@@ -143,6 +139,44 @@ install(
 
 install(
     FILES
+        communicator.h
+        connection.h
+        connection_with_send_message.h
+        dispatcher_base.h
+        dispatcher.h
+        dispatcher_support.h
+        exception.h
+        fd_buffer_connection.h
+        fd_connection.h
+        file_changed.h
+        inter_thread_message_connection.h
+        message.h
+        pipe_buffer_connection.h
+        pipe_connection.h
+        pipe_message_connection.h
+        signal.h
+        tcp_base.h
+        tcp_bio_client.h
+        tcp_bio_options.h
+        tcp_bio_server.h
+        tcp_blocking_client_message_connection.h
+        tcp_client_buffer_connection.h
+        tcp_client_connection.h
+        tcp_client.h
+        tcp_client_message_connection.h
+        tcp_client_permanent_message_connection.h
+        tcp_server_client_buffer_connection.h
+        tcp_server_client_connection.h
+        tcp_server_client_message_connection.h
+        tcp_server_connection.h
+        tcp_server.h
+        thread_done_signal.h
+        timer.h
+        udp_base.h
+        udp_client.h
+        udp_server_connection.h
+        udp_server.h
+        udp_server_message_connection.h
         utils.h
         ${CMAKE_CURRENT_BINARY_DIR}/version.h
 

@@ -1,5 +1,7 @@
-// TCP Client & Server -- classes to ease handling sockets
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,6 +18,12 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
+/** \file
+ * \brief Event dispatch class.
+ *
+ * Class used to handle events.
+ */
+
 // make sure we use OpenSSL with multi-thread support
 // (TODO: move to .cpp once we have the SSL flags worked on!)
 #define OPENSSL_THREAD_DEFINES
@@ -23,13 +31,13 @@
 
 // C++ lib
 //
-#include <string>
+#include    <string>
 
 
 // OpenSSL lib
 //
-// TODO: create our own set of flags
-#include <openssl/ssl.h>
+// TODO: create our own set of flags to avoid  this header in the .h
+#include    <openssl/ssl.h>
 
 
 

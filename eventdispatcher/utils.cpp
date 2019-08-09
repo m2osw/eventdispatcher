@@ -1,5 +1,7 @@
-// Snap Communicator -- classes to ease handling communication between processes
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,6 +16,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+/** \file
+ * \brief Various helper functions.
+ *
+ * These functions are useful for our event dispatcher environment.
+ */
 
 
 // self
@@ -38,12 +46,6 @@
 #include    <snapdev/poison.h>
 
 
-
-/** \file
- * \brief Various helper functions.
- *
- * These functions are useful for our event dispatcher environment.
- */
 
 namespace ed
 {

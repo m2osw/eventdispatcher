@@ -1,5 +1,7 @@
-// Event Dispatcher
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,6 +16,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+/** \file
+ * \brief Event dispatch class.
+ *
+ * Class used to handle events.
+ */
 
 // make sure we use OpenSSL with multi-thread support
 // (TODO: move to .cpp once we have the impl!)
@@ -35,44 +43,24 @@
 
 // snaplogger lib
 //
-#include "snaplogger/message.h"
+#include    <snaplogger/message.h>
 
 
-//// snapdev lib
-////
-////#include "snapdev/not_reached.h"
-#include "snapdev/not_used.h"
-////#include "snapdev/raii_generic_deleter.h"
+// snapdev lib
+//
+#include    <snapdev/not_used.h>
 
 
 // OpenSSL lib
 //
-#include <openssl/bio.h>
-#include <openssl/err.h>
-#include <openssl/ssl.h>
-
-
-//// C++
-////
-//#include <sstream>
-//#include <iomanip>
-//
-//
-//// C lib
-////
-//#include <netdb.h>
-//#include <netinet/tcp.h>
-//#include <poll.h>
-//#include <string.h>
-//#include <sys/ioctl.h>
-//#include <sys/socket.h>
-//#include <sys/types.h>
-//#include <unistd.h>
+#include    <openssl/bio.h>
+#include    <openssl/err.h>
+#include    <openssl/ssl.h>
 
 
 // last include
 //
-#include "snapdev/poison.h"
+#include    <snapdev/poison.h>
 
 
 

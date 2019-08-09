@@ -1,5 +1,7 @@
-// Event Dispatcher
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,9 +18,15 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
+/** \file
+ * \brief Event dispatch class.
+ *
+ * Class used to handle events.
+ */
+
 // self
 //
-#include "eventdispatcher/utils.h"
+#include    "eventdispatcher/utils.h"
 
 
 

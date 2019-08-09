@@ -1,5 +1,7 @@
-// Event Dispatcher
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,60 +17,50 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+/** \file
+ * \brief Event dispatch class.
+ *
+ * Class used to handle events.
+ */
+
 // make sure we use OpenSSL with multi-thread support
 // (TODO: move to .cpp once we have the impl!)
 #define OPENSSL_THREAD_DEFINES
 
 // self
 //
-#include "eventdispatcher/tcp_bio_client.h"
+#include    "eventdispatcher/tcp_bio_client.h"
 
-#include "eventdispatcher/exception.h"
-#include "eventdispatcher/tcp_private.h"
+#include    "eventdispatcher/exception.h"
+#include    "eventdispatcher/tcp_private.h"
 
 
 // snaplogger lib
 //
-#include "snaplogger/message.h"
+#include    <snaplogger/message.h>
 
 
 // snapdev lib
 //
-#include "snapdev/not_reached.h"
-//#include "snapdev/not_used.h"
-//#include "snapdev/raii_generic_deleter.h"
-//
-//
+#include    <snapdev/not_reached.h>
 
 
 // OpenSSL lib
 //
-#include <openssl/bio.h>
-#include <openssl/err.h>
-#include <openssl/ssl.h>
-
-
-//// C++
-////
-//#include <sstream>
-//#include <iomanip>
+#include    <openssl/bio.h>
+#include    <openssl/err.h>
+#include    <openssl/ssl.h>
 
 
 // C lib
 //
-#include <netdb.h>
-//#include <netinet/tcp.h>
-#include <arpa/inet.h>
-//#include <string.h>
-//#include <sys/ioctl.h>
-//#include <sys/socket.h>
-//#include <sys/types.h>
-//#include <unistd.h>
+#include    <netdb.h>
+#include    <arpa/inet.h>
 
 
 // last include
 //
-#include "snapdev/poison.h"
+#include    <snapdev/poison.h>
 
 
 
@@ -100,6 +92,7 @@ namespace ed
 
 
 #if 0
+// code to do traces
 namespace
 {
 
@@ -625,47 +618,6 @@ tcp_bio_client::tcp_bio_client()
     : f_impl(new detail::tcp_bio_client_impl)
 {
 }
-
-
-///** \brief Create a BIO client object from an actual BIO pointer.
-// *
-// * This function is called by the server whenever it accepts a new BIO
-// * connection. The server then can return the tcp_bio_client object instead
-// * of a BIO object.
-// *
-// * \param[in] bio  The BIO pointer representing a BIO connection with a client.
-// */
-//tcp_bio_client::tcp_bio_client(std::shared_ptr<BIO> bio)
-//    //: f_ssl_ctx(nullptr) -- auto-init
-//    : f_bio(bio)
-//{
-//    if(bio)
-//    {
-//        // TODO: somehow this does not seem to give us any information
-//        //       about the cipher and other details...
-//        //
-//        //       this is because it is (way) too early, we did not even
-//        //       receive the HELLO yet!
-//        //
-//        SSL * ssl(nullptr);
-//#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Wold-style-cast"
-//        BIO_get_ssl(bio.get(), &ssl);
-//#pragma GCC diagnostic pop
-//        if(ssl != nullptr)
-//        {
-//            char const * cipher_name(SSL_get_cipher(ssl));
-//            int cipher_bits(0);
-//            SSL_get_cipher_bits(ssl, &cipher_bits);
-//            SNAP_LOG_DEBUG
-//                << "accepted BIO client with SSL cipher \""
-//                << cipher_name
-//                << "\" representing "
-//                << cipher_bits
-//                << " bits of encryption.";
-//        }
-//    }
-//}
 
 
 /** \brief Clean up the BIO client object.

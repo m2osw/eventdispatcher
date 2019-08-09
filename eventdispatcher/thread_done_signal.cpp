@@ -1,5 +1,8 @@
 // Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
 //
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
+//
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
@@ -14,57 +17,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-
-// self
-//
-#include "eventdispatcher/thread_done_signal.h"
-
-#include "eventdispatcher/exception.h"
-
-
-// snaplogger lib
-//
-#include "snaplogger/message.h"
-
-
-//// snapdev lib
-////
-//#include "snapdev/not_reached.h"
-//#include "snapdev/not_used.h"
-//#include "snapdev/string_replace_many.h"
-//
-//
-//// libaddr lib
-////
-//#include "libaddr/addr_parser.h"
-//
-//
-//// C++ lib
-////
-//#include <sstream>
-//#include <limits>
-//#include <atomic>
-
-
-// C lib
-//
-#include <fcntl.h>
-//#include <poll.h>
-//#include <unistd.h>
-//#include <sys/eventfd.h>
-//#include <sys/inotify.h>
-//#include <sys/ioctl.h>
-//#include <sys/resource.h>
-//#include <sys/syscall.h>
-//#include <sys/time.h>
-
-
-// last include
-//
-#include <snapdev/poison.h>
-
-
-
 /** \file
  * \brief Implementation of the Thread Done Signal class.
  *
@@ -72,6 +24,30 @@
  * is done via a signal (i.e. without having to be blocked joining
  * the thread).
  */
+
+
+// self
+//
+#include    "eventdispatcher/thread_done_signal.h"
+
+#include    "eventdispatcher/exception.h"
+
+
+// snaplogger lib
+//
+#include    <snaplogger/message.h>
+
+
+// C lib
+//
+#include    <fcntl.h>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
+
 
 namespace ed
 {
