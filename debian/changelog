@@ -1,3 +1,9 @@
+eventdispatcher (1.0.2.0~xenial) xenial; urgency=high
+
+  * Removed the find_package() looking for log4cplus.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sat, 10 Aug 2019 01:51:53 -0800
+
 eventdispatcher (1.0.1.0~xenial) xenial; urgency=high
 
   * Added the libaddr-dev as a dependency for the build.
