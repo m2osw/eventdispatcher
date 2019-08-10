@@ -1,3 +1,9 @@
+eventdispatcher (1.0.1.0~xenial) xenial; urgency=high
+
+  * Added the libaddr-dev as a dependency for the build.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sat, 10 Aug 2019 01:29:56 -0800
+
 eventdispatcher (1.0.0.0~xenial) xenial; urgency=high
 
   * Moving the snap_communitor.cpp/.h, the dispatcher, and TCP/UDP client and
