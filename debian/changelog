@@ -1,3 +1,9 @@
+eventdispatcher (1.0.3.0~xenial) xenial; urgency=high
+
+  * Add the libssl-dev as a build dependency.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sat, 10 Aug 2019 02:04:04 -0800
+
 eventdispatcher (1.0.2.0~xenial) xenial; urgency=high
 
   * Removed the find_package() looking for log4cplus.
