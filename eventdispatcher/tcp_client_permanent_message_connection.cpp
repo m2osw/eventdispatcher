@@ -267,7 +267,8 @@ public:
                 //    << ":"
                 //    << f_port
                 //    << " failed with: "
-                //    << e.what();
+                //    << e.what()
+                //    << SNAP_LOG_SEND;
                 f_last_error = e.what();
                 f_tcp_connection.reset();
             }
@@ -462,7 +463,8 @@ public:
         if(f_done)
         {
             SNAP_LOG_ERROR
-                << "Permanent connection marked done. Cannot attempt to reconnect.";
+                << "Permanent connection marked done. Cannot attempt to reconnect."
+                << SNAP_LOG_SEND;
             return;
         }
 
@@ -506,14 +508,16 @@ public:
         if(f_done)
         {
             SNAP_LOG_ERROR
-                << "Permanent connection marked done. Cannot attempt to reconnect.";
+                << "Permanent connection marked done. Cannot attempt to reconnect."
+                << SNAP_LOG_SEND;
             return false;
         }
 
         if(f_thread.is_running())
         {
             SNAP_LOG_ERROR
-                << "A background connection attempt is already in progress. Further requests are ignored.";
+                << "A background connection attempt is already in progress. Further requests are ignored."
+                << SNAP_LOG_SEND;
             return false;
         }
 
@@ -529,7 +533,8 @@ public:
         if(!f_thread.start())
         {
             SNAP_LOG_ERROR
-                << "The thread used to run the background connection process did not start.";
+                << "The thread used to run the background connection process did not start."
+                << SNAP_LOG_SEND;
             return false;
         }
 
@@ -610,7 +615,8 @@ public:
                 << ":"
                 << f_thread_runner.get_port()
                 << " failed with: "
-                << f_thread_runner.get_last_error();
+                << f_thread_runner.get_last_error()
+                << SNAP_LOG_SEND;
 
             // signal that an error occurred
             //

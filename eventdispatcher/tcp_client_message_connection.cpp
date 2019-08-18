@@ -115,7 +115,8 @@ void tcp_client_message_connection::process_line(std::string const & line)
         SNAP_LOG_ERROR
                 << "snap_communicator::snap_tcp_client_message_connection::process_line() was asked to process an invalid message ("
                 << line
-                << ")";
+                << ")"
+                << SNAP_LOG_SEND;
     }
 }
 

@@ -186,14 +186,19 @@ void dispatcher_support::process_message(message const & msg)
     //unknown.add_parameter("command", message.get_command());
     //if(!send_message(unknown, false))
     //{
-    //    SNAP_LOG_WARNING("could not reply with UNKNOWN message to \"")(message.get_command())("\"");
+    //    SNAP_LOG_WARNING
+    //        << "could not reply with UNKNOWN message to \""
+    //        << message.get_command()
+    //        << "\""
+    //        << SNAP_LOG_SEND;
     //}
 
     SNAP_LOG_FATAL
         << "process_message() with message \""
         << msg.to_message()
         << "\" was not reimplemented in your class and"
-        << " the always_match() was not used in your dispatcher matches.";
+        << " the always_match() was not used in your dispatcher matches."
+        << SNAP_LOG_SEND;
 
     throw event_dispatcher_implementation_error(
               "your class is not reimplementing the process_message()"

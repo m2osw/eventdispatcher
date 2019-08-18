@@ -477,7 +477,8 @@ tcp_bio_client::tcp_bio_client(
                         << "the SNI feature is turned off,"
                            " often failure to connect with SSL is because the"
                            " SSL Hello message is missing the SNI (Server Name In)."
-                           " See the tcp_bio_client::options::set_sni().";
+                           " See the tcp_bio_client::options::set_sni()."
+                        << SNAP_LOG_SEND;
                 }
                 detail::bio_log_errors();
                 throw event_dispatcher_initialization_error("SSL BIO_do_connect() failed connecting BIO object to server");
@@ -493,7 +494,8 @@ tcp_bio_client::tcp_bio_client(
                         << "the SNI feature is turned off,"
                            " often failure to connect with SSL is because the"
                            " SSL Hello message is missing the SNI (Server Name In)."
-                           " See the tcp_bio_client::options::set_sni().";
+                           " See the tcp_bio_client::options::set_sni()."
+                        << SNAP_LOG_SEND;
                 }
                 detail::bio_log_errors();
                 throw event_dispatcher_initialization_error("failed establishing a secure BIO connection with server, handshake failed."
@@ -522,7 +524,8 @@ tcp_bio_client::tcp_bio_client(
                     throw event_dispatcher_initialization_error("peer certificate could not be verified");
                 }
                 SNAP_LOG_WARNING
-                    << "connecting with SSL but certificate verification failed.";
+                    << "connecting with SSL but certificate verification failed."
+                    << SNAP_LOG_SEND;
             }
 
             // it worked, save the results
@@ -540,7 +543,8 @@ tcp_bio_client::tcp_bio_client(
                 << cipher_name
                 << "\" representing "
                 << cipher_bits
-                << " bits of encryption.";
+                << " bits of encryption."
+                << SNAP_LOG_SEND;
         }
         break;
 
@@ -599,7 +603,8 @@ tcp_bio_client::tcp_bio_client(
             if(setsockopt(socket, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) != 0)
             {
                 SNAP_LOG_WARNING
-                    << "an error occurred trying to mark client socket with SO_KEEPALIVE.";
+                    << "an error occurred trying to mark client socket with SO_KEEPALIVE."
+                    << SNAP_LOG_SEND;
             }
         }
     }
@@ -981,7 +986,12 @@ int tcp_bio_client::write(char const * buf, size_t size)
 #ifdef _DEBUG
     // This write is useful when developing APIs against 3rd party
     // servers, otherwise, it's just too much debug
-    //SNAP_LOG_TRACE("tcp_bio_client::write(): buf=")(buf)(", size=")(size);
+    //SNAP_LOG_TRACE
+    //    << "tcp_bio_client::write(): buf="
+    //    << buf
+    //    << ", size="
+    //    << size
+    //    << SNAP_LOG_SEND;
 #endif
     if(!f_impl->f_bio)
     {

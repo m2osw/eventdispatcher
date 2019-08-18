@@ -90,7 +90,8 @@ tcp_server_client_message_connection::tcp_server_client_message_connection(tcp_b
     if(socket < 0)
     {
         SNAP_LOG_ERROR
-            << "called with a closed client connection.";
+            << "called with a closed client connection."
+            << SNAP_LOG_SEND;
         throw std::runtime_error("tcp_server_client_message_connection() called with a closed client connection.");
     }
 
@@ -104,7 +105,8 @@ tcp_server_client_message_connection::tcp_server_client_message_connection(tcp_b
             << e
             << " -- "
             << strerror(e)
-            << ").";
+            << ")."
+            << SNAP_LOG_SEND;
         throw std::runtime_error("getpeername() failed to retrieve IP address in tcp_server_client_message_connection()");
     }
     if(address.ss_family != AF_INET
@@ -113,7 +115,8 @@ tcp_server_client_message_connection::tcp_server_client_message_connection(tcp_b
         SNAP_LOG_ERROR
             << "address family ("
             << address.ss_family
-            << ") returned by getpeername() is not understood, it is neither an IPv4 nor IPv6.";
+            << ") returned by getpeername() is not understood, it is neither an IPv4 nor IPv6."
+            << SNAP_LOG_SEND;
         throw std::runtime_error("getpeername() returned an address which is not understood in tcp_server_client_message_connection()");
     }
     if(length < sizeof(address))
@@ -151,7 +154,7 @@ tcp_server_client_message_connection::tcp_server_client_message_connection(tcp_b
         err += " -- ";
         err += strerror(e);
         err += ").";
-        SNAP_LOG_FATAL << err;
+        SNAP_LOG_FATAL << err << SNAP_LOG_SEND;
         throw event_dispatcher_runtime_error(err);
     }
 
@@ -199,7 +202,8 @@ void tcp_server_client_message_connection::process_line(std::string const & line
         SNAP_LOG_ERROR
             << "process_line() was asked to process an invalid message ("
             << line
-            << ")";
+            << ")"
+            << SNAP_LOG_SEND;
     }
 }
 

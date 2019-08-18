@@ -232,7 +232,8 @@ bool communicator::remove_connection(connection::pointer_t connection)
         << connection->get_name()
         << "\", of "
         << f_connections.size()
-        << " connections (including this one.)";
+        << " connections (including this one.)"
+        << SNAP_LOG_SEND;
 
     f_connections.erase(it);
 
@@ -245,7 +246,11 @@ std::for_each(
         , f_connections.end()
         , [](auto const & c)
         {
-            SNAP_LOG_TRACE("communicator::remove_connection(): remaining connection: \"")(c->get_name())("\"");
+            SNAP_LOG_TRACE
+                << "communicator::remove_connection(): remaining connection: \""
+                << c->get_name()
+                << "\""
+                << SNAP_LOG_SEND;
         });
 #endif
 #endif
@@ -344,10 +349,22 @@ bool communicator::run()
             enabled.push_back(c->is_enabled());
             if(!enabled[idx])
             {
-                //SNAP_LOG_TRACE("communicator::run(): connection '")(c->get_name())("' has been disabled, so ignored.");
+                //SNAP_LOG_TRACE
+                //    << "communicator::run(): connection '"
+                //    << c->get_name()
+                //    << "' has been disabled, so ignored."
+                //    << SNAP_LOG_SEND;
                 continue;
             }
-//SNAP_LOG_TRACE("communicator::run(): handling connection ")(idx)("/")(max_connections)(". '")(c->get_name())("' since it is enabled...");
+//SNAP_LOG_TRACE
+//    << "communicator::run(): handling connection "
+//    << idx
+//    << "/"
+//    << max_connections
+//    << ". '"
+//    << c->get_name()
+//    << "' since it is enabled..."
+//    << SNAP_LOG_SEND;
 
             // check whether a timeout is defined in this connection
             //
@@ -401,7 +418,12 @@ bool communicator::run()
             //
             c->f_fds_position = fds.size();
 
-//SNAP_LOG_ERROR("*** still waiting on \"")(c->get_name())("\".");
+//SNAP_LOG_ERROR
+//    << "*** still waiting on \""
+//    << c->get_name()
+//    << "\"."
+//    << SNAP_LOG_SEND;
+
             struct pollfd fd;
             fd.fd = c->get_socket();
             fd.events = e;
@@ -439,7 +461,8 @@ bool communicator::run()
             SNAP_LOG_FATAL
                 << "communicator::run(): nothing to poll() on. All connections are disabled? (Ignoring "
                 << max_connections
-                << " and exiting the run() loop anyway.)";
+                << " and exiting the run() loop anyway.)"
+                << SNAP_LOG_SEND;
             return false;
         }
 
@@ -448,7 +471,8 @@ bool communicator::run()
 //               << "timeout " << timeout
 //               << " (next was: " << next_timeout_timestamp
 //               << ", current ~ " << get_current_date()
-//               << ")";
+//               << ")"
+//               << SNAP_LOG_SEND;
 
         // TODO: add support for ppoll() so we can support signals cleanly
         //       with nearly no additional work from us
@@ -468,7 +492,8 @@ bool communicator::run()
             //    << gettid()
             //    << ", communicator::run(): ------------------- new set of "
             //    << r
-            //    << " events to handle";
+            //    << " events to handle"
+            //    << SNAP_LOG_SEND;
 
             // check each connection one by one for:
             //
@@ -497,7 +522,8 @@ bool communicator::run()
                     //SNAP_LOG_TRACE
                     //    << "communicator::run(): in loop, connection '"
                     //    << c->get_name()
-                    //    << "' has been disabled, so ignored!";
+                    //    << "' has been disabled, so ignored!"
+                    //    << SNAP_LOG_SEND;
                     continue;
                 }
 
@@ -570,7 +596,8 @@ bool communicator::run()
 //    << "communicator::run(): timer of connection = '"<< c->get_name()
 //    << "', timestamp = " << timestamp
 //    << ", now = " << now
-//    << ", now >= timestamp --> " << (now >= timestamp ? "TRUE (timed out!)" : "FALSE");
+//    << ", now >= timestamp --> " << (now >= timestamp ? "TRUE (timed out!)" : "FALSE")
+//    << SNAP_LOG_SEND;
 
                         // move the timeout as required first
                         // (because the callback may move it again)

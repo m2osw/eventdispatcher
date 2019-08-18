@@ -168,7 +168,8 @@ bool message::from_message(std::string const & original_message)
                 SNAP_LOG_ERROR
                     << "a message with sent_from_server must not include a space in the server name ("
                     << original_message
-                    << ").";
+                    << ")."
+                    << SNAP_LOG_SEND;
                 return false;
             }
 
@@ -187,7 +188,8 @@ bool message::from_message(std::string const & original_message)
             // invalid syntax from input message
             //
             SNAP_LOG_ERROR
-                << "a message cannot only include a 'sent from service' definition.";
+                << "a message cannot only include a 'sent from service' definition."
+                << SNAP_LOG_SEND;
             return false;
         }
         // Skip the ' '
@@ -209,7 +211,8 @@ bool message::from_message(std::string const & original_message)
                 // we also cannot have a ':' after the '/'
                 //
                 SNAP_LOG_ERROR
-                    << "a server name cannot be empty when specified, also it cannot include two server names and a server name after a service name was specified.";
+                    << "a server name cannot be empty when specified, also it cannot include two server names and a server name after a service name was specified."
+                    << SNAP_LOG_SEND;
                 return false;
             }
             has_server = true;
@@ -225,7 +228,8 @@ bool message::from_message(std::string const & original_message)
                 // and the name cannot be empty if '/' is used
                 //
                 SNAP_LOG_ERROR
-                    << "a service name is mandatory when the message includes a slash (/), also it cannot include two service names.";
+                    << "a service name is mandatory when the message includes a slash (/), also it cannot include two service names."
+                    << SNAP_LOG_SEND;
                 return false;
             }
             has_service = true;
@@ -243,7 +247,8 @@ bool message::from_message(std::string const & original_message)
         // command is mandatory
         //
         SNAP_LOG_ERROR
-            << "a command is mandatory in a message.";
+            << "a command is mandatory in a message."
+            << SNAP_LOG_SEND;
         return false;
     }
 
@@ -265,7 +270,8 @@ bool message::from_message(std::string const & original_message)
                 // parameters must have a name
                 //
                 SNAP_LOG_ERROR
-                    << "could not accept message because an empty parameter name is not valid.";
+                    << "could not accept message because an empty parameter name is not valid."
+                    << SNAP_LOG_SEND;
                 return false;
             }
             try
@@ -280,7 +286,8 @@ bool message::from_message(std::string const & original_message)
                     << "could not accept message because parameter name \""
                     << param_name
                     << "\" is not considered valid: "
-                    << e.what();
+                    << e.what()
+                    << SNAP_LOG_SEND;
                 return false;
             }
 
@@ -290,7 +297,8 @@ bool message::from_message(std::string const & original_message)
                 // ?!?
                 //
                 SNAP_LOG_ERROR
-                    << "message parameters must be followed by an equal (=) character.";
+                    << "message parameters must be followed by an equal (=) character."
+                    << SNAP_LOG_SEND;
                 return false;
             }
             ++m;    // skip '='
@@ -309,7 +317,8 @@ bool message::from_message(std::string const & original_message)
                         // closing quote (") is missing
                         //
                         SNAP_LOG_ERROR
-                            << "a quoted message parameter must end with a quote (\").";
+                            << "a quoted message parameter must end with a quote (\")."
+                            << SNAP_LOG_SEND;
                         return false;
                     }
 
@@ -347,7 +356,8 @@ bool message::from_message(std::string const & original_message)
                     // this should never happend
                     //
                     SNAP_LOG_ERROR
-                        << "two parameters must be separated by a semicolon (;).";
+                        << "two parameters must be separated by a semicolon (;)."
+                        << SNAP_LOG_SEND;
                     return false;
                 }
 
@@ -1217,7 +1227,9 @@ void verify_message_name(std::string const & name, bool can_be_empty, bool can_b
     && name.empty())
     {
         std::string err("a message name cannot be empty.");
-        SNAP_LOG_FATAL << err;
+        SNAP_LOG_FATAL
+            << err
+            << SNAP_LOG_SEND;
         throw event_dispatcher_invalid_message(err);
     }
 
@@ -1233,7 +1245,9 @@ void verify_message_name(std::string const & name, bool can_be_empty, bool can_b
                             " only (also a command must be uppercase only,) \"");
             err += name;
             err += "\" is not valid.";
-            SNAP_LOG_FATAL << err;
+            SNAP_LOG_FATAL
+                << err
+                << SNAP_LOG_SEND;
             throw event_dispatcher_invalid_message(err);
         }
     }
@@ -1244,7 +1258,9 @@ void verify_message_name(std::string const & name, bool can_be_empty, bool can_b
         std::string err("parameter name cannot start with a digit, \"");
         err += name;
         err += "\" is not valid.";
-        SNAP_LOG_FATAL << err;
+        SNAP_LOG_FATAL
+            << err
+            << SNAP_LOG_SEND;
         throw event_dispatcher_invalid_message(err);
     }
 }

@@ -124,7 +124,8 @@ void pipe_message_connection::process_line(std::string const & line)
         SNAP_LOG_ERROR
             << "snap_communicator::snap_pipe_message_connection::process_line() was asked to process an invalid message ("
             << line
-            << ")";
+            << ")"
+            << SNAP_LOG_SEND;
     }
 }
 

@@ -421,7 +421,8 @@ int bio_log_errors()
             << line
             << "]:["
             << ((flags & ERR_TXT_STRING) != 0 && data != nullptr ? data : "(no details)")
-            << "]";
+            << "]"
+            << SNAP_LOG_SEND;
     }
 }
 

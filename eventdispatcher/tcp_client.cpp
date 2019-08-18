@@ -119,7 +119,7 @@ tcp_client::tcp_client(std::string const & addr, int port)
         err += " -- ";
         err += strerror(e);
         err += ")";
-        SNAP_LOG_FATAL << err;
+        SNAP_LOG_FATAL << err << SNAP_LOG_SEND;
         throw event_dispatcher_runtime_error(err);
     }
 
@@ -132,7 +132,8 @@ tcp_client::tcp_client(std::string const & addr, int port)
             << e
             << " -- "
             << strerror(e)
-            << ")";
+            << ")"
+            << SNAP_LOG_SEND;
         throw event_dispatcher_runtime_error("could not create socket for client");
     }
 
@@ -144,7 +145,8 @@ tcp_client::tcp_client(std::string const & addr, int port)
             << e
             << " -- "
             << strerror(e)
-            << ")";
+            << ")"
+            << SNAP_LOG_SEND;
         close(f_socket);
         throw event_dispatcher_runtime_error("could not connect client socket to \"" + f_addr + "\"");
     }

@@ -174,7 +174,8 @@ void thread_done_signal::process_read()
             << e
             << " -- "
             << strerror(e)
-            << ").";
+            << ")."
+            << SNAP_LOG_SEND;
     }
 }
 
@@ -198,7 +199,8 @@ void thread_done_signal::thread_done()
             << e
             << " -- "
             << strerror(e)
-            << ").";
+            << ")."
+            << SNAP_LOG_SEND;
     }
 }
 

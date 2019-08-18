@@ -151,7 +151,8 @@ void connection_with_send_message::msg_help(message & msg)
         SNAP_LOG_WARNING
             << "could not reply to \""
             << msg.get_command()
-            << "\" with a COMMANDS message.";
+            << "\" with a COMMANDS message."
+            << SNAP_LOG_SEND;
     }
 }
 
@@ -197,7 +198,8 @@ void connection_with_send_message::msg_alive(message & msg)
         SNAP_LOG_WARNING
             << "could not reply to \""
             << msg.get_command()
-            << "\" with an ABSOLULTELY message.";
+            << "\" with an ABSOLULTELY message."
+            << SNAP_LOG_SEND;
     }
 }
 
@@ -224,7 +226,8 @@ void connection_with_send_message::msg_log(message & msg)
         // send log in the old file and format
         //
         SNAP_LOG_INFO
-            << "-------------------- Logging reconfiguration request.";
+            << "-------------------- Logging reconfiguration request."
+            << SNAP_LOG_SEND;
 
         // reconfigure
         //
@@ -233,7 +236,8 @@ void connection_with_send_message::msg_log(message & msg)
         // send log to new file and format
         //
         SNAP_LOG_INFO
-            << "-------------------- Logging reconfiguration done.";
+            << "-------------------- Logging reconfiguration done."
+            << SNAP_LOG_SEND;
     }
 }
 
@@ -353,7 +357,8 @@ void connection_with_send_message::msg_log_unknown(message & msg)
     SNAP_LOG_ERROR
         << "we sent unknown command \""
         << msg.get_parameter("command")
-        << "\" and probably did not get the expected result.";
+        << "\" and probably did not get the expected result."
+        << SNAP_LOG_SEND;
 }
 
 
@@ -396,7 +401,8 @@ void connection_with_send_message::msg_reply_with_unknown(message & msg)
         SNAP_LOG_WARNING
             << "could not reply to \""
             << msg.get_command()
-            << "\" with UNKNOWN message.";
+            << "\" with UNKNOWN message."
+            << SNAP_LOG_SEND;
     }
 }
 
@@ -447,7 +453,8 @@ void connection_with_send_message::ready(message & msg)
     // do nothing by default -- user is expected to overload this function
     //
     SNAP_LOG_WARNING
-        << "default ready() function was called.";
+        << "default ready() function was called."
+        << SNAP_LOG_SEND;
 }
 
 
@@ -466,7 +473,8 @@ void connection_with_send_message::stop(bool quitting)
     // do nothing by default -- user is expected to overload this function
     //
     SNAP_LOG_WARNING
-        << "default stop() function was called.";
+        << "default stop() function was called."
+        << SNAP_LOG_SEND;
 }
 
 

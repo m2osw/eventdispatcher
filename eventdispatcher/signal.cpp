@@ -215,7 +215,7 @@ signal::signal(int posix_signal)
         err += " -- ";
         err += strerror(e);
         err += ").";
-        SNAP_LOG_ERROR << err;
+        SNAP_LOG_ERROR << err << SNAP_LOG_SEND;
         throw event_dispatcher_runtime_error(err);
     }
 
@@ -331,7 +331,8 @@ void signal::process()
                         << e
                         << " -- "
                         << strerror(e)
-                        << ").";
+                        << ")."
+                        << SNAP_LOG_SEND;
                 }
             }
             else
@@ -342,7 +343,8 @@ void signal::process()
                     << r
                     << ", expected "
                     << sizeof(f_signal_info)
-                    << ")";
+                    << ")"
+                    << SNAP_LOG_SEND;
             }
             break;
         }
@@ -390,7 +392,8 @@ void signal::close()
                     << " with sigprocmask(). (errno: "
                     << e
                     << " -- "
-                    << strerror(e);
+                    << strerror(e)
+                    << SNAP_LOG_SEND;
                 std::cerr << "sigprocmask() failed to unblock signal." << std::endl;
 
                 std::terminate();

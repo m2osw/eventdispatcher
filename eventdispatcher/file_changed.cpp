@@ -135,7 +135,8 @@ void file_changed::watch_t::add_watch(int inotify)
             << e
             << " -- "
             << strerror(e)
-            << ").";
+            << ")."
+            << SNAP_LOG_SEND;
 
         // it did not work
         //
@@ -166,7 +167,8 @@ void file_changed::watch_t::merge_watch(int inotify, event_mask_t const events)
             << e
             << " -- "
             << strerror(e)
-            << ").";
+            << ")."
+            << SNAP_LOG_SEND;
 
         // it did not work
         //
@@ -191,7 +193,8 @@ void file_changed::watch_t::remove_watch(int inotify)
                 << e
                 << " -- "
                 << strerror(e)
-                << ").";
+                << ")."
+                << SNAP_LOG_SEND;
         }
 
         // we can remove it just once
@@ -387,7 +390,8 @@ void file_changed::process_read()
                 << e
                 << " -- "
                 << strerror(e)
-                << ").";
+                << ")."
+                << SNAP_LOG_SEND;
             process_error();
             return;
         }
@@ -423,7 +427,8 @@ void file_changed::process_read()
                 if((ievent.mask & IN_Q_OVERFLOW) != 0)
                 {
                     SNAP_LOG_ERROR
-                        << "Received an event queue overflow error.";
+                        << "Received an event queue overflow error."
+                        << SNAP_LOG_SEND;
                 }
                 else
                 {

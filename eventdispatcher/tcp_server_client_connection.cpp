@@ -269,7 +269,7 @@ std::string tcp_server_client_connection::get_client_addr() const
         err += " -- ";
         err += strerror(e);
         err += ").";
-        SNAP_LOG_FATAL << err;
+        SNAP_LOG_FATAL << err << SNAP_LOG_SEND;
         throw event_dispatcher_runtime_error(err);
     }
 
@@ -383,7 +383,8 @@ bool tcp_server_client_connection::define_address()
                 << e
                 << " -- "
                 << strerror(e)
-                << ").";
+                << ")."
+                << SNAP_LOG_SEND;
             f_length = 0;
             return false;
         }
@@ -393,7 +394,8 @@ bool tcp_server_client_connection::define_address()
             SNAP_LOG_ERROR
                 << "address family ("
                 << f_address.ss_family
-                << ") returned by getsockname() is not understood, it is neither an IPv4 nor IPv6.";
+                << ") returned by getsockname() is not understood, it is neither an IPv4 nor IPv6."
+                << SNAP_LOG_SEND;
             f_length = 0;
             return false;
         }

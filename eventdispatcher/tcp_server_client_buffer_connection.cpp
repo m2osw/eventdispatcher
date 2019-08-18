@@ -262,7 +262,8 @@ void tcp_server_client_buffer_connection::process_read()
                     << e
                     << " -- "
                     << strerror(e)
-                    << ").";
+                    << ")."
+                    << SNAP_LOG_SEND;
                 process_error();
                 return;
             }
@@ -311,7 +312,8 @@ void tcp_server_client_buffer_connection::process_write()
                 << e
                 << " -- "
                 << strerror(e)
-                << ").";
+                << ")."
+                << SNAP_LOG_SEND;
             process_error();
             return;
         }

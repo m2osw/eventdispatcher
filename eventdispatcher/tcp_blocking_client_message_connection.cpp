@@ -234,7 +234,8 @@ void tcp_blocking_client_message_connection::run()
                     return;
                 }
                 SNAP_LOG_FATAL
-                    << "blocking connection timed out.";
+                    << "blocking connection timed out."
+                    << SNAP_LOG_SEND;
                 throw event_dispatcher_runtime_error(
                     "tcp_blocking_client_message_connection::run(): blocking"
                     " connection timed out.");

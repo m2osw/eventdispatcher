@@ -147,7 +147,8 @@ udp_server::udp_server(std::string const & addr, int port, int family, std::stri
                 << f_addrinfo->ai_addrlen
                 << " and address is \""
                 << addr_buf
-                << "\"";
+                << "\""
+                << SNAP_LOG_SEND;
         throw event_dispatcher_runtime_error("could not bind UDP socket to \"" + f_addr + ":" + std::to_string(port) + "\"");
     }
 
@@ -213,7 +214,8 @@ udp_server::udp_server(std::string const & addr, int port, int family, std::stri
                     << "could not set IP_MULTICAST_ALL to zero, e = "
                     << e
                     << " -- "
-                    << strerror(e);
+                    << strerror(e)
+                    << SNAP_LOG_SEND;
         }
     }
 }

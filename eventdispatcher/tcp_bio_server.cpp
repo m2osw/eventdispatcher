@@ -415,7 +415,8 @@ tcp_bio_client::pointer_t tcp_bio_server::accept()
             {
                 SNAP_LOG_WARNING
                     << "tcp_bio_server::accept(): an error occurred trying"
-                       " to mark accepted socket with SO_KEEPALIVE.";
+                       " to mark accepted socket with SO_KEEPALIVE."
+                    << SNAP_LOG_SEND;
             }
         }
     }
@@ -445,7 +446,8 @@ tcp_bio_client::pointer_t tcp_bio_server::accept()
             << cipher_name
             << "\" representing "
             << cipher_bits
-            << " bits of encryption.";
+            << " bits of encryption."
+            << SNAP_LOG_SEND;
     }
 
     return client;

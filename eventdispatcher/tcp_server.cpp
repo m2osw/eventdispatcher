@@ -409,7 +409,8 @@ int tcp_server::accept( int const max_wait_ms )
         {
             SNAP_LOG_WARNING
                 << "tcp_server::accept(): an error occurred trying to mark"
-                   " accepted socket with SO_KEEPALIVE.";
+                   " accepted socket with SO_KEEPALIVE."
+                << SNAP_LOG_SEND;
         }
     }
 

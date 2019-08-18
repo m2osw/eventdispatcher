@@ -146,7 +146,8 @@ bool udp_server_message_connection::send_message(
     {
         // TODO: add errno to message
         SNAP_LOG_ERROR
-            << "udp_server_message_connection::send_message(): could not send UDP message.";
+            << "udp_server_message_connection::send_message(): could not send UDP message."
+            << SNAP_LOG_SEND;
         return false;
     }
 
@@ -190,7 +191,8 @@ void udp_server_message_connection::process_read()
                         // our secret code and the message secret code do not match
                         //
                         SNAP_LOG_ERROR
-                            << "the incoming message has an unexpected udp_secret code, message ignored.";
+                            << "the incoming message has an unexpected udp_secret code, message ignored."
+                            << SNAP_LOG_SEND;
                         return;
                     }
 
@@ -199,7 +201,8 @@ void udp_server_message_connection::process_read()
                     // the message
                     //
                     SNAP_LOG_WARNING
-                        << "no udp_secret=... parameter was expected (missing set_secret_code() call for this application?)";
+                        << "no udp_secret=... parameter was expected (missing set_secret_code() call for this application?)"
+                        << SNAP_LOG_SEND;
                 }
             }
             else if(!expected.empty())
@@ -207,7 +210,8 @@ void udp_server_message_connection::process_read()
                 // secret code is missing from incoming message
                 //
                 SNAP_LOG_ERROR
-                    << "the incoming message was expected to have udp_secret code, message ignored";
+                    << "the incoming message was expected to have udp_secret code, message ignored"
+                    << SNAP_LOG_SEND;
                 return;
             }
 
@@ -221,7 +225,8 @@ void udp_server_message_connection::process_read()
                 << "udp_server_message_connection::process_read() was asked"
                    " to process an invalid message ("
                 << udp_message
-                << ")";
+                << ")"
+                << SNAP_LOG_SEND;
         }
     }
 }

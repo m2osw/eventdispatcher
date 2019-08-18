@@ -518,7 +518,8 @@ void connection::calculate_next_tick()
         //
         //SNAP_LOG_DEBUG
         //        << "snap_communicator::snap_connection::calculate_next_tick()"
-        //           " called even though the next date is still larger than 'now'.";
+        //           " called even though the next date is still larger than 'now'."
+        //        << SNAP_LOG_SEND;
         return;
     }
 
@@ -719,7 +720,8 @@ void connection::keep_alive() const
                 << e
                 << " ("
                 << strerror(e)
-                << ") occurred trying to mark socket with SO_KEEPALIVE.";
+                << ") occurred trying to mark socket with SO_KEEPALIVE."
+                << SNAP_LOG_SEND;
         }
     }
 }
@@ -898,7 +900,8 @@ void connection::process_empty_buffer()
             << get_socket()
             << " of connection \""
             << f_name
-            << "\" was marked as done, removing in process_empty_buffer().";
+            << "\" was marked as done, removing in process_empty_buffer()."
+            << SNAP_LOG_SEND;
 
         remove_from_communicator();
     }
@@ -945,7 +948,8 @@ void connection::process_error()
             << get_socket()
             << " of connection \""
             << f_name
-            << "\" was marked as erroneous by the kernel or was closed (-1).";
+            << "\" was marked as erroneous by the kernel or was closed (-1)."
+            << SNAP_LOG_SEND;
     }
     else
     {
@@ -957,7 +961,8 @@ void connection::process_error()
             << get_socket()
             << " of connection \""
             << f_name
-            << "\" was marked as erroneous by the kernel.";
+            << "\" was marked as erroneous by the kernel."
+            << SNAP_LOG_SEND;
     }
 
     remove_from_communicator();
@@ -989,7 +994,8 @@ void connection::process_hup()
         << get_socket()
         << " of connection \""
         << f_name
-        << "\" hang up.";
+        << "\" hang up."
+        << SNAP_LOG_SEND;
 
     remove_from_communicator();
 }
@@ -1016,7 +1022,8 @@ void connection::process_invalid()
     SNAP_LOG_ERROR
         << "socket of connection \""
         << f_name
-        << "\" was marked as invalid by the kernel.";
+        << "\" was marked as invalid by the kernel."
+        << SNAP_LOG_SEND;
 
     remove_from_communicator();
 }

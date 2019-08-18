@@ -74,7 +74,8 @@ std::int64_t get_current_date()
             << err
             << " ("
             << strerror(err)
-            << ")";
+            << ")"
+            << SNAP_LOG_SEND;
         throw event_dispatcher_runtime_error("gettimeofday() failed");
     }
 
@@ -102,7 +103,8 @@ std::int64_t get_current_date_ns()
             << err
             << " ("
             << strerror(err)
-            << ")";
+            << ")"
+            << SNAP_LOG_SEND;
         throw event_dispatcher_runtime_error("clock_gettime() failed");
     }
 

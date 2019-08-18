@@ -1,3 +1,9 @@
+eventdispatcher (1.0.4.0~xenial) xenial; urgency=high
+
+  * Update to compile with the newer version of snaplogger.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 18 Aug 2019 14:34:01 -0800
+
 eventdispatcher (1.0.3.0~xenial) xenial; urgency=high
 
   * Add the libssl-dev as a build dependency.
