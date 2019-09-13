@@ -3,8 +3,8 @@
 # Once done this will define
 #
 # EVENTDISPATCHER_FOUND        - System has EventDispatcher
-# EVENTDISPATCHER_INCLUDE_DIR  - The EventDispatcher include directories
-# EVENTDISPATCHER_LIBRARY      - The libraries needed to use EventDispatcher (none)
+# EVENTDISPATCHER_INCLUDE_DIRS - The EventDispatcher include directories
+# EVENTDISPATCHER_LIBRARIES    - The libraries needed to use EventDispatcher (none)
 # EVENTDISPATCHER_DEFINITIONS  - Compiler switches required for using EventDispatcher (none)
 #
 # License:
@@ -35,9 +35,10 @@ find_path(
     PATHS
         $ENV{EVENTDISPATCHER_INCLUDE_DIR}
 )
+
 find_library(
     EVENTDISPATCHER_LIBRARY
-        EventDispatcher
+        eventdispatcher
 
     PATHS
         $ENV{EVENTDISPATCHER_LIBRARY}
@@ -52,6 +53,7 @@ set(EVENTDISPATCHER_INCLUDE_DIRS ${EVENTDISPATCHER_INCLUDE_DIR})
 set(EVENTDISPATCHER_LIBRARIES    ${EVENTDISPATCHER_LIBRARY})
 
 include( FindPackageHandleStandardArgs )
+
 # handle the QUIETLY and REQUIRED arguments and set EVENTDISPATHCER_FOUND to
 # TRUE if all listed variables are TRUE
 find_package_handle_standard_args(
