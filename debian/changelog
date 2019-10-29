@@ -1,3 +1,9 @@
+eventdispatcher (1.0.6.0~xenial) xenial; urgency=high
+
+  * Updated to work with the newer version of cppthread.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Tue, 29 Sep 2019 01:51:46 -0800
+
 eventdispatcher (1.0.5.0~xenial) xenial; urgency=high
 
   * Fixed the name of the library in the cmake file to lowercase only.
