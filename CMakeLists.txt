@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2019  Made to Order Software Corp.  All Rights Reserved
+# Copyright (c) 2013-2020  Made to Order Software Corp.  All Rights Reserved
 #
 # https://snapwebsites.org/project/eventdispatcher
 # contact@m2osw.com
@@ -32,6 +32,9 @@ find_package(OpenSSL          REQUIRED)
 find_package(SnapDev          REQUIRED)
 find_package(SnapLogger       REQUIRED)
 find_package(SnapDoxygen              )
+find_package(Qt5Core                  )
+find_package(Qt5Widgets               )
+find_package(Qt5X11Extras             )
 
 SnapGetVersion(EVENTDISPATCHER ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -40,10 +43,11 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-add_subdirectory(eventdispatcher)
-add_subdirectory(tests          )
-add_subdirectory(doc            )
-add_subdirectory(cmake          )
-#add_subdirectory(tools          )
+add_subdirectory(eventdispatcher   )
+add_subdirectory(eventdispatcher_qt)
+add_subdirectory(tests             )
+add_subdirectory(doc               )
+add_subdirectory(cmake             )
+#add_subdirectory(tools             )
 
 # vim: ts=4 sw=4 et

@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2019  Made to Order Software Corp.  All Rights Reserved
+# Copyright (c) 2013-2020  Made to Order Software Corp.  All Rights Reserved
 #
 # https://snapwebsites.org/project/eventdispatcher
 # contact@m2osw.com
@@ -25,6 +25,14 @@ install(
 
     DESTINATION
         share/cmake/EventDispatcher
+)
+
+install(
+    FILES
+        EventDispatcherQtConfig.cmake
+
+    DESTINATION
+        share/cmake/EventDispatcherQt
 )
 
 # vim: ts=4 sw=4 et nocindent

@@ -1,3 +1,23 @@
+eventdispatcher (1.1.0.0~bionic) bionic; urgency=high
+
+  * Added the Qt connection since we need it in VE.
+  * Made a new library so you do not need to use the Qt extension (which would
+    otherwise force you to install Qt to run eventdispatcher).
+
+ -- Alexis Wilke <alexis@m2osw.com>  Fri,  3 May 2020 12:28:46 -0800
+
+eventdispatcher (1.0.6.1~bionic) bionic; urgency=high
+
+  * Fixed the name of the library as a dependency of the -dev version.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Fri,  1 May 2020 12:46:39 -0800
+
+eventdispatcher (1.0.6.0~bionic) bionic; urgency=high
+
+  * Create a bionic version.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Fri,  1 May 2020 00:18:45 -0800
+
 eventdispatcher (1.0.6.0~xenial) xenial; urgency=high
 
   * Updated to work with the newer version of cppthread.

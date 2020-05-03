@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2012-2020  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/eventdispatcher
 // contact@m2osw.com
@@ -16,28 +16,38 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#pragma once
 
-// self
-//
-#include    "main.h"
-
-// eventdispatcher lib
-//
-#include    <eventdispatcher/version.h>
+#include "eventdispatcher/connection.h"
+#include "eventdispatcher/exception.h"
 
 
 
-CATCH_TEST_CASE("Version", "[version]")
+namespace ed
 {
-    CATCH_START_SECTION("verify runtime vs compile time version numbers")
-    {
-        CATCH_REQUIRE(ed::get_major_version()   == EVENTDISPATCHER_VERSION_MAJOR);
-        CATCH_REQUIRE(ed::get_release_version() == EVENTDISPATCHER_VERSION_MINOR);
-        CATCH_REQUIRE(ed::get_patch_version()   == EVENTDISPATCHER_VERSION_PATCH);
-        CATCH_REQUIRE(strcmp(ed::get_version_string(), EVENTDISPATCHER_VERSION_STRING) == 0);
-    }
-    CATCH_END_SECTION()
-}
 
 
+DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_no_connection_found);
+
+
+class qt_connection
+    : public connection
+{
+public:
+    typedef std::shared_ptr<qt_connection> pointer_t;
+
+                                qt_connection();
+    virtual                     ~qt_connection() override;
+
+    // implements connection
+    virtual int                 get_socket() const override;
+    virtual bool                is_reader() const override;
+    virtual void                process_read() override;
+
+private:
+    int                         f_fd = -1;
+};
+
+
+} // namespace snap
 // vim: ts=4 sw=4 et

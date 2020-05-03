@@ -1,0 +1,3 @@
+usr/include/eventdispatcher_qt.h
+usr/lib/libeventdispatcher_qt.so
+usr/share/cmake/EventDispatcherQtConfig/*

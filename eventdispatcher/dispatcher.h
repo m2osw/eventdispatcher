@@ -27,7 +27,8 @@
 
 // snapwebsites lib
 //
-#include    "eventdispatcher/snap_communicator.h"
+#include    "eventdispatcher/dispatcher_base.h"
+#include    "eventdispatcher/communicator.h"
 #include    "eventdispatcher/utils.h"
 
 
@@ -367,7 +368,7 @@ public:
          */
         bool match_is_one_to_one_match() const
         {
-            return f_match == &snap::dispatcher<T>::dispatcher_match::one_to_one_match;
+            return f_match == &ed::dispatcher<T>::dispatcher_match::one_to_one_match;
         }
 
         /** \brief Check whether f_match is always_match().
@@ -379,7 +380,7 @@ public:
          */
         bool match_is_always_match() const
         {
-            return f_match == &snap::dispatcher<T>::dispatcher_match::always_match;
+            return f_match == &ed::dispatcher<T>::dispatcher_match::always_match;
         }
 
         /** \brief Check whether f_match is always_match().
@@ -391,7 +392,7 @@ public:
          */
         bool match_is_callback_match() const
         {
-            return f_match == &snap::dispatcher<T>::dispatcher_match::callback_match;
+            return f_match == &ed::dispatcher<T>::dispatcher_match::callback_match;
         }
     };
 
@@ -410,7 +411,7 @@ private:
      * match and execute functions. This is used to go through
      * the matches and execute (dispatch) as required.
      */
-    typename snap::dispatcher<T>::dispatcher_match::vector_t  f_matches = {};
+    typename ed::dispatcher<T>::dispatcher_match::vector_t  f_matches = {};
 
     /** \brief Tell whether messages should be traced or not.
      *
@@ -440,7 +441,7 @@ public:
      * \param[in] matches  The array of dispatch keywords and functions.
      * \param[in] matches_size  The sizeof() of the matches array.
      */
-    dispatcher<T>(T * connection, typename snap::dispatcher<T>::dispatcher_match::vector_t matches)
+    dispatcher<T>(T * connection, typename ed::dispatcher<T>::dispatcher_match::vector_t matches)
         : f_connection(connection)
         , f_matches(matches)
     {
@@ -506,71 +507,71 @@ public:
         f_matches.reserve(f_matches.size() + 7);
 
         {
-            typename snap::dispatcher<T>::dispatcher_match m;
+            typename ed::dispatcher<T>::dispatcher_match m;
             m.f_expr = "HELP";
             m.f_execute = &T::msg_help;
             //m.f_match = <default>;
             f_matches.push_back(m);
         }
         {
-            typename snap::dispatcher<T>::dispatcher_match m;
+            typename ed::dispatcher<T>::dispatcher_match m;
             m.f_expr = "ALIVE";
             m.f_execute = &T::msg_alive;
             //m.f_match = <default>;
             f_matches.push_back(m);
         }
         {
-            typename snap::dispatcher<T>::dispatcher_match m;
+            typename ed::dispatcher<T>::dispatcher_match m;
             m.f_expr = "LOG";
             m.f_execute = &T::msg_log;
             //m.f_match = <default>;
             f_matches.push_back(m);
         }
         {
-            typename snap::dispatcher<T>::dispatcher_match m;
+            typename ed::dispatcher<T>::dispatcher_match m;
             m.f_expr = "QUITTING";
             m.f_execute = &T::msg_quitting;
             //m.f_match = <default>;
             f_matches.push_back(m);
         }
         {
-            typename snap::dispatcher<T>::dispatcher_match m;
+            typename ed::dispatcher<T>::dispatcher_match m;
             m.f_expr = "READY";
             m.f_execute = &T::msg_ready;
             //m.f_match = <default>;
             f_matches.push_back(m);
         }
         {
-            typename snap::dispatcher<T>::dispatcher_match m;
+            typename ed::dispatcher<T>::dispatcher_match m;
             m.f_expr = "RESTART";
             m.f_execute = &T::msg_restart;
             //m.f_match = <default>;
             f_matches.push_back(m);
         }
         {
-            typename snap::dispatcher<T>::dispatcher_match m;
+            typename ed::dispatcher<T>::dispatcher_match m;
             m.f_expr = "STOP";
             m.f_execute = &T::msg_stop;
             //m.f_match = <default>;
             f_matches.push_back(m);
         }
         {
-            typename snap::dispatcher<T>::dispatcher_match m;
+            typename ed::dispatcher<T>::dispatcher_match m;
             m.f_expr = "UNKNOWN";
             m.f_execute = &T::msg_log_unknown;
             //m.f_match = <default>;
             f_matches.push_back(m);
         }
         {
-            typename snap::dispatcher<T>::dispatcher_match m;
+            typename ed::dispatcher<T>::dispatcher_match m;
             m.f_expr = nullptr; // any other message
             m.f_execute = &T::msg_reply_with_unknown;
-            m.f_match = &snap::dispatcher<T>::dispatcher_match::always_match;
+            m.f_match = &ed::dispatcher<T>::dispatcher_match::always_match;
             f_matches.push_back(m);
         }
     }
 
-    typename snap::dispatcher<T>::dispatcher_match::vector_t const & get_matches() const
+    typename ed::dispatcher<T>::dispatcher_match::vector_t const & get_matches() const
     {
         return f_matches;
     }
@@ -606,7 +607,8 @@ public:
             SNAP_LOG_TRACE
                 << "dispatch message \""
                 << msg.to_message()
-                << "\".";
+                << "\"."
+                << SNAP_LOG_SEND;
         }
 
         // go in order to execute matches
@@ -650,11 +652,11 @@ public:
     /** \brief Retrieve the list of commands.
      *
      * This function transforms the vector of f_matches in a list of
-     * commands in a QStringList.
+     * commands in a string_list_t.
      *
      * \param[in,out] commands  The place where the list of commands is saved.
      *
-     * \return true if the commands were all determined, false if some need
+     * \return false if the commands were all determined, true if some need
      *         help from the user of this dispatcher.
      */
     virtual bool get_commands(string_list_t & commands) override
@@ -687,7 +689,7 @@ public:
                 //       and digits and the underscore it would work
                 //       with fromLatin1() too
                 //
-                commands << m.f_expr;
+                commands.push_back(m.f_expr);
             }
             else
             {

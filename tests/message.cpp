@@ -22,7 +22,7 @@
 #include    "main.h"
 
 
-// snaplogger lib
+// eventdispatcher lib
 //
 #include    <eventdispatcher/message.h>
 

@@ -4,7 +4,7 @@
 # This will work if you built the environment using our ~/bin/build-snap script
 
 PROJECT_NAME=eventdispatcher
-PROCESSORS=4
+PROCESSORS=`nproc`
 
 case $1 in
 "-l")
