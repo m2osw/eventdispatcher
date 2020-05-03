@@ -1,3 +1,9 @@
+eventdispatcher (1.1.0.1~bionic) bionic; urgency=high
+
+  * Added the source dependency on Qt in the control file for the build.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Fri,  3 May 2020 13:18:26 -0800
+
 eventdispatcher (1.1.0.0~bionic) bionic; urgency=high
 
   * Added the Qt connection since we need it in VE.
