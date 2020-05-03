@@ -41,4 +41,4 @@ usr/include/eventdispatcher/udp_server_message_connection.h
 usr/include/eventdispatcher/utils.h
 usr/include/eventdispatcher/version.h
 usr/lib/libeventdispatcher.so
-usr/share/cmake/EventDispatcherConfig/*
+usr/share/cmake/EventDispatcher/*

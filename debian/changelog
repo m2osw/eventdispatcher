@@ -1,8 +1,9 @@
-eventdispatcher (1.1.0.1~bionic) bionic; urgency=high
+eventdispatcher (1.1.0.3~bionic) bionic; urgency=high
 
   * Added the source dependency on Qt in the control file for the build.
+  * Fixed the name of a file files in the .install files.
 
- -- Alexis Wilke <alexis@m2osw.com>  Fri,  3 May 2020 13:18:26 -0800
+ -- Alexis Wilke <alexis@m2osw.com>  Fri,  3 May 2020 13:33:46 -0800
 
 eventdispatcher (1.1.0.0~bionic) bionic; urgency=high
 
