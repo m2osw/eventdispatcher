@@ -260,11 +260,9 @@ bool message::from_message(std::string const & original_message)
         {
             // first we have to read the parameter name (up to the '=')
             //
-            std::string param_name;
-            for(; *m != '\0' && *m != '='; ++m)
-            {
-                param_name += *m;
-            }
+            char const *s(m);
+            for(; *m != '\0' && *m != '='; ++m);
+            std::string const param_name(s, m - s);
             if(param_name.empty())
             {
                 // parameters must have a name
@@ -477,6 +475,7 @@ std::string message::to_message() const
         {
             f_cached_message += sep;
             f_cached_message += p.first;
+            f_cached_message += '=';
 
             std::string safe_value(snap::string_replace_many(
                     p.second,
