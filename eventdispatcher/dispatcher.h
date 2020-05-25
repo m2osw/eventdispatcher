@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2012-2020  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/eventdispatcher
 // contact@m2osw.com
@@ -103,6 +103,10 @@ namespace ed
  * \note
  * This is documented here because it is a template and we cannot do
  * that in the .cpp (at least older versions of doxygen could not.)
+ *
+ * \todo
+ * Transform the dispatcher_match with classes so we can build the
+ * array safely.
  */
 template<typename T>
 class dispatcher
@@ -683,11 +687,6 @@ public:
             {
                 // add the f_expr as is since it represents a command
                 // as is
-                //
-                // note: the fromUtf8() is not extremely important
-                //       since commands have to be uppercase letters
-                //       and digits and the underscore it would work
-                //       with fromLatin1() too
                 //
                 commands.push_back(m.f_expr);
             }
