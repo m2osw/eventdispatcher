@@ -43,30 +43,35 @@ CATCH_TEST_CASE("message", "[message]")
         //
         CATCH_REQUIRE(msg.get_sent_from_server().empty());
         msg.set_sent_from_server("remote");
+        CATCH_REQUIRE_FALSE(msg.get_sent_from_server().empty());
         CATCH_REQUIRE(msg.get_sent_from_server() == "remote");
 
         // SENT FROM SERVICE
         //
         CATCH_REQUIRE(msg.get_sent_from_service().empty());
         msg.set_sent_from_service("firewall");
+        CATCH_REQUIRE_FALSE(msg.get_sent_from_service().empty());
         CATCH_REQUIRE(msg.get_sent_from_service() == "firewall");
 
         // SERVER
         //
         CATCH_REQUIRE(msg.get_server().empty());
         msg.set_server("jungle");
+        CATCH_REQUIRE_FALSE(msg.get_server().empty());
         CATCH_REQUIRE(msg.get_server() == "jungle");
 
         // SERVICE
         //
         CATCH_REQUIRE(msg.get_service().empty());
         msg.set_service("watchdog");
+        CATCH_REQUIRE_FALSE(msg.get_service().empty());
         CATCH_REQUIRE(msg.get_service() == "watchdog");
 
         // COMMAND
         //
         CATCH_REQUIRE(msg.get_command().empty());
         msg.set_command("CONNECT");
+        CATCH_REQUIRE_FALSE(msg.get_command().empty());
         CATCH_REQUIRE(msg.get_command() == "CONNECT");
 
         // MESSAGE VERSION
@@ -178,9 +183,91 @@ CATCH_TEST_CASE("message", "[message]")
     }
     CATCH_END_SECTION()
 
+    CATCH_START_SECTION("To & From Messages (simple)")
+    {
+        ed::message msg;
+
+        CATCH_REQUIRE(msg.get_command().empty());
+        msg.set_command("FIRE");
+        CATCH_REQUIRE_FALSE(msg.get_command().empty());
+        CATCH_REQUIRE(msg.get_command() == "FIRE");
+
+        CATCH_REQUIRE_FALSE(msg.has_parameter("name"));
+        msg.add_parameter("name", "Charles");
+        CATCH_REQUIRE(msg.has_parameter("name"));
+        CATCH_REQUIRE(msg.get_parameter("name") == "Charles");
+
+        CATCH_REQUIRE_FALSE(msg.has_parameter("length"));
+        msg.add_parameter("length", -35);
+        CATCH_REQUIRE(msg.has_parameter("length"));
+        CATCH_REQUIRE(msg.get_parameter("length") == "-35");
+        CATCH_REQUIRE(msg.get_integer_parameter("length") == -35);
+
+        std::string const m(msg.to_message());
+
+        ed::message rcv;
+
+        CATCH_REQUIRE(rcv.get_command().empty());
+        CATCH_REQUIRE_FALSE(rcv.has_parameter("name"));
+        CATCH_REQUIRE_FALSE(rcv.has_parameter("length"));
+
+        rcv.from_message(m);
+
+        CATCH_REQUIRE_FALSE(rcv.get_command().empty());
+        CATCH_REQUIRE(rcv.get_command() == "FIRE");
+
+        CATCH_REQUIRE(rcv.has_parameter("name"));
+        CATCH_REQUIRE(rcv.get_parameter("name") == "Charles");
+
+        CATCH_REQUIRE(rcv.has_parameter("length"));
+        CATCH_REQUIRE(rcv.get_parameter("length") == "-35");
+        CATCH_REQUIRE(rcv.get_integer_parameter("length") == -35);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("To & From Messages (full message)")
+    {
+        ed::message msg;
+
+        CATCH_REQUIRE(msg.get_command().empty());
+        msg.set_command("FIRE");
+        CATCH_REQUIRE_FALSE(msg.get_command().empty());
+        CATCH_REQUIRE(msg.get_command() == "FIRE");
+
+        CATCH_REQUIRE_FALSE(msg.has_parameter("name"));
+        msg.add_parameter("name", "Charles");
+        CATCH_REQUIRE(msg.has_parameter("name"));
+        CATCH_REQUIRE(msg.get_parameter("name") == "Charles");
+
+        CATCH_REQUIRE_FALSE(msg.has_parameter("length"));
+        msg.add_parameter("length", -35);
+        CATCH_REQUIRE(msg.has_parameter("length"));
+        CATCH_REQUIRE(msg.get_parameter("length") == "-35");
+        CATCH_REQUIRE(msg.get_integer_parameter("length") == -35);
+
+        std::string const m(msg.to_message());
+
+        ed::message rcv;
+
+        CATCH_REQUIRE(rcv.get_command().empty());
+        CATCH_REQUIRE_FALSE(rcv.has_parameter("name"));
+        CATCH_REQUIRE_FALSE(rcv.has_parameter("length"));
+
+        rcv.from_message(m);
+
+        CATCH_REQUIRE_FALSE(rcv.get_command().empty());
+        CATCH_REQUIRE(rcv.get_command() == "FIRE");
+
+        CATCH_REQUIRE(rcv.has_parameter("name"));
+        CATCH_REQUIRE(rcv.get_parameter("name") == "Charles");
+
+        CATCH_REQUIRE(rcv.has_parameter("length"));
+        CATCH_REQUIRE(rcv.get_parameter("length") == "-35");
+        CATCH_REQUIRE(rcv.get_integer_parameter("length") == -35);
+    }
+    CATCH_END_SECTION()
+
     // TODO:
-    //bool                    from_message(std::string const & msg);
-    //std::string             to_message() const;
     //void                    reply_to(message const & msg);
     //parameters_t const &    get_all_parameters() const;
 }
