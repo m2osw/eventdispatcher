@@ -1,7 +1,15 @@
-eventdispatcher (1.1.0.3~bionic) bionic; urgency=high
+eventdispatcher (1.1.1.0~bionic) bionic; urgency=high
+
+  * Fixed call from thread_signal_handler::process_read() which would loop
+    forever instead of calling thread_done_signal::process_read().
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 24 May 2020 17:11:25 -0800
+
+eventdispatcher (1.1.0.4~bionic) bionic; urgency=high
 
   * Added the source dependency on Qt in the control file for the build.
   * Fixed the name of a file files in the .install files.
+  * Added the new eventdispatcher_qt to the docs.
 
  -- Alexis Wilke <alexis@m2osw.com>  Fri,  3 May 2020 13:33:46 -0800
 

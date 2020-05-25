@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2012-2020  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/eventdispatcher
 // contact@m2osw.com
@@ -186,7 +186,7 @@ public:
          */
         virtual void process_read()
         {
-            thread_signal_handler::process_read();
+            thread_done_signal::process_read();
 
             f_parent_impl->thread_done();
         }
