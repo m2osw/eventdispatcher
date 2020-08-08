@@ -217,4 +217,3 @@ void qt_connection::process_read()
 
 } // namespace ed
 // vim: ts=4 sw=4 et
-

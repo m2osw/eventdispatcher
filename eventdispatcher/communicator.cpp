@@ -58,6 +58,7 @@
 //
 #include    <cppthread/guard.h>
 #include    <cppthread/mutex.h>
+#include    <cppthread/thread.h>
 
 
 // snaplogger lib
@@ -487,13 +488,13 @@ bool communicator::run()
             {
                 throw event_dispatcher_runtime_error("communicator::run(): poll() returned a number of events to handle larger than the input allows");
             }
-            //SNAP_LOG_TRACE
-            //    <<"tid="
-            //    << gettid()
-            //    << ", communicator::run(): ------------------- new set of "
-            //    << r
-            //    << " events to handle"
-            //    << SNAP_LOG_SEND;
+//SNAP_LOG_TRACE
+//    <<"tid="
+//    << cppthread::gettid()
+//    << ", communicator::run(): ------------------- new set of "
+//    << r
+//    << " events to handle"
+//    << SNAP_LOG_SEND;
 
             // check each connection one by one for:
             //
@@ -536,6 +537,14 @@ bool communicator::run()
 
                     // if any events were found by poll(), process them now
                     //
+//SNAP_LOG_TRACE
+//    <<"tid="
+//    << cppthread::gettid()
+//    << ", communicator::run(): events for "
+//    << c->get_name()
+//    << " = "
+//    << fd->revents
+//    << SNAP_LOG_SEND;
                     if(fd->revents != 0)
                     {
                         // an event happened on this one
