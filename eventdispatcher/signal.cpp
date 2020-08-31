@@ -302,9 +302,11 @@ pid_t signal::get_child_pid() const
  * structure. You can access that structure and its content using this
  * function.
  *
- * The structure is return read/write since there is nearly nothing we
- * do that would force us to make it read-only. However, in most cases
- * you probably want to think about it as a read-only structure.
+ * The structure is return as read-only. You should not modify it. If you
+ * need to do so, make a copy.
+ *
+ * The structre remains valid until your process_signal() function returns.
+ * If you need the info after, make sure to make a copy.
  *
  * \return A direct pointer to the signal info in the object.
  */
