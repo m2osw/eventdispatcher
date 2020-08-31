@@ -557,7 +557,7 @@ bool communicator::run()
                             if(c->is_signal())
                             {
                                 signal * ss(dynamic_cast<signal *>(c.get()));
-                                if(ss)
+                                if(ss != nullptr)
                                 {
                                     ss->process();
                                 }

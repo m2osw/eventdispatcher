@@ -57,6 +57,7 @@ public:
     virtual int                 get_socket() const override;
 
     pid_t                       get_child_pid() const;
+    signalfd_siginfo const *    get_signal_info() const;
 
 private:
     friend communicator;

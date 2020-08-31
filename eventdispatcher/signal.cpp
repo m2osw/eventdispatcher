@@ -296,6 +296,24 @@ pid_t signal::get_child_pid() const
 }
 
 
+/** \brief Get a copy of the current signal.
+ *
+ * Whenever we read a signal, the data is saved in the internal f_signal_info
+ * structure. You can access that structure and its content using this
+ * function.
+ *
+ * The structure is return read/write since there is nearly nothing we
+ * do that would force us to make it read-only. However, in most cases
+ * you probably want to think about it as a read-only structure.
+ *
+ * \return A direct pointer to the signal info in the object.
+ */
+signalfd_siginfo const * signal::get_signal_info() const
+{
+    return &f_signal_info;
+}
+
+
 /** \brief Processes this signal.
  *
  * This function reads the signal "socket" for all the signal received
