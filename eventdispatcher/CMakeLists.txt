@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2019  Made to Order Software Corp.  All Rights Reserved
+# Copyright (c) 2012-2020  Made to Order Software Corp.  All Rights Reserved
 #
 # https://snapwebsites.org/project/eventdispatcher
 # contact@m2osw.com
@@ -54,6 +54,7 @@ add_library(${PROJECT_NAME} SHARED
                 pipe_message_connection.cpp
 
         signal.cpp
+        signal_handler.cpp
 
         timer.cpp
 
