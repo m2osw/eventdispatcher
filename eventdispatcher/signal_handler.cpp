@@ -117,7 +117,7 @@ constexpr char const * g_signal_names[64] =
  * some signals, it's generally totally useless so we use a mask to know
  * which signals to write events for.
  */
-signal_handler::signal_mask_t       g_show_stack = 0;
+signal_handler::signal_mask_t       g_show_stack = signal_handler::DEFAULT_SHOW_STACK;
 
 
 /** \brief The signal_handler allocated.

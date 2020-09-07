@@ -1,3 +1,11 @@
+eventdispatcher (1.1.6.0~bionic) bionic; urgency=high
+
+  * Fixed the default show stack mask initialization.
+  * Installed the signal_handler.h header file.
+  * Fixed the CMake files (the Qt/Non-Qt were swapped).
+
+ -- Alexis Wilke <alexis@m2osw.com>  Mon, 07 Sep 2020 02:03:53 -0700
+
 eventdispatcher (1.1.5.0~bionic) bionic; urgency=high
 
   * Added the signal_handler to handle the default termination signals.

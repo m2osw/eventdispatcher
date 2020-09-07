@@ -1,4 +1,4 @@
-# - Try to find EventDispatcher
+# - Try to find EventDispatcherQt
 #
 # Once done this will define
 #
@@ -29,38 +29,38 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 find_path(
-    EVENTDISPATCHER_INCLUDE_DIR
-        eventdispatcher/version.h
+    EVENTDISPATCHER_QT_INCLUDE_DIR
+        eventdispatcher/connection.h
 
     PATHS
         $ENV{EVENTDISPATCHER_INCLUDE_DIR}
 )
 
 find_library(
-    EVENTDISPATCHER_LIBRARY
-        eventdispatcher
+    EVENTDISPATCHER_QT_LIBRARY
+        eventdispatcher_qt
 
     PATHS
         $ENV{EVENTDISPATCHER_LIBRARY}
 )
 
 mark_as_advanced(
-    EVENTDISPATCHER_INCLUDE_DIR
-    EVENTDISPATCHER_LIBRARY
+    EVENTDISPATCHER_QT_INCLUDE_DIR
+    EVENTDISPATCHER_QT_LIBRARY
 )
 
-set(EVENTDISPATCHER_INCLUDE_DIRS ${EVENTDISPATCHER_INCLUDE_DIR})
-set(EVENTDISPATCHER_LIBRARIES    ${EVENTDISPATCHER_LIBRARY})
+set(EVENTDISPATCHER_QT_INCLUDE_DIRS ${EVENTDISPATCHER_QT_INCLUDE_DIR})
+set(EVENTDISPATCHER_QT_LIBRARIES    ${EVENTDISPATCHER_QT_LIBRARY})
 
 include(FindPackageHandleStandardArgs)
 
-# handle the QUIETLY and REQUIRED arguments and set EVENTDISPATHCER_FOUND to
+# handle the QUIETLY and REQUIRED arguments and set EVENTDISPATHCER_QT_FOUND to
 # TRUE if all listed variables are TRUE
 find_package_handle_standard_args(
-    EventDispatcher
+    EventDispatcherQt
     DEFAULT_MSG
-    EVENTDISPATCHER_INCLUDE_DIR
-    EVENTDISPATCHER_LIBRARY
+    EVENTDISPATCHER_QT_INCLUDE_DIR
+    EVENTDISPATCHER_QT_LIBRARY
 )
 
 # vim: ts=4 sw=4 et
