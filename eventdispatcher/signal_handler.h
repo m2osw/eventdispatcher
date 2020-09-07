@@ -107,7 +107,7 @@ public:
 
     signal_handler              operator = (signal_handler const &) = delete;
 
-    pointer_t                   get_instance();
+    static pointer_t            get_instance();
 
     void                        set_show_stack(signal_mask_t sigs);
     signal_mask_t               get_show_stack() const;

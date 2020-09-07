@@ -182,7 +182,11 @@ signal_handler::~signal_handler()
 
 signal_handler::pointer_t signal_handler::get_instance()
 {
-    return std::shared_ptr<signal_handler>();
+    if(g_signal_handler == nullptr)
+    {
+        g_signal_handler.reset(new signal_handler());
+    }
+    return g_signal_handler;
 }
 
 
@@ -210,7 +214,6 @@ void signal_handler::add_terminal_signals(signal_mask_t sigs)
 
             f_signal_actions[i] = std::make_shared<sigaction_t>();
             sigaction(i, &action, f_signal_actions[i].get());
-            f_signal_actions[i].reset();
         }
     }
 }
@@ -228,7 +231,6 @@ void signal_handler::add_ignore_signals(signal_mask_t sigs)
 
             f_signal_actions[i] = std::make_shared<sigaction_t>();
             sigaction(i, &action, f_signal_actions[i].get());
-            f_signal_actions[i].reset();
         }
     }
 }
