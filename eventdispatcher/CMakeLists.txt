@@ -55,6 +55,7 @@ add_library(${PROJECT_NAME} SHARED
 
         signal.cpp
         signal_handler.cpp
+        signal_profiler.cpp
 
         timer.cpp
 

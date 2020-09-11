@@ -1,3 +1,9 @@
+eventdispatcher (1.1.8.0~bionic) bionic; urgency=high
+
+  * Added the signal_profiler class I worked on (not working yet, though).
+
+ -- Alexis Wilke <alexis@m2osw.com>  Thu, 10 Sep 2020 19:55:35 -0700
+
 eventdispatcher (1.1.7.0~bionic) bionic; urgency=high
 
   * Made the get_instance() a static function as it was supposed to be.
