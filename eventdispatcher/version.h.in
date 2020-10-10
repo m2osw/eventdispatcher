@@ -43,5 +43,5 @@ char const *    get_version_string();
 
 
 
-} // snaplogger namespace
+} // namespace ed
 // vim: ts=4 sw=4 et

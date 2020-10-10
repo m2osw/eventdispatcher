@@ -67,5 +67,5 @@ private:
 
 
 
-} // namespace tcp_client_server
+} // namespace ed
 // vim: ts=4 sw=4 et

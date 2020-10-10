@@ -120,5 +120,5 @@ void signal_profiler::process_signal()
 }
 
 
-} // ed namespace
+} // namespace ed
 // vim: ts=4 sw=4 et

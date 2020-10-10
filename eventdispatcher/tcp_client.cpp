@@ -368,5 +368,5 @@ int tcp_client::write(const char *buf, size_t size)
 
 
 
-} // namespace tcp_client_server
+} // namespace ed
 // vim: ts=4 sw=4 et
