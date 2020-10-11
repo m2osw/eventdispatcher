@@ -108,8 +108,6 @@ communicator::pointer_t *           g_instance = nullptr;
  * This function initializes the communicator object.
  */
 communicator::communicator()
-    //: f_connections() -- auto-init
-    //, f_force_sort(true) -- auto-init
 {
 }
 
@@ -131,6 +129,9 @@ communicator::pointer_t communicator::instance()
 
     if(g_instance == nullptr)
     {
+        // `communicator` constructor is private so we can't use
+        // the std::make_shared<>
+        //
         g_instance = new communicator::pointer_t();
         g_instance->reset(new communicator());
     }

@@ -100,11 +100,8 @@ namespace ed
  */
 tcp_server::tcp_server(std::string const & addr, int port, int max_connections, bool reuse_addr, bool auto_close)
     : f_max_connections(max_connections <= 0 ? MAX_CONNECTIONS : max_connections)
-    //, f_socket(-1) -- auto-init
     , f_port(port)
     , f_addr(addr)
-    //, f_accepted_socket(-1) -- auto-init
-    //, f_keepalive(true) -- auto-init
     , f_auto_close(auto_close)
 {
     if(f_addr.empty())

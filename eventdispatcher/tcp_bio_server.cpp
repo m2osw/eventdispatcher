@@ -128,7 +128,7 @@ public:
  * \param[in] mode  The mode used to create the listening socket.
  */
 tcp_bio_server::tcp_bio_server(addr::addr const & addr_port, int max_connections, bool reuse_addr, std::string const & certificate, std::string const & private_key, mode_t mode)
-    : f_impl(new detail::tcp_bio_server_impl)
+    : f_impl(std::make_shared<detail::tcp_bio_server_impl>())
 {
     f_impl->f_max_connections = max_connections <= 0 ? MAX_CONNECTIONS : max_connections;
     if(f_impl->f_max_connections < 5)
@@ -421,7 +421,9 @@ tcp_bio_client::pointer_t tcp_bio_server::accept()
         }
     }
 
-    tcp_bio_client::pointer_t client(new tcp_bio_client());
+    // tcp_bio_client is private so we can't use the std::make_shared<>
+    //
+    tcp_bio_client::pointer_t client(new tcp_bio_client);
 
     client->f_impl->f_bio = bio;
 

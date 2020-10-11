@@ -184,6 +184,9 @@ signal_handler::pointer_t signal_handler::get_instance()
 {
     if(g_signal_handler == nullptr)
     {
+        // the signal_handler constructor is private so we can't use
+        // the std::make_shared<>
+        //
         g_signal_handler.reset(new signal_handler());
     }
     return g_signal_handler;

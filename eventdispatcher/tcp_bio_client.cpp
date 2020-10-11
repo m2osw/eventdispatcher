@@ -332,7 +332,7 @@ tcp_bio_client::tcp_bio_client(
             , int port
             , mode_t mode
             , tcp_bio_options const & opt)
-    : f_impl(new detail::tcp_bio_client_impl)
+    : f_impl(std::make_shared<detail::tcp_bio_client_impl>())
 {
     if(port < 0 || port >= 65536)
     {
@@ -620,7 +620,7 @@ tcp_bio_client::tcp_bio_client(
  * The BIO is saved directly in the f_impl class (the server is given access.)
  */
 tcp_bio_client::tcp_bio_client()
-    : f_impl(new detail::tcp_bio_client_impl)
+    : f_impl(std::make_shared<detail::tcp_bio_client_impl>())
 {
 }
 

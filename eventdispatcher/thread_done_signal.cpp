@@ -90,7 +90,7 @@ namespace ed
  *      };
  *
  *      // in the main thread
- *      ed::thread_done_signal::pointer_t s(new thread_done_impl);
+ *      ed::thread_done_signal::pointer_t s(std::shared_ptr<thread_done_impl>());
  *      ed::communicator::instance()->add_connection(s);
  *
  *      // create thread... and make sure the thread has access to 's'

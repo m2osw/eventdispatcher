@@ -206,7 +206,6 @@ void file_changed::watch_t::remove_watch(int inotify)
 
 file_changed::file_changed()
     : f_inotify(inotify_init1(IN_NONBLOCK | IN_CLOEXEC))
-    //, f_watches() -- auto-init
 {
     if(f_inotify == -1)
     {

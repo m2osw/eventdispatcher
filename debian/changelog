@@ -1,3 +1,14 @@
+eventdispatcher (1.1.9.0~bionic) bionic; urgency=high
+
+  * Fixed the loss of the permanent connection thread by catching all
+    exceptions.
+  * Removed a few "auto-init" comments. Now that we have C++11 and better,
+    it becomes less useful.
+  * Replaced all foo.reset(new blah) with std::make_shared() wherever
+    possible as to avoid potential leaks.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Thu, 10 Sep 2020 19:55:35 -0700
+
 eventdispatcher (1.1.8.0~bionic) bionic; urgency=high
 
   * Added the signal_profiler class I worked on (not working yet, though).

@@ -917,7 +917,7 @@ void connection::process_empty_buffer()
  * \code
  *      // get the socket from the accept() function
  *      int const client_socket(accept());
- *      client_impl::pointer_t connection(new client_impl(get_communicator(), client_socket));
+ *      client_impl::pointer_t connection(std::make_shared<client_impl>(get_communicator(), client_socket));
  *      connection->set_name("connection created by server on accept()");
  *      get_communicator()->add_connection(connection);
  * \endcode

@@ -246,6 +246,7 @@ public:
          */
         void connect()
         {
+            char const * error_name(nullptr);
             try
             {
                 // create a socket using the bio_client class,
@@ -254,24 +255,45 @@ public:
                 // we cannot directly create the right type of
                 // object otherwise...)
                 //
-                f_tcp_connection.reset(new tcp_bio_client(f_address, f_port, f_mode));
+                f_tcp_connection = std::make_shared<tcp_bio_client>(f_address, f_port, f_mode);
+                return;
+            }
+            catch(event_dispatcher_initialization_error const & e)
+            {
+                error_name = "event_dispatcher_initialization_error";
+                f_last_error = e.what();
             }
             catch(event_dispatcher_runtime_error const & e)
             {
-                // connection failed... we will have to try again later
-                //
-                // WARNING: our logger is not multi-thread safe
-                //SNAP_LOG_ERROR
-                //    << "connection to "
-                //    << f_address
-                //    << ":"
-                //    << f_port
-                //    << " failed with: "
-                //    << e.what()
-                //    << SNAP_LOG_SEND;
+                error_name = "event_dispatcher_runtime_error";
                 f_last_error = e.what();
-                f_tcp_connection.reset();
             }
+            catch(std::exception const & e)
+            {
+                error_name = "std::exception";
+                f_last_error = e.what();
+            }
+            catch(...)
+            {
+                error_name = "... (any other exception)";
+                f_last_error = "Unknown exception";
+            }
+            f_tcp_connection.reset();
+
+            // connection failed... we will have to try again later
+            //
+            // WARNING: our logger is not multi-thread safe quiet yet
+            //SNAP_LOG_ERROR
+            //    << "connection to "
+            //    << f_address
+            //    << ":"
+            //    << f_port
+            //    << " failed with: "
+            //    << f_last_error
+            //    << " ("
+            //    << error_name
+            //    << ")"
+            //    << SNAP_LOG_SEND;
         }
 
 
@@ -405,11 +427,8 @@ public:
                 , int port
                 , tcp_bio_client::mode_t mode)
         : f_parent(parent)
-        //, f_thread_done() -- auto-init
         , f_thread_runner(this, address, port, mode)
         , f_thread("background connection handler thread", &f_thread_runner)
-        //, f_messenger(nullptr) -- auto-init
-        //, f_message_cache() -- auto-init
     {
     }
 
@@ -525,7 +544,7 @@ public:
         //
         if(f_thread_done == nullptr)
         {
-            f_thread_done.reset(new thread_signal_handler(this));
+            f_thread_done = std::make_shared<thread_signal_handler>(this);
         }
 
         communicator::instance()->add_connection(f_thread_done);
@@ -624,7 +643,7 @@ public:
         }
         else
         {
-            f_messenger.reset(new messenger(f_parent, client));
+            f_messenger = std::make_shared<messenger>(f_parent, client);
 
             // add the messenger to the communicator
             //
@@ -843,7 +862,7 @@ tcp_client_permanent_message_connection::tcp_client_permanent_message_connection
           , std::int64_t const pause
           , bool const use_thread)
     : timer(pause < 0 ? -pause : 0)
-    , f_impl(new detail::tcp_client_permanent_message_connection_impl(this, address, port, mode))
+    , f_impl(std::make_shared<detail::tcp_client_permanent_message_connection_impl>(this, address, port, mode))
     , f_pause(llabs(pause))
     , f_use_thread(use_thread)
 {
