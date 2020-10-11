@@ -97,7 +97,7 @@ namespace ed
  * One of them is for "thread A" and the other is for "thread B".
  *
  * \todo
- * To support all the features of a snap_connection on both sides
+ * To support all the features of a connection on both sides
  * we would have to allocate a sub-connection object for thread B.
  * That sub-connection object would then be used just like a full
  * regular connection with all of its own parameters. Actually the
@@ -158,24 +158,22 @@ void inter_thread_message_connection::close()
 
 /** \brief Poll the connection in the child.
  *
- * There can be only one snap_communicator, therefore, the thread
+ * There can be only one communicator, therefore, the thread
  * cannot make use of it since it is only for the main application.
  * This poll() function can be used by the child to wait on the
  * connection.
  *
  * You may specify a timeout as usual.
  *
- * \exception snap_communicator_runtime_error
+ * \exception event_dispatcher_runtime_error
  * If an interrupt happens and stops the poll() then this exception is
  * raised. If not enough memory is available to run the poll() function,
  * this errors is raised.
  *
- * \exception snap_communicator_parameter_error
+ * \exception event_dispatcher_parameter_error
  * Somehow a buffer was moved out of our client's space (really that one
  * is not likely to happen...). Too many file descriptors in the list of
  * fds (not likely to happen since we just have one!)
- *
- * \exception snap_communicator_parameter_error
  *
  * \param[in] timeout  The maximum amount of time to wait in microseconds.
  *                     Use zero (0) to not block at all.
@@ -234,7 +232,7 @@ int inter_thread_message_connection::poll(int timeout)
             if(e == EINTR)
             {
                 // Note: if the user wants to prevent this error, he should
-                //       use the snap_signal with the Unix signals that may
+                //       use the signal with the Unix signals that may
                 //       happen while calling poll().
                 //
                 throw event_dispatcher_runtime_error("EINTR occurred while in poll() -- interrupts are not supported yet though");

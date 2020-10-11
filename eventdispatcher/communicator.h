@@ -38,7 +38,7 @@ namespace ed
 
 
 
-// WARNING: a snap_communicator object must be allocated and held in a shared pointer (see pointer_t)
+// WARNING: a communicator object must be allocated and held in a shared pointer (see pointer_t)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
 class communicator

@@ -98,8 +98,8 @@ namespace ed
  *          my_blocking_connection(std::string const & addr, int port, mode_t mode)
  *              : tcp_blocking_client_message_connection(addr, port, mode)
  *          {
- *              // need to register with snap communicator
- *              snap_communicator_message register_message;
+ *              // need to register with communicator
+ *              message register_message;
  *              register_message.set_command("REGISTER");
  *              ...
  *              blocking_connection.send_message(register_message);
@@ -110,12 +110,12 @@ namespace ed
  *          ~my_blocking_connection()
  *          {
  *              // done, send UNLOCK and then make sure to unregister
- *              snap_communicator_message unlock_message;
+ *              message unlock_message;
  *              unlock_message.set_command("UNLOCK");
  *              ...
  *              blocking_connection.send_message(unlock_message);
  *
- *              snap_communicator_message unregister_message;
+ *              message unregister_message;
  *              unregister_message.set_command("UNREGISTER");
  *              ...
  *              blocking_connection.send_message(unregister_message);
@@ -126,7 +126,7 @@ namespace ed
  *          //
  *          // Please, consider using the dispatcher instead
  *          //
- *          virtual void process_message(snap_communicator_message const & message)
+ *          virtual void process_message(message const & message)
  *          {
  *              QString const command(message.get_command());
  *              if(command == "LOCKED")
@@ -138,7 +138,7 @@ namespace ed
  *              {
  *                  // the REGISTER worked
  *                  // send the LOCK now
- *                  snap_communicator_message lock_message;
+ *                  message lock_message;
  *                  lock_message.set_command("LOCK");
  *                  ...
  *                  blocking_connection.send_message(lock_message);
@@ -147,7 +147,7 @@ namespace ed
  *              {
  *                  // snapcommunicator wants us to tell it what commands
  *                  // we accept
- *                  snap_communicator_message commands_message;
+ *                  message commands_message;
  *                  commands_message.set_command("COMMANDS");
  *                  ...
  *                  blocking_connection.send_message(commands_message);
@@ -250,7 +250,7 @@ void tcp_blocking_client_message_connection::run()
                 if(errno == EINTR)
                 {
                     // Note: if the user wants to prevent this error, he should
-                    //       use the snap_signal with the Unix signals that may
+                    //       use the signal with the Unix signals that may
                     //       happen while calling poll().
                     //
                     throw event_dispatcher_runtime_error(
@@ -386,7 +386,7 @@ void tcp_blocking_client_message_connection::peek()
                 if(errno == EINTR)
                 {
                     // Note: if the user wants to prevent this error, he should
-                    //       use the snap_signal with the Unix signals that may
+                    //       use the signal with the Unix signals that may
                     //       happen while calling poll().
                     //
                     throw event_dispatcher_runtime_error(
@@ -530,7 +530,7 @@ bool tcp_blocking_client_message_connection::send_message(message const & msg, b
  * This function is overriding the lower level process_error() to make
  * (mostly) sure that the remove_from_communicator() function does not
  * get called because that would generate the creation of a
- * snap_communicator object which we do not want with blocking
+ * communicator object which we do not want with blocking
  * clients.
  */
 void tcp_blocking_client_message_connection::process_error()

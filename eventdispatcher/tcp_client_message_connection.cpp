@@ -90,8 +90,8 @@ tcp_client_message_connection::tcp_client_message_connection(
 
 /** \brief Process a line (string) just received.
  *
- * The function parses the line as a message (snap_communicator_message)
- * and then calls the process_message() function if the line was valid.
+ * The function parses the line as a message and then calls the
+ * process_message() function if the line was valid.
  *
  * \param[in] line  The line of text that was just read.
  */
@@ -113,7 +113,7 @@ void tcp_client_message_connection::process_line(std::string const & line)
         //       and the messages are not compatible anymore.
         //
         SNAP_LOG_ERROR
-                << "snap_communicator::snap_tcp_client_message_connection::process_line() was asked to process an invalid message ("
+                << "tcp_client_message_connection::process_line() was asked to process an invalid message ("
                 << line
                 << ")"
                 << SNAP_LOG_SEND;
@@ -126,13 +126,8 @@ void tcp_client_message_connection::process_line(std::string const & line)
  * This function sends a message to the client on the other side
  * of this connection.
  *
- * \exception snap_communicator_runtime_error
- * This function throws this exception if the write() to the pipe
- * fails to write the entire message. This should only happen if
- * the pipe gets severed.
- *
  * \param[in] message  The message to be sent.
- * \param[in] cache  Whether to cache the message if there is no connection.
+ * \param[in] cache  Ignored.
  *
  * \return Always true, although if an error occurs the function throws.
  */

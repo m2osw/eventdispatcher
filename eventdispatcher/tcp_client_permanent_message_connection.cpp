@@ -88,7 +88,7 @@ namespace detail
 {
 
 
-/** \brief Internal implementation of the snap_tcp_client_permanent_message_connection class.
+/** \brief Internal implementation of the tcp_client_permanent_message_connection class.
  *
  * This class is used to handle a thread that will process a connection for
  * us. This allows us to connect in any amount of time required by the
@@ -120,35 +120,35 @@ public:
         messenger(messenger const & rhs) = delete;
         messenger & operator = (messenger const & rhs) = delete;
 
-        // snap_connection implementation
+        // connection implementation
         virtual void process_empty_buffer()
         {
             tcp_server_client_message_connection::process_empty_buffer();
             f_parent->process_empty_buffer();
         }
 
-        // snap_connection implementation
+        // connection implementation
         virtual void process_error()
         {
             tcp_server_client_message_connection::process_error();
             f_parent->process_error();
         }
 
-        // snap_connection implementation
+        // connection implementation
         virtual void process_hup()
         {
             tcp_server_client_message_connection::process_hup();
             f_parent->process_hup();
         }
 
-        // snap_connection implementation
+        // connection implementation
         virtual void process_invalid()
         {
             tcp_server_client_message_connection::process_invalid();
             f_parent->process_invalid();
         }
 
-        // snap_tcp_server_client_message_connection implementation
+        // tcp_server_client_message_connection implementation
         virtual void process_message(message const & msg)
         {
             // We call the dispatcher from our parent since the child
@@ -412,11 +412,11 @@ public:
      * the specified address and port.
      *
      * This class and its sub-classes may end up executing callbacks
-     * of the snap_tcp_client_permanent_message_connection object.
+     * of the tcp_client_permanent_message_connection object.
      * However, in all cases these are never run from the thread.
      *
      * \param[in] client  A pointer to the owner of this
-     *            snap_tcp_client_permanent_message_connection_impl object.
+     *            tcp_client_permanent_message_connection_impl object.
      * \param[in] address  The address we are to connect to.
      * \param[in] port  The port we are to connect to.
      * \param[in] mode  The mode used to connect.
@@ -464,7 +464,7 @@ public:
         communicator::instance()->remove_connection(f_thread_done);
 
         // although the f_messenger variable gets reset automatically in
-        // the destructor, it would not get removed from the snap
+        // the destructor, it would not get removed from the
         // communicator instance if we were not doing it explicitly
         //
         disconnect();
@@ -592,7 +592,7 @@ public:
      * \note
      * This is used only if the user requested that the connection
      * happen in the background (i.e. use_thread was set to true
-     * in the snap_tcp_client_permanent_message_connection object
+     * in the tcp_client_permanent_message_connection object
      * constructor.)
      */
     void thread_done()
@@ -701,7 +701,7 @@ public:
      *
      * If there is a messenger, this means:
      *
-     * \li Removing the messenger from the snap_communicator instance.
+     * \li Removing the messenger from the communicator instance.
      * \li Closing the connection in the thread object.
      *
      * In most cases, it is called when an error occur, also it happens
@@ -767,7 +767,7 @@ public:
     /** \brief Mark the messenger as done.
      *
      * This function is used to mark the messenger as done. This means it
-     * will get removed from the snap_communicator instance as soon as it
+     * will get removed from the communicator instance as soon as it
      * is done with its current write buffer if there is one.
      *
      * You may also want to call the disconnection() function to actually
@@ -935,7 +935,7 @@ bool tcp_client_permanent_message_connection::is_connected() const
  *
  * B also wants to call the mark_done() function to make sure that it
  * does not reconnected a split second later and instead the permanent
- * connection gets removed from the snap_communicator list of connections.
+ * connection gets removed from the communicator list of connections.
  */
 void tcp_client_permanent_message_connection::disconnect()
 {
@@ -945,8 +945,8 @@ void tcp_client_permanent_message_connection::disconnect()
 
 /** \brief Overload so we do not have to use namespace everywhere.
  *
- * This function overloads the snap_connection::mark_done() function so
- * we can call it without the need to use snap_timer::mark_done()
+ * This function overloads the connection::mark_done() function so
+ * we can call it without the need to use timer::mark_done()
  * everywhere.
  */
 void tcp_client_permanent_message_connection::mark_done()
@@ -1091,9 +1091,9 @@ void tcp_client_permanent_message_connection::process_timeout()
  * implementation or enable the timer yourselves.
  *
  * \warning
- * This function does not call the snap_timer::process_error() function
+ * This function does not call the timer::process_error() function
  * which means that this connection is not automatically removed from
- * the snapcommunicator object on failures.
+ * the communicator object on failures.
  */
 void tcp_client_permanent_message_connection::process_error()
 {
@@ -1118,9 +1118,9 @@ void tcp_client_permanent_message_connection::process_error()
  * implementation or enable the timer yourselves.
  *
  * \warning
- * This function does not call the snap_timer::process_hup() function
+ * This function does not call the timer::process_hup() function
  * which means that this connection is not automatically removed from
- * the snapcommunicator object on failures.
+ * the communicator object on failures.
  */
 void tcp_client_permanent_message_connection::process_hup()
 {
@@ -1145,9 +1145,9 @@ void tcp_client_permanent_message_connection::process_hup()
  * implementation or enable the timer yourselves.
  *
  * \warning
- * This function does not call the snap_timer::process_invalid() function
+ * This function does not call the timer::process_invalid() function
  * which means that this connection is not automatically removed from
- * the snapcommunicator object on failures.
+ * the communicator object on failures.
  */
 void tcp_client_permanent_message_connection::process_invalid()
 {
@@ -1166,8 +1166,8 @@ void tcp_client_permanent_message_connection::process_invalid()
 /** \brief Make sure that the messenger connection gets removed.
  *
  * This function makes sure that the messenger sub-connection also gets
- * removed from the snap communicator. Otherwise it would lock the system
- * since connections are saved in the snap communicator object as shared
+ * removed from the communicator. Otherwise it would lock the system
+ * since connections are saved in the communicator object as shared
  * pointers.
  */
 void tcp_client_permanent_message_connection::connection_removed()

@@ -128,7 +128,7 @@ tcp_server_connection::tcp_server_connection(
 }
 
 
-/** \brief Reimplement the is_listener() for the snap_tcp_server_connection.
+/** \brief Reimplement the is_listener() for the tcp_server_connection.
  *
  * A server connection is a listener socket. The library makes
  * use of a completely different callback when a "read" event occurs

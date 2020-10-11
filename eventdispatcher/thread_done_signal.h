@@ -44,7 +44,7 @@ public:
                                 thread_done_signal();
     virtual                     ~thread_done_signal() override;
 
-    // snap_connection implementation
+    // connection implementation
     virtual bool                is_reader() const override;
     virtual int                 get_socket() const override;
     virtual void                process_read() override;

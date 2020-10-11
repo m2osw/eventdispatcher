@@ -78,10 +78,10 @@ namespace ed
  * processes.
  *
  * \warning
- * You need to create a new snap_pipe_connection each time you want
+ * You need to create a new pipe_connection each time you want
  * to create a new child.
  *
- * \exception snap_communicator_initialization_error
+ * \exception event_dispatcher_initialization_error
  * This exception is raised if the pipes (socketpair) cannot be created.
  */
 pipe_connection::pipe_connection()

@@ -8,4 +8,8 @@
   such and a way to track which message was ever sent (i.e. a form of
   message coverage) so we can verify that all messages were checked
 
+* A service to track changes to the list of opened/closed network connections
+  (I already have code to do that, but I never spent any time on implementing
+  anything in link with it. It should track the changes to the /proc/... file
+  and report these through some mechanism similar to the file_change system)
 

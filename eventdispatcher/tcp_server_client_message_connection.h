@@ -52,7 +52,7 @@ public:
     // connection_with_send_message
     virtual bool                send_message(message const & msg, bool cache = false) override;
 
-    // snap_tcp_server_client_buffer_connection implementation
+    // tcp_server_client_buffer_connection implementation
     virtual void                process_line(std::string const & line) override;
 
 private:

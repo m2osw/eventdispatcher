@@ -84,7 +84,7 @@ namespace ed
  *      ( '<' sent-from-server ':' sent-from-service ' ')? ( ( server ':' )? service '/' )? command ' ' ( parameter_name '=' value ';' )*
  * \endcode
  *
- * The sender "<sent-from-server:sent-from-service" names are added by
+ * The sender "\<sent-from-server:sent-from-service" names are added by
  * snapcommunicator when it receives a message which is destined for
  * another service (i.e. not itself). This can be used by the receiver
  * to reply back to the exact same process if it is a requirement for that
@@ -409,7 +409,7 @@ bool message::from_message(std::string const & original_message)
  * The sent-from information gets saved in the message only if both,
  * the server name and service name it was sent from are defined.
  *
- * \exception snap_communicator_invalid_message
+ * \exception event_dispatcher_invalid_message
  * This function raises an exception if the message command was not
  * defined since a command is always mandatory.
  *
@@ -1075,7 +1075,7 @@ bool message::has_parameter(std::string const & name) const
  * the value of that parameter, what has been returned does not change
  * under your feet.
  *
- * \exception snap_communicator_invalid_message
+ * \exception event_dispatcher_invalid_message
  * This exception is raised whenever the parameter is not defined or
  * if the parameter \p name is not considered valid.
  *
@@ -1112,7 +1112,7 @@ std::string message::get_parameter(std::string const & name) const
  *
  * The name must be valid as defined by the verify_message_name() function.
  *
- * \exception snap_communicator_invalid_message
+ * \exception event_dispatcher_invalid_message
  * This exception is raised whenever the parameter is not a valid integer,
  * it is not set, or the parameter name is not considered valid.
  *

@@ -61,7 +61,7 @@ namespace ed
  * This function creates a connection using the address, port, and mode
  * parameters. This is very similar to using the bio_client class to
  * create a connection, only the resulting connection can be used with
- * the snap_communicator object.
+ * the communicator object.
  *
  * \note
  * The function also saves the remote address and port used to open
@@ -73,7 +73,7 @@ namespace ed
  * If the remote address is an IPv6, we need to put it between [...]
  * (i.e. [::1]:4040) so we can extract the port safely.
  *
- * \param[in] communicator  The snap communicator controlling this connection.
+ * \param[in] communicator  The communicator controlling this connection.
  * \param[in] addr  The address of the server to connect to.
  * \param[in] port  The port to connect to.
  * \param[in] mode  Type of connection: plain or secure.

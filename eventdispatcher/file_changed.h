@@ -101,7 +101,7 @@ public:
 
     void                        stop_watch(std::string const & watched_path);
 
-    // snap_connection implementation
+    // connection implementation
     virtual bool                is_reader() const override;
     virtual int                 get_socket() const override;
     virtual void                set_enable(bool enabled);

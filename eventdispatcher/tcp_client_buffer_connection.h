@@ -50,7 +50,7 @@ public:
     bool                        has_input() const;
     bool                        has_output() const;
 
-    // snap::snap_communicator::snap_tcp_client_connection implementation
+    // ed::tcp_client_connection implementation
     virtual ssize_t             write(void const * data, size_t length) override;
     virtual bool                is_writer() const override;
     virtual void                process_read() override;

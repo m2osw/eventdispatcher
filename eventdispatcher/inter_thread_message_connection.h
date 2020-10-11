@@ -58,10 +58,10 @@ public:
 
     void                        close();
 
-    // the child cannot have its own snap_communicator object, so...
+    // the child cannot have its own communicator object, so...
     int                         poll(int timeout);
 
-    // snap_connection implementation
+    // connection implementation
     virtual bool                is_reader() const override;
     //virtual bool                is_writer() const override;
     virtual int                 get_socket() const override;

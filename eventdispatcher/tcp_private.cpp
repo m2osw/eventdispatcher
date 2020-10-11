@@ -78,42 +78,6 @@ namespace detail
 
 
 
-///** \brief Data handled by each lock.
-// *
-// * This function holds the data handled on a per lock basis.
-// * Even if your daemon is not using multiple threads, this
-// * is likely to kick in.
-// */
-//class crypto_lock_t
-//{
-//public:
-//    typedef std::vector<crypto_lock_t>  vector_t;
-//
-//                        crypto_lock_t()
-//                        {
-//                            pthread_mutex_init(&f_mutex, nullptr);
-//                        }
-//
-//                        ~crypto_lock_t()
-//                        {
-//                            pthread_mutex_destroy(&f_mutex);
-//                        }
-//
-//    void                lock()
-//                        {
-//                            pthread_mutex_lock(&f_mutex);
-//                        }
-//
-//    void                unlock()
-//                        {
-//                            pthread_mutex_unlock(&f_mutex);
-//                        }
-//
-//private:
-//    pthread_mutex_t     f_mutex = pthread_mutex_t();
-//};
-
-
 /** \brief The vector of locks.
  *
  * This function is initialized by the crypto_thread_setup().
@@ -121,7 +85,6 @@ namespace detail
  * It is defined as a pointer in case someone was to try to access this
  * pointer before entering main().
  */
-//crypto_lock_t::vector_t *   g_locks = nullptr;
 cppthread::mutex::direct_vector_t  *   g_locks = nullptr;
 
 

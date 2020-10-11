@@ -99,7 +99,7 @@ void cleanup()
  * Any error which is still attached to a thread must be removed
  * before the thread dies or it will be lost. This function must
  * be called before you return from your
- * snap::snap_thread::snap_runner::run()
+ * cppthread::runner::run()
  * function.
  *
  * The thread must be pro-active and make sure to catch() errors
@@ -113,8 +113,8 @@ void cleanup()
  * TBD--this may not be required. I read a few things a while back
  * saying that certain things were now automatic in the BIO library
  * and this may very well be one of them. To test this function,
- * see the snapdbproxy/src/snapdbproxy_connection.cpp and see how
- * it works one way or the other.
+ * see the snapwebsites/snapdbproxy/src/snapdbproxy_connection.cpp
+ * in the snapwebsites project and see how it works one way or the other.
  */
 void cleanup_on_thread_exit()
 {

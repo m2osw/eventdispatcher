@@ -24,7 +24,6 @@
  * Class used to handle events.
  */
 
-
 // self
 //
 #include    "eventdispatcher/udp_base.h"

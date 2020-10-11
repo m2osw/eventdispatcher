@@ -49,7 +49,7 @@ public:
 
                                 timer(std::int64_t timeout_us);
 
-    // snap_connection implementation
+    // connection implementation
     virtual int                 get_socket() const override;
     virtual bool                valid_socket() const override;
 };

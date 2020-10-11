@@ -47,10 +47,10 @@ public:
     bool                        has_output() const;
     virtual bool                is_writer() const override;
 
-    // snap_fd_connection implementation
+    // fd_connection implementation
     virtual ssize_t             write(void const * data, size_t const length) override;
 
-    // snap_connection implementation
+    // connection implementation
     virtual void                process_read() override;
     virtual void                process_write() override;
     virtual void                process_hup() override;

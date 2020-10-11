@@ -68,9 +68,9 @@ connection::connection()
 }
 
 
-/** \brief Proceed with the cleanup of the snap_connection.
+/** \brief Proceed with the cleanup of the connection.
  *
- * This function cleans up a snap_connection object.
+ * This function cleans up a connection object.
  */
 connection::~connection()
 {
@@ -90,7 +90,7 @@ connection::~connection()
  * \li When the connection looks erroneous
  * \li When the connection looks invalid
  *
- * If the connection is not currently connected to a snap_communicator
+ * If the connection is not currently connected to a communicator
  * object, then nothing happens.
  */
 void connection::remove_from_communicator()
@@ -129,11 +129,11 @@ void connection::set_name(std::string const & name)
 
 /** \brief Tell us whether this socket is a listener or not.
  *
- * By default a snap_connection object does not represent a listener
+ * By default a connection object does not represent a listener
  * object.
  *
  * \return The base implementation returns false. Override this
- *         virtual function if your snap_connection is a listener.
+ *         virtual function if your connection is a listener.
  */
 bool connection::is_listener() const
 {
@@ -143,8 +143,8 @@ bool connection::is_listener() const
 
 /** \brief Tell us whether this connection is listening on a Unix signal.
  *
- * By default a snap_connection object does not represent a Unix signal.
- * See the snap_signal implementation for further information about
+ * By default a connection object does not represent a Unix signal.
+ * See the signal implementation for further information about
  * Unix signal handling in this library.
  *
  * \return The base implementation returns false.
@@ -235,7 +235,7 @@ void connection::set_enable(bool enabled)
 
 /** \brief Define the priority of this connection object.
  *
- * By default snap_connection objets have a priority of 100.
+ * By default connection objets have a priority of 100.
  *
  * You may also use the set_priority() to change the priority of a
  * connection at any time.
@@ -260,7 +260,7 @@ int connection::get_priority() const
  * Note that the priority of a connection can modified at any time.
  * It is not guaranteed to be taken in account immediately, though.
  *
- * \exception snap_communicator_parameter_error
+ * \exception event_dispatcher_parameter_error
  * The priority of the event is out of range when this exception is raised.
  * The value must between between 0 and EVENT_MAX_PRIORITY. Any
  * other value raises this exception.
@@ -271,8 +271,8 @@ void connection::set_priority(priority_t priority)
 {
     if(priority < 0 || priority > EVENT_MAX_PRIORITY)
     {
-        std::string err("snap_communicator::set_priority(): priority out of range,"
-                        " this instance of snap_communicator accepts priorities between 0 and ");
+        std::string err("connection::set_priority(): priority out of range,"
+                        " this instance of connection accepts priorities between 0 and ");
         err += std::to_string(EVENT_MAX_PRIORITY);
         err += ".";
         throw event_dispatcher_parameter_error(err);
@@ -292,14 +292,14 @@ void connection::set_priority(priority_t priority)
  * This function is used to know whether a connection has a higher or lower
  * priority. This is used when one adds, removes, or changes the priority
  * of a connection. The sorting itself happens in the
- * snap_communicator::run() which knows that something changed whenever
+ * communicator::run() which knows that something changed whenever
  * it checks the data.
  *
  * The result of the priority mechanism is that callbacks of items with
  * a smaller priorirty will be called first.
  *
- * \param[in] lhs  The left hand side snap_connection.
- * \param[in] rhs  The right hand side snap_connection.
+ * \param[in] lhs  The left hand side connection.
+ * \param[in] rhs  The right hand side connection.
  *
  * \return true if lhs has a smaller priority than rhs.
  */
@@ -327,7 +327,7 @@ bool connection::compare(pointer_t const & lhs, pointer_t const & rhs)
  * processing returns even if additional events are already available
  * in connection.
  *
- * \sa snap_communicator::snap_connection::set_event_limit()
+ * \sa set_event_limit()
  */
 uint16_t connection::get_event_limit() const
 {
@@ -351,7 +351,7 @@ uint16_t connection::get_event_limit() const
  *
  * \param[in] event_limit  Number of events to process in a row.
  *
- * \sa snap_communicator::snap_connection::get_event_limit()
+ * \sa get_event_limit()
  */
 void connection::set_event_limit(uint16_t event_limit)
 {
@@ -377,7 +377,7 @@ void connection::set_event_limit(uint16_t event_limit)
  * processing returns even if additional events are already available
  * in connection.
  *
- * \sa snap_communicator::snap_connection::set_processing_time_limit()
+ * \sa set_processing_time_limit()
  */
 uint16_t connection::get_processing_time_limit() const
 {
@@ -406,7 +406,7 @@ uint16_t connection::get_processing_time_limit() const
  *            allowed before a connection processing returns even if
  *            additional events are already available in connection.
  *
- * \sa snap_communicator::snap_connection::get_processing_time_limit()
+ * \sa get_processing_time_limit()
  */
 void connection::set_processing_time_limit(std::int32_t processing_time_limit)
 {
@@ -454,11 +454,11 @@ int64_t connection::get_timeout_delay() const
  * with time. However, this implementation may skip one or more
  * ticks at any time (especially if the delay is very small).
  *
- * When a tick triggers an EVENT_TIMEOUT, the snap_communicator::run()
+ * When a tick triggers an EVENT_TIMEOUT, the communicator::run()
  * function calls calculate_next_tick() to calculate the time when
  * the next tick will occur which will always be in the function.
  *
- * \exception snap_communicator_parameter_error
+ * \exception event_dispatcher_parameter_error
  * This exception is raised if the timeout_us parameter is not considered
  * valid. The minimum value is 10 and microseconds. You may use -1 to turn
  * off the timeout delay feature.
@@ -471,7 +471,7 @@ void connection::set_timeout_delay(std::int64_t timeout_us)
     && timeout_us < 10)
     {
         throw event_dispatcher_parameter_error(
-                      "snap_communicator::snap_connection::set_timeout_delay():"
+                      "connection::set_timeout_delay():"
                       " timeout_us parameter cannot be less than 10"
                       " unless it is exactly -1, "
                     + std::to_string(timeout_us)
@@ -517,7 +517,7 @@ void connection::calculate_next_tick()
         // so commenting out.
         //
         //SNAP_LOG_DEBUG
-        //        << "snap_communicator::snap_connection::calculate_next_tick()"
+        //        << "connection::calculate_next_tick()"
         //           " called even though the next date is still larger than 'now'."
         //        << SNAP_LOG_SEND;
         return;
@@ -563,7 +563,7 @@ int64_t connection::get_timeout_date() const
  * priority is used to know which other connections are parsed
  * first.)
  *
- * \exception snap_communicator_parameter_error
+ * \exception event_dispatcher_parameter_error
  * If the date_us is too small (less than -1) then this exception
  * is raised.
  *
@@ -574,7 +574,7 @@ void connection::set_timeout_date(std::int64_t date_us)
     if(date_us < -1)
     {
         throw event_dispatcher_parameter_error(
-                      "snap_communicator::snap_connection::set_timeout_date():"
+                      "connection::set_timeout_date():"
                       " date_us parameter cannot be less than -1, "
                     + std::to_string(date_us)
                     + " is not valid.");
@@ -715,8 +715,7 @@ void connection::keep_alive() const
         {
             int const e(errno);
             SNAP_LOG_WARNING
-                << "snap_communicator::snap_connection::keep_alive():"
-                   " error "
+                << "connection::keep_alive(): error "
                 << e
                 << " ("
                 << strerror(e)
@@ -760,7 +759,7 @@ bool connection::is_done() const
  *
  * So one knows that the write (output) buffer is empty whenever one gets
  * its process_empty_buffer() callback called. At that point, the connection
- * can be removed from the snap_communicator instance since we are done with
+ * can be removed from the communicator instance since we are done with
  * it. The default process_empty_buffer() does that for us whenver the
  * mark_done() function was called.
  *
@@ -801,7 +800,7 @@ void connection::mark_done()
  * restore it as not done.
  *
  * Specifically, this is used by the
- * snap_tcp_blocking_client_message_connection class. When you call the
+ * tcp_blocking_client_message_connection class. When you call the
  * run() function, this mark_not_done() function gets called so in
  * effect you can re-enter the run() loop multiple times. Each time,
  * you have to call the mark_done() function to exit the loop.
@@ -821,7 +820,7 @@ void connection::mark_not_done()
  * connection. It is expected to be overwritten by your class if
  * you expect to use the timeout feature.
  *
- * The snap_timer class is expected to always have a timer (although
+ * The timer class is expected to always have a timer (although
  * the connection can temporarily be disabled) which triggers this
  * callback on a given periodicity.
  */
@@ -833,7 +832,7 @@ void connection::process_timeout()
 /** \brief This callback gets called whenever the signal happened.
  *
  * This function is called whenever a certain signal (as defined in
- * your snap_signal object) was detected while waiting for an
+ * your signal object) was detected while waiting for an
  * event.
  */
 void connection::process_signal()
@@ -884,11 +883,11 @@ void connection::process_write()
  * You may refill it at that time.
  *
  * The callback is often used to remove a connection from the
- * snapcommunicator instance (i.e. just after we sent a last
+ * communicator instance (i.e. just after we sent a last
  * message to the other end.)
  *
  * By default this function removes the connection from the
- * snap_communicator instance if the mark_done() function was
+ * communicator instance if the mark_done() function was
  * called. Otherwise, it just ignores the message.
  */
 void connection::process_empty_buffer()
@@ -1032,7 +1031,7 @@ void connection::process_invalid()
 /** \brief Callback called whenever this connection gets added.
  *
  * This function gets called whenever this connection is added to
- * the snap_communicator object. This gives you the opportunity
+ * the communicator object. This gives you the opportunity
  * to do additional initialization before the run() loop gets
  * called or re-entered.
  */
@@ -1044,7 +1043,7 @@ void connection::connection_added()
 /** \brief Callback called whenever this connection gets removed.
  *
  * This callback gets called after it got removed from the
- * snap_communicator object. This gives you the opportunity
+ * communicator object. This gives you the opportunity
  * to do additional clean ups before the run() loop gets
  * re-entered.
  */
@@ -1054,5 +1053,5 @@ void connection::connection_removed()
 
 
 
-} // namespace snap
+} // namespace ed
 // vim: ts=4 sw=4 et

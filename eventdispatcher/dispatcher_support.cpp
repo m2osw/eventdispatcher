@@ -111,7 +111,7 @@ dispatcher_base::pointer_t dispatcher_support::get_dispatcher() const
  * cases, having a function that handles your command(s) will be more
  * than enough.
  *
- * If you called the add_snap_communicator_commands() function on your
+ * If you called the add_communicator_commands() function on your
  * dispatcher, it won't be necessary to implement the process_message()
  * since it adds a last entry which is a "catch all" entry. This entry
  * uses the function that replies to the user with the UNKNOWN message.
@@ -176,11 +176,11 @@ bool dispatcher_support::dispatch_message(message & msg)
 void dispatcher_support::process_message(message const & msg)
 {
     // We don't currently have access to the send_message() function from
-    // here--the snap_inter_thread_message_connection class causes a problem
+    // here--the inter_thread_message_connection class causes a problem
     // because it has two process_message() functions: process_message_a()
     // and process_message_b().
     //
-    //snap::snap_communicator_message unknown;
+    //message unknown;
     //unknown.reply_to(message);
     //unknown.set_command("UNKNOWN");
     //unknown.add_parameter("command", message.get_command());

@@ -82,7 +82,7 @@ namespace ed
  *              // to exit or has exited; since the write to the pipe
  *              // happens before the thread really exited, but should
  *              // be near the very end, you should be fine calling the
- *              // snap_thread::stop() function to join with it very
+ *              // cppthread::stop() function to join with it very
  *              // quickly.
  *              ...
  *          }
@@ -132,7 +132,7 @@ thread_done_signal::~thread_done_signal()
 
 /** \brief Tell that this connection expects incoming data.
  *
- * The snap_thread_done_signal implements a signal that a secondary
+ * The thread_done_signal implements a signal that a secondary
  * thread can trigger before it quits, hence waking up the main
  * thread immediately instead of polling.
  *

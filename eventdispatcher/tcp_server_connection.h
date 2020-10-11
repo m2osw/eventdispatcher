@@ -52,7 +52,7 @@ public:
                                     , int max_connections = -1
                                     , bool reuse_addr = false);
 
-    // snap_connection implementation
+    // connection implementation
     virtual bool                is_listener() const override;
     virtual int                 get_socket() const override;
 };

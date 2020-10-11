@@ -176,8 +176,8 @@ tcp_server_client_message_connection::tcp_server_client_message_connection(tcp_b
 
 /** \brief Process a line (string) just received.
  *
- * The function parses the line as a message (snap_communicator_message)
- * and then calls the process_message() function if the line was valid.
+ * The function parses the line as a message and then calls the
+ * process_message() function if the line was valid.
  *
  * \param[in] line  The line of text that was just read.
  */

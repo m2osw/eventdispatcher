@@ -53,7 +53,7 @@ public:
     void                        close();
     void                        mark_closed();
 
-    // snap_connection implementation
+    // connection implementation
     virtual bool                is_reader() const override;
     virtual bool                is_writer() const override;
     virtual int                 get_socket() const override;

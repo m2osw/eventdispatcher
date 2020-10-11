@@ -123,9 +123,9 @@ ssize_t tcp_server_client_connection::read(void * buf, size_t count)
  * This write function may not always write all the data you are
  * trying to send to the remote connection. If you want to make
  * sure that all your data is written to the other connection,
- * you want to instead use the snap_tcp_server_client_buffer_connection
+ * you want to instead use the tcp_server_client_buffer_connection
  * which overloads the write() function and saves the data to be
- * written to the socket in a buffer. The snap communicator run
+ * written to the socket in a buffer. The communicator run
  * loop is then responsible for sending all the data.
  *
  * \param[in] buf  The buffer of data to be written to the socket.

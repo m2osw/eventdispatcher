@@ -46,7 +46,7 @@ public:
 
     void                        close();
 
-    // snap_connection implementation
+    // connection implementation
     virtual bool                is_reader() const override;
     virtual int                 get_socket() const override;
 

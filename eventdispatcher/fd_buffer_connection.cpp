@@ -196,8 +196,8 @@ ssize_t fd_buffer_connection::write(void const * data, size_t const length)
  * \todo
  * Look into a way, if possible, to have a single instantiation since
  * as far as I know this code matches the one written in the
- * process_read() of the snap_tcp_client_buffer_connection and
- * the snap_pipe_buffer_connection classes (and now snap_fd_buffer_connection).
+ * process_read() of the tcp_client_buffer_connection and
+ * the pipe_buffer_connection classes (and now fd_buffer_connection).
  */
 void fd_buffer_connection::process_read()
 {

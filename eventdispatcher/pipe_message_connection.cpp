@@ -99,8 +99,8 @@ bool pipe_message_connection::send_message(message const & msg, bool cache)
 
 /** \brief Process a line (string) just received.
  *
- * The function parses the line as a message (snap_communicator_message)
- * and then calls the process_message() function if the line was valid.
+ * The function parses the line as a message and then calls the
+ * process_message() function if the line was valid.
  *
  * \param[in] line  The line of text that was just read.
  */
@@ -122,7 +122,7 @@ void pipe_message_connection::process_line(std::string const & line)
         //       and the messages are not compatible anymore.
         //
         SNAP_LOG_ERROR
-            << "snap_communicator::snap_pipe_message_connection::process_line() was asked to process an invalid message ("
+            << "pipe_message_connection::process_line() was asked to process an invalid message ("
             << line
             << ")"
             << SNAP_LOG_SEND;

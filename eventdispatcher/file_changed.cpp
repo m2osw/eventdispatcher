@@ -77,12 +77,12 @@ file_changed::event_t::event_t(std::string const & watched_path
 {
     if(f_watched_path.empty())
     {
-        throw event_dispatcher_initialization_error("a snap_file_changed watch path cannot be the empty string.");
+        throw event_dispatcher_initialization_error("a file_changed watch path cannot be the empty string.");
     }
 
     if(f_events == SNAP_FILE_CHANGED_EVENT_NO_EVENTS)
     {
-        throw event_dispatcher_initialization_error("a snap_file_changed events parameter cannot be 0.");
+        throw event_dispatcher_initialization_error("a file_changed events parameter cannot be 0.");
     }
 }
 
@@ -209,7 +209,7 @@ file_changed::file_changed()
 {
     if(f_inotify == -1)
     {
-        throw event_dispatcher_initialization_error("snap_file_changed: inotify_init1() failed.");
+        throw event_dispatcher_initialization_error("file_changed: inotify_init1() failed.");
     }
 }
 
@@ -506,7 +506,7 @@ uint32_t file_changed::events_to_mask(event_mask_t const events)
 
     if(mask == 0)
     {
-        throw event_dispatcher_initialization_error("invalid snap_file_changed events parameter, it was not changed to any IN_... flags.");
+        throw event_dispatcher_initialization_error("invalid file_changed events parameter, it was not changed to any IN_... flags.");
     }
 
     return mask;

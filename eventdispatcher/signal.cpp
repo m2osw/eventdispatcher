@@ -63,7 +63,7 @@ namespace
 
 
 
-/** \brief The array of signals handled by snap_signal objects.
+/** \brief The array of signals handled by signal objects.
  *
  * This map holds a list of signal handlers. You cannot register
  * the same signal more than once so this map is used to make
@@ -105,10 +105,10 @@ sigset_t                            g_signal_handlers = sigset_t();
  * thus not have the signal break any of our normal user code.
  *
  * The ppoll() function unblocks all the signals that you listen
- * to (i.e. for each snap_signal object you created.) The run()
+ * to (i.e. for each signal object you created.) The run()
  * loop ends up calling your process_signal() callback function.
  *
- * Note that the snap_signal callback is called from the normal user
+ * Note that the signal callback is called from the normal user
  * environment and not directly from the POSIX signal handler.
  * This means you can call any function from your callback.
  *
@@ -144,7 +144,7 @@ sigset_t                            g_signal_handlers = sigset_t();
  * \warning
  * The the signal gets masked by this constructor. If you want to make
  * sure that most of your code does not get affected by said signal,
- * make sure to create your snap_signal object early on or mask those
+ * make sure to create your signal object early on or mask those
  * signals beforehand. Otherwise the signal could happen before it
  * gets masked. Initialization of your process may not require
  * protection anyway.
@@ -155,20 +155,20 @@ sigset_t                            g_signal_handlers = sigset_t();
  * being said, we my current testing (as of Ubuntu 16.04), it seems
  * to work just fine..
  *
- * \exception snap_communicator_initialization_error
- * Create multiple snap_signal() with the same posix_signal parameter
+ * \exception event_dispatcher_initialization_error
+ * Create multiple signal() with the same posix_signal parameter
  * is not supported and this exception is raised whenever you attempt
- * to do that. Remember that you can have at most one snap_communicator
+ * to do that. Remember that you can have at most one communicator
  * object (hence the singleton.)
  *
- * \exception snap_communicator_runtime_error
+ * \exception event_dispatcher_runtime_error
  * The signalfd() function is expected to create a "socket" (file
  * descriptor) listening for incoming signals. If it fails, this
  * exception is raised (which is very similar to other socket
  * based connections which throw whenever a connection cannot
  * be achieved.)
  *
- * \param[in] posix_signal  The signal to be managed by this snap_signal.
+ * \param[in] posix_signal  The signal to be managed by this signal.
  */
 signal::signal(int posix_signal)
     : f_signal(posix_signal)
@@ -225,10 +225,10 @@ signal::signal(int posix_signal)
 }
 
 
-/** \brief Restore the signal as it was before you created a snap_signal.
+/** \brief Restore the signal as it was before you created a signal.
  *
  * The destructor is expected to restore the signal to what it was
- * before you create this snap_signal. Of course, if you created
+ * before you create this signal. Of course, if you created
  * other signal handlers in between, it will not work right since
  * this function will destroy your handler pointer.
  *
@@ -244,7 +244,7 @@ signal::~signal()
 
 /** \brief Tell that this connection is listening on a Unix signal.
  *
- * The snap_signal implements the signal listening feature. We use
+ * The signal implements the signal listening feature. We use
  * a simple flag in the virtual table to avoid a more expansive
  * dynamic_cast<>() is a loop that goes over all the connections
  * you have defined.
@@ -279,7 +279,7 @@ int signal::get_socket() const
  * This function returns the process identifier (pid_t) of the child that
  * just sent us a SIGCHLD Unix signal.
  *
- * \exception snap_communicator_runtime_error
+ * \exception event_dispatcher_runtime_error
  * This exception is raised if the function gets called before any signal
  * ever occurred.
  *
@@ -289,7 +289,7 @@ pid_t signal::get_child_pid() const
 {
     if(f_signal_info.ssi_signo == 0)
     {
-        throw event_dispatcher_runtime_error("snap_signal::get_child_pid() called before any signal ever occurred.");
+        throw event_dispatcher_runtime_error("signal::get_child_pid() called before any signal ever occurred.");
     }
 
     return f_signal_info.ssi_pid;
@@ -403,7 +403,7 @@ void signal::close()
             {
                 // we cannot throw in a destructor and in most cases this
                 // happens in the destructor...
-                //throw snap_communicator_runtime_error("sigprocmask() failed to block signal.");
+                //throw event_dispatcher_runtime_error("sigprocmask() failed to block signal.");
 
                 int const e(errno);
                 SNAP_LOG_FATAL
@@ -414,7 +414,7 @@ void signal::close()
                     << " -- "
                     << strerror(e)
                     << SNAP_LOG_SEND;
-                std::cerr << "sigprocmask() failed to unblock signal." << std::endl;
+                std::cerr << "signal::close(): sigprocmask() failed to unblock signal." << std::endl;
 
                 std::terminate();
             }
@@ -425,12 +425,12 @@ void signal::close()
 
 /** \brief Unmask a signal that was part of a connection.
  *
- * If you remove a snap_signal connection, you may want to restore
+ * If you remove a signal connection, you may want to restore
  * the mask functionality. By default the signal gets masked but
  * it does not get unmasked.
  *
  * By calling this function just after creation, the signal gets restored
- * (unblocked) whenever the snap_signal object gets destroyed.
+ * (unblocked) whenever the signal object gets destroyed.
  */
 void signal::unblock_signal_on_destruction()
 {

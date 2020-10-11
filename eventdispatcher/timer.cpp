@@ -52,7 +52,7 @@ namespace ed
  * This function initializes the timer object with the specified \p timeout
  * defined in microseconds.
  *
- * Note that by default all snap_connection objects are marked as persistent
+ * Note that by default all connection objects are marked as persistent
  * since in most cases that is the type of connections you are interested
  * in. Therefore timers are also marked as persistent. This means if you
  * want a one time callback, you want to call the remove_connection()
@@ -67,7 +67,7 @@ namespace ed
  * given a chance to process the timer, you only get one single
  * signal.
  *
- * \param[in] communicator  The snap communicator controlling this connection.
+ * \param[in] communicator  The communicator controlling this connection.
  * \param[in] timeout_us  The timeout in microseconds.
  */
 timer::timer(std::int64_t timeout_us)

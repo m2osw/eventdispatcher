@@ -345,7 +345,7 @@ void tcp_client_buffer_connection::process_write()
 /** \brief The hang up event occurred.
  *
  * This function closes the socket and then calls the previous level
- * hang up code which removes this connection from the snap_communicator
+ * hang up code which removes this connection from the communicator
  * object it was last added in.
  */
 void tcp_client_buffer_connection::process_hup()
@@ -367,7 +367,7 @@ void tcp_client_buffer_connection::process_hup()
  *
  * \note
  * At this point I implemented this function so one can instantiate
- * a snap_tcp_server_client_buffer_connection without having to
+ * a tcp_server_client_buffer_connection without having to
  * derive it, although I do not think that is 100% proper.
  *
  * \param[in] line  The line of data that was just read from the input

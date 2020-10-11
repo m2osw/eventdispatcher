@@ -1,6 +1,6 @@
 
 <p align="center">
-<img alt="snaplogger" title="Multi-destination and easily extensible logger in C++."
+<img alt="eventdispatcher" title="C++ Event Dispatcher using poll() to write concurrent tasks in a single thread."
 src="https://raw.githubusercontent.com/m2osw/eventdispatcher/master/doc/eventdispatcher.png" width="321" height="320"/>
 </p>
 
@@ -16,8 +16,8 @@ It was first part of our libsnapwebsites as:
 * `tcp_client_server.cpp/.h`
 * `udp_client_server.cpp/.h`
 
-Now these are all broken up in separate files and work with support
-from libraries found in our contrib folder.
+Now these are all broken up in separate files (84 of them at time of
+writing) and work with support from libraries found in our contrib folder.
 
 ## Features
 
@@ -36,10 +36,16 @@ found in this library:
   - unix signal
   - unix pipe (read/write)
   - thread done
-  - listen to file changes
+  - listen to file changes on your local storage devices
   - any number of timers
 * priority control -- objects can be given a priority
 * easy enable/disable of objects
+
+There are also research projects  which are not yet fully functional but
+if you need such functionality you may be interested in finding out how
+to make it work from our existing code:
+
+* attempt to avoid the SIGPROF from breaking our code by handling the signal
 
 
 # License

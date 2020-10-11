@@ -57,7 +57,7 @@ public:
     int                         get_client_port() const;
     std::string                 get_client_addr_port() const;
 
-    // snap_connection implementation
+    // connection implementation
     virtual bool                is_reader() const override;
     virtual int                 get_socket() const override;
 

@@ -67,12 +67,12 @@ namespace ed
  * This is a class used to handle existing pipes or socket (opposed to other
  * implementations which create a pipe, open a socket, etc.) It is especially
  * useful if you want to listen to stdin and stdout. Use the `fileno()`
- * function to get the file descriptor and create a `snap_fd_connection`
+ * function to get the file descriptor and create a `fd_connection`
  * object what that descriptor.
  *
  * The mode parameter defines how you are to use the file descriptor. In
  * other words, a socket that is read/write could be added to two different
- * `snap_fd_connection` objects: one to read and one to write, instead of
+ * `fd_connection` objects: one to read and one to write, instead of
  * a single read/write object.
  *
  * Note that although you can say it's only going to be used in READ or
@@ -83,9 +83,9 @@ namespace ed
  * \note
  * It is important to note that the lifetime of the file desriptor is
  * not managed by this object. You are responsible for the descriptor to
- * stay valid as long as the connection is added to the snap_communicator
+ * stay valid as long as the connection is added to the communicator
  * list of connections. If you want to close the connection, please first
- * remove the connection from the snap_communicator, destroy the connection,
+ * remove the connection from the communicator, destroy the connection,
  * then close the file descriptor.
  *
  * \note

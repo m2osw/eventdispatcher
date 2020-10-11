@@ -365,7 +365,7 @@ void connection_with_send_message::msg_log_unknown(message & msg)
 /** \brief Send the UNKNOWN message as a reply.
  *
  * This function replies to the \p message with the UNKNOWN message as
- * expected by all our `snap_connection`'s when a service receives a
+ * expected by all our connection objects when a service receives a
  * message it does not know how to handle.
  *
  * It is expected to be used in your dispatcher_match array.
@@ -383,7 +383,7 @@ void connection_with_send_message::msg_log_unknown(message & msg)
  *      {
  *          nullptr
  *        , &my_service_connection::msg_reply_with_unknown
- *        , &snap::dispatcher<my_service_connection>::dispatcher_match::always_match
+ *        , &ed::dispatcher<my_service_connection>::dispatcher_match::always_match
  *      }
  *  };
  * \endcode

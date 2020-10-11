@@ -19,10 +19,10 @@
 #pragma once
 
 /** \file
- * \brief Definitions of the snaplogger version.
+ * \brief Definitions of the event dispatcher version.
  *
- * This header includes the snaplogger library version and functions you
- * can use to check the current version of the library.
+ * This header includes the event dispatcher library version and functions
+ * you can use to check the current version of the library.
  */
 
 

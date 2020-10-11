@@ -25,7 +25,7 @@
  */
 
 
-// snapwebsites lib
+// self
 //
 #include    "eventdispatcher/dispatcher_base.h"
 #include    "eventdispatcher/communicator.h"
@@ -504,7 +504,7 @@ public:
      * (not us) does not understand and adjust our code accordingly (i.e. add
      * support for that message in that receiver or maybe fixed the spelling.)
      */
-    void add_snap_communicator_commands()
+    void add_communicator_commands()
     {
         // avoid more than one realloc()
         //

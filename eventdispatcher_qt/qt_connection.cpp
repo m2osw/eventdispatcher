@@ -22,18 +22,6 @@
 #include "eventdispatcher_qt/qt_connection.h"
 
 
-// snapwebsites lib
-//
-//#include "snaplogger/message.h"
-//#include "snapwebsites/qstring_stream.h"
-
-
-// snapdev lib
-//
-//#include <snapdev/not_reached.h>
-//#include <snapdev/not_used.h>
-
-
 // Qt lib
 //
 #include <QX11Info>
@@ -91,15 +79,15 @@ bool g_qt_communicator_created = false;
 
 
 /** \class qt_connection
- * \brief Handle the Qt connection along the snap_communicator.
+ * \brief Handle the Qt connection along the communicator.
  *
  * This class is used to handle the Qt connection along your other
- * snap_connection objects. You can only create one of them. Attempt
+ * connection objects. You can only create one of them. Attempt
  * to create a second one and it will throw an exception.
  *
  * The idea is pretty simple, you create the qt_connection and
- * add it as a connection to the snap_communicator. Then call the
- * snap_communicator run() function instead of the Qt application
+ * add it as a connection to the communicator. Then call the
+ * communicator::run() function instead of the Qt application
  * run() function. The messages will be executed by the
  * qt_connection instead.
  */

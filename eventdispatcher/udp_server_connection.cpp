@@ -62,7 +62,7 @@ namespace ed
  * listener which wakes up whenever a send() is sent to this listener
  * address and port.
  *
- * \param[in] communicator  The snap communicator controlling this connection.
+ * \param[in] communicator  The communicator controlling this connection.
  * \param[in] addr  The address to listen on. It may be set to "0.0.0.0".
  * \param[in] port  The port to listen on.
  */

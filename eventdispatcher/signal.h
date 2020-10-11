@@ -52,7 +52,7 @@ public:
     void                        close();
     void                        unblock_signal_on_destruction();
 
-    // snap_connection implementation
+    // connection implementation
     virtual bool                is_signal() const override;
     virtual int                 get_socket() const override;
 

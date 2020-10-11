@@ -73,7 +73,7 @@ namespace ed
  * parameter.
  *
  * If you are a pure client (opposed to a client that was just accepted)
- * you may want to consider using the snap_tcp_client_buffer_connection
+ * you may want to consider using the tcp_client_buffer_connection
  * instead. That gives you a way to open the socket from a set of address
  * and port definitions among other things.
  *
@@ -185,8 +185,8 @@ ssize_t tcp_server_client_buffer_connection::write(void const * data, size_t con
  * \todo
  * Look into a way, if possible, to have a single instantiation since
  * as far as I know this code matches the one written in the
- * process_read() of the snap_tcp_client_buffer_connection and
- * the snap_pipe_buffer_connection classes.
+ * process_read() of the tcp_client_buffer_connection and
+ * the pipe_buffer_connection classes.
  */
 void tcp_server_client_buffer_connection::process_read()
 {

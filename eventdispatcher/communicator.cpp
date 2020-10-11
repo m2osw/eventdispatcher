@@ -103,7 +103,7 @@ communicator::pointer_t *           g_instance = nullptr;
 
 
 
-/** \brief Initialize a snap communicator object.
+/** \brief Initialize a communicator object.
  *
  * This function initializes the communicator object.
  */
@@ -397,7 +397,7 @@ bool communicator::run()
             }
             if(e == 0)
             {
-                // this should only happend on snap_timer objects
+                // this should only happend on timer objects
                 //
                 continue;
             }
@@ -451,7 +451,7 @@ bool communicator::run()
                 timeout /= 1000;
                 if(timeout == 0)
                 {
-                    // less than one is a waste of time (CPU intenssive
+                    // less than one is a waste of time (CPU intensive
                     // until the time is reached, we can be 1 ms off
                     // instead...)
                     timeout = 1;
@@ -480,7 +480,7 @@ bool communicator::run()
         //       with nearly no additional work from us
         //
         errno = 0;
-        int const r(poll(&fds[0], fds.size(), timeout));
+        int const r(poll(fds.empty() ? nullptr : &fds[0], fds.size(), timeout));
         if(r >= 0)
         {
             // quick sanity check
@@ -636,7 +636,7 @@ bool communicator::run()
             if(errno == EINTR)
             {
                 // Note: if the user wants to prevent this error, he should
-                //       use the snap_signal with the Unix signals that may
+                //       use the signal with the Unix signals that may
                 //       happen while calling poll().
                 //
                 throw event_dispatcher_runtime_error("communicator::run(): EINTR occurred while in poll() -- interrupts are not supported yet though");
