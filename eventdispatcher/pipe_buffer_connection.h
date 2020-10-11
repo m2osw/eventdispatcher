@@ -41,10 +41,10 @@ class pipe_buffer_connection
 public:
     typedef std::shared_ptr<pipe_buffer_connection>    pointer_t;
 
-    // ed::connection
+    // connection
     virtual bool                is_writer() const override;
 
-    // ed::pipe_connection implementation
+    // pipe_connection implementation
     virtual ssize_t             write(void const * data, size_t length) override;
     virtual void                process_read() override;
     virtual void                process_write() override;
