@@ -1,7 +1,7 @@
 eventdispatcher (1.1.10.0~bionic) bionic; urgency=high
 
   * Many cleanup of old snap object references.
-  * Fixed a few links/references
+  * Fixed a few links/references.
   * Removed a few commented out objects/functions.
 
  -- Alexis Wilke <alexis@m2osw.com>  Thu, 10 Sep 2020 19:55:35 -0700

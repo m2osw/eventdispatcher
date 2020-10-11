@@ -65,7 +65,7 @@ namespace ed
  * is done, the thread calls the thread_done() function. That will wake
  * up the main process.
  *
- * The same snap_thread_done_signal class can be used multiple times,
+ * The same thread_done_signal class can be used multiple times,
  * but only by one thread at a time. Otherwise you cannot know which
  * thread sent the message and by the time you attempt a join, you may
  * be testing the wrong thread (either that or you need another type
