@@ -36,6 +36,11 @@
 #include    <snaplogger/message.h>
 
 
+// cppthread lib
+//
+#include    <cppthread/thread.h>
+
+
 // C++ lib
 //
 #include    <iostream>
@@ -142,7 +147,7 @@ sigset_t                            g_signal_handlers = sigset_t();
  * unblock_signal() function right after you create your connection.
  *
  * \warning
- * The the signal gets masked by this constructor. If you want to make
+ * The signal gets masked by this constructor. If you want to make
  * sure that most of your code does not get affected by said signal,
  * make sure to create your signal object early on or mask those
  * signals beforehand. Otherwise the signal could happen before it
@@ -152,8 +157,20 @@ sigset_t                            g_signal_handlers = sigset_t();
  * \bug
  * You should not use signal() and setup a handler for the same signal.
  * It will not play nice to have both types of signal handlers. That
- * being said, we my current testing (as of Ubuntu 16.04), it seems
+ * being said, with my current testing (as of Ubuntu 16.04), it seems
  * to work just fine..
+ *
+ * \bug
+ * At the moment you can't create a signal() object if you already
+ * started a thread. This is because the thread could end up being
+ * the one accepting the signal and when that happens, it would most
+ * certainly crash (i.e. the `sigprocmask()` only protects the current
+ * thread and its spawns, not existing threads). Since you may not be
+ * in control of other threads, this is really not easy to handle. One
+ * possibility, though, would be to offer a "low level" function which
+ * you can call near the beginning of your process (i.e. in main())
+ * and call that function to "pre-block" the signals you're interested
+ * in.
  *
  * \exception event_dispatcher_initialization_error
  * Create multiple signal() with the same posix_signal parameter
@@ -188,11 +205,17 @@ signal::signal(int posix_signal)
         throw event_dispatcher_initialization_error("posix_signal (f_signal) is not a valid/recognized signal number.");
     }
 
+    cppthread::process_ids_t const pids(cppthread::get_thread_ids());
+    if(pids.size() != 1)
+    {
+        throw event_dispatcher_initialization_error("this object must be created before any threads or the signals will kill your process.");
+    }
+
     // create a mask for that signal
     //
     sigset_t set;
     sigemptyset(&set);
-    sigaddset(&set, f_signal); // ignore error, we already know f_signal is valid
+    sigaddset(&set, f_signal); // ignore returned error, we already know f_signal is valid
 
     // first we block the signal
     //
@@ -207,6 +230,8 @@ signal::signal(int posix_signal)
     f_socket = signalfd(-1, &set, SFD_NONBLOCK | SFD_CLOEXEC);
     if(f_socket == -1)
     {
+        sigprocmask(SIG_UNBLOCK, &set, nullptr);
+
         int const e(errno);
         std::string err("signalfd() failed to create a signal listener for signal ");
         err += std::to_string(f_signal);

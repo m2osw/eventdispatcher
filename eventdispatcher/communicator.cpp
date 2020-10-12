@@ -468,9 +468,9 @@ bool communicator::run()
             return false;
         }
 
-//SNAP_LOG_TRACE << "communicator::run(): "
+//SNAP_LOG_TRACE << "communicator::run(): ready to poll(); "
 //               << "count " << fds.size()
-//               << "timeout " << timeout
+//               << " timeout " << timeout
 //               << " (next was: " << next_timeout_timestamp
 //               << ", current ~ " << get_current_date()
 //               << ")"

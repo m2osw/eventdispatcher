@@ -1,5 +1,6 @@
 eventdispatcher (1.1.10.0~bionic) bionic; urgency=high
 
+  * Fixed the signalfd, it won't work well if you already started threads.
   * Many cleanup of old snap object references.
   * Fixed a few links/references.
   * Removed a few commented out objects/functions.
