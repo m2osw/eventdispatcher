@@ -208,7 +208,9 @@ signal::signal(int posix_signal)
     cppthread::process_ids_t const pids(cppthread::get_thread_ids());
     if(pids.size() != 1)
     {
-        throw event_dispatcher_initialization_error("this object must be created before any threads or the signals will kill your process.");
+        std::string const msg("an ed::signal object must be created before any threads or the signals will kill your process.");
+        std::cerr << msg << std::endl;
+        throw event_dispatcher_initialization_error(msg);
     }
 
     // create a mask for that signal
