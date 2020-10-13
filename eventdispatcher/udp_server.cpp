@@ -156,7 +156,7 @@ udp_server::udp_server(std::string const & addr, int port, int family, std::stri
     //
     if(multicast_addr != nullptr)
     {
-        struct ip_mreqn mreq;
+        struct ip_mreqn mreq = {};
 
         std::stringstream decimal_port;
         decimal_port << f_port;
@@ -174,29 +174,47 @@ udp_server::udp_server(std::string const & addr, int port, int family, std::stri
         r = getaddrinfo(multicast_addr->c_str(), port_str.c_str(), &hints, &a);
         if(r != 0 || a == nullptr)
         {
-            throw event_dispatcher_runtime_error("invalid address or port for UDP socket: \"" + addr + ":" + port_str + "\"");
+            throw event_dispatcher_runtime_error(
+                      "invalid address or port for UDP multicast socket: \""
+                    + *multicast_addr
+                    + "\"");
         }
 
         // both addresses must have the right size
         //
-        if(a->ai_addrlen != sizeof(mreq.imr_multiaddr)
-        || f_addrinfo->ai_addrlen != sizeof(mreq.imr_address))
+        if(a->ai_addrlen <= sizeof(mreq.imr_multiaddr)
+        || f_addrinfo->ai_addrlen <= sizeof(mreq.imr_address))
         {
-            throw event_dispatcher_runtime_error("invalid address type for UDP multicast: \"" + addr + ":" + port_str
-                                                        + "\" or \"" + *multicast_addr + ":" + port_str + "\"");
+            throw event_dispatcher_runtime_error(
+                      "invalid address type for UDP multicast: \""
+                    + addr + ":" + port_str
+                    + "\" or \""
+                    + *multicast_addr + ":" + port_str + "\" (sizes: "
+                    + std::to_string(a->ai_addrlen) + ", "
+                    + std::to_string(f_addrinfo->ai_addrlen) + ", "
+                    + std::to_string(sizeof(mreq.imr_address)) + ")");
         }
 
-        memcpy(&mreq.imr_multiaddr, a->ai_addr->sa_data, sizeof(mreq.imr_multiaddr));
-        memcpy(&mreq.imr_address, f_addrinfo->ai_addr->sa_data, sizeof(mreq.imr_address));
+        memcpy(&mreq.imr_multiaddr, &reinterpret_cast<sockaddr_in *>(a->ai_addr)->sin_addr, sizeof(mreq.imr_multiaddr));
+        memcpy(&mreq.imr_address, &reinterpret_cast<sockaddr_in *>(f_addrinfo->ai_addr)->sin_addr, sizeof(mreq.imr_address));
         mreq.imr_ifindex = 0;   // no specific interface
+
+        // TODO: fix this free because we actually will leak if we throw
+        //       and we use it in our messages so it really needs to be an
+        //       RAII object which will hold the pointer for a while.
+        //
+        freeaddrinfo(a);
 
         r = setsockopt(f_socket.get(), IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
         if(r < 0)
         {
             int const e(errno);
-            throw event_dispatcher_runtime_error("IP_ADD_MEMBERSHIP failed for: \"" + addr + ":" + port_str
-                                                        + "\" or \"" + *multicast_addr + ":" + port_str + "\", "
-                                                        + std::to_string(e) + strerror(e));
+            throw event_dispatcher_runtime_error(
+                      "IP_ADD_MEMBERSHIP failed for: \""
+                    + addr + ":" + port_str
+                    + "\" or \"" + *multicast_addr + ":" + port_str
+                    + "\", errno: "
+                    + std::to_string(e) + ", " + strerror(e));
         }
 
         // setup the multicast to 0 so we don't receive other's
