@@ -43,7 +43,11 @@ class udp_server_connection
 public:
     typedef std::shared_ptr<udp_server_connection>    pointer_t;
 
-                                udp_server_connection(std::string const & addr, int port);
+                                udp_server_connection(
+                                      std::string const & addr
+                                    , int port
+                                    , int family = AF_UNSPEC
+                                    , std::string const * multicast_addr = nullptr);
 
     // connection implementation
     virtual bool                is_reader() const override;

@@ -327,7 +327,7 @@ int udp_server::timed_recv(char * msg, size_t const max_size, int const max_wait
  *
  * \sa timed_recv()
  */
-std::string udp_server::timed_recv( int const bufsize, int const max_wait_ms )
+std::string udp_server::timed_recv(int const bufsize, int const max_wait_ms)
 {
     std::vector<char> buf;
     buf.resize( bufsize + 1, '\0' ); // +1 for ending \0

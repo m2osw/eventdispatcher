@@ -66,8 +66,12 @@ namespace ed
  * \param[in] addr  The address to listen on. It may be set to "0.0.0.0".
  * \param[in] port  The port to listen on.
  */
-udp_server_connection::udp_server_connection(std::string const & addr, int port)
-    : udp_server(addr, port)
+udp_server_connection::udp_server_connection(
+              std::string const & addr
+            , int port
+            , int family
+            , std::string const * multicast_addr)
+    : udp_server(addr, port, family, multicast_addr)
 {
 }
 

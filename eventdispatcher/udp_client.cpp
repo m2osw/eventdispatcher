@@ -50,7 +50,7 @@ namespace ed
  * The \p addr parameter is a textual address. It may be an IPv4 or IPv6
  * address and it can represent a host name or an address defined with
  * just numbers. If the address cannot be resolved then an error occurs
- * and constructor throws.
+ * and the constructor throws.
  *
  * \note
  * The socket is open in this process. If you fork() or exec() then the
@@ -91,7 +91,7 @@ udp_client::~udp_client()
  * cannot be used to change the destination as it was defined when creating
  * the udp_client object.
  *
- * The size must be small enough for the message to fit. In most cases we
+ * The size must be small enough for the message to fit. In most cases, we
  * use these in Snap! to send very small signals (i.e. 4 bytes commands.)
  * Any data we would want to share remains in the Cassandra database so
  * that way we can avoid losing it because of a UDP message.
