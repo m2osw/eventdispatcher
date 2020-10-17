@@ -1,6 +1,7 @@
 eventdispatcher (1.1.12.0~bionic) bionic; urgency=high
 
-  * Fixed the multicast initialization (copy correct address).
+  * Fixed the multicast initialization (copy correct address, bind to multicast
+    address, not interface, use RAII for the addrinfo).
   * Various clean ups in the function.
 
  -- Alexis Wilke <alexis@m2osw.com>  Tue, 13 Oct 2020 09:15:51 -0700
