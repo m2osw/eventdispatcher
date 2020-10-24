@@ -1,3 +1,9 @@
+eventdispatcher (1.1.12.1~bionic) bionic; urgency=high
+
+  * Bump version to recompile against new snaplogger library.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sat, 24 Oct 2020 10:04:13 -0700
+
 eventdispatcher (1.1.12.0~bionic) bionic; urgency=high
 
   * Fixed the multicast initialization (copy correct address, bind to multicast
