@@ -89,12 +89,12 @@ namespace ed
  * processes running on that server. Any one process can listen for
  * any and all multicast messages from any other process. Our
  * implementation limits the multicast from a specific IP. However.
- * other processes can also receive you packets and there is nothing
+ * other processes can also receive your packets and there is nothing
  * you can do to prevent that.
  *
  * \exception udp_client_server_runtime_error
  * The udp_client_server_runtime_error exception is raised when the address
- * and port combinaison cannot be resolved or if the socket cannot be
+ * and port combination cannot be resolved or if the socket cannot be
  * opened.
  *
  * \param[in] addr  The address we receive on.
