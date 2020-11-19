@@ -50,6 +50,11 @@
 #include    <openssl/ssl.h>
 
 
+// C lib
+//
+#include    <fcntl.h>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -76,6 +81,7 @@ public:
     std::shared_ptr<SSL_CTX>    f_ssl_ctx = std::shared_ptr<SSL_CTX>();
     std::shared_ptr<BIO>        f_listen = std::shared_ptr<BIO>();
     bool                        f_keepalive = true;
+    bool                        f_close_on_exec = false;
 };
 
 
@@ -130,15 +136,15 @@ public:
 tcp_bio_server::tcp_bio_server(addr::addr const & addr_port, int max_connections, bool reuse_addr, std::string const & certificate, std::string const & private_key, mode_t mode)
     : f_impl(std::make_shared<detail::tcp_bio_server_impl>())
 {
-    f_impl->f_max_connections = max_connections <= 0 ? MAX_CONNECTIONS : max_connections;
-    if(f_impl->f_max_connections < 5)
-    {
-        f_impl->f_max_connections = 5;
-    }
-    else if(f_impl->f_max_connections > 1000)
-    {
-        f_impl->f_max_connections = 1000;
-    }
+    f_impl->f_max_connections = std::clamp(max_connections <= 0 ? MAX_CONNECTIONS : max_connections, 5, 1000);
+    //if(f_impl->f_max_connections < 5)
+    //{
+    //    f_impl->f_max_connections = 5;
+    //}
+    //else if(f_impl->f_max_connections > 1000)
+    //{
+    //    f_impl->f_max_connections = 1000;
+    //}
 
     detail::bio_initialize();
 
@@ -323,6 +329,93 @@ tcp_bio_server::~tcp_bio_server()
 }
 
 
+/** \brief Return the current status of the keepalive flag.
+ *
+ * This function returns the current status of the keepalive flag. This
+ * flag is set to true by default (in the constructor.) It can be
+ * changed with the set_keepalive() function.
+ *
+ * The flag is used to mark new connections with the SO_KEEPALIVE flag.
+ * This is used whenever a service may take a little to long to answer
+ * and avoid losing the TCP connection before the answer is sent to
+ * the client.
+ *
+ * \warning
+ * It is very likely that the BIO interface forces the keepalive flag
+ * automatically so even if false here, it is very likely that your
+ * connection will either way be marked as keepalive.
+ *
+ * \return The current status of the keepalive flag.
+ */
+bool tcp_bio_server::get_keepalive() const
+{
+    return f_impl->f_keepalive;
+}
+
+
+/** \brief Set the keepalive flag.
+ *
+ * This function sets the keepalive flag to either true (i.e. mark connection
+ * sockets with the SO_KEEPALIVE flag) or false. The default is true (as set
+ * in the constructor,) because in most cases this is a feature people want.
+ *
+ * \warning
+ * The keepalive flag is likely force within the BIO interface, so setting it
+ * to true here (which is the default anyway) probably has no real effect
+ * (i.e. the fact is set a second time).
+ *
+ * \param[in] yes  Whether to keep new connections alive even when no traffic
+ * goes through.
+ */
+void tcp_bio_server::set_keepalive(bool yes)
+{
+    f_impl->f_keepalive = yes;
+}
+
+
+/** \brief Return the current status of the close_on_exec flag.
+ *
+ * This function returns the current status of the close_on_exec flag. This
+ * flag is set to false by default (in the constructor.) It can be
+ * changed with the set_close_on_exec() function.
+ *
+ * The flag is used to atomically mark new connections with the FD_CLOEXEC
+ * flag. This prevents child processes from inhiriting the socket (i.e. if
+ * you use the system() function, for example, that process would inherit
+ * your socket).
+ *
+ * \return The current status of the close_on_exec flag.
+ */
+bool tcp_bio_server::get_close_on_exec() const
+{
+    return f_impl->f_close_on_exec;
+}
+
+
+/** \brief Set the close_on_exec flag.
+ *
+ * This function sets the close_on_exec flag to either true (i.e. mark connection
+ * sockets with the FD_CLOEXEC flag) or false. The default is false (as set
+ * in the constructor,) because in our legacy code, the flag is not expected
+ * to be set.
+ *
+ * \warning
+ * This is not thread safe. The BIO_do_accept() implementation uses the
+ * accept() function which then returns and we set the FD_CLOEXEC flag
+ * on the socket. This means it's not secure if you use exec() in a
+ * separate thread (i.e. it may share the socket anyway unless your accept
+ * is protected from such things). If you need to have a separate process,
+ * look into using a fork() instead of force close the sockets in the
+ * child process.
+ *
+ * \param[in] yes  Whether to close on exec() or not.
+ */
+void tcp_bio_server::set_close_on_exec(bool yes)
+{
+    f_impl->f_close_on_exec = yes;
+}
+
+
 /** \brief Tell you whether the server uses a secure BIO or not.
  *
  * This function checks whether the BIO is using encryption (true)
@@ -381,7 +474,7 @@ tcp_bio_client::pointer_t tcp_bio_server::accept()
         // TBD: should we instead return an empty shared pointer in this case?
         //
         detail::bio_log_errors();
-        throw event_dispatcher_runtime_error("failed accepting a new BIO");
+        throw event_dispatcher_runtime_error("failed accepting a new BIO client");
     }
 
     // retrieve the new connection by "popping it"
@@ -395,6 +488,10 @@ tcp_bio_client::pointer_t tcp_bio_server::accept()
     }
 
     // mark the new connection with the SO_KEEPALIVE flag
+    //
+    // note that it is likely that the BIO implementation already does that
+    // automatically once the accept() succeeded.
+    //
     if(f_impl->f_keepalive)
     {
         // retrieve the socket (we do not yet have a bio_client object
@@ -416,6 +513,31 @@ tcp_bio_client::pointer_t tcp_bio_server::accept()
                 SNAP_LOG_WARNING
                     << "tcp_bio_server::accept(): an error occurred trying"
                        " to mark accepted socket with SO_KEEPALIVE."
+                    << SNAP_LOG_SEND;
+            }
+        }
+    }
+
+    // force a close on exec() to avoid sharing the socket in child processes
+    if(f_impl->f_close_on_exec)
+    {
+        // retrieve the socket (we do not yet have a bio_client object
+        // so we cannot call a get_socket() function...)
+        //
+        int socket(-1);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+        BIO_get_fd(bio.get(), &socket);
+#pragma GCC diagnostic pop
+        if(socket >= 0)
+        {
+            // if this call fails, we ignore the error, but still log the event
+            //
+            if(fcntl(socket, F_SETFD, FD_CLOEXEC) != 0)
+            {
+                SNAP_LOG_WARNING
+                    << "tcp_bio_server::accept(): an error occurred trying"
+                       " to mark accepted socket with FD_CLOEXEC."
                     << SNAP_LOG_SEND;
             }
         }

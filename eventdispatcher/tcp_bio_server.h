@@ -75,6 +75,10 @@ public:
                                     , mode_t mode);
     virtual                     ~tcp_bio_server();
 
+    bool                        get_keepalive() const;
+    void                        set_keepalive(bool yes = true);
+    bool                        get_close_on_exec() const;
+    void                        set_close_on_exec(bool yes = true);
     bool                        is_secure() const;
     int                         get_socket() const;
     tcp_bio_client::pointer_t   accept();

@@ -1,3 +1,12 @@
+eventdispatcher (1.1.14.0~bionic) bionic; urgency=high
+
+  * We are actually using the tcp_bio_server so the close-on-exec needs to be
+    in that class as well (the tcp_server may actually be removed at some
+    point since it pretty much a duplicate of the tcp_biod_server).
+  * Also allow changing the keepalive flag.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Thu, 19 Nov 2020 11:44:57 -0800
+
 eventdispatcher (1.1.13.0~bionic) bionic; urgency=high
 
   * Added support for close-on-exec in the TCP server.
