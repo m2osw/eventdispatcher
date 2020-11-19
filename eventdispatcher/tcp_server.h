@@ -60,6 +60,8 @@ public:
     std::string         get_addr() const;
     bool                get_keepalive() const;
     void                set_keepalive(bool yes = true);
+    bool                get_close_on_exec() const;
+    void                set_close_on_exec(bool yes = true);
 
     int                 accept(int const max_wait_ms = -1);
     int                 get_last_accepted_socket() const;
@@ -72,6 +74,7 @@ private:
     int                 f_accepted_socket = -1;
     bool                f_keepalive = true;
     bool                f_auto_close = false;
+    bool                f_close_on_exec = false;
 };
 
 

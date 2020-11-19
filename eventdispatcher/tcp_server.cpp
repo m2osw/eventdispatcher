@@ -257,7 +257,7 @@ std::string tcp_server::get_addr() const
  *
  * This function returns the current status of the keepalive flag. This
  * flag is set to true by default (in the constructor.) It can be
- * changed with the keepalive() function.
+ * changed with the set_keepalive() function.
  *
  * The flag is used to mark new connections with the SO_KEEPALIVE flag.
  * This is used whenever a service may take a little to long to answer
@@ -284,6 +284,40 @@ bool tcp_server::get_keepalive() const
 void tcp_server::set_keepalive(bool yes)
 {
     f_keepalive = yes;
+}
+
+
+/** \brief Return the current status of the close_on_exec flag.
+ *
+ * This function returns the current status of the close_on_exec flag. This
+ * flag is set to false by default (in the constructor.) It can be
+ * changed with the set_close_on_exec() function.
+ *
+ * The flag is used to atomically mark new connections with the FD_CLOEXEC
+ * flag. This prevents child processes from inhiriting the socket (i.e. if
+ * you use the system() function, for example, that process would inherit
+ * your socket).
+ *
+ * \return The current status of the close_on_exec flag.
+ */
+bool tcp_server::get_close_on_exec() const
+{
+    return f_close_on_exec;
+}
+
+
+/** \brief Set the close_on_exec flag.
+ *
+ * This function sets the close_on_exec flag to either true (i.e. mark connection
+ * sockets with the FD_CLOEXEC flag) or false. The default is false (as set
+ * in the constructor,) because in our legacy code, the flag is not expected
+ * to be set.
+ *
+ * \param[in] yes  Whether to close on exec() or not.
+ */
+void tcp_server::set_close_on_exec(bool yes)
+{
+    f_close_on_exec = yes;
 }
 
 
@@ -328,13 +362,18 @@ void tcp_server::set_keepalive(bool yes)
  * DO NOT use the shutdown() call since we may end up forking and using
  * that connection in the child.
  *
+ * \note
+ * If you want to have the FD_CLOEXEC flag set, make sure to call the
+ * set_close_on_exec() function before you call the accept() function.
+ *
  * \param[in] max_wait_ms  The maximum number of milliseconds to wait for
  *            a message. If set to -1 (the default), accept() will block
  *            indefintely.
  *
- * \return A client socket descriptor or -1 if an error occured, -2 if timeout and max_wait is set.
+ * \return A client socket descriptor, -1 if an error occured, or
+ *         -2 if it times out and max_wait is set.
  */
-int tcp_server::accept( int const max_wait_ms )
+int tcp_server::accept(int const max_wait_ms)
 {
     // auto-close?
     if(f_auto_close && f_accepted_socket != -1)
@@ -389,10 +428,13 @@ int tcp_server::accept( int const max_wait_ms )
 
     // accept the next connection
     //
-    struct sockaddr_in accepted_addr;
+    struct sockaddr_in accepted_addr = {};
     socklen_t addr_len(sizeof(accepted_addr));
-    memset(&accepted_addr, 0, sizeof(accepted_addr));
-    f_accepted_socket = ::accept(f_socket, reinterpret_cast<struct sockaddr *>(&accepted_addr), &addr_len);
+    f_accepted_socket = ::accept4(
+                  f_socket
+                , reinterpret_cast<struct sockaddr *>(&accepted_addr)
+                , &addr_len
+                , f_close_on_exec ? SOCK_CLOEXEC : 0);
 
     // mark the new connection with the SO_KEEPALIVE flag
     //
