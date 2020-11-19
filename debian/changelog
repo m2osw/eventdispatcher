@@ -1,3 +1,9 @@
+eventdispatcher (1.1.15.0~bionic) bionic; urgency=high
+
+  * Also set the FD_CLOEXEC on the listening socket.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Thu, 19 Nov 2020 13:06:46 -0800
+
 eventdispatcher (1.1.14.0~bionic) bionic; urgency=high
 
   * We are actually using the tcp_bio_server so the close-on-exec needs to be

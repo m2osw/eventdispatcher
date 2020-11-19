@@ -399,6 +399,10 @@ bool tcp_bio_server::get_close_on_exec() const
  * in the constructor,) because in our legacy code, the flag is not expected
  * to be set.
  *
+ * \note
+ * When set to true, the FD_CLOEXEC is also set on the listening socket so
+ * the child can't snatch connections from under our feet.
+ *
  * \warning
  * This is not thread safe. The BIO_do_accept() implementation uses the
  * accept() function which then returns and we set the FD_CLOEXEC flag
@@ -413,6 +417,30 @@ bool tcp_bio_server::get_close_on_exec() const
 void tcp_bio_server::set_close_on_exec(bool yes)
 {
     f_impl->f_close_on_exec = yes;
+
+    if(yes)
+    {
+        // retrieve the socket (we do not yet have a bio_client object
+        // so we cannot call a get_socket() function...)
+        //
+        int socket(-1);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+        BIO_get_fd(f_impl->f_listen.get(), &socket);
+#pragma GCC diagnostic pop
+        if(socket >= 0)
+        {
+            // if this call fails, we ignore the error, but still log the event
+            //
+            if(fcntl(socket, F_SETFD, FD_CLOEXEC) != 0)
+            {
+                SNAP_LOG_WARNING
+                    << "tcp_bio_server::accept(): an error occurred trying"
+                       " to mark accepted socket with FD_CLOEXEC."
+                    << SNAP_LOG_SEND;
+            }
+        }
+    }
 }
 
 
