@@ -349,7 +349,7 @@ public:
          */
         bool execute(T * connection, ::ed::message & msg) const
         {
-            match_t m(f_match(f_expr, msg));
+            match_t m(f_match(f_expr == nullptr ? std::string() : f_expr, msg));
             if(m == match_t::MATCH_TRUE
             || m == match_t::MATCH_CALLBACK)
             {
@@ -387,12 +387,12 @@ public:
             return f_match == &ed::dispatcher<T>::dispatcher_match::always_match;
         }
 
-        /** \brief Check whether f_match is always_match().
+        /** \brief Check whether f_match is callback_match().
          *
          * This function checks whether the f_match function was defined
-         * to always_match() and if so returns true.
+         * to callback_match() and if so returns true.
          *
-         * \return true if f_match is the always_match() function.
+         * \return true if f_match is the callback_match() function.
          */
         bool match_is_callback_match() const
         {

@@ -149,8 +149,8 @@ bool tcp_client_buffer_connection::has_output() const
  * \param[out] length  The number of bytes to send.
  *
  * \return The number of bytes that were saved in our buffer, 0 if
- *         no data was written to the buffer (i.e. the socket is
- *         closed, length is zero, or data is a null pointer.)
+ *         no data was written to the buffer (i.e. length is zero or data
+ *         is a null pointer). Or -1 on an error (i.e. the socket is closed).
  */
 ssize_t tcp_client_buffer_connection::write(void const * data, size_t length)
 {
