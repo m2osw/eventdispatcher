@@ -1,3 +1,15 @@
+eventdispatcher (1.1.17.0~bionic) bionic; urgency=high
+
+  * Added the ed-signal tool.
+  * Added a corresponding configuration file.
+  * Fixed some of the dispatcher and other documentation.
+  * Added a restart() function for the RESTART message (instead of using
+    ready() which is for another message)
+  * Renamed the variables of the connection_with_send_message() to avoid the
+    shadowing of the message class.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Tue, 08 Dec 2020 13:11:44 -0800
+
 eventdispatcher (1.1.16.0~bionic) bionic; urgency=high
 
   * Fixed the last match in case we hit a nullptr because creating an

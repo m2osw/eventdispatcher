@@ -40,21 +40,22 @@ class connection_with_send_message
 public:
     virtual                     ~connection_with_send_message();
 
-    // new callback
-    virtual bool                send_message(message const & message, bool cache = false) = 0;
+    // new callbacks
+    virtual bool                send_message(message const & msg, bool cache = false) = 0;
 
-    virtual void                msg_help(message & message);
-    virtual void                msg_alive(message & message);
-    virtual void                msg_log(message & message);
-    virtual void                msg_quitting(message & message);
-    virtual void                msg_ready(message & message);
-    virtual void                msg_restart(message & message);
-    virtual void                msg_stop(message & message);
-    virtual void                msg_log_unknown(message & message);
-    virtual void                msg_reply_with_unknown(message & message);
+    virtual void                msg_help(message & msg);
+    virtual void                msg_alive(message & msg);
+    virtual void                msg_log(message & msg);
+    virtual void                msg_quitting(message & msg);
+    virtual void                msg_ready(message & msg);
+    virtual void                msg_restart(message & msg);
+    virtual void                msg_stop(message & msg);
+    virtual void                msg_log_unknown(message & msg);
+    virtual void                msg_reply_with_unknown(message & msg);
 
     virtual void                help(string_list_t & commands);
-    virtual void                ready(message & message);
+    virtual void                ready(message & msg);
+    virtual void                restart(message & msg);
     virtual void                stop(bool quitting);
 };
 

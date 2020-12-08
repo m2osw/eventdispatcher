@@ -85,7 +85,7 @@ connection_with_send_message::~connection_with_send_message()
  *
  * \param[in] message  The HELP message.
  *
- * \sa msg_ready()
+ * \sa help()
  */
 void connection_with_send_message::msg_help(message & msg)
 {
@@ -206,14 +206,14 @@ void connection_with_send_message::msg_alive(message & msg)
 
 /** \brief Reconfigure the logger.
  *
- * Whenever the logrotate runs or some changes are maed to the log
+ * Whenever the logrotate runs or some changes are made to the log
  * definitions, the corresponding daemons need to reconfigure their
  * logger to make use of the new file and settings. This command is
- * used for the purpose.
+ * used for this purpose.
  *
  * \note
  * If the environment logger is not currently configured, this message
- * gets ignored.
+ * is ignored.
  *
  * \param[in] message  The STOP message.
  */
@@ -253,6 +253,7 @@ void connection_with_send_message::msg_log(message & msg)
  * \param[in] message  The STOP message.
  *
  * \sa msg_stop()
+ * \sa stop()
  */
 void connection_with_send_message::msg_quitting(message & msg)
 {
@@ -262,17 +263,17 @@ void connection_with_send_message::msg_quitting(message & msg)
 }
 
 
-/** \brief Call you ready() function with the message.
+/** \brief Calls your ready() function with the message.
  *
  * All daemons using the snapcommunicator daemon have to have a ready()
  * function which gets called once the HELP and COMMAND message were
- * handled. This is why your daemon is expected to be ready to start
+ * handled. This is when your daemon is expected to be ready to start
  * working. Some daemon, though, start working immediately no matter
  * what (i.e. snapwatchdog and snapfirewall do work either way.)
  *
  * \param[in] message  The READY message.
  *
- * \sa msg_help()
+ * \sa ready()
  */
 void connection_with_send_message::msg_ready(message & msg)
 {
@@ -282,7 +283,7 @@ void connection_with_send_message::msg_ready(message & msg)
 }
 
 
-/** \brief Do nothing at the moment.
+/** \brief Calls your restart() function with the message.
  *
  * This message has no implementation by default at the moment. What we
  * want to do is find a clean way to restart any service instantly.
@@ -291,33 +292,33 @@ void connection_with_send_message::msg_ready(message & msg)
  * to some file or the system environment somehow affects your service
  * in such a way that it requires a restart. For example, after an
  * upgrade of eventdispatcher library, you should restart all the services
- * that make use of  this library. For this reason, we have a RESTART
+ * that make use of this library. For this reason, we have a RESTART
  * message.
  *
- * The messages comes with one parameter named `reason` which describes
+ * The message comes with one parameter named `reason` which describes
  * why the RESTART was sent:
  *
- * \li upgrade -- something (library/tools) was upgraded
- * \li config -- a congiguration file was updated
+ * \li `reason=upgrade` -- something (library/tools) was upgraded
+ * \li `reason=config` -- a congiguration file was updated
  *
  * \note
- * There is currently some services that make use of a CONFIG message
+ * There are currently some services that make use of a CONFIG message
  * whenever their configuration changes. Pretty much all services do
  * not support a live configuration change (because it initializes their
  * objects from the configuration data once on startup and in many cases
  * it would be very complicated to allow for changes to occur.)
  * \note
- * In those existing implementation, we really just do a restart anyway.
+ * In those existing implementations, we really just do a restart anyway.
  *
- * \param[in] message  The READY message.
+ * \param[in] message  The RESTART message.
  *
- * \sa msg_help()
+ * \sa restart()
  */
 void connection_with_send_message::msg_restart(message & msg)
 {
     // pass the message so any additional info can be accessed.
     //
-    ready(msg);
+    restart(msg);
 }
 
 
@@ -454,6 +455,30 @@ void connection_with_send_message::ready(message & msg)
     //
     SNAP_LOG_WARNING
         << "default ready() function was called."
+        << SNAP_LOG_SEND;
+}
+
+
+/** \brief The default restart() function does nothing.
+ *
+ * This implementation does nothing. It is expected that you reimplement
+ * this function depending on your daemon's need. Most often this function
+ * calls the stop() function in order to restart the deamon. If only a
+ * configuration file changed and your daemon is capable of reading the
+ * new settings without a full restart, then just read that new config.
+ *
+ * \param[in,out] message  The RESTART message.
+ *
+ * \sa msg_restart()
+ */
+void connection_with_send_message::restart(message & msg)
+{
+    snap::NOTUSED(msg);
+
+    // do nothing by default -- user is expected to overload this function
+    //
+    SNAP_LOG_WARNING
+        << "default restart() function was called."
         << SNAP_LOG_SEND;
 }
 

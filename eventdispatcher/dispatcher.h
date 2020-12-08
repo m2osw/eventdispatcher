@@ -502,7 +502,7 @@ public:
      * Note that the UNKNOWN message is understood and just logs the message
      * received. This allows us to see that WE sent a message that the receiver
      * (not us) does not understand and adjust our code accordingly (i.e. add
-     * support for that message in that receiver or maybe fixed the spelling.)
+     * support for that message in that receiver or maybe fix the spelling.)
      */
     void add_communicator_commands()
     {

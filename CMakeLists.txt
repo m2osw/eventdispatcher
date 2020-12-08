@@ -48,6 +48,6 @@ add_subdirectory(eventdispatcher_qt)
 add_subdirectory(tests             )
 add_subdirectory(doc               )
 add_subdirectory(cmake             )
-#add_subdirectory(tools             )
+add_subdirectory(tools             )
 
 # vim: ts=4 sw=4 et
