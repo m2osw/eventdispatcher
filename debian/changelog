@@ -1,3 +1,9 @@
+eventdispatcher (1.1.19.0~bionic) bionic; urgency=high
+
+  * Install the logrotate_udp_messenger header.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Tue, 29 Dec 2020 19:19:57 -0800
+
 eventdispatcher (1.1.18.0~bionic) bionic; urgency=high
 
   * Added the logrotate_udp_messenger class to auto-support the LOG message.

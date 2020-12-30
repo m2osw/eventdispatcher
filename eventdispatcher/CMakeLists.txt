@@ -151,6 +151,7 @@ install(
         fd_connection.h
         file_changed.h
         inter_thread_message_connection.h
+        logrotate_udp_messenger.h
         message.h
         pipe_buffer_connection.h
         pipe_connection.h
