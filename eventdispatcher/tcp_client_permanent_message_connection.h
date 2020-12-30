@@ -70,7 +70,7 @@ public:
     size_t                      get_client_address(struct sockaddr_storage & address) const;
     std::string                 get_client_addr() const;
 
-    // connection_with_send_message
+    // connection_with_send_message implementation
     virtual bool                send_message(message const & msg, bool cache = false) override;
 
     // connection implementation

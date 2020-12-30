@@ -82,8 +82,35 @@ logrotate_udp_messenger::logrotate_udp_messenger(
 }
 
 
+/** \brief The logrotate messenger destructor.
+ *
+ * This function is here because the logrotate_udp_messenger derives from
+ * classes that have virtual functions and the destructor of such classes
+ * have to be defined virtual.
+ */
 logrotate_udp_messenger::~logrotate_udp_messenger()
 {
+}
+
+
+/** \brief Implement a send message for it is required.
+ *
+ * This function does nothing. It has to be defined because one of the
+ * dependencies of this class has a pure virtual function named send_message().
+ *
+ * In a later implementation we may change this implementation.
+ *
+ * \param[in] msg  The message to be sent (ignored).
+ * \param[in] cache  Whether to cache the message if it can't immediately be
+ * sent (ignored).
+ *
+ * \return Always returns true (as if the message was sent successfully).
+ */
+bool logrotate_udp_messenger::send_message(ed::message const & msg, bool cache)
+{
+    snap::NOTUSED(msg);
+    snap::NOTUSED(cache);
+    return true;
 }
 
 
