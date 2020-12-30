@@ -73,7 +73,7 @@ add_library(${PROJECT_NAME} SHARED
 
         udp_server_connection.cpp
             udp_server_message_connection.cpp
-
+                logrotate_udp_messenger.cpp
 
     # tcp
     tcp_base.cpp
