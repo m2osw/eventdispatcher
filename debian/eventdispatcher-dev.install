@@ -11,6 +11,7 @@ usr/include/eventdispatcher/fd_buffer_connection.h
 usr/include/eventdispatcher/fd_connection.h
 usr/include/eventdispatcher/file_changed.h
 usr/include/eventdispatcher/inter_thread_message_connection.h
+usr/include/eventdispatcher/logrotate_udp_messenger.h
 usr/include/eventdispatcher/message.h
 usr/include/eventdispatcher/pipe_buffer_connection.h
 usr/include/eventdispatcher/pipe_connection.h
