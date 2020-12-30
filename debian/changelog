@@ -1,3 +1,9 @@
+eventdispatcher (1.1.21.0~bionic) bionic; urgency=high
+
+  * Added the namespace to the logrotate_udp_messenger implementation.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Tue, 29 Dec 2020 20:35:26 -0800
+
 eventdispatcher (1.1.20.0~bionic) bionic; urgency=high
 
   * Also added to the .install file in the debian folder.

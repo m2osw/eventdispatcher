@@ -101,6 +101,9 @@
 #include    <libaddr/addr.h>
 
 
+namespace ed
+{
+
 
 /** \brief Accept messages over UDP.
  *
@@ -131,4 +134,5 @@ private:
 };
 
 
+} // namespace ed
 // vim: ts=4 sw=4 et

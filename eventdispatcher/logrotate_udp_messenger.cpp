@@ -29,6 +29,10 @@
 
 
 
+namespace ed
+{
+
+
 
 /** \brief The UDP server initialization.
  *
@@ -83,4 +87,5 @@ logrotate_udp_messenger::~logrotate_udp_messenger()
 }
 
 
+} // namespace ed
 // vim: ts=4 sw=4 et
