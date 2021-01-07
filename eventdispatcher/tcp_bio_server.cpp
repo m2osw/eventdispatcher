@@ -136,15 +136,19 @@ public:
 tcp_bio_server::tcp_bio_server(addr::addr const & addr_port, int max_connections, bool reuse_addr, std::string const & certificate, std::string const & private_key, mode_t mode)
     : f_impl(std::make_shared<detail::tcp_bio_server_impl>())
 {
+#if __GNUC__ > 5
     f_impl->f_max_connections = std::clamp(max_connections <= 0 ? MAX_CONNECTIONS : max_connections, 5, 1000);
-    //if(f_impl->f_max_connections < 5)
-    //{
-    //    f_impl->f_max_connections = 5;
-    //}
-    //else if(f_impl->f_max_connections > 1000)
-    //{
-    //    f_impl->f_max_connections = 1000;
-    //}
+#else
+    f_impl->f_max_connections = max_connections <= 0 ? MAX_CONNECTIONS : max_connections;
+    if(f_impl->f_max_connections < 5)
+    {
+        f_impl->f_max_connections = 5;
+    }
+    else if(f_impl->f_max_connections > 1000)
+    {
+        f_impl->f_max_connections = 1000;
+    }
+#endif
 
     detail::bio_initialize();
 

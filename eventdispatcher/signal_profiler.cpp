@@ -106,7 +106,7 @@ void signal_profiler::process_signal()
             info.si_addr_lsb    = 0; //fdinfo->ssi_addr_lsb; // not on arch64
             info.si_lower       = 0;
             info.si_upper       = 0;
-            info.si_pkey        = 0;
+            //info.si_pkey        = 0; -- this doesn't exist in 16.04, keep commented until we stop support
             info.si_call_addr   = 0;
             info.si_syscall     = 0;
             info.si_arch        = 0;
