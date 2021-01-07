@@ -247,9 +247,8 @@ int udp_base::get_mtu_size() const
             }
             else
             {
-                ifreq ifr;
-                memset(&ifr, 0, sizeof(ifr));
-                strncpy(ifr.ifr_name, iface_name.c_str(), sizeof(ifr.ifr_name));
+                ifreq ifr = {};
+                strncpy(ifr.ifr_name, iface_name.c_str(), sizeof(ifr.ifr_name) - 1);
                 if(ioctl(f_socket.get(), SIOCGIFMTU, &ifr) == 0)
                 {
                     f_mtu_size = ifr.ifr_mtu;
