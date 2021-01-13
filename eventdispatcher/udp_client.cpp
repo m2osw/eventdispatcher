@@ -96,6 +96,20 @@ udp_client::~udp_client()
  * Any data we would want to share remains in the Cassandra database so
  * that way we can avoid losing it because of a UDP message.
  *
+ * \note
+ * The send may fail with EAGAIN, EWOULDBLOCK, or ENOBUFS which all mean
+ * that the attempt can be tried again. The ENOBUFS means that a new buffer
+ * could not be allocated, not that the UDP queue is full or that packets
+ * are being lost because too many are being sent in a row. To avoid drop
+ * of UDP messages, you need to time your calls to the send() function
+ * taking in account the amount of data being sent and the network speed.
+ * On the lo network, the throughput is very high and packets can be really
+ * large (nearly 64Kb). On a local network, check the size with the
+ * get_mss_size() function and (TBD how?) check the speed. You certainly
+ * can use up to about 95% of the speed without much problems assuming that
+ * the pipe is only used by these UDP packets. Too much and the dropping is
+ * going to increase steadily.
+ *
  * \param[in] msg  The message to send.
  * \param[in] size  The number of bytes representing this message.
  *
