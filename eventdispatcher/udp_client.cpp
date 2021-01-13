@@ -100,11 +100,20 @@ udp_client::~udp_client()
  * The send may fail with EAGAIN, EWOULDBLOCK, or ENOBUFS which all mean
  * that the attempt can be tried again. The ENOBUFS means that a new buffer
  * could not be allocated, not that the UDP queue is full or that packets
- * are being lost because too many are being sent in a row. To avoid drop
- * of UDP messages, you need to time your calls to the send() function
- * taking in account the amount of data being sent and the network speed.
- * On the lo network, the throughput is very high and packets can be really
- * large (nearly 64Kb). On a local network, check the size with the
+ * are being lost because too many are being sent in a row. Also, you want
+ * to control the size of your buffer with get_mss_size(). UDP buffers that
+ * are larger will be broken up in multiple packets and that increases the
+ * chance that the packet never arrives. Also over a certain size (probably
+ * around 64K in IPv4) the ENOBUFS automatically happens. Note that IPv6
+ * allows for much buffer packets. This is not automatically a good idea
+ * unless the number of packets is quite small because when it fails, you
+ * have to resend a very large packet...
+ *
+ * \note
+ * To avoid drop of UDP messages, you need to time your calls to the send()
+ * function taking in account the amount of data being sent and the network
+ * speed. On the lo network, the throughput is very high and packets can be
+ * really large (nearly 64Kb). On a local network, check the size with the
  * get_mss_size() function and (TBD how?) check the speed. You certainly
  * can use up to about 95% of the speed without much problems assuming that
  * the pipe is only used by these UDP packets. Too much and the dropping is
