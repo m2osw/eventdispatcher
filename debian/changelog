@@ -1,3 +1,9 @@
+eventdispatcher (1.1.23.1~bionic) bionic; urgency=high
+
+  * Bumped version to force a rebuild.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 17 Jan 2021 14:16:42 -0800
+
 eventdispatcher (1.1.23.0~bionic) bionic; urgency=high
 
   * Removed another two fields as Ubuntu 16.04 does not support signals as well.
