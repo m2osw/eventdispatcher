@@ -166,6 +166,33 @@ int udp_base::get_socket() const
 }
 
 
+/** \brief Set whether this UDP socket is to be used to broadcast messages.
+ *
+ * This function sets the BROADCAST flagon the socket. This is important
+ * because by default it is expected that the socket is not used in
+ * broadcast mode. This makes sure that was your intention.
+ *
+ * \note
+ * We do not try to automatically set the flag for (1) the OS implementation
+ * expects the end user application to systematically set the flag if
+ * required and (2) it's complicated to know whether the address represents
+ * the broadcast address (i.e. you need to get the info on the corresponding
+ * interface to get the network mask, see whether the interface supports
+ * broadcasting, etc.) We'll eventually implement that test in our
+ * libaddr library one day. However, that would be a test we use in the
+ * send() function to catch errors early (i.e. determine whether the
+ * socket can be sent to in the current state).
+ *
+ * \param[in] state  Whether to set (true) or remove (false) the broadcast
+ * flag on this UDP socket.
+ */
+void udp_base::set_broadcast(bool state)
+{
+    int const value(state ? 1 : 0);
+    setsockopt(f_socket.get(), SOL_SOCKET, SO_BROADCAST, &value, sizeof(value));
+}
+
+
 /** \brief Retrieve the size of the MTU on that connection.
  *
  * Linux offers a ioctl() function to retrieve the MTU's size. This
@@ -187,7 +214,7 @@ int udp_base::get_socket() const
  * Discovery.
  *
  * \todo
- * We need to support the possibly dynamically changing MTU size
+ * We need to support the possibly of dynamically changing MTU size
  * that the Internet may generate (or even a LAN if you let people
  * tweak their MTU "randomly".) This is done by preventing
  * defragmentation (see IP_NODEFRAG in `man 7 ip`) and also by
@@ -198,8 +225,8 @@ int udp_base::get_socket() const
  * to send packets of that size at the most. Note that packets
  * are otherwise automatically broken in smaller chunks and
  * rebuilt on the other side, but that is not efficient if you
- * expect to lose quite a few packets. The limit for chunked
- * packets is a little under 64Kb.
+ * expect to loose quite a few packets along the way. The limit
+ * for chunked packets is a little under 64Kb.
  *
  * \note
  * errno is either EBADF or set by ioctl().

@@ -43,6 +43,8 @@ public:
     virtual             ~udp_base();
 
     int                 get_socket() const;
+    void                set_broadcast(bool state);
+
     int                 get_mtu_size() const;
     int                 get_mss_size() const;
     int                 get_port() const;
