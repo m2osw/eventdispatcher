@@ -225,7 +225,7 @@ void udp_base::set_broadcast(bool state)
  * to send packets of that size at the most. Note that packets
  * are otherwise automatically broken in smaller chunks and
  * rebuilt on the other side, but that is not efficient if you
- * expect to loose quite a few packets along the way. The limit
+ * expect to lose quite a few packets along the way. The limit
  * for chunked packets is a little under 64Kb.
  *
  * \note
