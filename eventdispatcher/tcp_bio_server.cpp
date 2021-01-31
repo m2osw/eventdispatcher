@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2012-2021  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/eventdispatcher
 // contact@m2osw.com
@@ -133,7 +133,13 @@ public:
  * \param[in] private_key  The server private key filename (PEM).
  * \param[in] mode  The mode used to create the listening socket.
  */
-tcp_bio_server::tcp_bio_server(addr::addr const & addr_port, int max_connections, bool reuse_addr, std::string const & certificate, std::string const & private_key, mode_t mode)
+tcp_bio_server::tcp_bio_server(
+          addr::addr const & addr_port
+        , int max_connections
+        , bool reuse_addr
+        , std::string const & certificate
+        , std::string const & private_key
+        , mode_t mode)
     : f_impl(std::make_shared<detail::tcp_bio_server_impl>())
 {
 #if __GNUC__ > 5
