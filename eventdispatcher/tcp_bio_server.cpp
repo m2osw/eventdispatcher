@@ -438,9 +438,14 @@ void tcp_bio_server::set_close_on_exec(bool yes)
             //
             if(fcntl(socket, F_SETFD, FD_CLOEXEC) != 0)
             {
+                int const e(errno);
                 SNAP_LOG_WARNING
-                    << "tcp_bio_server::accept(): an error occurred trying"
-                       " to mark accepted socket with FD_CLOEXEC."
+                    << "tcp_bio_server::set_close_on_exec(): an error occurred trying"
+                       " to mark accepted socket with FD_CLOEXEC ("
+                    << e
+                    << ", "
+                    << strerror(e)
+                    << ")."
                     << SNAP_LOG_SEND;
             }
         }
