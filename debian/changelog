@@ -1,3 +1,9 @@
+eventdispatcher (1.1.26.0~bionic) bionic; urgency=high
+
+  * Fixed a copy operator.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Thu, 04 Feb 2021 16:14:28 -0800
+
 eventdispatcher (1.1.25.0~bionic) bionic; urgency=high
 
   * Show errno on the set of FD_CLOEXEC because we get that error at times.

@@ -105,7 +105,7 @@ public:
                                 signal_handler(signal_handler const &) = delete;
     virtual                     ~signal_handler();
 
-    signal_handler              operator = (signal_handler const &) = delete;
+    signal_handler &            operator = (signal_handler const &) = delete;
 
     static pointer_t            get_instance();
 
