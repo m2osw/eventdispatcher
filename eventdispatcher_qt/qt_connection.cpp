@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2012-2021  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/eventdispatcher
 // contact@m2osw.com
@@ -196,7 +196,9 @@ bool qt_connection::is_reader() const
  */
 void qt_connection::process_read()
 {
+    QCoreApplication::sendPostedEvents();
     QCoreApplication::processEvents(QEventLoop::AllEvents);
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
 }
 
 
