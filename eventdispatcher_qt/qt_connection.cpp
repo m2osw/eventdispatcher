@@ -56,6 +56,13 @@
  * function.
  *
  * Also you can only create one such connection.
+ *
+ * \warning
+ * We use a 100ms timer to act on the Qt events. If you try to use timers
+ * with a greater precision, it will never work properly for you. We suggest
+ * you look at using a thread for your eventdispatcher loop in such a
+ * situation (i.e. if you're using OpenGL and expect realtime updates,
+ * this class is definitely not a good solution).
  */
 
 namespace ed
@@ -90,6 +97,15 @@ bool g_qt_communicator_created = false;
  * communicator::run() function instead of the Qt application
  * run() function. The messages will be executed by the
  * qt_connection instead.
+ *
+ * \warning
+ * The class uses a timer with a 100ms increment. This is used to
+ * make sure that all the events get executed. Without that, the
+ * event loops require mouse movements or some other such X11
+ * event to work and it's not good... One day we may find a fix
+ * for this issue. In the meantime, if you can use threads, I
+ * suggest you place your eventdispatcher loop in a thread and
+ * call the app.exec() as usual on your main (GUI) thread.
  */
 
 
@@ -114,6 +130,17 @@ bool g_qt_communicator_created = false;
  * inconvenience, but here we state that it can't be used by more
  * than one thread. In any event, you can't create more than one
  * Qt connection.
+ *
+ * \bug
+ * The current implementation uses a 100ms timer which checks for
+ * additional messages on a constant basis. This means your application
+ * will not be sleeping when no events happen. If your application
+ * can use threads, we suggest that you place the eventdispatcher loop
+ * in a separate threads and do not use the qt_connection at all.
+ * Then in your main thread, call the standard app.exec() function.
+ * Obviously this means you now need mutexes to communicate between
+ * the eventdispatcher callbacks and your GUI, but that should still
+ * be preferable to having a timer that wakes up all the time for naught.
  */
 qt_connection::qt_connection()
 {
@@ -147,6 +174,11 @@ qt_connection::qt_connection()
     {
         throw event_dispatcher_no_connection_found("qt_connection was not able to find a file descriptor to poll() on");
     }
+
+    // Qt has many internal functionality which doesn't get awaken by
+    // the X11 socket so we have always be checking for messages...
+    //
+    set_timeout_delay(100'000);
 }
 
 
@@ -189,6 +221,39 @@ bool qt_connection::is_reader() const
 }
 
 
+/** \brief The timer kicked in.
+ *
+ * The X11 socket is not used by all the Qt messages (to the contrary, most
+ * events don't use any of the OS windowing system mechanism). So at this
+ * point we have to use a timer to constantly check for more messages. This
+ * is not ideal, though.
+ *
+ * If your application is able to make use of threads, you may want to run
+ * the eventdispatcher loop in a thread and not make use of the qt_connection
+ * at all. Then use the normal app.exec() function from Qt. This will make
+ * the loops much cleaner (i.e. no timer wasting time every 100ms). This
+ * solution is good if do not want to deal with multiple thread and your
+ * application is not expected to be running 24/7.
+ *
+ * \note
+ * If your application is to display things that need constant updating such
+ * as statistics, then having a timer like so can be to your advantage.
+ * Instead of using a Qt timer, your functions can just request an update
+ * of your widget viewport and it will refresh as expected.
+ *
+ * \note
+ * The main reason for not using threads is because your application uses
+ * fork() without exec() (i.e. a fork() + exec() is safe, a fork() + work
+ * means that this sub-process state in invalid because only one task gets
+ * forked and all the other threads are _dangling_.)
+ */
+void qt_connection::process_timeout()
+{
+    QCoreApplication::sendPostedEvents();
+    QCoreApplication::processEvents(QEventLoop::AllEvents);
+}
+
+
 /** \brief At least one X11 event was received.
  *
  * This function is called whenever X11 sent a message to your
@@ -198,7 +263,6 @@ void qt_connection::process_read()
 {
     QCoreApplication::sendPostedEvents();
     QCoreApplication::processEvents(QEventLoop::AllEvents);
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
 }
 
 

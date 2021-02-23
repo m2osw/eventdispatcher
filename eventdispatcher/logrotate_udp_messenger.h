@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Virtual Entertainment LLC
+// Copyright (c) 2020-2021 Virtual Entertainment LLC
 // All rights reserved
 //
 // https://snapwebsites.org/project/eventdispatcher

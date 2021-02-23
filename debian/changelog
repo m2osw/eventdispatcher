@@ -1,3 +1,10 @@
+eventdispatcher (1.1.27.0~bionic) bionic; urgency=high
+
+  * Added a timer to handle Qt events constantly.
+  * Updated copyright notices to 2021.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 21 Feb 2021 11:19:15 -0800
+
 eventdispatcher (1.1.26.0~bionic) bionic; urgency=high
 
   * Fixed a copy operator.
