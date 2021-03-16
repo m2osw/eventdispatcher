@@ -1,3 +1,10 @@
+eventdispatcher (1.1.28.1~bionic) bionic; urgency=high
+
+  * Bump version to recompile against the new cppthread.
+  * Updated all the copyright notices to 2021.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Mon, 15 Mar 2021 23:16:43 -0700
+
 eventdispatcher (1.1.28.0~bionic) bionic; urgency=high
 
   * Added the process_timer() function to the header.

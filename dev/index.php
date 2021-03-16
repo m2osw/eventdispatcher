@@ -2,7 +2,7 @@
 # Display this directory to users
 # (code used to display test results)
 #
-# Copyright:    Copyright (c) 2011-2019  Made to Order Software Corp.  All Rights Reserved
+# Copyright:    Copyright (c) 2011-2021  Made to Order Software Corp.  All Rights Reserved
 #
 # https://snapwebsites.org/project/advgetopt
 # contact@m2osw.com
