@@ -28,11 +28,6 @@ add_executable(${PROJECT_NAME}
 
 include_directories(
     ${ADVGETOPT_INCLUDE_DIRS}
-    #${LIBEXCEPT_INCLUDE_DIRS}
-    #${LIBUFTF8_INCLUDE_DIRS}
-    #${SNAPLOGGER_INCLUDE_DIRS}
-    #${OPENSSL_INCLUDE_DIR}
-    #${LIBADDR_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}

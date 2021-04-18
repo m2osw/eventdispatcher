@@ -114,7 +114,6 @@ target_link_libraries(${PROJECT_NAME}
     ${LIBADDR_LIBRARIES}
 )
 
-message("Snap logger libraries = ${SNAPLOGGER_LIBRARIES}")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VERSION

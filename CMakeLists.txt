@@ -20,7 +20,7 @@
 
 cmake_minimum_required(VERSION 2.8.4)
 
-project(eventdispatcher_library)
+project(eventdispatcher_project)
 
 find_package(SnapCMakeModules REQUIRED)
 find_package(AdvGetOpt        REQUIRED)

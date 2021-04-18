@@ -46,6 +46,7 @@ if you need such functionality you may be interested in finding out how
 to make it work from our existing code:
 
 * attempt to avoid the SIGPROF from breaking our code by handling the signal
+* snaploggerd -- a service to send log messages over the network
 
 
 # License
