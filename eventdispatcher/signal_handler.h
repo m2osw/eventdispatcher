@@ -106,7 +106,8 @@ public:
     static constexpr signal_mask_t const        DEFAULT_SIGNAL_IGNORE =
                                                       SIGNAL_INTERACTIVE_STOP
                                                     | SIGNAL_TERMINAL_IN
-                                                    | SIGNAL_TERMINAL_OUT;
+                                                    | SIGNAL_TERMINAL_OUT
+                                                    | SIGNAL_PIPE;
 
     static constexpr signal_mask_t const        DEFAULT_SHOW_STACK =
                                                       ALL_SIGNALS
