@@ -1,3 +1,9 @@
+eventdispatcher (1.1.30.0~bionic) bionic; urgency=high
+
+  * Removed the std::size() for now, it doesn't compile under 16.04.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 18 Apr 2021 20:41:55 -0700
+
 eventdispatcher (1.1.29.0~bionic) bionic; urgency=high
 
   * Enhanced the signal_handler.
