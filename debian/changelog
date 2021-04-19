@@ -1,3 +1,10 @@
+eventdispatcher (1.1.29.0~bionic) bionic; urgency=high
+
+  * Enhanced the signal_handler.
+  * Added the snaploggerd directory, not yet compiling it.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 18 Apr 2021 20:41:55 -0700
+
 eventdispatcher (1.1.28.1~bionic) bionic; urgency=high
 
   * Bump version to recompile against the new cppthread.
