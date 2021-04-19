@@ -74,64 +74,12 @@ namespace
 
 int main(int argc, char *argv[])
 {
+    ed::signal_handler::create_handler();
+
     try
     {
-        // panel_ve initialize the logger so we place it first
-        //
-        panel_ve p(argc, argv);
-
-        // finalize the initialization of the Jetson panel
-        //
-
-        // the script can either redo its job each time or create a file
-        // and do it only if the file did not exist yet
-        //
-        int r(system("/usr/bin/final-system-setup"));
-        if(r != 0)
-        {
-            // ignore errors, just go ahead and start the panel either way
-            // but still signal that an error happened
-            //
-            SNAP_LOG_WARNING
-                << "the final-system-setup returned an error code: "
-                << r
-                << SNAP_LOG_SEND;
-        }
-
-        // this second command needs to run as root so we use a C++ command
-        // which can do a setuid(0)
-        //
-        r = system("/usr/bin/final-jetson-setup");
-        if(r != 0)
-        {
-            SNAP_LOG_WARNING
-                << "the final-jetson-setup returned an error code: "
-                << r
-                << SNAP_LOG_SEND;
-        }
-
-        try
-        {
-            p.init();
-            return p.run();
-        }
-        catch(std::exception const & e)
-        {
-            std::cerr << "error: an exception occurred (1): " << e.what() << std::endl;
-            SNAP_LOG_FATAL
-                << "an exception occurred (1): "
-                << e.what()
-                << SNAP_LOG_SEND;
-            exit(1);
-        }
-        catch(...)
-        {
-            std::cerr << "error: an unknown exception occurred (2)." << std::endl;
-            SNAP_LOG_FATAL
-                << "an unknown exception occurred (2)."
-                << SNAP_LOG_SEND;
-            exit(2);
-        }
+        service s(argc, argv);
+        return s.run();
     }
     catch(advgetopt::getopt_exit const & e)
     {

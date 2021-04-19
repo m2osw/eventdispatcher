@@ -25,13 +25,15 @@
  * handled.
  */
 
-// self
+// cppthread lib
 //
-//#include    "eventdispatcher/connection.h"
+#include    <cppthread/mutex.h>
 
 
 // C++ lib
 //
+#include    <functional>
+#include    <list>
 #include    <memory>
 
 
@@ -50,7 +52,13 @@ class signal_handler
 {
 public:
     typedef std::shared_ptr<signal_handler>     pointer_t;
-    typedef uint64_t                            signal_mask_t;
+    typedef std::uint64_t                       signal_mask_t;
+    typedef std::uint32_t                       callback_id_t;
+    typedef std::function<bool(
+              callback_id_t callback_id
+            , int callback_sig
+            , siginfo_t const * info
+            , ucontext_t const * ucontext)>     callback_t;
 
     static constexpr signal_mask_t const        SIGNAL_HANGUP           = 1UL << SIGHUP;
     static constexpr signal_mask_t const        SIGNAL_INTERRUPT        = 1UL << SIGINT;
@@ -84,13 +92,16 @@ public:
     static constexpr signal_mask_t const        SIGNAL_POWER            = 1UL << SIGPWR;
     static constexpr signal_mask_t const        SIGNAL_SYSTEM           = 1UL << SIGSYS;
 
+    static constexpr signal_mask_t const        ALL_SIGNALS = 0xFFFFFFFFFFFFFFFEUL;
     static constexpr signal_mask_t const        DEFAULT_SIGNAL_TERMINAL =
-                                                      SIGNAL_INTERRUPT
-                                                    | SIGNAL_QUIT
-                                                    | SIGNAL_ILLEGAL
+                                                      SIGNAL_ILLEGAL
                                                     | SIGNAL_BUS
                                                     | SIGNAL_FLOATPOINTERROR
-                                                    | SIGNAL_SEGMENTVIOLATION
+                                                    | SIGNAL_SEGMENTVIOLATION;
+    static constexpr signal_mask_t const        EXTENDED_SIGNAL_TERMINAL =
+                                                      DEFAULT_SIGNAL_TERMINAL
+                                                    | SIGNAL_INTERRUPT
+                                                    | SIGNAL_QUIT
                                                     | SIGNAL_TERMINATE;
     static constexpr signal_mask_t const        DEFAULT_SIGNAL_IGNORE =
                                                       SIGNAL_INTERACTIVE_STOP
@@ -98,34 +109,61 @@ public:
                                                     | SIGNAL_TERMINAL_OUT;
 
     static constexpr signal_mask_t const        DEFAULT_SHOW_STACK =
-                                                      SIGNAL_INTERRUPT
-                                                    | SIGNAL_QUIT
-                                                    | SIGNAL_TERMINATE;
+                                                      ALL_SIGNALS
+                                                    & ~(SIGNAL_ALARM
+                                                      | SIGNAL_CHILD
+                                                      | SIGNAL_HANGUP
+                                                      | SIGNAL_INTERRUPT
+                                                      | SIGNAL_PIPE
+                                                      | SIGNAL_POLL
+                                                      | SIGNAL_PROFILING
+                                                      | SIGNAL_QUIT
+                                                      | SIGNAL_TERMINATE
+                                                      | SIGNAL_URGENT
+                                                      | SIGNAL_WINDOW_CHANGE
+                                                      | SIGNAL_XCPU);
 
                                 signal_handler(signal_handler const &) = delete;
-    virtual                     ~signal_handler();
+                                ~signal_handler();
 
     signal_handler &            operator = (signal_handler const &) = delete;
 
+    static pointer_t            create_instance(
+                                      signal_mask_t terminal = DEFAULT_SIGNAL_TERMINAL
+                                    , signal_mask_t ignored = DEFAULT_SIGNAL_IGNORE
+                                    , callback_id_t callback_id = -1
+                                    , int callback_sig = -1
+                                    , callback_t callback = callback_t());
     static pointer_t            get_instance();
 
+    void                        add_callback(callback_id_t id, int sig, callback_t callback);
+    void                        remove_callback(callback_id_t id);
     void                        set_show_stack(signal_mask_t sigs);
     signal_mask_t               get_show_stack() const;
     void                        add_terminal_signals(signal_mask_t sigs);
-    void                        add_ignore_signals(signal_mask_t sigs);
-    void                        remove_signal(signal_mask_t sigs);
+    void                        add_ignored_signals(signal_mask_t sigs);
+    void                        remove_signals(signal_mask_t sigs);
     void                        remove_all_signals();
     static char const *         get_signal_name(int sig);
 
-    virtual void                process_signal(int sig, siginfo_t * info, ucontext_t * ucontext);
-
 private:
-                                signal_handler();
-
+    struct signal_callback_t
+    {
+        callback_id_t   f_id = -1;
+        int             f_sig = -1;
+        callback_t      f_callback = nullptr;
+    };
+    typedef std::list<signal_callback_t>    callback_list_t;
     typedef struct sigaction                sigaction_t;
     typedef std::shared_ptr<sigaction_t>    sigaction_ptr_t;
 
+                                signal_handler();
+    static void                 signal_handler_func(int sig, siginfo_t * info, void * context);
+    void                        process_signal(int sig, siginfo_t * info, ucontext_t * ucontext);
+
+    mutable cppthread::mutex    f_mutex = cppthread::mutex();
     sigaction_ptr_t             f_signal_actions[64] = { sigaction_ptr_t() };
+    callback_list_t             f_callbacks = callback_list_t();
 };
 
 
