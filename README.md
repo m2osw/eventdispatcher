@@ -17,7 +17,8 @@ It was first part of our libsnapwebsites as:
 * `udp_client_server.cpp/.h`
 
 Now these are all broken up in separate files (84 of them at time of
-writing) and work with support from libraries found in our contrib folder.
+writing) and work with support from libraries found in our
+[snapcpp](https://github.com/m2osw/) contrib folder.
 
 ## Features
 

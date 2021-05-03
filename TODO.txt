@@ -1,15 +1,16 @@
 
-
-
 * See to have clients and servers for HTTP/HTTPS/HTTP2
   (we already have such in libsnapwebsites, only it uses `snapuri`...)
 
 * Config describing allowed messages with their parameters and values for
   such and a way to track which message was ever sent (i.e. a form of
   message coverage) so we can verify that all messages were checked
+  (i.e. for debug purposes).
 
 * A service to track changes to the list of opened/closed network connections
   (I already have code to do that, but I never spent any time on implementing
   anything in link with it. It should track the changes to the /proc/... file
-  and report these through some mechanism similar to the file_change system)
+  and report these through some mechanism similar to the file_change system).
+
+* Finish the snaplogger network appender extension.
 
