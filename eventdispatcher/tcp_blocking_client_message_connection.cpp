@@ -62,6 +62,11 @@
 #include    <snapdev/not_used.h>
 
 
+// C++ lib
+//
+#include    <cstring>
+
+
 // C lib
 //
 #include    <poll.h>

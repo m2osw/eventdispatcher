@@ -45,6 +45,11 @@
 #include    <snapdev/not_used.h>
 
 
+// C++ lib
+//
+#include    <algorithm>
+
+
 // OpenSSL lib
 //
 #include    <openssl/ssl.h>

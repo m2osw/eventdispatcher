@@ -54,6 +54,7 @@
 // C++ lib
 //
 #include    <algorithm>
+#include    <cstring>
 
 
 // last include

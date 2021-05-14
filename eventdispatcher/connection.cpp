@@ -42,6 +42,11 @@
 #include    <snaplogger/message.h>
 
 
+// C++ lib
+//
+#include    <cstring>
+
+
 // C lib
 //
 #include    <sys/ioctl.h>

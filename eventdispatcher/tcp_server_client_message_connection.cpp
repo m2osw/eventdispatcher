@@ -51,6 +51,11 @@
 #include    <snaplogger/message.h>
 
 
+// C++ lib
+//
+#include    <cstring>
+
+
 // C lib
 //
 #include    <arpa/inet.h>

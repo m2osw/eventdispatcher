@@ -52,6 +52,12 @@
 #include    <snaplogger/message.h>
 
 
+// C++ lib
+//
+#include    <algorithm>
+#include    <cstring>
+
+
 // last include
 //
 #include    <snapdev/poison.h>

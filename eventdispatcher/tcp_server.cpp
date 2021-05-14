@@ -46,6 +46,11 @@
 #include    <snapdev/not_reached.h>
 
 
+// C++ lib
+//
+#include    <cstring>
+
+
 // C lib
 //
 #include    <poll.h>

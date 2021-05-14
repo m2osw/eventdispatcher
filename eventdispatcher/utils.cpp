@@ -41,6 +41,11 @@
 #include    <snapdev/not_reached.h>
 
 
+// C++ lib
+//
+#include    <cstring>
+
+
 // last include
 //
 #include    <snapdev/poison.h>

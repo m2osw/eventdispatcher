@@ -52,6 +52,12 @@
 #include    <snaplogger/message.h>
 
 
+// C++ lib
+//
+#include    <algorithm>
+#include    <cstring>
+
+
 // C lib
 //
 #include    <sys/inotify.h>

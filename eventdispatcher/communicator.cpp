@@ -69,6 +69,7 @@
 // C++ lib
 //
 #include    <algorithm>
+#include    <cstring>
 
 
 // C lib
@@ -666,7 +667,7 @@ bool communicator::run()
             }
             int const e(errno);
             throw event_dispatcher_runtime_error(
-                      "communicator::run(): poll() failed with error "
+                        "communicator::run(): poll() failed with error "
                       + std::to_string(e)
                       + " -- "
                       + strerror(e));

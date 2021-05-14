@@ -68,6 +68,11 @@
 #include    <cppthread/thread.h>
 
 
+// C++ lib
+//
+#include    <cstring>
+
+
 // C lib
 //
 #include    <sys/socket.h>
