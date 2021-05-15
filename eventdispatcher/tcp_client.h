@@ -27,6 +27,7 @@
 
 // C++ lib
 //
+#include    <string>
 #include    <memory>
 
 

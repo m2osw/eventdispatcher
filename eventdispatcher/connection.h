@@ -32,6 +32,7 @@
 // C++ lib
 //
 #include    <memory>
+#include    <string>
 #include    <vector>
 
 

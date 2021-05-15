@@ -29,6 +29,11 @@
 #include    "eventdispatcher/connection.h"
 
 
+// C lib
+//
+#include    <sys/types.h>
+
+
 
 namespace ed
 {
