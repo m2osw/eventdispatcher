@@ -1,3 +1,10 @@
+eventdispatcher (1.1.30.1~bionic) bionic; urgency=high
+
+  * Bump version to recompile with the newer versions.
+  * Fixed a few #include because of some changes in header files.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sat, 15 May 2021 12:41:54 -0700
+
 eventdispatcher (1.1.30.0~bionic) bionic; urgency=high
 
   * Removed the std::size() for now, it doesn't compile under 16.04.
