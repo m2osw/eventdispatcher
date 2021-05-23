@@ -28,7 +28,7 @@
 
 // self
 //
-#include    "network_appenders.h"
+#include    "base_network_appender.h"
 
 
 
@@ -39,7 +39,7 @@ namespace snaplogger_network
 
 
 class udp_appender
-    : public network_appender
+    : public base_network_appender
 {
 public:
     typedef std::shared_ptr<udp_appender>      pointer_t;
@@ -52,7 +52,9 @@ public:
     virtual void        set_config(advgetopt::getopt const & params) override;
 
 protected:
-    virtual void        process_message(message const & msg, std::string const & formatted_message) override;
+    virtual void        process_message(
+                                  snaplogger::message const & msg
+                                , std::string const & formatted_message) override;
 
 private:
     std::string         f_secret_code = std::string();

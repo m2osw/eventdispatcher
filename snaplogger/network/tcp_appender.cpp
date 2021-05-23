@@ -1,23 +1,21 @@
-/*
- * Copyright (c) 2013-2021  Made to Order Software Corp.  All Rights Reserved
- *
- * https://snapwebsites.org/project/snaplogger
- * contact@m2osw.com
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
+// Copyright (c) 2021  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/snaplogger
+// contact@m2osw.com
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 /** \file
  * \brief The implementation of the TCP appender.
@@ -27,28 +25,24 @@
 
 // self
 //
-#include    "snaplogger/file_appender.h"
-
-#include    "snaplogger/guard.h"
-//#include    "snaplogger/map_diagnostic.h"
+#include    "snaplogger/network/tcp_appender.h"
 
 
-// snapdev lib
+
+// snaplogger lib
 //
-//#include    <snapdev/lockfile.h>
+#include    "snaplogger/guard.h"
+
+
+// eventdispatcher lib
+//
+#include    <eventdispatcher/dispatcher.h>
+#include    <eventdispatcher/tcp_client_permanent_message_connection.h>
 
 
 // C++ lib
 //
 #include    <iostream>
-
-
-// C lib
-//
-//#include    <sys/types.h>
-//#include    <sys/stat.h>
-//#include    <fcntl.h>
-//#include    <unistd.h>
 
 
 // last include
@@ -57,7 +51,7 @@
 
 
 
-namespace snaplogger
+namespace snaplogger_network
 {
 
 
@@ -70,14 +64,14 @@ APPENDER_FACTORY(tcp);
 
 
 class appender_connection
-    : public tcp_client_permanent_message_connection
+    : public ed::tcp_client_permanent_message_connection
 {
 public:
                             appender_connection(addr::addr const & server_address);
     virtual                 ~appender_connection() override;
 
-    void                    msg_pause(ed::message & message);
-    void                    msg_unpause(ed::message & message);
+    void                    msg_pause(ed::message & msg);
+    void                    msg_unpause(ed::message & msg);
 
     bool                    is_paused() const;
 
@@ -130,14 +124,18 @@ appender_connection::~appender_connection()
 }
 
 
-void appender_connection::msg_pause()
+void appender_connection::msg_pause(ed::message & msg)
 {
+    snap::NOTUSED(msg);
+
     f_paused = true;
 }
 
 
-void appender_connection::msg_unpause()
+void appender_connection::msg_unpause(ed::message & msg)
 {
+    snap::NOTUSED(msg);
+
     f_paused = false;
 }
 
@@ -156,9 +154,9 @@ bool appender_connection::is_paused() const
 
 
 
-tcp_appender::tcp_appender(std::string const name)
-    : network_appender(name, "tcp")
-    , f_communicator(ed::communicator::get_instance())
+tcp_appender::tcp_appender(std::string const & name)
+    : base_network_appender(name, "tcp")
+    , f_communicator(ed::communicator::instance())
 {
 }
 
@@ -170,7 +168,7 @@ tcp_appender::~tcp_appender()
 
 void tcp_appender::set_config(advgetopt::getopt const & opts)
 {
-    network_appender::set_config(opts);
+    base_network_appender::set_config(opts);
 
     // COMPRESSION
     //
@@ -201,9 +199,9 @@ void tcp_appender::server_address_changed()
 }
 
 
-void tcp_appender::process_message(message const & msg, std::string const & formatted_message)
+void tcp_appender::process_message(snaplogger::message const & msg, std::string const & formatted_message)
 {
-    guard g;
+    snaplogger::guard g;
 
     ed::message log_message;
     log_message_to_ed_message(msg, log_message);
@@ -240,7 +238,7 @@ void tcp_appender::process_message(message const & msg, std::string const & form
     // currently paused?
     //
     if(f_connection != nullptr
-    && f_connection->is_paused())
+    && std::static_pointer_cast<appender_connection>(f_connection)->is_paused())
     {
         return;
     }
@@ -248,7 +246,7 @@ void tcp_appender::process_message(message const & msg, std::string const & form
     // send message via TCP
     //
     if(f_connection == nullptr
-    || !f_connection->send_message(log_message, true))
+    || !std::static_pointer_cast<appender_connection>(f_connection)->send_message(log_message, true))
     {
         // how could we report that? we are the logger...
         //
@@ -264,5 +262,5 @@ void tcp_appender::process_message(message const & msg, std::string const & form
 
 
 
-} // snaplogger namespace
+} // snaplogger_network namespace
 // vim: ts=4 sw=4 et

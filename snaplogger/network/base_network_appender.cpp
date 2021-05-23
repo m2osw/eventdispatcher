@@ -26,23 +26,28 @@
 
 // self
 //
-#include    "snaplogger/network/network_appender.h"
+#include    "snaplogger/network/base_network_appender.h"
 
-//#include    "snaplogger/guard.h"
-//#include    "snaplogger/map_diagnostic.h"
+
+
+// snaplogger lib
+//
+#include    <snaplogger/guard.h>
+
+
+// libaddr lib
+//
+#include    <libaddr/addr_parser.h>
+
+
+// snapdev lib
+//
+#include    <snapdev/string_replace_many.h>
 
 
 // C++ lib
 //
 #include    <iostream>
-
-
-// C lib
-//
-//#include    <sys/types.h>
-//#include    <sys/stat.h>
-//#include    <fcntl.h>
-//#include    <unistd.h>
 
 
 // last include
@@ -55,18 +60,18 @@ namespace snaplogger_network
 {
 
 
-network_appender::network_appender(std::string const & name, std::string const & type)
+base_network_appender::base_network_appender(std::string const & name, std::string const & type)
     : appender(name, type)
 {
 }
 
 
-network_appender::~network_appender()
+base_network_appender::~base_network_appender()
 {
 }
 
 
-void network_appender::set_config(advgetopt::getopt const & opts)
+void base_network_appender::set_config(advgetopt::getopt const & opts)
 {
     appender::set_config(opts);
 
@@ -75,21 +80,21 @@ void network_appender::set_config(advgetopt::getopt const & opts)
     std::string const server_address_field(get_name() + "::server_address");
     if(opts.is_defined(server_address_field))
     {
-        f_server_address = addr::string_to_addr(opts.get_string(
+        f_server_address = addr::string_to_addr(
                               opts.get_string(server_address_field)
                             , "127.0.0.1"
                             , 4043
                             , get_type()
-                            , false));
+                            , false);
     }
     else
     {
-        f_server_address = addr::string_to_addr(opts.get_string(
+        f_server_address = addr::string_to_addr(
                               "127.0.0.1:4043"
                             , "127.0.0.1"
                             , 4043
                             , get_type()
-                            , false));
+                            , false);
     }
 
     // ACKNOWLEDGE
@@ -118,7 +123,7 @@ void network_appender::set_config(advgetopt::getopt const & opts)
     if(opts.is_defined(acknowledge_severity_field))
     {
         std::string const acknowledge_severity(opts.get_string(acknowledge_severity_field));
-        severity::pointer_t severity(snaplogger::get_severity(acknowledge_severity));
+        snaplogger::severity::pointer_t severity(snaplogger::get_severity(acknowledge_severity));
         if(severity != nullptr)
         {
             f_acknowledge_severity = severity->get_severity();
@@ -135,9 +140,9 @@ void network_appender::set_config(advgetopt::getopt const & opts)
 }
 
 
-void network_appender::set_server_address(addr::addr const & server_address)
+void base_network_appender::set_server_address(addr::addr const & server_address)
 {
-    guard g;
+    snaplogger::guard g;
 
     if(f_server_address != server_address)
     {
@@ -148,21 +153,19 @@ void network_appender::set_server_address(addr::addr const & server_address)
 }
 
 
-void network_appender::server_address_changed()
+void base_network_appender::server_address_changed()
 {
     // do nothing by default
 }
 
 
-void network_appender::log_message_to_ed_message(snaplogger::message const & msg, ed::message & message)
+void base_network_appender::log_message_to_ed_message(snaplogger::message const & msg, ed::message & log_message)
 {
-    guard g;
-
-    ed::message log_message;
+    snaplogger::guard g;
 
     // severity
     //
-    severity::pointer_t severity(get_severity(msg.get_severity()));
+    snaplogger::severity::pointer_t severity(snaplogger::get_severity(msg.get_severity()));
     if(severity != nullptr)
     {
         log_message.add_parameter("severity", severity->get_name());
@@ -190,7 +193,7 @@ void network_appender::log_message_to_ed_message(snaplogger::message const & msg
     }
 
     std::string comps;
-    component::set_t const & components(msg.get_components());
+    snaplogger::component::set_t const & components(msg.get_components());
     for(auto c : components)
     {
         if(!comps.empty())
@@ -211,7 +214,8 @@ void network_appender::log_message_to_ed_message(snaplogger::message const & msg
 
     log_message.add_parameter("message", msg.get_message());
 
-    field_map_t const fields(get_fields());
+    std::string flds;
+    snaplogger::message::field_map_t const fields(msg.get_fields());
     for(auto f : fields)
     {
         if(!flds.empty())
@@ -240,6 +244,6 @@ void network_appender::log_message_to_ed_message(snaplogger::message const & msg
 
 
 
-} // snaplogger namespace
+} // snaplogger_network namespace
 // vim: ts=4 sw=4 et
 

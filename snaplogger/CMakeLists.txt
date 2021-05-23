@@ -22,8 +22,8 @@
 ##
 project(snaploggerd_project)
 
-add_subdirectory(appenders)
-add_subdirectory(daemon)
+add_subdirectory(network)
+#add_subdirectory(daemon)
 
 
 # vim: ts=4 sw=4 et

@@ -23,7 +23,7 @@
 project(snaploggerd-appenders)
 
 add_library(${PROJECT_NAME} SHARED
-    network_appenders.cpp
+    base_network_appender.cpp
     tcp_appender.cpp
     udp_appender.cpp
 )

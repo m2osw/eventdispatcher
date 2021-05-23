@@ -28,21 +28,20 @@
 //
 #include    "snaplogger/network/udp_appender.h"
 
-#include    "snaplogger/guard.h"
-//#include    "snaplogger/map_diagnostic.h"
+
+// snaplogger lib
+//
+#include    <snaplogger/guard.h>
+
+
+// eventdispatcher lib
+//
+#include    <eventdispatcher/udp_server_message_connection.h>
 
 
 // C++ lib
 //
 #include    <iostream>
-
-
-// C lib
-//
-//#include    <sys/types.h>
-//#include    <sys/stat.h>
-//#include    <fcntl.h>
-//#include    <unistd.h>
 
 
 // last include
@@ -67,8 +66,8 @@ APPENDER_FACTORY(udp);
 
 
 
-udp_appender::udp_appender(std::string const name)
-    : appender(name, "udp")
+udp_appender::udp_appender(std::string const & name)
+    : base_network_appender(name, "udp")
 {
 }
 
@@ -80,7 +79,7 @@ udp_appender::~udp_appender()
 
 void udp_appender::set_config(advgetopt::getopt const & opts)
 {
-    network_appender::set_config(opts);
+    base_network_appender::set_config(opts);
 
     // SECRET CODE
     //
@@ -92,9 +91,9 @@ void udp_appender::set_config(advgetopt::getopt const & opts)
 }
 
 
-void udp_appender::process_message(message const & msg, std::string const & formatted_message)
+void udp_appender::process_message(snaplogger::message const & msg, std::string const & formatted_message)
 {
-    guard g;
+    snaplogger::guard g;
 
     ed::message log_message;
     log_message_to_ed_message(msg, log_message);
@@ -108,8 +107,11 @@ void udp_appender::process_message(message const & msg, std::string const & form
         //
         log_message.add_parameter("acknowledge", "true");
 
-        f_waiting_acknowledgement.push_back(log_message);
-        // TODO: set a timeout as well...
+        // TODO: we need to save messages and wait for the acknowledgement
+        //       if not acknowledge in `timeout`, then try to resend it
+        //
+        //f_waiting_acknowledgement.push_back(log_message);
+        // TODO: set a timeout & # of retries...
     }
 
     // send message via UDP

@@ -50,4 +50,7 @@ add_subdirectory(doc               )
 add_subdirectory(cmake             )
 add_subdirectory(tools             )
 
+# Extension to support a snaplogger server (remote logs)
+add_subdirectory(snaplogger        )
+
 # vim: ts=4 sw=4 et
