@@ -28,7 +28,7 @@
 
 // self
 //
-//#include    "snaplogger/file_appender.h"
+//#include    "snaploggerd/logger_appender.h"
 
 //#include    "snaplogger/guard.h"
 //#include    "snaplogger/map_diagnostic.h"
