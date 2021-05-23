@@ -96,10 +96,10 @@ udp_server_message_connection::udp_server_message_connection(std::string const &
  *
  * This function offers you to send a UDP message to the specified
  * address and port. The message should be small enough to fit in
- * on UDP packet or the call will fail.
+ * one UDP packet or the call will fail.
  *
  * \note
- * The function return true when the message was successfully sent.
+ * The function returns true when the message was successfully sent.
  * This does not mean it was received.
  *
  * \param[in] addr  The destination address for the message.
@@ -132,6 +132,9 @@ bool udp_server_message_connection::send_message(
     {
         buf = msg.to_message();
     }
+
+    // TODO: this maximum size needs to be checked dynamically
+    //
     if(buf.length() > DATAGRAM_MAX_SIZE)
     {
         // packet too large for our buffers
@@ -142,6 +145,7 @@ bool udp_server_message_connection::send_message(
                 + " bytes) for a UDP server (max: "
                   BOOST_PP_STRINGIZE(DATAGRAM_MAX_SIZE));
     }
+
     if(client.send(buf.data(), buf.length()) != static_cast<ssize_t>(buf.length())) // we do not send the '\0'
     {
         // TODO: add errno to message

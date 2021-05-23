@@ -676,6 +676,13 @@ std::string const & message::get_server() const
  * to all servers even if the destination service name is
  * "snapcommunicator".
  *
+ * \note
+ * This function works hand in hand with the "snapcommunicator". That is,
+ * the snapcommunicator is the one tool that makes use of the server name.
+ * It won't otherwise work with just the library (i.e. you have to know
+ * which client sent you a message to send it back to that client
+ * if you manage an array of clients).
+ *
  * \param[in] server  The name of the server to send this message to.
  *
  * \sa get_server()
