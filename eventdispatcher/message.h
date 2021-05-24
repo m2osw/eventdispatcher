@@ -49,8 +49,9 @@ constexpr char const                MESSAGE_VERSION_NAME[]  = "version";
 class message
 {
 public:
-    typedef std::vector<message>    vector_t;
-    typedef string_map_t            parameters_t;
+    typedef std::shared_ptr<message>    pointer_t;
+    typedef std::vector<message>        vector_t;
+    typedef string_map_t                parameters_t;
 
     bool                    from_message(std::string const & msg);
     std::string             to_message() const;

@@ -379,8 +379,6 @@ signal_handler::pointer_t signal_handler::get_instance()
  */
 void signal_handler::add_callback(callback_id_t id, int sig, callback_t callback)
 {
-    cppthread::guard g(f_mutex);
-
     if(static_cast<std::size_t>(sig) >= sizeof(f_signal_actions) / sizeof(f_signal_actions[0]))
     {
         throw std::runtime_error(
@@ -392,6 +390,8 @@ void signal_handler::add_callback(callback_id_t id, int sig, callback_t callback
     {
         throw std::runtime_error("signal_handler::add_callback() called with nullptr as the callback.");
     }
+
+    cppthread::guard g(f_mutex);
 
     f_callbacks.push_back(signal_callback_t{id, sig, callback});
 }
