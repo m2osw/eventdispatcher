@@ -13,27 +13,30 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 ##
 ## snaplogger daemon appenders
 ##
 project(snaploggerd-appenders)
 
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/version.h
+)
+
 add_library(${PROJECT_NAME} SHARED
     base_network_appender.cpp
     tcp_appender.cpp
     udp_appender.cpp
+    version.cpp
 )
 
 include_directories(
     ${ADVGETOPT_INCLUDE_DIRS}
-    #${LIBEXCEPT_INCLUDE_DIRS}
-    #${LIBUFTF8_INCLUDE_DIRS}
     ${SNAPLOGGER_INCLUDE_DIRS}
-    #${OPENSSL_INCLUDE_DIR}
     ${LIBADDR_INCLUDE_DIRS}
 )
 

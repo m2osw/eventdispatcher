@@ -19,47 +19,41 @@
 #pragma once
 
 /** \file
- * \brief Declaration of a UDP appender to send messages to a server.
+ * \brief The declaration of the TCP logger server.
  *
- * This file declares the UDP appender one can use to send messages to
- * a snaploggerd server. The UDP protocol is very light and can be used
- * without the need to support acknowledgements.
+ * This file declares the TCP logger server which listens for clients
+ * to connect and send us LOG_MESSAGE messages.
  */
 
-// self
+// eventdispatcher lib
 //
-#include    "base_network_appender.h"
+#include    <eventdispatcher/communicator.h>
+#include    <eventdispatcher/tcp_server_connection.h>
 
 
 
-
-
-namespace snaplogger_network
+namespace snaplogger_daemon
 {
 
 
-class udp_appender
-    : public base_network_appender
+class tcp_logger_server
+    : public ed::tcp_server_connection
 {
 public:
-    typedef std::shared_ptr<udp_appender>      pointer_t;
+    typedef std::shared_ptr<tcp_logger_server>
+                                pointer_t;
 
-                        udp_appender(std::string const & name);
-    virtual             ~udp_appender() override;
+                                tcp_logger_server(addr::addr const & listen);
+    virtual                     ~tcp_logger_server() override;
 
-    // appender implementation
+    // tcp_server_connection implementation
     //
-    virtual void        set_config(advgetopt::getopt const & params) override;
-
-protected:
-    virtual void        process_message(
-                                  snaplogger::message const & msg
-                                , std::string const & formatted_message) override;
+    void                        process_accept();
 
 private:
-    std::string         f_secret_code = std::string();
+    ed::communicator::pointer_t f_communicator;
 };
 
 
-} // snaplogger_network namespace
+} // snaplogger_daemon namespace
 // vim: ts=4 sw=4 et

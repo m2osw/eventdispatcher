@@ -1,23 +1,21 @@
-/*
- * Copyright (c) 2013-2021  Made to Order Software Corp.  All Rights Reserved
- *
- * https://snapwebsites.org/project/snaplogger
- * contact@m2osw.com
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
+// Copyright (c) 2021  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #pragma once
 
 /** \file
@@ -28,47 +26,53 @@
 
 // self
 //
-#include    "snaplogger/appender.h"
+#include    "snaplogger/daemon/tcp_logger_server.h"
+#include    "snaplogger/daemon/udp_logger_server.h"
 
 
-// snapdev lib
+// eventdispatcher lib
 //
-#include    <snapdev/raii_generic_deleter.h>
+#include    "eventdispatcher/logrotate_udp_messenger.h"
+
+
+// advgetopt lib
+//
+#include    <advgetopt/advgetopt.h>
 
 
 
-namespace snaplogger
+
+namespace snaplogger_daemon
 {
 
 
-class file_appender
-    : public appender
+constexpr int                       DEFAULT_CONTROLLER_PORT = 4050;
+constexpr int                       DEFAULT_LOGROTATE_PORT  = 4051;
+constexpr int                       DEFAULT_UDP_PORT        = 4052;
+constexpr int                       DEFAULT_TCP_PORT        = 4053;
+
+
+class snaploggerd
+    : public std::enable_shared_from_this<snaploggerd>
 {
 public:
-    typedef std::shared_ptr<file_appender>      pointer_t;
+    typedef std::shared_ptr<snaploggerd>
+                                    pointer_t;
 
-                        file_appender(std::string const name);
-    virtual             ~file_appender() override;
+                                    snaploggerd(int argc, char * argv[]);
 
-    virtual void        set_config(advgetopt::getopt const & params) override;
-    virtual void        reopen() override;
-
-    void                set_filename(std::string const & filename);
-
-protected:
-    virtual void        process_message(message const & msg, std::string const & formatted_message) override;
+    bool                            init();
+    int                             run();
 
 private:
-    std::string         f_path = std::string("/var/log/snaplogger");
-    std::string         f_filename = std::string();
-    snap::raii_fd_t     f_fd = snap::raii_fd_t();
-    bool                f_initialized = false;
-    bool                f_lock = true;
-    bool                f_flush = true;
-    bool                f_secure = false;
-    bool                f_fallback_to_console = false;
+    advgetopt::getopt               f_opts;
+    ed::communicator::pointer_t     f_communicator = ed::communicator::pointer_t();
+    ed::logrotate_udp_messenger::pointer_t
+                                    f_logrotate_connection = ed::logrotate_udp_messenger::pointer_t();
+    tcp_logger_server::pointer_t    f_tcp_server = tcp_logger_server::pointer_t();
+    udp_logger_server::pointer_t    f_udp_server = udp_logger_server::pointer_t();
 };
 
 
-} // snaplogger namespace
+} // snaplogger_daemon namespace
 // vim: ts=4 sw=4 et

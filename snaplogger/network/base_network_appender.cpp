@@ -1,6 +1,6 @@
 // Copyright (c) 2021  Made to Order Software Corp.  All Rights Reserved
 //
-// https://snapwebsites.org/project/snaplogger
+// https://snapwebsites.org/project/eventdispatcher
 // contact@m2osw.com
 //
 // This program is free software; you can redistribute it and/or modify
@@ -163,6 +163,12 @@ void base_network_appender::log_message_to_ed_message(snaplogger::message const 
 {
     snaplogger::guard g;
 
+    // WARNING: the Snap! environment already uses the "LOG" message for
+    //          resetting the snaplogger so here we want to use something
+    //          else to clearly distinguish between both
+    //
+    log_message.set_command("LOGGER");
+
     // severity
     //
     snaplogger::severity::pointer_t severity(snaplogger::get_severity(msg.get_severity()));
@@ -235,8 +241,15 @@ void base_network_appender::log_message_to_ed_message(snaplogger::message const 
                         { ":", "\\:" },
                     }));
         flds += safe_name;
-        flds += ':';
-        flds += safe_value;
+        if(!safe_value.empty())
+        {
+            flds += ':';
+            flds += safe_value;
+        }
+    }
+    if(!flds.empty())
+    {
+        log_message.add_parameter("fields", flds);
     }
 }
 

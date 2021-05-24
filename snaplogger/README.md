@@ -141,3 +141,17 @@ serial number starts at 1 and increases by 1 with each message being
 sent.
 
 
+# License
+
+The project is covered by the GPL 2.0 license.
+
+
+# Bugs
+
+Submit bug reports and patches on
+[github](https://github.com/m2osw/eventdispatcher/issues).
+
+
+_This file is part of the [snapcpp project](https://snapwebsites.org/)._
+
+vim: ts=4 sw=4 et

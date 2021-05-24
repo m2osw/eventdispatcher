@@ -30,7 +30,7 @@
 
 // self
 //
-#include    "snaplogger/network/version.h"
+#include    "snaplogger/daemon/version.h"
 
 
 // last include
@@ -39,7 +39,7 @@
 
 
 
-namespace snaplogger_network
+namespace snaplogger_daemon
 {
 
 
@@ -54,7 +54,7 @@ namespace snaplogger_network
  */
 int get_major_version()
 {
-    return SNAPLOGGER_NETWORK_VERSION_MAJOR;
+    return SNAPLOGGERD_VERSION_MAJOR;
 }
 
 
@@ -67,7 +67,7 @@ int get_major_version()
  */
 int get_release_version()
 {
-    return SNAPLOGGER_NETWORK_VERSION_MINOR;
+    return SNAPLOGGERD_VERSION_MINOR;
 }
 
 
@@ -80,7 +80,7 @@ int get_release_version()
  */
 int get_patch_version()
 {
-    return SNAPLOGGER_NETWORK_VERSION_PATCH;
+    return SNAPLOGGERD_VERSION_PATCH;
 }
 
 
@@ -99,9 +99,9 @@ int get_patch_version()
  */
 char const * get_version_string()
 {
-    return SNAPLOGGER_NETWORK_VERSION_STRING;
+    return SNAPLOGGERD_VERSION_STRING;
 }
 
 
-} // snaplogger_network namespace
+} // snaplogger_daemon namespace
 // vim: ts=4 sw=4 et

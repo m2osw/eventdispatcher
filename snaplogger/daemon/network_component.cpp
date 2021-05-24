@@ -16,31 +16,35 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#pragma once
 
 /** \file
- * \brief Definitions of the snaplogger network extension version.
+ * \brief Appenders are used to append data to somewhere.
  *
- * This header includes the snaplogger library version and functions you
- * can use to check the current version of the library.
+ * This file declares the base appender class.
  */
 
+// self
+//
+#include    "snaplogger/daemon/network_component.h"
 
-#define    SNAPLOGGER_NETWORK_VERSION_MAJOR   @EVENTDISPATCHER_VERSION_MAJOR@
-#define    SNAPLOGGER_NETWORK_VERSION_MINOR   @EVENTDISPATCHER_VERSION_MINOR@
-#define    SNAPLOGGER_NETWORK_VERSION_PATCH   @EVENTDISPATCHER_VERSION_PATCH@
-#define    SNAPLOGGER_NETWORK_VERSION_STRING  "@EVENTDISPATCHER_VERSION_MAJOR@.@EVENTDISPATCHER_VERSION_MINOR@.@EVENTDISPATCHER_VERSION_PATCH@"
 
-namespace snaplogger_network
+
+// last include
+//
+#include    <snapdev/poison.h>
+
+
+
+namespace snaplogger_daemon
 {
 
 
-int             get_major_version();
-int             get_release_version();
-int             get_patch_version();
-char const *    get_version_string();
+snaplogger::component::pointer_t        g_daemon_component(snaplogger::get_component(COMPONENT_DAEMON));
+snaplogger::component::pointer_t        g_remote_component(snaplogger::get_component(COMPONENT_REMOTE));
+snaplogger::component::pointer_t        g_local_component(snaplogger::get_component(COMPONENT_LOCAL));
+snaplogger::component::pointer_t        g_tcp_component(snaplogger::get_component(COMPONENT_TCP));
+snaplogger::component::pointer_t        g_udp_component(snaplogger::get_component(COMPONENT_UDP));
 
 
-
-} // snaplogger_network namespace
+} // snaplogger_daemon namespace
 // vim: ts=4 sw=4 et

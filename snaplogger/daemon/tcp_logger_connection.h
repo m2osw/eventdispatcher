@@ -19,47 +19,44 @@
 #pragma once
 
 /** \file
- * \brief Declaration of a UDP appender to send messages to a server.
+ * \brief Appenders are used to append data to somewhere.
  *
- * This file declares the UDP appender one can use to send messages to
- * a snaploggerd server. The UDP protocol is very light and can be used
- * without the need to support acknowledgements.
+ * This file declares the base appender class.
  */
 
 // self
 //
-#include    "base_network_appender.h"
+//#include    "snaplogger/appender.h"
+
+
+// eventdispatcher lib
+//
+#include    <eventdispatcher/dispatcher.h>
+#include    <eventdispatcher/tcp_server_client_message_connection.h>
 
 
 
-
-
-namespace snaplogger_network
+namespace snaplogger_daemon
 {
 
 
-class udp_appender
-    : public base_network_appender
+class tcp_logger_connection
+    : public ed::tcp_server_client_message_connection
 {
 public:
-    typedef std::shared_ptr<udp_appender>      pointer_t;
+    typedef std::shared_ptr<tcp_logger_connection>
+                                pointer_t;
 
-                        udp_appender(std::string const & name);
-    virtual             ~udp_appender() override;
+                                tcp_logger_connection(ed::tcp_bio_client::pointer_t client);
+    virtual                     ~tcp_logger_connection() override;
 
-    // appender implementation
-    //
-    virtual void        set_config(advgetopt::getopt const & params) override;
-
-protected:
-    virtual void        process_message(
-                                  snaplogger::message const & msg
-                                , std::string const & formatted_message) override;
+    void                        msg_logger_message(ed::message & message);
 
 private:
-    std::string         f_secret_code = std::string();
+    ed::dispatcher<tcp_logger_connection>::pointer_t
+                                f_dispatcher = ed::dispatcher<tcp_logger_connection>::pointer_t();
 };
 
 
-} // snaplogger_network namespace
+} // snaplogger_daemon namespace
 // vim: ts=4 sw=4 et

@@ -19,28 +19,28 @@
 #pragma once
 
 /** \file
- * \brief Definitions of the snaplogger network extension version.
+ * \brief A few useful functions and structures.
  *
- * This header includes the snaplogger library version and functions you
- * can use to check the current version of the library.
+ * A few complementary functions and structures.
  */
 
+// snaplogger lib
+//
+#include    <snaplogger/message.h>
 
-#define    SNAPLOGGER_NETWORK_VERSION_MAJOR   @EVENTDISPATCHER_VERSION_MAJOR@
-#define    SNAPLOGGER_NETWORK_VERSION_MINOR   @EVENTDISPATCHER_VERSION_MINOR@
-#define    SNAPLOGGER_NETWORK_VERSION_PATCH   @EVENTDISPATCHER_VERSION_PATCH@
-#define    SNAPLOGGER_NETWORK_VERSION_STRING  "@EVENTDISPATCHER_VERSION_MAJOR@.@EVENTDISPATCHER_VERSION_MINOR@.@EVENTDISPATCHER_VERSION_PATCH@"
 
-namespace snaplogger_network
+// eventdispatcher lib
+//
+#include    <eventdispatcher/message.h>
+
+
+
+namespace snaplogger_daemon
 {
 
 
-int             get_major_version();
-int             get_release_version();
-int             get_patch_version();
-char const *    get_version_string();
+snaplogger::message::pointer_t ed_message_to_log_message(ed::message const & message);
 
 
-
-} // snaplogger_network namespace
+} // snaplogger_daemon namespace
 // vim: ts=4 sw=4 et
