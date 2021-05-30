@@ -50,12 +50,14 @@ namespace snaplogger_daemon
 {
 
 
-constexpr char const                        COMPONENT_DAEMON[] = "daemon";
-constexpr char const                        COMPONENT_REMOTE[] = "remote";
-constexpr char const                        COMPONENT_LOCAL[]  = "local";
-constexpr char const                        COMPONENT_TCP[]    = "tcp";
-constexpr char const                        COMPONENT_UDP[]    = "udp";
+constexpr char const                        COMPONENT_NETWORK[] = "network";
+constexpr char const                        COMPONENT_DAEMON[]  = "daemon";
+constexpr char const                        COMPONENT_REMOTE[]  = "remote";
+constexpr char const                        COMPONENT_LOCAL[]   = "local";
+constexpr char const                        COMPONENT_TCP[]     = "tcp";
+constexpr char const                        COMPONENT_UDP[]     = "udp";
 
+extern snaplogger::component::pointer_t     g_network_component;
 extern snaplogger::component::pointer_t     g_daemon_component;
 extern snaplogger::component::pointer_t     g_remote_component;
 extern snaplogger::component::pointer_t     g_local_component;

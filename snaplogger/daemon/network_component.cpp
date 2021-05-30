@@ -39,11 +39,12 @@ namespace snaplogger_daemon
 {
 
 
+snaplogger::component::pointer_t        g_network_component(snaplogger::get_component(COMPONENT_NETWORK));
 snaplogger::component::pointer_t        g_daemon_component(snaplogger::get_component(COMPONENT_DAEMON));
-snaplogger::component::pointer_t        g_remote_component(snaplogger::get_component(COMPONENT_REMOTE));
-snaplogger::component::pointer_t        g_local_component(snaplogger::get_component(COMPONENT_LOCAL));
+snaplogger::component::pointer_t        g_remote_component(snaplogger::get_component(COMPONENT_REMOTE, { g_daemon_component }));
+snaplogger::component::pointer_t        g_local_component(snaplogger::get_component(COMPONENT_LOCAL, { g_daemon_component, g_remote_component }));
 snaplogger::component::pointer_t        g_tcp_component(snaplogger::get_component(COMPONENT_TCP));
-snaplogger::component::pointer_t        g_udp_component(snaplogger::get_component(COMPONENT_UDP));
+snaplogger::component::pointer_t        g_udp_component(snaplogger::get_component(COMPONENT_UDP, { g_tcp_component }));
 
 
 } // snaplogger_daemon namespace

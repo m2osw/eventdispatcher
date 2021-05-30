@@ -75,6 +75,9 @@ int main(int argc, char *argv[])
     {
         std::cerr << "error: an exception occurred: " << e.what() << std::endl;
         SNAP_LOG_FATAL
+            << section(snaplogger::g_normal_component)
+            << section(snaplogger_daemon::g_network_component)
+            << section(snaplogger_daemon::g_daemon_component)
             << "an exception occurred: "
             << e.what()
             << SNAP_LOG_SEND;
@@ -84,6 +87,9 @@ int main(int argc, char *argv[])
     {
         std::cerr << "error: an unknown exception occurred." << std::endl;
         SNAP_LOG_FATAL
+            << section(snaplogger::g_normal_component)
+            << section(snaplogger_daemon::g_network_component)
+            << section(snaplogger_daemon::g_daemon_component)
             << "an unknown exception occurred."
             << SNAP_LOG_SEND;
         exit(3);

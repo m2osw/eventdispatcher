@@ -76,6 +76,8 @@ void tcp_logger_server::process_accept()
     {
         int const e(errno);
         SNAP_LOG_ERROR
+            << snaplogger::section(snaplogger::g_normal_component)
+            << snaplogger::section(g_network_component)
             << snaplogger::section(g_daemon_component)
             << "accept() returned an error. (errno: "
             << e

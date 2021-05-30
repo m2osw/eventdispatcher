@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 #
 # Run all the eventdispatcher tests with coverage
 #
@@ -17,12 +17,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-
-set -e
 
 PROJECT_NAME=eventdispatcher
 PUBLISH_PROJECT=snapwebsites
@@ -54,7 +52,7 @@ cd tmp/coverage
 mkdir BUILD
 cd BUILD
 # request coverage in this build
-dist=`cd ../../../../../../; pwd`/BUILD/dist
+dist=`cd ../../../../../BUILD/Debug/dist; pwd`
 modules=$dist/share/cmake-3.5/Modules
 cmake -DCMAKE_INSTALL_PREFIX:PATH=$dist \
     -DCMAKE_MODULE_PATH:PATH=$modules \

@@ -101,10 +101,24 @@ snaplogger::message::pointer_t ed_message_to_log_message(ed::message const & mes
             msg->add_component(snaplogger::get_component(*msg, c));
         }
     }
+    else
+    {
+        // the "normal" component is the default, but if we add other
+        // components the "normal" component will not be there, which may
+        // fail some appender tests, so we have to add it unless "secure" or
+        // some other exclusive component is present
+        //
+        if(msg->can_add_component(g_normal_component))
+        {
+            msg->add_component(g_normal_component);
+        }
+    }
     if(!is_local)
     {
         msg->add_component(g_remote_component);
     }
+    msg->add_component(g_network_component);
+
 
     if(message.has_parameter("fields"))
     {
