@@ -209,7 +209,7 @@ public:
                     , std::string const & address
                     , int port
                     , tcp_bio_client::mode_t mode)
-            : cppthread::runner("background tcp_client_permanent_message_connection for asynchroneous connections")
+            : cppthread::runner("background tcp_client_permanent_message_connection for asynchronous connections")
             , f_parent_impl(parent_impl)
             , f_address(address)
             , f_port(port)
@@ -631,7 +631,7 @@ public:
         if(client == nullptr)
         {
             // TODO: fix address in error message using a snap::addr so
-            //       as to handle IPv6 seemlessly.
+            //       as to handle IPv6 seamlessly.
             //
             SNAP_LOG_ERROR
                 << "connection to "
@@ -846,7 +846,7 @@ private:
  * -5000000LL as the pause parameter.
  *
  * The \p use_thread parameter determines whether the connection should
- * be attempted in a thread (asynchroneously) or immediately (which means
+ * be attempted in a thread (asynchronously) or immediately (which means
  * the timeout callback may block for a while.) If the connection is to
  * a local server with an IP address specified as numbers (i.e. 127.0.0.1),
  * the thread is probably not required. For connections to a remote
@@ -1008,7 +1008,7 @@ size_t tcp_client_permanent_message_connection::get_client_address(sockaddr_stor
  * This function returns the address of the remote computer as a string.
  * It will be a canonicalized IP address.
  *
- * \return The cacnonicalized IP address.
+ * \return The canonicalized IP address.
  */
 std::string tcp_client_permanent_message_connection::get_client_addr() const
 {
@@ -1020,7 +1020,7 @@ std::string tcp_client_permanent_message_connection::get_client_addr() const
  *
  * This callback implements the guts of this class: it attempts to connect
  * to the specified address and port, optionally after creating a thread
- * so the attempt can happen asynchroneously.
+ * so the attempt can happen asynchronously.
  *
  * When the connection fails, the timer is used to try again pause
  * microseconds later (pause as specified in the constructor).
@@ -1035,7 +1035,7 @@ std::string tcp_client_permanent_message_connection::get_client_addr() const
  * using the set_timeout_delay() function. If the pause parameter
  * was set to -1, then the timeout never gets changed.
  * However, you should not use a permanent message timer as your
- * own or you will interfer with the internal use of the timer.
+ * own or you will interfere with the internal use of the timer.
  */
 void tcp_client_permanent_message_connection::process_timeout()
 {
@@ -1189,7 +1189,7 @@ void tcp_client_permanent_message_connection::connection_removed()
  * If you overload this function, make sure to either call this
  * implementation or enable the timer yourselves.
  *
- * \param[in] error_message  The error message that trigged this callback.
+ * \param[in] error_message  The error message that triggered this callback.
  */
 void tcp_client_permanent_message_connection::process_connection_failed(std::string const & error_message)
 {

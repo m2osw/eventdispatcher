@@ -49,7 +49,7 @@ namespace ed
 
 
 
-/** \brief The destuctor.
+/** \brief The destructor.
  *
  * The destructor cleans up the dispatcher support object.
  */
@@ -86,7 +86,7 @@ void dispatcher_support::set_dispatcher(dispatcher_base::pointer_t d)
  * Note that it may return nullptr because the weak pointer was just
  * set to nullptr as the owner of the dispatcher was deleted.
  *
- * \return The pointer to the dispatcher used to execite messages or nullptr.
+ * \return The pointer to the dispatcher used to execute messages or nullptr.
  */
 dispatcher_base::pointer_t dispatcher_support::get_dispatcher() const
 {
@@ -149,7 +149,7 @@ bool dispatcher_support::dispatch_message(message & msg)
 
 /** \brief A default implementation of the process_message() function.
  *
- * This function is adefault fallback for the process_message()
+ * This function is a default fallback for the process_message()
  * functionality. If you define a dispatcher, then you probably
  * won't need to define a process_message() which in most cases
  * would do the exact same thing but it would be called.
@@ -202,7 +202,7 @@ void dispatcher_support::process_message(message const & msg)
 
     throw event_dispatcher_implementation_error(
               "your class is not reimplementing the process_message()"
-              " virtual function and your dispatcher did not catch mnessage \""
+              " virtual function and your dispatcher did not catch message \""
             + msg.to_message()
             + "\".");
 }

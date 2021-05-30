@@ -62,7 +62,7 @@ namespace ed
 
 /** \brief Initialize a connection_with_send_message object.
  *
- * This constructor initializes a connectopm which supports a send_message()
+ * This constructor initializes a connection which supports a send_message()
  * function. This allows that object to send a certain number of default
  * messages such as the UNKNOWN message automatically.
  */
@@ -198,7 +198,7 @@ void connection_with_send_message::msg_alive(message & msg)
         SNAP_LOG_WARNING
             << "could not reply to \""
             << msg.get_command()
-            << "\" with an ABSOLULTELY message."
+            << "\" with an ABSOLUTELY message."
             << SNAP_LOG_SEND;
     }
 }
@@ -299,7 +299,7 @@ void connection_with_send_message::msg_ready(message & msg)
  * why the RESTART was sent:
  *
  * \li `reason=upgrade` -- something (library/tools) was upgraded
- * \li `reason=config` -- a congiguration file was updated
+ * \li `reason=config` -- a configuration file was updated
  *
  * \note
  * There are currently some services that make use of a CONFIG message
@@ -389,7 +389,7 @@ void connection_with_send_message::msg_log_unknown(message & msg)
  *  };
  * \endcode
  *
- * \param[in] message  The messageto reply to.
+ * \param[in] message  The message to reply to.
  */
 void connection_with_send_message::msg_reply_with_unknown(message & msg)
 {
@@ -463,7 +463,7 @@ void connection_with_send_message::ready(message & msg)
  *
  * This implementation does nothing. It is expected that you reimplement
  * this function depending on your daemon's need. Most often this function
- * calls the stop() function in order to restart the deamon. If only a
+ * calls the stop() function in order to restart the daemon. If only a
  * configuration file changed and your daemon is capable of reading the
  * new settings without a full restart, then just read that new config.
  *

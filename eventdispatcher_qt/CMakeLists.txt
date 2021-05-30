@@ -44,7 +44,7 @@ add_library(${PROJECT_NAME} SHARED
 
 target_link_libraries(${PROJECT_NAME}
     ${LIBEXCEPT_LIBRARIES}
-    ${LIBUFTF8_LIBRARIES}
+    ${LIBUTF8_LIBRARIES}
     ${QT_LIBRARIES}
     Qt5::X11Extras
     eventdispatcher

@@ -81,7 +81,7 @@ namespace ed
  * In most cases you do not need to specify the matching function. It will
  * use the default which is a one to one match. So in the example above,
  * for "HELP", only a message with the command set to "HELP" will match.
- * When a match is found, the correcsponding function (msg_help() here)
+ * When a match is found, the corresponding function (msg_help() here)
  * gets called.
  *
  * Note that "functions" are actually offsets. You will get `this` defined

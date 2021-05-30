@@ -74,7 +74,7 @@ namespace
 /** \brief A global variable to check unicity.
  *
  * We use this variable to make sure that you don't create two of
- * the sanp_qt_connection since that would wreak havoc your application
+ * the ed::qt_connection since that would wreak havoc your application
  * anyway. It will throw event_dispatcher_implementation_error if
  * it happens.
  */

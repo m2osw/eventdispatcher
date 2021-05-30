@@ -55,7 +55,7 @@ protected:
 
     // TODO: convert the port + addr into a libaddr addr object?
     //       (we use the f_addrinfo as is in the sendto() and bind() calls
-    //       and use libaddr for the convertions already)
+    //       and use libaddr for the conversions already)
     //
     snap::raii_fd_t     f_socket = snap::raii_fd_t();
     int                 f_port = -1;

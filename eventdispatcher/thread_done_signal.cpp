@@ -126,7 +126,7 @@ thread_done_signal::thread_done_signal()
 
 /** \brief Close the pipe used to detect the thread death.
  *
- * The destructor is expected to close the pipe opned in the constructor.
+ * The destructor is expected to close the pipe opened in the constructor.
  */
 thread_done_signal::~thread_done_signal()
 {

@@ -300,7 +300,7 @@ void ssl_trace(
 
 
 
-/** \brief Contruct a tcp_bio_client object.
+/** \brief Construct a tcp_bio_client object.
  *
  * The tcp_bio_client constructor initializes a BIO connector and connects
  * to the specified server. The server is defined with the \p addr and

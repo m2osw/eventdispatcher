@@ -140,7 +140,7 @@ ssize_t tcp_client_connection::read(void * buf, size_t count)
  * client socket.
  *
  * The function can safely be called after the socket was closed, although
- * it will return -1 and set errno to EBADF in tha case.
+ * it will return -1 and set errno to EBADF in that case.
  *
  * \param[in] buf  The buffer to write to the client connection socket.
  * \param[in] count  The maximum number of bytes to write on this connection.

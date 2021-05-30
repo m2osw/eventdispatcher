@@ -81,7 +81,7 @@ namespace ed
  * specifying WRITE or RW.
  *
  * \note
- * It is important to note that the lifetime of the file desriptor is
+ * It is important to note that the lifetime of the file descriptor is
  * not managed by this object. You are responsible for the descriptor to
  * stay valid as long as the connection is added to the communicator
  * list of connections. If you want to close the connection, please first
@@ -112,7 +112,7 @@ fd_connection::fd_connection(int fd, mode_t mode)
 
 /** \brief Used to close the file descriptor.
  *
- * This function closes the file descript of this connection.
+ * This function closes the file descriptor of this connection.
  *
  * The function is not called automatically as we mention in the
  * constructor, the function cannot just close the file descriptor

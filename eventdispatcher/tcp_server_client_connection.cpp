@@ -80,7 +80,7 @@ namespace ed
  *
  * The destructor will automatically close that socket on destruction.
  *
- * \param[in] client  The client that acecpt() returned.
+ * \param[in] client  The client that accept() returned.
  */
 tcp_server_client_connection::tcp_server_client_connection(tcp_bio_client::pointer_t client)
     : f_client(client)
@@ -135,7 +135,7 @@ ssize_t tcp_server_client_connection::read(void * buf, size_t count)
  *
  * \param[in] buf  The buffer of data to be written to the socket.
  * \param[in] count  The number of bytes the caller wants to write to the
- *                   conneciton.
+ *                   connection.
  *
  * \return The number of bytes written to the socket or -1 if an error occurred.
  */
@@ -233,7 +233,7 @@ size_t tcp_server_client_connection::get_client_address(sockaddr_storage & addre
  * easily be used to log information and other similar tasks.
  *
  * \todo
- * Look at using libaddr for the convertion.
+ * Look at using libaddr for the conversion.
  *
  * \return The client's address in the form of a string.
  */
@@ -317,7 +317,7 @@ int tcp_server_client_connection::get_client_port() const
  * easily be used to log information and other similar tasks.
  *
  * \todo
- * Look at using libaddr for the convertion.
+ * Look at using libaddr for the conversion.
  *
  * \return The client's address in the form of a string.
  */

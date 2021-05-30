@@ -240,7 +240,7 @@ void connection::set_enable(bool enabled)
 
 /** \brief Define the priority of this connection object.
  *
- * By default connection objets have a priority of 100.
+ * By default connection objects have a priority of 100.
  *
  * You may also use the set_priority() to change the priority of a
  * connection at any time.
@@ -301,7 +301,7 @@ void connection::set_priority(priority_t priority)
  * it checks the data.
  *
  * The result of the priority mechanism is that callbacks of items with
- * a smaller priorirty will be called first.
+ * a smaller priority will be called first.
  *
  * \param[in] lhs  The left hand side connection.
  * \param[in] rhs  The right hand side connection.
@@ -415,7 +415,7 @@ uint16_t connection::get_processing_time_limit() const
  */
 void connection::set_processing_time_limit(std::int32_t processing_time_limit)
 {
-    // in mircoseconds.
+    // in microseconds.
     //
     f_processing_time_limit = processing_time_limit;
 }
@@ -660,7 +660,7 @@ int64_t connection::save_timeout_timestamp()
  *
  * This function returns the timeout as saved by the
  * save_timeout_timestamp() function. The timestamp returned by
- * this funtion was frozen so if the user calls various timeout
+ * this function was frozen so if the user calls various timeout
  * functions that could completely change the timeout stamp that
  * the get_timeout_timestamp() would return just at the time we
  * want to know whether th timeout callback needs to be called
@@ -765,7 +765,7 @@ bool connection::is_done() const
  * So one knows that the write (output) buffer is empty whenever one gets
  * its process_empty_buffer() callback called. At that point, the connection
  * can be removed from the communicator instance since we are done with
- * it. The default process_empty_buffer() does that for us whenver the
+ * it. The default process_empty_buffer() does that for us whenever the
  * mark_done() function was called.
  *
  * \li HUP of a permanent connection

@@ -122,7 +122,7 @@ bool tcp_server_client_buffer_connection::has_output() const
 
 /** \brief Tells that this connection is a writer when we have data to write.
  *
- * This function checks to know whether there is data to be writen to
+ * This function checks to know whether there is data to be written to
  * this connection socket. If so then the function returns true. Otherwise
  * it just returns false.
  *
@@ -143,7 +143,7 @@ bool tcp_server_client_buffer_connection::is_writer() const
  * The data is bufferized and as soon as the connection can WRITE
  * to the socket, it will wake up and send the data. In other words,
  * we cannot just sleep and wait for an answer. The transfer will
- * be asynchroneous.
+ * be asynchronous.
  *
  * \todo
  * Determine whether we may end up with really large buffers that

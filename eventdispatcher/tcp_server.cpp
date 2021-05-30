@@ -299,7 +299,7 @@ void tcp_server::set_keepalive(bool yes)
  * changed with the set_close_on_exec() function.
  *
  * The flag is used to atomically mark new connections with the FD_CLOEXEC
- * flag. This prevents child processes from inhiriting the socket (i.e. if
+ * flag. This prevents child processes from inheriting the socket (i.e. if
  * you use the system() function, for example, that process would inherit
  * your socket).
  *
@@ -373,9 +373,9 @@ void tcp_server::set_close_on_exec(bool yes)
  *
  * \param[in] max_wait_ms  The maximum number of milliseconds to wait for
  *            a message. If set to -1 (the default), accept() will block
- *            indefintely.
+ *            indefinitely.
  *
- * \return A client socket descriptor, -1 if an error occured, or
+ * \return A client socket descriptor, -1 if an error occurred, or
  *         -2 if it times out and max_wait is set.
  */
 int tcp_server::accept(int const max_wait_ms)

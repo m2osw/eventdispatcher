@@ -504,7 +504,7 @@ void tcp_blocking_client_message_connection::peek()
  * \param[in] cache  Whether to cache the message if it cannot be sent
  *                   immediately (ignored at the moment.)
  *
- * \return true if the message was sent succesfully, false otherwise.
+ * \return true if the message was sent successfully, false otherwise.
  */
 bool tcp_blocking_client_message_connection::send_message(message const & msg, bool cache)
 {

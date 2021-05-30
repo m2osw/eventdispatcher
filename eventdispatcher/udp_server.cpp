@@ -179,7 +179,7 @@ udp_server::udp_server(std::string const & addr, int port, int family, std::stri
             break;
 
         default:
-            strncpy(addr_buf, "Unknown Adress Family", sizeof(addr_buf));
+            strncpy(addr_buf, "Unknown Address Family", sizeof(addr_buf));
             break;
 
         }

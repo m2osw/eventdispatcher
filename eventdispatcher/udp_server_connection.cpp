@@ -65,7 +65,7 @@ namespace ed
  * \param[in] addr  The address to listen on. It may be set to "0.0.0.0".
  * \param[in] port  The port to listen on.
  * \param[in] family  The family used to search for 'addr' (IPv4 or IPv6).
- * \param[in] multicase_addr  A multicast address (224.x.x.x) or nullptr.
+ * \param[in] multicast_addr  A multicast address (224.x.x.x) or nullptr.
  */
 udp_server_connection::udp_server_connection(
               std::string const & addr

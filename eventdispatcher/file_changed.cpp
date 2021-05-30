@@ -468,7 +468,7 @@ void file_changed::process_read()
                 inotify_rm_watch(f_inotify, ievent.wd);
             }
 
-            // move the pointer to the next stucture until we reach 'end'
+            // move the pointer to the next structure until we reach 'end'
             //
             start += sizeof(struct inotify_event) + ievent.len;
         }

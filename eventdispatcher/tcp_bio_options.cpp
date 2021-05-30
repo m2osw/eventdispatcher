@@ -120,7 +120,7 @@ size_t tcp_bio_options::get_verification_depth() const
  * This function sets the SSL options to the new \p ssl_options
  * values.
  *
- * By default the bio_clent forbids:
+ * By default the bio_client forbids:
  *
  * * SSL version 2
  * * SSL version 3
@@ -354,7 +354,7 @@ void tcp_bio_options::set_host(std::string const & host)
  * bio_client constructor is called with a hostname, the
  * SNI won't be included in the request.
  *
- * \return A referemce string with the hostname.
+ * \return A reference string with the hostname.
  */
 std::string const & tcp_bio_options::get_host() const
 {

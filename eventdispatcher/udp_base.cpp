@@ -309,7 +309,7 @@ int udp_base::get_mtu_size() const
  * on our end!
  *
  * \todo
- * For congetion control, read more as described on ietf.org:
+ * For congestion control, read more as described on ietf.org:
  * https://tools.ietf.org/html/rfc8085
  *
  * \todo

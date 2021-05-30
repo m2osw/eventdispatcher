@@ -332,7 +332,7 @@ pid_t signal::get_child_pid() const
  * The structure is return as read-only. You should not modify it. If you
  * need to do so, make a copy.
  *
- * The structre remains valid until your process_signal() function returns.
+ * The structure remains valid until your process_signal() function returns.
  * If you need the info after, make sure to make a copy.
  *
  * \return A direct pointer to the signal info in the object.

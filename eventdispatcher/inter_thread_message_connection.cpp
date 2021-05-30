@@ -208,7 +208,7 @@ int inter_thread_message_connection::poll(int timeout)
             timeout /= 1000;
             if(timeout == 0)
             {
-                // less than one is a waste of time (CPU intenssive
+                // less than one is a waste of time (CPU intensive
                 // until the time is reached, we can be 1 ms off
                 // instead...)
                 //

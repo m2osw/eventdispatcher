@@ -66,7 +66,7 @@ namespace ed
  * over time.
  */
 
-/** \brief Contruct a tcp_client object.
+/** \brief Construct a tcp_client object.
  *
  * The tcp_client constructor initializes a TCP client object by connecting
  * to the specified server. The server is defined with the \p addr and

@@ -295,7 +295,7 @@ signal_handler::~signal_handler()
  * add_callback() gets called. In that case, the \p callback must
  * be properly defined.
  *
- * \param[in] terminall  Mask with the set of terminal signals.
+ * \param[in] terminal  Mask with the set of terminal signals.
  * \param[in] ignored  Mask with set of signals to be ignored.
  * \param[in] callback_id  An identifier to attach the callback with.
  * \param[in] callback_sig  Signal for which you want a callback.
@@ -605,7 +605,7 @@ char const * signal_handler::get_signal_name(int sig)
  * This function is the handler that gets called whenever a signal is
  * raised.
  *
- * \param[in] sig  The signal thatgenerated this handler.
+ * \param[in] sig  The signal that generated this handler.
  * \param[in] info  Information about the signal handler.
  * \param[in] context  The context from when the interrupt was generated.
  */

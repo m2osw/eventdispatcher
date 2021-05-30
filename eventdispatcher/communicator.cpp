@@ -121,7 +121,7 @@ communicator::communicator()
  * the communicator as a singleton. It also means you cannot
  * actually delete the communicator.
  *
- * The initialization fo the communicator instance is thread
+ * The initialization of the communicator instance is thread
  * safe.
  */
 communicator::pointer_t communicator::instance()
@@ -398,7 +398,7 @@ bool communicator::run()
             }
             if(e == 0)
             {
-                // this should only happend on timer objects
+                // this should only happen on timer objects
                 //
                 continue;
             }

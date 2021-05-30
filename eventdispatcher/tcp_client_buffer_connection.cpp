@@ -136,7 +136,7 @@ bool tcp_client_buffer_connection::has_output() const
  * The data is bufferized and as soon as the connection can WRITE
  * to the socket, it will wake up and send the data. In other words,
  * we cannot just sleep and wait for an answer. The transfer will
- * be asynchroneous.
+ * be asynchronous.
  *
  * \todo
  * Optimization: look into writing the \p data buffer directly in

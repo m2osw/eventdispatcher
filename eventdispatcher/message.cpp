@@ -78,7 +78,7 @@ namespace ed
 
 
 
-/** \brief Parse a message from the specified paremeter.
+/** \brief Parse a message from the specified parameter.
  *
  * This function transformed the input string in a set of message
  * fields.
@@ -121,7 +121,7 @@ namespace ed
  * escape backslashes themselves by doubling them, so \ becomes \\.
  *
  * Note that only parameter values support absolutely any character.
- * All the other parameters are limited to the latin alphabet, digits,
+ * All the other parameters are limited to the Latin alphabet, digits,
  * and underscores ([A-Za-z0-9_]+). Also all commands are limited
  * to uppercase letters only.
  *
@@ -132,7 +132,7 @@ namespace ed
  * \param[in] message  The string to convert into fields in this
  *                     message object.
  *
- * \return true if the message was succesfully parsed; false when an
+ * \return true if the message was successfully parsed; false when an
  *         error occurs and in that case no fields get modified.
  *
  * \sa to_message()
@@ -356,7 +356,7 @@ bool message::from_message(std::string const & original_message)
             {
                 if(*m != ';')
                 {
-                    // this should never happend
+                    // this should never happen
                     //
                     SNAP_LOG_ERROR
                         << "two parameters must be separated by a semicolon (;)."
@@ -369,7 +369,7 @@ bool message::from_message(std::string const & original_message)
                 ++m;
             }
 
-            // also restore new lines and blackslashes if any
+            // also restore new lines and backslashes if any
             //
             std::string const unsafe_value(snap::string_replace_many(
                     param_value,
@@ -832,7 +832,7 @@ void message::set_command(std::string const & command)
  * compiled with. Since we offer a shared object (.so) library, it
  * could be different from the version your application was compiled
  * with. If that's the case, your application may want to at least
- * warn the user about the dicrepancy.
+ * warn the user about the discrepancy.
  *
  * \return The MESSAGE_VERSION at the time this library was compiled.
  */
@@ -881,7 +881,7 @@ bool message::check_version_parameter() const
  * message protocol.
  *
  * In the snapcommunicator tool, this is sent over with the CONNECT
- * message. It allows the snapcommunicators to make sure they will
+ * message. It allows the snapcommunicator to make sure they will
  * properly understand each others.
  */
 void message::add_version_parameter()
@@ -1172,7 +1172,7 @@ std::int64_t message::get_integer_parameter(std::string const & name) const
  * defined in this message.
  *
  * This can be useful if you allow for variable lists of parameters, but
- * generally the get_parameter() and get_integer_parameter() are prefered.
+ * generally the get_parameter() and get_integer_parameter() are preferred.
  *
  * \warning
  * This is a direct reference to the list of parameter. If you call the
@@ -1200,7 +1200,7 @@ message::parameters_t const & message::get_all_parameters() const
  * \li parameters
  *
  * All those names must be valid as per this function. They are checked
- * on read and on write (i.e. add_parameter() and get_paramter() both
+ * on read and on write (i.e. add_parameter() and get_parameter() both
  * check the parameter name to make sure you did not mistype it.)
  *
  * A valid name must start with a letter or an underscore (although
@@ -1224,7 +1224,7 @@ message::parameters_t const & message::get_all_parameters() const
  * At this point all our services use lowercase, but this is not enforced.
  * Actually, mixed case or uppercase service names are allowed.
  *
- * \exception event_distpatcher_invalid_message
+ * \exception event_dispatcher_invalid_message
  * This exception is raised if the name includes characters considered
  * invalid.
  *

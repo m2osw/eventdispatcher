@@ -122,7 +122,7 @@ bool fd_buffer_connection::has_output() const
 
 /** \brief Tells that this file descriptor is a writer when we have data.
  *
- * This function checks to know whether there is output data to be writen
+ * This function checks to know whether there is output data to be written
  * to this file descriptor. If so then the function returns true. Otherwise
  * it just returns false.
  *
@@ -147,7 +147,7 @@ bool fd_buffer_connection::is_writer() const
  * The data is bufferized and as soon as the connection file descriptor
  * can accept more data it gets written there. In other words, we cannot
  * just sleep and wait for an answer. The transfer of the data is therefore
- * asynchroneous.
+ * asynchronous.
  *
  * \todo
  * Determine whether we may end up with really large buffers that

@@ -70,7 +70,7 @@ namespace ed
 
 /** \brief Initialize a UDP server to send and receive messages.
  *
- * This function initialises a UDP server as a Snap UDP server
+ * This function initializes a UDP server as a Snap UDP server
  * connection attached to the specified address and port.
  *
  * It is expected to be used to send and receive UDP messages.

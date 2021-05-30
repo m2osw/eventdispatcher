@@ -113,7 +113,7 @@ public:
 
 
 
-/** \brief Contruct a tcp_bio_server object.
+/** \brief Construct a tcp_bio_server object.
  *
  * The tcp_bio_server constructor initializes a BIO server and listens
  * for connections from the specified address and port.
@@ -126,7 +126,7 @@ public:
  *
  * \warning
  * Currently the max_connections parameter is pretty much ignored since
- * there is no way to pass that paramter down to the BIO interface. In
+ * there is no way to pass that parameter down to the BIO interface. In
  * that code they use the SOMAXCONN definition which under Linux is
  * defined at 128 (Ubuntu 16.04.1). See:
  * /usr/include/x86_64-linux-gnu/bits/socket.h
@@ -212,7 +212,7 @@ tcp_bio_server::tcp_bio_server(
                 }
             }
 
-            // Verify that the private key and certifcate are a match
+            // Verify that the private key and certificate are a match
             //
             if(!SSL_CTX_check_private_key(ssl_ctx.get()))
             {
@@ -395,7 +395,7 @@ void tcp_bio_server::set_keepalive(bool yes)
  * changed with the set_close_on_exec() function.
  *
  * The flag is used to atomically mark new connections with the FD_CLOEXEC
- * flag. This prevents child processes from inhiriting the socket (i.e. if
+ * flag. This prevents child processes from inheriting the socket (i.e. if
  * you use the system() function, for example, that process would inherit
  * your socket).
  *
