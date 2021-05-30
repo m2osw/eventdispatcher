@@ -35,4 +35,12 @@ install(
         share/cmake/EventDispatcherQt
 )
 
+install(
+    FILES
+        SnapLoggerNetworkConfig.cmake
+
+    DESTINATION
+        share/cmake/SnapLoggerNetwork
+)
+
 # vim: ts=4 sw=4 et nocindent
