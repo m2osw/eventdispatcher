@@ -17,6 +17,9 @@ usr/include/eventdispatcher/pipe_buffer_connection.h
 usr/include/eventdispatcher/pipe_connection.h
 usr/include/eventdispatcher/pipe_message_connection.h
 usr/include/eventdispatcher/signal.h
+usr/include/eventdispatcher/signal_handler.h
+# the signal profile (SIGPROF) doesn't work at all in our environment
+#usr/include/eventdispatcher/signal_profiler.h
 usr/include/eventdispatcher/tcp_base.h
 usr/include/eventdispatcher/tcp_bio_client.h
 usr/include/eventdispatcher/tcp_bio_options.h

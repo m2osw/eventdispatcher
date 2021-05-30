@@ -1,6 +1,6 @@
 Source: eventdispatcher
 Priority: extra
-Maintainer: R. Douglas Barbieri <doug@dooglio.net>
+Maintainer: Alexis Wilke <alexis@m2osw.com>
 Build-Depends: cmake,
     cppthread-dev (>= 1.0.0.0~bionic),
     debhelper,
@@ -22,7 +22,7 @@ Standards-Version: 3.9.4
 Section: libs
 Homepage: https://snapwebsites.org/
 Vcs-Git: https://github.com/m2osw/snapcpp.git
-Vcs-Browser: https://github.com/m2osw/snaplogger
+Vcs-Browser: https://github.com/m2osw/eventdispatcher
 
 Package: eventdispatcher-doc
 Section: doc
@@ -34,6 +34,7 @@ Description: Documentation for the C++ Event Dispatcher library.
 Package: eventdispatcher-dev
 Section: libdevel
 Architecture: any
+Suggests: eventdispatcher-doc
 Depends: eventdispatcher (= ${binary:Version}), ${misc:Depends}
 Description: Development package for the C++ Event Dispatcher library.
  This library provides advance network and event support.
@@ -48,6 +49,7 @@ Description: C++ library for easy event based networking and communication.
 Package: eventdispatcher-qt-dev
 Section: libdevel
 Architecture: any
+Suggests: eventdispatcher-doc
 Depends: eventdispatcher-dev (= ${binary:Version}),
  eventdispatcher-qt (= ${binary:Version}), ${misc:Depends}
 Description: Development package for the C++ Event Dispatcher library.
@@ -57,9 +59,48 @@ Description: Development package for the C++ Event Dispatcher library.
 Package: eventdispatcher-qt
 Section: libs
 Architecture: any
-Depends: eventdispatcher (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Depends: eventdispatcher (= ${binary:Version}), ${shlibs:Depends},
+ ${misc:Depends}
 Description: C++ library for easy event based networking and communication.
  This library provides an additional connection to support Qt as one of the
  input sockets.
+
+Package: snaplogger-network
+Section: libs
+Architecture: any
+Depends: eventdispatcher (= ${binary:Version}), ${shlibs:Depends},
+ ${misc:Depends}
+Description: C++ library to extend the logger to the network
+ This library offers a TCP and a UDP appender to be able to send the snaplogger
+ output to other computers via the network.
+
+Package: snaplogger-network-dev
+Section: libdevel
+Architecture: any
+Suggests: snaplogger-network-doc
+Depends: snaplogger-network (= ${binary:Version}), ${shlibs:Depends},
+ ${misc:Depends}
+Description: C++ library to extend the logger to the network
+ This library offers a TCP and a UDP appender to be able to send the snaplogger
+ output to other computers via the network. This includes the development
+ files (headers, library to link against).
+
+Package: snaplogger-network-doc
+Section: doc
+Architecture: any
+Depends: ${misc:Depends}
+Description: C++ library to extend the logger to the network
+ This package includes the documentation of the C++ library extension to
+ offer network capabilities in the snaplogger project.
+
+Package: snaploggerd
+Section: libs
+Architecture: any
+Depends: eventdispatcher (= ${binary:Version}), ${shlibs:Depends},
+ ${misc:Depends}
+Description: Daemon to collect logs on a remote computer
+ This service is expected to be installed on one computer that will then
+ automatically receive logs from other computer. This is an extension to
+ the snaplogger package which only saves logs locally.
 
 # vim: ts=4 sw=4 et

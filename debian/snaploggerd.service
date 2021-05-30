@@ -1,0 +1,34 @@
+# Documentation available at:
+# https://www.freedesktop.org/software/systemd/man/systemd.service.html
+
+[Unit]
+Description=Snap! Logger daemon
+
+[Service]
+Type=simple
+WorkingDirectory=~
+ProtectHome=true
+NoNewPrivileges=true
+ExecStart=/usr/sbin/snaploggerd
+
+# TODO: we can't have an IP:port here, we need a way to give ed-signal
+#       the name of a config file and variable to read that info
+#
+ExecStop=/usr/bin/ed-signal --message STOP --server 127.0.0.1:4050
+
+Restart=on-failure
+RestartSec=10
+User=snaplogger
+Group=snaplogger
+LimitNPROC=1000
+# For developers and administrators to get console output
+#StandardOutput=tty
+#StandardError=tty
+#TTYPath=/dev/console
+# Enter a size to get a core dump in case of a crash
+#LimitCORE=10G
+
+[Install]
+WantedBy=multi-user.target
+
+# vim: syntax=dosini

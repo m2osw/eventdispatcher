@@ -1,0 +1,3 @@
+usr/sbin/snaploggerd                    usr/sbin
+conf/snaploggerd.conf                   etc/snaplogger/
+conf/logger/snaploggerd.conf            etc/snaplogger/logger

@@ -1,4 +1,4 @@
-# Copyright (c) 2021  Made to Order Software Corp.  All Rights Reserved
+# Copyright (c) 2012-2021  Made to Order Software Corp.  All Rights Reserved
 #
 # https://snapwebsites.org/project/eventdispatcher
 # contact@m2osw.com
@@ -13,18 +13,18 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
 
 ##
-## snaplogger daemon project
+## Documentation
 ##
-project(snaploggerd_project)
-
-add_subdirectory(network)
-add_subdirectory(daemon)
-add_subdirectory(doc)
-
+AddDoxygenTarget(snaplogger-network
+    ${EVENTDISPATCHER_VERSION_MAJOR}
+    ${EVENTDISPATCHER_VERSION_MINOR}
+    ${EVENTDISPATCHER_VERSION_PATCH}
+)
 
 # vim: ts=4 sw=4 et
