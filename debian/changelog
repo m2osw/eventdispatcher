@@ -1,3 +1,9 @@
+eventdispatcher (1.1.31.3~bionic) bionic; urgency=high
+
+  * Fixed the docs, it needs to be added to all the packages.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 30 May 2021 15:40:07 -0700
+
 eventdispatcher (1.1.31.2~bionic) bionic; urgency=high
 
   * Added a SnapLoggerNetworkConfig.cmake file and install it.
