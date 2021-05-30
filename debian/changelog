@@ -1,3 +1,9 @@
+eventdispatcher (1.1.31.0~bionic) bionic; urgency=high
+
+  * Added even more components to each log message.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 30 May 2021 07:29:06 -0700
+
 eventdispatcher (1.1.30.2~bionic) bionic; urgency=high
 
   * Bump version to recompile with the newer versions.

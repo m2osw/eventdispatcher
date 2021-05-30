@@ -108,9 +108,9 @@ snaplogger::message::pointer_t ed_message_to_log_message(ed::message const & mes
         // fail some appender tests, so we have to add it unless "secure" or
         // some other exclusive component is present
         //
-        if(msg->can_add_component(g_normal_component))
+        if(msg->can_add_component(snaplogger::g_normal_component))
         {
-            msg->add_component(g_normal_component);
+            msg->add_component(snaplogger::g_normal_component);
         }
     }
     if(!is_local)
