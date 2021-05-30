@@ -1,3 +1,9 @@
+eventdispatcher (1.1.31.1~bionic) bionic; urgency=high
+
+  * Try a rebuild with the actual snaplogger extension packages.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 30 May 2021 14:32:16 -0700
+
 eventdispatcher (1.1.31.0~bionic) bionic; urgency=high
 
   * Added even more components to each log message.
