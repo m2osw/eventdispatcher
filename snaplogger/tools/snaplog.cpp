@@ -212,7 +212,15 @@ snaplog::snaplog(int argc, char * argv[])
 {
     snaplogger::add_logger_options(f_opt);
     f_opt.finish_parsing(argc, argv);
-    snaplogger::process_logger_options(f_opt, "/etc/snaplogger/logger");
+    if(!snaplogger::process_logger_options(
+              f_opt
+            , "/etc/snaplogger/logger"
+            , std::cout
+            , false))
+    {
+        // exit on any error
+        throw advgetopt::getopt_exit("logger options generated an error.", 0);
+    }
 }
 
 

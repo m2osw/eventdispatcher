@@ -33,6 +33,11 @@
 
 
 
+// advgetopt lib
+//
+#include    "advgetopt/exception.h"
+
+
 // snaplogger lib
 //
 #include    "snaplogger/options.h"
@@ -193,7 +198,11 @@ snaploggerd::snaploggerd(int argc, char * argv[])
 {
     snaplogger::add_logger_options(f_opts);
     f_opts.finish_parsing(argc, argv);
-    snaplogger::process_logger_options(f_opts, "/etc/snaploggerd/logger");
+    if(!snaplogger::process_logger_options(f_opts, "/etc/snaploggerd/logger"))
+    {
+        // exit on any error
+        throw advgetopt::getopt_exit("logger options generated an error.", 0);
+    }
 
     // TODO: implement the controller listener
     //       we first need a replacement to the snapcontroller daemon

@@ -141,6 +141,23 @@ serial number starts at 1 and increases by 1 with each message being
 sent.
 
 
+# The `snaplog` Tool
+
+The `snaplog` tool is here to allow you to send log messages from the
+command line.
+
+The destination of the logs can be specified in the default configuration
+file, generally:
+
+    /etc/snaplogger/logger/snaplog.conf
+
+You can change that file path with the `--log-config` command line argument
+or some similar logger option.
+
+The main reason for creating this tool was to have a simple way to test the
+new snaplogger appenders.
+
+
 # License
 
 The project is covered by the GPL 2.0 license.

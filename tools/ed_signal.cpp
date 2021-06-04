@@ -276,7 +276,11 @@ ed_signal::ed_signal(int argc, char * argv[])
 {
     snaplogger::add_logger_options(f_opt);
     f_opt.finish_parsing(argc, argv);
-    snaplogger::process_logger_options(f_opt, "/etc/eventdispatcher/logger");
+    if(!snaplogger::process_logger_options(f_opt, "/etc/eventdispatcher/logger"))
+    {
+        // exit on any error
+        throw advgetopt::getopt_exit("logger options generated an error.", 0);
+    }
 }
 
 
