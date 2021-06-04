@@ -160,7 +160,7 @@ tcp_server::tcp_server(std::string const & addr, int port, int max_connections, 
         // if this fails, we ignore the error (TODO log an INFO message)
         int optval(1);
         socklen_t const optlen(sizeof(optval));
-        snap::NOTUSED(setsockopt(f_socket, SOL_SOCKET, SO_REUSEADDR, &optval, optlen));
+        snap::NOT_USED(setsockopt(f_socket, SOL_SOCKET, SO_REUSEADDR, &optval, optlen));
     }
 
     if(bind(f_socket, addr_info.get()->ai_addr, addr_info.get()->ai_addrlen) < 0)

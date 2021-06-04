@@ -99,7 +99,7 @@ void pthreads_thread_id(CRYPTO_THREADID * tid)
 {
     // on 19.04 the macro does not use tid
     //
-    snap::NOTUSED(tid);
+    snap::NOT_USED(tid);
 
     CRYPTO_THREADID_set_numeric(tid, cppthread::gettid());
 }
@@ -116,8 +116,7 @@ void pthreads_thread_id(CRYPTO_THREADID * tid)
  */
 void pthreads_locking_callback(int mode, int type, char const * file, int line)
 {
-    snap::NOTUSED(file);
-    snap::NOTUSED(line);
+    snap::NOT_USED(file, line);
 
     if(g_locks == nullptr)
     {

@@ -301,7 +301,7 @@ int inter_thread_message_connection::poll(int timeout)
             process_invalid();
         }
     }
-    snap::NOTREACHED();
+    snap::NOT_REACHED();
 }
 
 
@@ -423,7 +423,7 @@ void inter_thread_message_connection::process_read()
  */
 bool inter_thread_message_connection::send_message(message const & msg, bool cache)
 {
-    snap::NOTUSED(cache);
+    snap::NOT_USED(cache);
 
     if(f_creator_id == cppthread::gettid())
     {

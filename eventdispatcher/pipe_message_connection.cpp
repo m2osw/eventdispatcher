@@ -85,7 +85,7 @@ namespace ed
  */
 bool pipe_message_connection::send_message(message const & msg, bool cache)
 {
-    snap::NOTUSED(cache);
+    snap::NOT_USED(cache);
 
     // transform the message to a string and write to the socket
     // the writing is asynchronous so the message is saved in a cache

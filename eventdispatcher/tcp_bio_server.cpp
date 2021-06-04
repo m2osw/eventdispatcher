@@ -13,9 +13,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
  * \brief Event dispatch class.
@@ -275,7 +275,7 @@ tcp_bio_server::tcp_bio_server(
             //          pointer and thus we have to make sure that we
             //          do not keep it in our unique_ptr<>().
             //
-            snap::NOTUSED(bio.release());
+            snap::NOT_USED(bio.release());
 
             // Actually call bind() and listen() on the socket
             //

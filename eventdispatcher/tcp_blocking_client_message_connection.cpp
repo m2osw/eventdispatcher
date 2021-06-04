@@ -13,9 +13,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
  * \brief Implementation of the Snap Communicator class.
@@ -508,7 +508,7 @@ void tcp_blocking_client_message_connection::peek()
  */
 bool tcp_blocking_client_message_connection::send_message(message const & msg, bool cache)
 {
-    snap::NOTUSED(cache);
+    snap::NOT_USED(cache);
 
     int const s(get_socket());
     if(s >= 0)

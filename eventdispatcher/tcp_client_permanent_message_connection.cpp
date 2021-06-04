@@ -1193,7 +1193,7 @@ void tcp_client_permanent_message_connection::connection_removed()
  */
 void tcp_client_permanent_message_connection::process_connection_failed(std::string const & error_message)
 {
-    snap::NOTUSED(error_message);
+    snap::NOT_USED(error_message);
     set_enable(true);
 }
 

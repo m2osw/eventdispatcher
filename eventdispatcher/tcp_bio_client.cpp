@@ -194,8 +194,7 @@ void ssl_trace(
         SSL * ssl,
         void * userp)
 {
-    snap::NOTUSED(ssl);
-    snap::NOTUSED(userp);
+    snap::NOT_USED(ssl, userp);
 
     std::stringstream out;
     char const * msg_name;
@@ -770,7 +769,7 @@ int tcp_bio_client::get_client_port() const
         return -1;
 
     }
-    snap::NOTREACHED();
+    snap::NOT_REACHED();
 }
 
 

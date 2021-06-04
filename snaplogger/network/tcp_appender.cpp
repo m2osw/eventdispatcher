@@ -126,7 +126,7 @@ appender_connection::~appender_connection()
 
 void appender_connection::msg_pause(ed::message & msg)
 {
-    snap::NOTUSED(msg);
+    snap::NOT_USED(msg);
 
     f_paused = true;
 }
@@ -134,7 +134,7 @@ void appender_connection::msg_pause(ed::message & msg)
 
 void appender_connection::msg_unpause(ed::message & msg)
 {
-    snap::NOTUSED(msg);
+    snap::NOT_USED(msg);
 
     f_paused = false;
 }

@@ -13,9 +13,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
  * \brief Implementation of the Signal Handler class.
@@ -701,7 +701,7 @@ void signal_handler::process_signal(int sig, siginfo_t * info, ucontext_t * ucon
     // Abort
     //
     std::terminate();
-    snap::NOTREACHED();
+    snap::NOT_REACHED();
 }
 
 

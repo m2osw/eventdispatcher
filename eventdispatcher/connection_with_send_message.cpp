@@ -13,9 +13,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
  * \brief Implementation of the Connection with Send Message class.
@@ -89,7 +89,7 @@ connection_with_send_message::~connection_with_send_message()
  */
 void connection_with_send_message::msg_help(message & msg)
 {
-    snap::NOTUSED(msg);
+    snap::NOT_USED(msg);
 
     bool need_user_help(true);
     string_list_t commands;
@@ -219,7 +219,7 @@ void connection_with_send_message::msg_alive(message & msg)
  */
 void connection_with_send_message::msg_log(message & msg)
 {
-    snap::NOTUSED(msg);
+    snap::NOT_USED(msg);
 
     if(snaplogger::is_configured())
     {
@@ -257,7 +257,7 @@ void connection_with_send_message::msg_log(message & msg)
  */
 void connection_with_send_message::msg_quitting(message & msg)
 {
-    snap::NOTUSED(msg);
+    snap::NOT_USED(msg);
 
     stop(true);
 }
@@ -336,7 +336,7 @@ void connection_with_send_message::msg_restart(message & msg)
  */
 void connection_with_send_message::msg_stop(message & msg)
 {
-    snap::NOTUSED(msg);
+    snap::NOT_USED(msg);
 
     stop(false);
 }
@@ -433,7 +433,7 @@ void connection_with_send_message::msg_reply_with_unknown(message & msg)
  */
 void connection_with_send_message::help(string_list_t & commands)
 {
-    snap::NOTUSED(commands);
+    snap::NOT_USED(commands);
 
     // do nothing by default -- user is expected to overload this function
 }
@@ -449,7 +449,7 @@ void connection_with_send_message::help(string_list_t & commands)
  */
 void connection_with_send_message::ready(message & msg)
 {
-    snap::NOTUSED(msg);
+    snap::NOT_USED(msg);
 
     // do nothing by default -- user is expected to overload this function
     //
@@ -473,7 +473,7 @@ void connection_with_send_message::ready(message & msg)
  */
 void connection_with_send_message::restart(message & msg)
 {
-    snap::NOTUSED(msg);
+    snap::NOT_USED(msg);
 
     // do nothing by default -- user is expected to overload this function
     //
@@ -493,7 +493,7 @@ void connection_with_send_message::restart(message & msg)
  */
 void connection_with_send_message::stop(bool quitting)
 {
-    snap::NOTUSED(quitting);
+    snap::NOT_USED(quitting);
 
     // do nothing by default -- user is expected to overload this function
     //

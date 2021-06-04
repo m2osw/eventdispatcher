@@ -243,8 +243,7 @@ public:
          */
         static match_t always_match(std::string const & expr, message & msg)
         {
-            snap::NOTUSED(expr);
-            snap::NOTUSED(msg);
+            snap::NOT_USED(expr, msg);
             return match_t::MATCH_TRUE;
         }
 
@@ -261,8 +260,7 @@ public:
          */
         static match_t callback_match(std::string const & expr, message & msg)
         {
-            snap::NOTUSED(expr);
-            snap::NOTUSED(msg);
+            snap::NOT_USED(expr, msg);
             return match_t::MATCH_CALLBACK;
         }
 
