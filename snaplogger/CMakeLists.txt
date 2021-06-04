@@ -24,6 +24,7 @@ project(snaploggerd_project)
 
 add_subdirectory(network)
 add_subdirectory(daemon)
+add_subdirectory(tools)
 add_subdirectory(doc)
 
 
