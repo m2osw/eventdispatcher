@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2021  Made to Order Software Corp.  All Rights Reserved
+# Copyright (c) 2011-2021  Made to Order Software Corp.  All Rights Reserved
 #
 # https://snapwebsites.org/project/eventdispatcher
 # contact@m2osw.com
@@ -17,14 +17,14 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+##
+## snapcommunicator RPC project
+##
+project(snapcommunicator_project)
 
-##
-## Documentation
-##
-AddDoxygenTarget(snaplogger-network
-    ${EVENTDISPATCHER_VERSION_MAJOR}
-    ${EVENTDISPATCHER_VERSION_MINOR}
-    ${EVENTDISPATCHER_VERSION_PATCH}
-)
+add_subdirectory(src)
+add_subdirectory(doc)
+add_subdirectory(tools)
+
 
 # vim: ts=4 sw=4 et

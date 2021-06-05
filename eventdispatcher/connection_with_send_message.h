@@ -57,6 +57,48 @@ public:
     virtual void                ready(message & msg);
     virtual void                restart(message & msg);
     virtual void                stop(bool quitting);
+
+    bool                        get_last_send_status() const;
+
+    /** \brief Broadcast a message to a set of connections.
+     *
+     * This function sends one message to all the connections found in a
+     * container set. The type of the container is not specified. It can
+     * be any container which works with `for(auto ...)`.
+     *
+     * Note that this function should only be used with connections that
+     * do not automatically allow for broadcasting such as UDP. This is
+     * useful to send messages to a plethora of connections such as TCP
+     * or Unix sockets.
+     *
+     * \tparam C  A connection container.
+     *
+     * \param[in] container  A set of connections (vector, map, set, etc.)
+     * \param[in] msg  The message to broadcast.
+     * \param[in] cache  Whether to cache the message if the connection is not
+     * currently opened.
+     *
+     * \return true if the send_message() succeeded on all connections, false
+     * otherwise. If false was returned, you can use the get_last_send_status()
+     * function to discover which connections failed.
+     */
+    template<class C>
+    bool broadcast_message(C & container, message const & msg, bool cache = false)
+    {
+        bool result(true);
+        for(auto c : container)
+        {
+            f_last_send_status = c->send_message(msg, cache);
+            if(!f_last_send_status)
+            {
+                result = false;
+            }
+        }
+        return result;
+    }
+
+private:
+    bool        f_last_send_status = true;
 };
 
 

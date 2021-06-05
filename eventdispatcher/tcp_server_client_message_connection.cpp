@@ -274,6 +274,5 @@ std::string const & tcp_server_client_message_connection::get_remote_address() c
 }
 
 
-
 } // namespace ed
 // vim: ts=4 sw=4 et

@@ -503,6 +503,22 @@ void connection_with_send_message::stop(bool quitting)
 }
 
 
+/** \brief Check whether the last send_message() worked.
+ *
+ * This function returns true if the last send_message() to this connection
+ * worked or not.
+ *
+ * \warning
+ * This flag is used by the broadcast_message() function only.
+ *
+ * \return true if the last send_message() was successful.
+ */
+bool connection_with_send_message::get_last_send_status() const
+{
+    return f_last_send_status;
+}
+
+
 
 } // namespace ed
 // vim: ts=4 sw=4 et
