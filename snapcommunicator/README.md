@@ -1,161 +1,86 @@
 
 # Introduction
 
-The Snap! Logger daemon is implemented in the eventdispatcher project
-since this very project depends on the snaplogger project. It is also
-a great example of how one can use the TCP and UDP objects available
-in the eventdispatcher project.
+The Snap! Communicator daemon is a way to send messages to any one of your
+services on your entire network. What you need to do for this to work is:
 
-# Snap! Logger
+1. Link against the communicator library
+2. Register your services with the local Snap! Communicator
+3. Send messages to the Snap! Communicator
+4. List for messages from the Snap! Communicator
+5. Tell each Snap! Communicator where the others are
 
-The Snap! Logger project is a tool used to manage logs. The base
-implementation sends the logs to files, your console, and the syslog
-facility.
+Point (5) is only if you have more than one computer.
 
-The base implementation allows for additional appenders which can be
-used to redirect the logs to yet other locations. This very project
-can be used to send the data to a log server on another computer.
-
-_**Note:** if you use syslog already, you can also setup syslog to share
-the logs between multiple computers. This will not include all the
-capabilities offered by our server, but you'll get logs from all
-your services (not just Snap! based service)._
-
-# Daemon Appender
-
-The project comes with two sides:
-
-* A new appender which receives the logs and sends them to the snaploggerd
-  server via either TCP or UDP messages.
-* A daemon which you can use to receive those TCP and UDP messages.
-
-The following is about the appenders which you link in your projects.
-
-_**Note:** The appender library has to be linked to your project to be
-available to your users. At some point, we will port the libsnapwebsites
-dynamic loader will be used for appenders so these can be added to a
-directory and the base library can automatically pick them up from that
-directory._
-
-## Options
-
-The appender supports the following options:
-
-### Server IP & Port
-
-The server IP address and port, where to send the log data, are defined
-as follow:
-
-    server_tcp=<ip-address>:<port>
-    server_udp=<ip-address>:<port>
-
-As you can see, the service supports both, the TCP and UDP protocols.
-Since you can enter multiple definitions (with different names), it
-is possible to send the log data to several servers.
-
-    [serverA]
-    type=tcp
-    server_address=127.0.0.1:4043
-
-    [serverB]
-    type=udp
-    server_address=10.0.3.11:4043
-
-### Fallback
-
-In case the UDP `send()` function fails, we can fallback to printing the
-message in `stdout`. This is done by setting the following parameter to
-`true`:
-
-    fallback_to_console=true
-
-### Acknowledge UDP Messages
-
-This parameter defines whether the snaplogger appender should acknowledge
-arrival of UDP packets it sends. The messages will include the necessary
-information to send the acknowledgement. If you do not mind too much losing
-some packets, then turning off the acknowledgement signals will ease the
-load over your network.
-
-    acknowledge=none|severity|all
-    acknowledge_severity=<severity>
-
-The value is an enumeration.
-
-* none -- do not request any acknowledgement
-* severity -- only request acknowledgement if message severity is equal or
-  over `acknowledge_severity`
-* all -- request acknowledgement for all messages
-
-For example, to only acknowledge messages representing an `ERROR`, a
-`CRITICAL` error, an `ALERT`, an `EMERGENCY`, or a `FATAL` error you
-would use:
-
-    acknowledge=severity
-    acknowledge_severity=ERROR
-
-Note that the `acknowledge_severity` is ignored if the `acknowledge`
-parameter is not set to `severity`.
+Points (1) to (4) are to make it works where all your service only need to
+know about the Snap! Communicator. All the other services are auomatically
+messaged through the communicator.
 
 
-# Server
+# Library
 
-The actual server is a simple daemon which listen for log messages on a
-TCP and a UDP port.
+The project includes a library extension which allows you to connect to
+the controller totally effortlessly.
 
-At this time there is no protection as the server is expected to be running
-in a local network environment. A later version will implement an OAuth2
-authentication system.
+    # Basic idea at the moment...
+    class MyService
+        : public sc::communicator("<name>")
+    {
+        sc::add_communicator_options(f_opts);
+        ...
+        if(!sc::process_communicator_options(f_opts, "/etc/snapwebsites"))
+        {
+            // handled failure
+            ...
+        }
 
-It is expected that the server directly saves the data to a file. But it
-is a lot easier to have the server use the snaplogger library, so we do
-that. You can change the settings to avoid the double timestamp and other
-such potential issues.
+        // from here on, the communicator is viewed as connected
+        // internally, the communicator started a connection and it
+        // will automatically REGISTER itself
+    }
 
-    format=${message}
+It also simplifies sending message as you don't have to know everything
+about the eventdispatcher library to send messages with this library
+extension.
 
-The server also offers additional variables such as the IP addess of the
-computer that sent the message.
+    SNAP_COMMUNICATOR_MESSAGE("COMMAND")
+        << sc::param("name", "value")
+        << ...
+        << sc::cache
+        << sc::...
+        << SNAP_COMMUNICATOR_SEND;
 
-## Variable: `souce_ip`
+So, something similar to the snaplogger feature, but for messages in the
+eventdispatcher (actually, this may be a feature that can live in the
+eventdispatcher in which case we could use `SNAP_ED_MESSAGE` and
+`SNAP_ED_SEND`, the TCP connection to the communicator would be the
+default place where these messages would go).
 
-The `source_ip` parameter is the IP address of the computer that sent a
-given log message. It can be displayed using the following syntax:
+Another idea, if we do not need a copy, would be to use a `message()`
+function which returns a reference which we can use just like the `<<`
+but the syntax would be more like:
 
-    format=${message} from ${source_ip}
+    communicator.message("COMMAND").param("name", "value").cache();
 
-The port is not made available. It would not be useful.
+Thinking about it, though, it's not really any simpler than:
 
-## Variable: `protocol`
-
-The `protocol` used to send the message, either `"tcp"` or `"udp"`.
-
-## Variable: `serial`
-
-Each message is given a serial number. This is an important part of the
-protocol so a message can be acknowledge using its serial number.
-
-The number is made available through the `serial` variable. It can be
-useful if you want to sort messages in the order they were sent. The
-serial number starts at 1 and increases by 1 with each message being
-sent.
+    ed::message msg("COMMAND");
+    msg.add_parameter("name", "value");
+    connection.send_message(msg, true);
 
 
-# The `snaplog` Tool
+# Daemon
 
-The `snaplog` tool is here to allow you to send log messages from the
-command line.
+The Snap! Communicator is primarily a deamon which can graphically map your
+network and the location of each of your services to allow for messages to
+seamlessly travel between all the services.
 
-The destination of the logs can be specified in the default configuration
-file, generally:
 
-    /etc/snaplogger/logger/snaplog.conf
+# Tools
 
-You can change that file path with the `--log-config` command line argument
-or some similar logger option.
-
-The main reason for creating this tool was to have a simple way to test the
-new snaplogger appenders.
+The projects comes with a few tools can are useful to send messages in
+script (such as the logrotate script) and debug your systems by sniffing
+the traffic going through the Snap! Communicator.
 
 
 # License
