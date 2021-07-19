@@ -57,6 +57,8 @@ add_library(${PROJECT_NAME} SHARED
         signal_handler.cpp
         signal_profiler.cpp
 
+        socket_events.cpp
+
         timer.cpp
 
         tcp_server_connection.cpp
