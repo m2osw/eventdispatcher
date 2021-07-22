@@ -71,7 +71,7 @@ functions and base classes
 
 * Connections -- many of the classes are named `<...>_connection`; these
 are used to create a connection or a listener; we currently support TCP,
-UDP, FIFO, Unix signals, file system events
+UDP, Unix sockets, FIFO, Unix signals, file system events
 
 * Communicator -- the communictor which is the core of the system; you can
 get its instance and call the run() function to run your process loop; the
@@ -142,9 +142,12 @@ The TCP classes have five layers:
 * Message Class -- the bufferized classes are further derived to create a
 message class which sees the incoming and ougoing data as IPC like messages
 (see the `message.h/cpp` files for details about the message support)
-* Permanent Class -- the TCP message class can also be made _permanent_; this
+* Permanent Class -- the TCP Message Class can also be made _permanent_; this
 means if the connection is lost, the class automatically takes care of
 reconnecting which all happens under the hood for you.
+* Blocking Message Class -- this classs is similar to the Message Class except
+it is possible to send a message and wait for the reply with a standard C++
+call.
 
 We have two types of clients. The ones that a client creates (such as
 the permanent message connection) and the ones that a server creates
@@ -168,6 +171,42 @@ are small and we have no special handling for large message (i.e. the limit
 is around 1.5Kb)
 * Server Message -- the UDP server has a specific message connection and is
 capable of using the message dispather.
+
+### Unix Sockets
+
+We have support for the stream Unix sockets. This is similar to the TCP
+socket. Like with any Unix socket, it is only available to clients
+running on the same computer the services they want to connect to.
+
+Many of our services want to connect to the communicator service which
+is then in charge of forwarding the messages to other computers. That
+simplifies many of the communications. It is also capable of broadcasting
+as per rules setup in the communicator.
+
+The Unix socket implementation is often used as an extra connection
+availability on a service. That way a service can be used via TCP or
+a Unix socket (and at times also with UDP).
+
+The following are the classes available with the streaming Unix socket
+implementation:
+
+* Base class -- this is the simplest which just connects and calls your
+`process_read()` and `process_write()` functions
+* Buffered Class -- this class implements the `process_read()` and
+`process_write()` functions and bufferize the data for you.
+* Message Class -- the bufferized classes are further derived to create a
+message class which sees the incoming and ougoing data as IPC like messages
+(see the `message.h/cpp` files for details about the message support)
+* Permanent Class -- the Message Class can also be made _permanent_; this
+means if the connection is lost, the class automatically takes care of
+reconnecting which all happens under the hood for you.
+* Blocking Message Class -- this classs is similar to the Message Class except
+it is possible to send a message and wait for the reply with a standard C++
+call.
+
+The Permanent Class is useful when your client connects to a service which
+may be restarted at any time (which is pretty much 100% of the time!) This
+makes your clients very much more stable.
 
 ### Unix FIFO
 
@@ -272,6 +311,9 @@ to anyone (i.e. are not as focused to only work with snapwebsites).
 which we use to force the logger to auto-re-open output files that were
 rotated
 * snaploggerd -- a service to send log messages over the network
+* fluid-settings -- a service to manage settings through a service so all
+the same settings can be used from any computer without having to duplicate
+them
 
 
 # License
