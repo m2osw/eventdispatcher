@@ -17,41 +17,26 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-// Tell catch we want it to add the runner code in this file.
-#define CATCH_CONFIG_RUNNER
-
 // self
 //
-#include "main.h"
-
+#include    "catch_main.h"
 
 // eventdispatcher lib
 //
-#include <eventdispatcher/version.h>
-
-
-// libexcept lib
-//
-#include <libexcept/exception.h>
-
-
-// C++ lib
-//
-#include <sstream>
+#include    <eventdispatcher/version.h>
 
 
 
-
-
-int main(int argc, char * argv[])
+CATCH_TEST_CASE("Version", "[version]")
 {
-    return SNAP_CATCH2_NAMESPACE::snap_catch2_main(
-              "eventdispatcher"
-            , EVENTDISPATCHER_VERSION_STRING
-            , argc
-            , argv
-            , []() { libexcept::set_collect_stack(false); }
-        );
+    CATCH_START_SECTION("verify runtime vs compile time version numbers")
+    {
+        CATCH_REQUIRE(ed::get_major_version()   == EVENTDISPATCHER_VERSION_MAJOR);
+        CATCH_REQUIRE(ed::get_release_version() == EVENTDISPATCHER_VERSION_MINOR);
+        CATCH_REQUIRE(ed::get_patch_version()   == EVENTDISPATCHER_VERSION_PATCH);
+        CATCH_REQUIRE(strcmp(ed::get_version_string(), EVENTDISPATCHER_VERSION_STRING) == 0);
+    }
+    CATCH_END_SECTION()
 }
 
 

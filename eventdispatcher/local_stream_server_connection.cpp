@@ -55,6 +55,7 @@
 
 // C lib
 //
+#include    <fcntl.h>
 #include    <sys/stat.h>
 
 
@@ -112,15 +113,17 @@ namespace ed
  * \param[in] max_connections  The number of connections to keep in the listen queue.
  * \param[in] force_reuse_addr  Whether to allow the deletion of a file
  * before the bind() call.
- * \param[in] close_on_exec  Whether to close the socket on an execve().
+ * \param[in] close_on_exec  Whether to close the server & client sockets
+ * on an execve().
  */
 local_stream_server_connection::local_stream_server_connection(
-              addr::unix const & u
+              addr::unix const & address
             , int max_connections
             , bool force_reuse_addr
             , bool close_on_exec)
-    : f_address(u)
+    : f_address(address)
     , f_max_connections(max_connections)
+    , f_close_on_exec(close_on_exec)
 {
     if(f_max_connections < 5)
     {
@@ -318,6 +321,81 @@ int local_stream_server_connection::get_socket() const
 int local_stream_server_connection::get_max_connections() const
 {
     return f_max_connections;
+}
+
+
+/** \brief Retrieve one new connection.
+ *
+ * This function will wait until a new connection arrives and returns a
+ * new bio_client object for each new connection.
+ *
+ * If the socket is made non-blocking then the function may return without
+ * a bio_client object (i.e. a null pointer instead.)
+ *
+ * \return A file descriptor representing the new connection socket.
+ */
+snap::raii_fd_t local_stream_server_connection::accept()
+{
+    struct sockaddr_un un;
+    socklen_t len(sizeof(un));
+    snap::raii_fd_t r(::accept(
+              f_socket.get()
+            , reinterpret_cast<sockaddr *>(&un)
+            , &len));
+    if(r == nullptr)
+    {
+        throw event_dispatcher_runtime_error("failed accepting a new AF_UNIX client");
+    }
+
+    // force a close on execve() to avoid sharing the socket in child
+    // processes
+    //
+    if(f_close_on_exec)
+    {
+        // if this call fails, we ignore the error, but still log the event
+        //
+        if(fcntl(r.get(), F_SETFD, FD_CLOEXEC) != 0)
+        {
+            SNAP_LOG_WARNING
+                << "::accept(): an error occurred trying"
+                   " to mark accepted AF_UNIX socket with FD_CLOEXEC."
+                << SNAP_LOG_SEND;
+        }
+    }
+
+    return std::move(r);
+}
+
+
+/** \brief Return the current state of the close-on-exec flag.
+ *
+ * This function returns the current state of the close-on-exec flag. This
+ * is the flag as defined in the contructor or by the set_close_on_exec()
+ * function. It does not represent the status of the server socket nor
+ * of the clients that were accept()'ed by this class.
+ *
+ * It will, however, be used whenever the accept() is called in the future.
+ *
+ * \return The current status of the close-on-exec flag.
+ */
+bool local_stream_server_connection::get_close_on_exec() const
+{
+    return f_close_on_exec;
+}
+
+
+/** \brief Change the close-on-exec flag for future accept() calls.
+ *
+ * This function allows you to change the close-on-exec flag after
+ * you created a Unix server. This means you may say that the server
+ * needs to be closed, but not the connections or vice versa.
+ *
+ * \param[in] yes  Whether the close-on-exec will be set on sockets
+ * returned by the accept() function.
+ */
+void local_stream_server_connection::set_close_on_exec(bool yes)
+{
+    f_close_on_exec = yes;
 }
 
 

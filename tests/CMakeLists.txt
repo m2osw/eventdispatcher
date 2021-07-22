@@ -22,9 +22,9 @@
 ##
 project(unittest)
 
-find_package( Catch2 )
+find_package(Catch2)
 
-if( Catch2_FOUND )
+if(Catch2_FOUND)
 
     add_definitions(
         -DCATCH_CONFIG_PREFIX_ALL
@@ -39,22 +39,23 @@ if( Catch2_FOUND )
     )
 
     add_executable( ${PROJECT_NAME}
-        main.cpp
+        catch_main.cpp
 
-        message.cpp
-        version.cpp
+        catch_message.cpp
+        catch_unix.cpp
+        catch_version.cpp
     )
 
     target_link_libraries( ${PROJECT_NAME}
         eventdispatcher
     )
 
-    add_test( unittests ${PROJECT_NAME} )
+    add_test(unittests ${PROJECT_NAME})
 
-else( Catch2_FOUND )
+else(Catch2_FOUND)
 
     message("snapcatch2 not found... no test will be built.")
 
-endif( Catch2_FOUND )
+endif(Catch2_FOUND)
 
 # vim: ts=4 sw=4 et

@@ -95,8 +95,8 @@ add_library(${PROJECT_NAME} SHARED
     tcp_bio_options.cpp
     tcp_bio_client.cpp
     tcp_bio_server.cpp
-    tcp_client.cpp      # basic class, not used in our environment
-    tcp_server.cpp      # basic class, not used in our environment
+    tcp_client.cpp      # basic class, not used with the communicator
+    tcp_server.cpp      # basic class, not used with the communicator
 
     # udp
     udp_base.cpp

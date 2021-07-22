@@ -56,7 +56,7 @@ public:
     typedef std::shared_ptr<local_stream_server_connection>     pointer_t;
 
                         local_stream_server_connection(
-                                  addr::unix const & u
+                                  addr::unix const & address
                                 , int max_connections = MAX_CONNECTIONS
                                 , bool force_reuse_addr = false
                                 , bool close_on_exec = true);
@@ -64,6 +64,9 @@ public:
 
     addr::unix          get_addr() const;
     int                 get_max_connections() const;
+    snap::raii_fd_t     accept();
+    bool                get_close_on_exec() const;
+    void                set_close_on_exec(bool yes = true);
 
     // connection implementation
     //
@@ -75,6 +78,7 @@ private:
     int                 f_max_connections = MAX_CONNECTIONS;
     snap::raii_fd_t     f_socket = snap::raii_fd_t();
     int                 f_accepted_socket = -1;
+    bool                f_close_on_exec = false;
 };
 
 
