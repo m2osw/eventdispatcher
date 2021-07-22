@@ -175,9 +175,20 @@ local_stream_server_connection::local_stream_server_connection(
         struct stat st = {};
         if(stat(un.sun_path, &st) == 0)
         {
+            if(!S_ISSOCK(st.st_mode))
+            {
+                SNAP_LOG_ERROR
+                    << "file \""
+                    << un.sun_path
+                    << "\" is not a socket; cannot listen on address \""
+                    << f_address.to_uri()
+                    << "\"."
+                    << SNAP_LOG_SEND;
+                throw event_dispatcher_runtime_error("file already exists and it is not a socket, can't create an AF_UNIX server");
+            }
+
             bool available(false);
-            if(force_reuse_addr
-            && !S_ISSOCK(st.st_mode))
+            if(force_reuse_addr)
             {
                 try
                 {

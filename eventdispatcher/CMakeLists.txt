@@ -49,6 +49,9 @@ add_library(${PROJECT_NAME} SHARED
         inter_thread_message_connection.cpp
         thread_done_signal.cpp
 
+        local_dgram_server_connection.cpp
+            local_dgram_server_message_connection.cpp
+
         local_stream_server_connection.cpp
 
         local_stream_server_client_connection.cpp
@@ -88,6 +91,11 @@ add_library(${PROJECT_NAME} SHARED
         udp_server_connection.cpp
             udp_server_message_connection.cpp
                 logrotate_udp_messenger.cpp
+
+    # Unix datagram
+    local_dgram_base.cpp
+    local_dgram_client.cpp
+    local_dgram_server.cpp
 
     # tcp
     tcp_base.cpp

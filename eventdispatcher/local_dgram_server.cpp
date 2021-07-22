@@ -31,7 +31,7 @@
 
 // self
 //
-#include    "eventdispatcher/udp_server.h"
+#include    "eventdispatcher/local_dgram_server.h"
 
 #include    "eventdispatcher/exception.h"
 
@@ -43,9 +43,9 @@
 
 // C lib
 //
-#include    <arpa/inet.h>
+#include    <sys/stat.h>
 #include    <poll.h>
-#include    <string.h>
+//#include    <string.h>
 
 
 // last include
@@ -97,172 +97,126 @@ namespace ed
  * and port combination cannot be resolved or if the socket cannot be
  * opened.
  *
- * \param[in] addr  The address we receive on.
- * \param[in] port  The port we receive from.
- * \param[in] family  The family used to search for 'addr'.
- * \param[in] multicast_addr  A multicast address.
+ * \param[in] address  The address to connect/listen to.
+ * \param[in] sequential  Whether the packets have to be 100% sequential.
+ * \param[in] close_on_exec  Whether the socket has to be closed on execve().
  */
-udp_server::udp_server(std::string const & addr, int port, int family, std::string const * multicast_addr)
-    : udp_base(addr, port, family)
+local_dgram_server::local_dgram_server(
+              addr::unix const & address
+            , bool sequential
+            , bool close_on_exec
+            , bool force_reuse_addr)
+    : local_dgram_base(address, sequential, close_on_exec)
 {
-    int r(0);
-    raii_addrinfo_t multicast_addrinfo;
-
-    std::stringstream decimal_port;
-    decimal_port << f_port;
-    std::string port_str(decimal_port.str());
-
-    if(multicast_addr != nullptr)
+    if(f_address.is_unnamed())
     {
-        // in multicast we have to bind to the multicast IP (or IN_ANYADDR
-        // which right now we do not support)
+        // for an unnamed socket, we do not bind at all the user is
+        // responsible for knowing where to read and where to write
         //
-        addrinfo hints = addrinfo();
-        hints.ai_family = AF_UNSPEC;
-        hints.ai_socktype = SOCK_DGRAM;
-        hints.ai_protocol = IPPROTO_UDP;
+        return;
+    }
 
-        // we use the multicast address, but the same port as for
-        // the other address
+    sockaddr_un un;
+    f_address.get_un(un);
+
+    // bind to the first address
+    //
+    int r(-1);
+    if(f_address.is_file())
+    {
+        // TODO: this is common code to the local_stream_server_connection.cpp
         //
-        addrinfo * a(nullptr);
-        r = getaddrinfo(multicast_addr->c_str(), port_str.c_str(), &hints, &a);
-        if(r != 0 || a == nullptr)
+        // a Unix file socket must create a new socket file to prove unicity
+        // if the file already exists, even if it isn't used, the bind() call
+        // will fail; if the file exists and the force_reuse_addr is true this
+        // this function attempts to delete the file if it is a socket and we
+        // can't connect to it (i.e. "lost file")
+        //
+        struct stat st = {};
+        if(stat(un.sun_path, &st) == 0)
         {
-            throw event_dispatcher_runtime_error(
-                      "invalid address or port for UDP multicast socket: \""
-                    + *multicast_addr
-                    + "\"");
-        }
-        multicast_addrinfo = raii_addrinfo_t(a);
+            if(!S_ISSOCK(st.st_mode))
+            {
+                SNAP_LOG_ERROR
+                    << "file \""
+                    << un.sun_path
+                    << "\" is not a socket; cannot listen on address \""
+                    << f_address.to_uri()
+                    << "\"."
+                    << SNAP_LOG_SEND;
+                throw event_dispatcher_runtime_error("file already exists and it is not a socket, can't create an AF_UNIX server");
+            }
 
-        if(multicast_addrinfo->ai_family != AF_INET
-        || f_addrinfo->ai_family != AF_INET)
-        {
-            throw event_dispatcher_runtime_error(
-                      "the UDP multicast implementation only supports IPv4 at the moment: \""
-                    + *multicast_addr
-                    + "\"");
-        }
+            if(!force_reuse_addr)
+            {
+                SNAP_LOG_ERROR
+                    << "file socket \""
+                    << un.sun_path
+                    << "\" already in use (errno: "
+                    << std::to_string(EADDRINUSE)
+                    << " -- "
+                    << strerror(EADDRINUSE)
+                    << "); cannot listen on address \""
+                    << f_address.to_uri()
+                    << "\"."
+                    << SNAP_LOG_SEND;
+                throw event_dispatcher_runtime_error("socket already exists, can't create an AF_UNIX server");
+            }
 
-        r = bind(f_socket.get(), multicast_addrinfo->ai_addr, multicast_addrinfo->ai_addrlen);
+            r = f_address.unlink();
+            if(r != 0
+            && errno != ENOENT)
+            {
+                SNAP_LOG_ERROR
+                    << "not able to delete file socket \""
+                    << un.sun_path
+                    << "\"; socket already in use (errno: "
+                    << std::to_string(EADDRINUSE)
+                    << " -- "
+                    << strerror(EADDRINUSE)
+                    << "); cannot listen on address \""
+                    << f_address.to_uri()
+                    << "\"."
+                    << SNAP_LOG_SEND;
+                throw event_dispatcher_runtime_error("could not unlink socket to reuse it as an AF_UNIX server");
+            }
+        }
+        r = bind(
+                  f_socket.get()
+                , reinterpret_cast<sockaddr const *>(&un)
+                , sizeof(struct sockaddr_un));
     }
     else
     {
-        // bind to the very first address
+        // we want to limit the size because otherwise it would include
+        // the '\0's after the specified name
         //
-        r = bind(f_socket.get(), f_addrinfo->ai_addr, f_addrinfo->ai_addrlen);
+        std::size_t const size(sizeof(un.sun_family)
+                                        + 1 // for the '\0' in sun_path[0]
+                                        + strlen(un.sun_path + 1));
+        r = bind(
+                  f_socket.get()
+                , reinterpret_cast<sockaddr const *>(&un)
+                , size);
     }
 
     if(r != 0)
     {
         int const e(errno);
-
-        // reverse the address from the f_addrinfo so we know exactly
-        // which one was picked
-        //
-        char addr_buf[256];
-        switch(f_addrinfo->ai_family)
-        {
-        case AF_INET:
-            inet_ntop(AF_INET
-                    , &reinterpret_cast<struct sockaddr_in *>(f_addrinfo->ai_addr)->sin_addr
-                    , addr_buf
-                    , sizeof(addr_buf));
-            break;
-
-        case AF_INET6:
-            inet_ntop(AF_INET6
-                    , &reinterpret_cast<struct sockaddr_in6 *>(f_addrinfo->ai_addr)->sin6_addr
-                    , addr_buf
-                    , sizeof(addr_buf));
-            break;
-
-        default:
-            strncpy(addr_buf, "Unknown Address Family", sizeof(addr_buf));
-            break;
-
-        }
-
         SNAP_LOG_ERROR
                 << "the bind() function failed with errno: "
                 << e
                 << " ("
                 << strerror(e)
-                << "); address length "
-                << f_addrinfo->ai_addrlen
-                << " and address is \""
-                << addr_buf
-                << "\""
+                << "); Unix address \""
+                << f_address.to_uri()
+                << "\"."
                 << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error("could not bind UDP socket to \"" + f_addr + ":" + std::to_string(port) + "\"");
+        throw event_dispatcher_runtime_error(
+                "could not bind AF_UNIX datagram socket to \""
+                + f_address.to_uri()
+                + "\"");
     }
-
-    // are we creating a server to listen to multicast packets?
-    //
-    if(multicast_addrinfo != nullptr)
-    {
-        ip_mreqn mreq = {};
-
-        // both addresses must have the right size
-        //
-        if(multicast_addrinfo->ai_addrlen <= sizeof(mreq.imr_multiaddr)
-        || f_addrinfo->ai_addrlen <= sizeof(mreq.imr_address))
-        {
-            throw event_dispatcher_runtime_error(
-                      "invalid address type for UDP multicast: \""
-                    + addr + ":" + port_str
-                    + "\" or \""
-                    + *multicast_addr + ":" + port_str + "\" (sizes: "
-                    + std::to_string(multicast_addrinfo->ai_addrlen) + ", "
-                    + std::to_string(f_addrinfo->ai_addrlen) + ", "
-                    + std::to_string(sizeof(mreq.imr_address)) + ")");
-        }
-
-        memcpy(&mreq.imr_multiaddr, &reinterpret_cast<sockaddr_in *>(multicast_addrinfo->ai_addr)->sin_addr, sizeof(mreq.imr_multiaddr));
-        memcpy(&mreq.imr_address, &reinterpret_cast<sockaddr_in *>(f_addrinfo->ai_addr)->sin_addr, sizeof(mreq.imr_address));
-        mreq.imr_ifindex = 0;   // no specific interface
-
-        r = setsockopt(f_socket.get(), IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
-        if(r < 0)
-        {
-            int const e(errno);
-            throw event_dispatcher_runtime_error(
-                      "IP_ADD_MEMBERSHIP failed for: \""
-                    + addr + ":" + port_str
-                    + "\" or \"" + *multicast_addr + ":" + port_str
-                    + "\", errno: "
-                    + std::to_string(e) + ", " + strerror(e));
-        }
-
-        // setup the multicast to 0 so we don't receive other's
-        // messages; apparently the default would be 1
-        //
-        int multicast_all(0);
-        r = setsockopt(f_socket.get(), IPPROTO_IP, IP_MULTICAST_ALL, &multicast_all, sizeof(multicast_all));
-        if(r < 0)
-        {
-            // things should still work if the IP_MULTICAST_ALL is not
-            // set as we want it
-            //
-            int const e(errno);
-            SNAP_LOG_WARNING
-                    << "could not set IP_MULTICAST_ALL to zero, e = "
-                    << e
-                    << " -- "
-                    << strerror(e)
-                    << SNAP_LOG_SEND;
-        }
-    }
-}
-
-
-/** \brief Clean up the UDP server.
- *
- * This function frees the address info structures and close the socket.
- */
-udp_server::~udp_server()
-{
 }
 
 
@@ -284,7 +238,7 @@ udp_server::~udp_server()
  *
  * \return The number of bytes read or -1 if an error occurs.
  */
-int udp_server::recv(char * msg, size_t max_size)
+int local_dgram_server::recv(char * msg, size_t max_size)
 {
     return static_cast<int>(::recv(f_socket.get(), msg, max_size, 0));
 }
@@ -309,23 +263,12 @@ int udp_server::recv(char * msg, size_t max_size)
  *
  * \return -1 if an error occurs or the function timed out, the number of bytes received otherwise.
  */
-int udp_server::timed_recv(char * msg, size_t const max_size, int const max_wait_ms)
+int local_dgram_server::timed_recv(char * msg, size_t const max_size, int const max_wait_ms)
 {
     pollfd fd;
     fd.events = POLLIN | POLLPRI | POLLRDHUP;
     fd.fd = f_socket.get();
     int const retval(poll(&fd, 1, max_wait_ms));
-
-//    fd_set s;
-//    FD_ZERO(&s);
-//#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Wold-style-cast"
-//    FD_SET(f_socket.get(), &s);
-//#pragma GCC diagnostic pop
-//    struct timeval timeout;
-//    timeout.tv_sec = max_wait_ms / 1000;
-//    timeout.tv_usec = (max_wait_ms % 1000) * 1000;
-//    int const retval(select(f_socket.get() + 1, &s, nullptr, &s, &timeout));
     if(retval == -1)
     {
         // poll() sets errno accordingly
@@ -359,14 +302,14 @@ int udp_server::timed_recv(char * msg, size_t const max_size, int const max_wait
  * \param[in] bufsize  The maximum size of the returned string in bytes.
  * \param[in] max_wait_ms  The maximum number of milliseconds to wait for a message.
  *
- * \return The received string or an empty string if not data received or error.
+ * \return received string. an empty string if not data received or error.
  *
  * \sa timed_recv()
  */
-std::string udp_server::timed_recv(int const bufsize, int const max_wait_ms)
+std::string local_dgram_server::timed_recv(int const bufsize, int const max_wait_ms)
 {
     std::vector<char> buf;
-    buf.resize(bufsize + 1, '\0'); // +1 for ending \0
+    buf.resize( bufsize + 1, '\0' ); // +1 for ending \0
     int const r(timed_recv(&buf[0], bufsize, max_wait_ms));
     if(r <= -1)
     {

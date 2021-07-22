@@ -41,10 +41,10 @@
 
 // self
 //
-#include    "eventdispatcher/udp_server_message_connection.h"
+#include    "eventdispatcher/local_dgram_server_message_connection.h"
 
 #include    "eventdispatcher/exception.h"
-#include    "eventdispatcher/udp_client.h"
+#include    "eventdispatcher/local_dgram_client.h"
 
 
 // snaplogger lib
@@ -80,11 +80,22 @@ namespace ed
  * when sending. Instead we create a client that we immediately
  * destruct once the message was sent.
  *
- * \param[in] addr  The address to listen on.
- * \param[in] port  The port to listen on.
+ * \param[in] address  The address to listen on. It may be set to "0.0.0.0".
+ * \param[in] sequential  Whether the packets are kept in order.
+ * \param[in] close_on_exec  Whether the socket is closed on execve().
+ * \param[in] force_reuse_addr  Whether caller is okay with an unlink() of
+ * a file socket if it exists.
  */
-udp_server_message_connection::udp_server_message_connection(std::string const & addr, int port)
-    : udp_server_connection(addr, port)
+local_dgram_server_message_connection::local_dgram_server_message_connection(
+              addr::unix const & address
+            , bool sequential
+            , bool close_on_exec
+            , bool force_reuse_addr)
+    : local_dgram_server_connection(
+          address
+        , sequential
+        , close_on_exec
+        , force_reuse_addr)
 {
     // allow for looping over all the messages in one go
     //
@@ -102,25 +113,23 @@ udp_server_message_connection::udp_server_message_connection(std::string const &
  * The function returns true when the message was successfully sent.
  * This does not mean it was received.
  *
- * \param[in] addr  The destination address for the message.
- * \param[in] port  The destination port for the message.
- * \param[in] message  The message to send to the destination.
+ * \param[in] address  The destination Unix address for the message.
+ * \param[in] msg  The message to send to the destination.
  * \param[in] secret_code  The secret code to send along the message.
  *
  * \return true when the message was sent, false otherwise.
  */
-bool udp_server_message_connection::send_message(
-                  std::string const & addr
-                , int port
+bool local_dgram_server_message_connection::send_message(
+                  addr::unix const & address
                 , message const & msg
                 , std::string const & secret_code)
 {
-    // Note: contrary to the TCP version, a UDP message does not
+    // Note: contrary to the Stream version, a Datagram message does not
     //       need to include the '\n' character since it is sent
-    //       in one UDP packet. However, it has a maximum size
-    //       limit which we enforce here.
+    //       in one packet. However, it has a maximum size limit
+    //       which we enforce here.
     //
-    udp_client client(addr, port);
+    local_dgram_client client(address);
     std::string buf;
     if(!secret_code.empty())
     {
@@ -137,21 +146,23 @@ bool udp_server_message_connection::send_message(
     //
     if(buf.length() > DATAGRAM_MAX_SIZE)
     {
-        // packet too large for our buffers
+        // packet too large for the socket buffers
         //
         throw event_dispatcher_invalid_message(
                   "message too large ("
                 + std::to_string(buf.length())
-                + " bytes) for a UDP server (max: "
+                + " bytes) for a Unix socket (max: "
                   BOOST_PP_STRINGIZE(DATAGRAM_MAX_SIZE));
     }
 
     if(client.send(buf.data(), buf.length()) != static_cast<ssize_t>(buf.length())) // we do not send the '\0'
     {
         // TODO: add errno to message
+        int const e(errno);
         SNAP_LOG_ERROR
-            << "udp_server_message_connection::send_message(): could not send UDP message."
+            << "local_dgram_server_message_connection::send_message(): could not send Datagram message."
             << SNAP_LOG_SEND;
+        errno = e;
         return false;
     }
 
@@ -170,7 +181,7 @@ bool udp_server_message_connection::send_message(
  *
  * The function actually reads as many pending datagrams as it can.
  */
-void udp_server_message_connection::process_read()
+void local_dgram_server_message_connection::process_read()
 {
     char buf[DATAGRAM_MAX_SIZE];
     for(;;)
@@ -180,9 +191,9 @@ void udp_server_message_connection::process_read()
         {
             break;
         }
-        std::string const udp_message(buf, r);
+        std::string const local_dgram_message(buf, r);
         message msg;
-        if(msg.from_message(udp_message))
+        if(msg.from_message(local_dgram_message))
         {
             std::string const expected(get_secret_code());
             if(msg.has_parameter("secret_code"))
@@ -205,7 +216,7 @@ void udp_server_message_connection::process_read()
                     // the message
                     //
                     SNAP_LOG_WARNING
-                        << "no secret_code=... parameter was expected (missing set_secret_code() call for this application?)"
+                        << "no secret_code=... parameter was expected (missing set_secret_code() call for this application?)."
                         << SNAP_LOG_SEND;
                 }
             }
@@ -214,7 +225,7 @@ void udp_server_message_connection::process_read()
                 // secret code is missing from incoming message
                 //
                 SNAP_LOG_ERROR
-                    << "the incoming message was expected to have a secret_code parameter, message ignored."
+                    << "the incoming message was expected to have a secret_code parameter, message dropped."
                     << SNAP_LOG_SEND;
                 return;
             }
@@ -226,9 +237,9 @@ void udp_server_message_connection::process_read()
         else
         {
             SNAP_LOG_ERROR
-                << "udp_server_message_connection::process_read() was asked"
-                   " to process an invalid message ("
-                << udp_message
+                << "local_dgram_server_message_connection::process_read() was"
+                   " asked to process an invalid message ("
+                << local_dgram_message
                 << ")"
                 << SNAP_LOG_SEND;
         }
