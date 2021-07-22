@@ -84,8 +84,7 @@ namespace ed
  * \param[in] port  The port the server is listening on.
  */
 tcp_client::tcp_client(std::string const & addr, int port)
-    : f_socket(-1)
-    , f_port(port)
+    : f_port(port)
     , f_addr(addr)
 {
     if(f_port < 0 || f_port >= 65536)
@@ -123,7 +122,7 @@ tcp_client::tcp_client(std::string const & addr, int port)
         throw event_dispatcher_runtime_error(err);
     }
 
-    f_socket = socket(addr_info.get()->ai_family, SOCK_STREAM, IPPROTO_TCP);
+    f_socket.reset(socket(addr_info.get()->ai_family, SOCK_STREAM, IPPROTO_TCP));
     if(f_socket < 0)
     {
         int const e(errno);
@@ -137,7 +136,7 @@ tcp_client::tcp_client(std::string const & addr, int port)
         throw event_dispatcher_runtime_error("could not create socket for client");
     }
 
-    if(connect(f_socket, addr_info.get()->ai_addr, addr_info.get()->ai_addrlen) < 0)
+    if(connect(f_socket.get(), addr_info.get()->ai_addr, addr_info.get()->ai_addrlen) < 0)
     {
         int const e(errno);
         SNAP_LOG_FATAL
@@ -147,7 +146,6 @@ tcp_client::tcp_client(std::string const & addr, int port)
             << strerror(e)
             << ")"
             << SNAP_LOG_SEND;
-        close(f_socket);
         throw event_dispatcher_runtime_error("could not connect client socket to \"" + f_addr + "\"");
     }
 }
@@ -162,7 +160,6 @@ tcp_client::tcp_client(std::string const & addr, int port)
  */
 tcp_client::~tcp_client()
 {
-    close(f_socket);
 }
 
 /** \brief Get the socket descriptor.
@@ -175,7 +172,7 @@ tcp_client::~tcp_client()
  */
 int tcp_client::get_socket() const
 {
-    return f_socket;
+    return f_socket.get();
 }
 
 /** \brief Get the TCP client port.
@@ -218,7 +215,7 @@ int tcp_client::get_client_port() const
 {
     struct sockaddr addr;
     socklen_t len(sizeof(addr));
-    int r(getsockname(f_socket, &addr, &len));
+    int r(getsockname(f_socket.get(), &addr, &len));
     if(r != 0)
     {
         return -1;
@@ -249,7 +246,7 @@ std::string tcp_client::get_client_addr() const
 {
     struct sockaddr addr;
     socklen_t len(sizeof(addr));
-    int const r(getsockname(f_socket, &addr, &len));
+    int const r(getsockname(f_socket.get(), &addr, &len));
     if(r != 0)
     {
         throw event_dispatcher_runtime_error("address not available");
@@ -300,7 +297,7 @@ std::string tcp_client::get_client_addr() const
  */
 int tcp_client::read(char *buf, size_t size)
 {
-    return static_cast<int>(::read(f_socket, buf, size));
+    return static_cast<int>(::read(f_socket.get(), buf, size));
 }
 
 
@@ -363,7 +360,7 @@ int tcp_client::read_line(std::string& line)
  */
 int tcp_client::write(const char *buf, size_t size)
 {
-    return static_cast<int>(::write(f_socket, buf, size));
+    return static_cast<int>(::write(f_socket.get(), buf, size));
 }
 
 

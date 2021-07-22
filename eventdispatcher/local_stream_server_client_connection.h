@@ -27,7 +27,16 @@
 // self
 //
 #include    "eventdispatcher/connection.h"
-#include    "eventdispatcher/tcp_bio_client.h"
+
+
+// libaddr
+//
+#include    <libaddr/unix.h>
+
+
+// snapdev lib
+//
+#include    <snapdev/raii_generic_deleter.h>
 
 
 // C lib
@@ -41,20 +50,17 @@ namespace ed
 
 
 
-class tcp_server_client_connection
+class local_stream_server_client_connection
     : public connection
+    //, public local_stream_client -- this will not work without some serious re-engineering of the local_stream_client class
 {
 public:
-    typedef std::shared_ptr<tcp_server_client_connection>    pointer_t;
+    typedef std::shared_ptr<local_stream_server_client_connection>    pointer_t;
 
-                                tcp_server_client_connection(tcp_bio_client::pointer_t client);
-    virtual                     ~tcp_server_client_connection() override;
+                                local_stream_server_client_connection(snap::raii_fd_t client);
 
     void                        close();
-    size_t                      get_client_address(sockaddr_storage & address) const;
-    std::string                 get_client_addr() const;
-    int                         get_client_port() const;
-    std::string                 get_client_addr_port() const;
+    addr::unix                  get_client_address() const;
 
     // connection implementation
     virtual bool                is_reader() const override;
@@ -65,11 +71,11 @@ public:
     virtual ssize_t             write(void const * buf, size_t count);
 
 private:
-    bool                        define_address();
+    void                        define_address();
 
-    tcp_bio_client::pointer_t   f_client = tcp_bio_client::pointer_t();
-    sockaddr_storage            f_address = sockaddr_storage();
-    socklen_t                   f_length = 0;
+    snap::raii_fd_t             f_client = snap::raii_fd_t();
+    addr::unix                  f_address = addr::unix();
+    bool                        f_address_defined = false;
 };
 
 

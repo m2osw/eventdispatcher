@@ -25,6 +25,11 @@
  */
 
 
+// snapdev lib
+//
+#include    <snapdev/raii_generic_deleter.h>
+
+
 // C++ lib
 //
 #include    <string>
@@ -61,7 +66,7 @@ public:
     int                 write(char const * buf, size_t size);
 
 private:
-    int                 f_socket = -1;
+    snap::raii_fd_t     f_socket = snap::raii_fd_t();
     int                 f_port = -1;
     std::string         f_addr = std::string();
 };

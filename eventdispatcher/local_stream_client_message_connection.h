@@ -26,8 +26,9 @@
 
 // self
 //
-#include    "eventdispatcher/connection.h"
-#include    "eventdispatcher/tcp_bio_server.h"
+#include    "eventdispatcher/connection_with_send_message.h"
+#include    "eventdispatcher/dispatcher_support.h"
+#include    "eventdispatcher/local_stream_client_buffer_connection.h"
 
 
 
@@ -36,26 +37,26 @@ namespace ed
 
 
 
-class tcp_server_connection
-    : public connection
-    , public tcp_bio_server
+class local_stream_client_message_connection
+    : public local_stream_client_buffer_connection
+    , public dispatcher_support
+    , public connection_with_send_message
 {
 public:
-    typedef std::shared_ptr<tcp_server_connection>    pointer_t;
+    typedef std::shared_ptr<local_stream_client_message_connection>    pointer_t;
 
-                                tcp_server_connection(
-                                      std::string const & addr
-                                    , int port
-                                    , std::string const & certificate
-                                    , std::string const & private_key
-                                    , mode_t mode = mode_t::MODE_PLAIN
-                                    , int max_connections = -1
-                                    , bool reuse_addr = false);
+                                local_stream_client_message_connection(
+                                          addr::unix const & address
+                                        , bool const blocking = false
+                                        , bool const close_on_exec = true);
 
-    // connection implementation
+    // connection_with_send_message implementation
     //
-    virtual bool                is_listener() const override;
-    virtual int                 get_socket() const override;
+    virtual bool                send_message(message const & msg, bool cache = false) override;
+
+    // local_stream_client_buffer_connection implementation
+    //
+    virtual void                process_line(std::string const & line) override;
 };
 
 

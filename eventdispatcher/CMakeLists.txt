@@ -49,6 +49,18 @@ add_library(${PROJECT_NAME} SHARED
         inter_thread_message_connection.cpp
         thread_done_signal.cpp
 
+        local_stream_server_connection.cpp
+
+        local_stream_server_client_connection.cpp
+            local_stream_server_client_buffer_connection.cpp
+                local_stream_server_client_message_connection.cpp
+
+        local_stream_client_connection.cpp
+            local_stream_client_buffer_connection.cpp
+                local_stream_client_message_connection.cpp
+                    local_stream_blocking_client_message_connection.cpp
+                local_stream_client_permanent_message_connection.cpp
+
         pipe_connection.cpp
             pipe_buffer_connection.cpp
                 pipe_message_connection.cpp
@@ -83,8 +95,8 @@ add_library(${PROJECT_NAME} SHARED
     tcp_bio_options.cpp
     tcp_bio_client.cpp
     tcp_bio_server.cpp
-    tcp_client.cpp
-    tcp_server.cpp
+    tcp_client.cpp      # basic class, not used in our environment
+    tcp_server.cpp      # basic class, not used in our environment
 
     # udp
     udp_base.cpp

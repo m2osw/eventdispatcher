@@ -26,8 +26,7 @@
 
 // self
 //
-#include    "eventdispatcher/connection.h"
-#include    "eventdispatcher/tcp_bio_server.h"
+#include    "eventdispatcher/local_stream_client_message_connection.h"
 
 
 
@@ -36,26 +35,24 @@ namespace ed
 
 
 
-class tcp_server_connection
-    : public connection
-    , public tcp_bio_server
+class local_stream_blocking_client_message_connection
+    : public local_stream_client_message_connection
 {
 public:
-    typedef std::shared_ptr<tcp_server_connection>    pointer_t;
+                                local_stream_blocking_client_message_connection(
+                                          addr::unix const & addr
+                                        , bool const blocking = false
+                                        , bool const close_on_exec = true);
 
-                                tcp_server_connection(
-                                      std::string const & addr
-                                    , int port
-                                    , std::string const & certificate
-                                    , std::string const & private_key
-                                    , mode_t mode = mode_t::MODE_PLAIN
-                                    , int max_connections = -1
-                                    , bool reuse_addr = false);
+    void                        run();
+    void                        peek();
 
-    // connection implementation
+    // connection_with_send_message implementation
     //
-    virtual bool                is_listener() const override;
-    virtual int                 get_socket() const override;
+    virtual bool                send_message(message const & msg, bool cache = false) override;
+
+private:
+    std::string                 f_line = std::string();
 };
 
 

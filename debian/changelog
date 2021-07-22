@@ -1,5 +1,12 @@
 eventdispatcher (1.1.32.0~bionic) bionic; urgency=high
 
+  * Added support for Unix sockets (stream-based for now).
+  * Small clean ups.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Wed, 21 Jul 2021 17:54:45 -0700
+
+eventdispatcher (1.1.32.0~bionic) bionic; urgency=high
+
   * Added a tool (snaplog) to test the network appenders.
 
  -- Alexis Wilke <alexis@m2osw.com>  Fri, 04 Jun 2021 00:16:23 -0700

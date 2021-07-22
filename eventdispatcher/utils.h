@@ -68,7 +68,7 @@ typedef std::unique_ptr<
                                     , &::freeaddrinfo>> raii_addrinfo_t;
 
 
-constexpr int                       MAX_CONNECTIONS = 50;
+constexpr int const                 MAX_CONNECTIONS = 50;
 
 
 std::int64_t                        get_current_date();

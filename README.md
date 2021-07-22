@@ -179,6 +179,8 @@ handling of the data
 * Buffer Class -- a simple read/write FIFO which bufferize the data for you
 * Message Class -- the full featured FIFO implementation which accepts and
 sends messages
+* Permanent Class -- the full featured FIFO implementation accepting and
+sending messages which auto-reconnect on a loss of connectivity
 
 
 ## Message Dispatcher
@@ -239,32 +241,6 @@ reply which is useless).
     threads at all. We've successfully use the library in all three types
     of processes.
 
-* Unix Sockets
-
-    One dearly missing implementation is support for Unix sockets. These
-    should be used 100% of the time when a service connects locally.
-    There are at least three advantages to this: the connection is much
-    faster and can handle large buffers; the connection is much more
-    secure since it never goes on the network stack; we can easily detect
-    whether such a socket is available when it is named (i.e. that file
-    has to exist).
-
-    We want a TCP like (SOCK_STREAM) and a UDP like (SOCK_DGRAM)
-    implementation. Linux also supports SOCK_SEQPACKET which is
-    very similar to SOCK_DGRAM.
-
-    We want to support all of the following:
-    - `SOCK_STREAM`
-    - `SOCK_DGRAM`
-    - unnamed (i.e. communication between parent & child, i.e. `fork()`,
-      probably better than using a FIFO?)
-    - named (i.e. using a Unix file socket)
-    - abstract? (i.e. using a name but no file, but we have a potential
-      security issue in this case since there is no good protection available
-      for such socket connections outside of the SO_PASSCRED)
-    - base
-    - bufferized
-    - message
 
 
 
@@ -276,9 +252,13 @@ if you need such functionality you may be interested in finding out how
 to make it work from our existing code:
 
 * attempt to avoid the SIGPROF from breaking our code by handling the signal
+
 * poll for `listen()` calls and signal when detected (see `socket_events`)
-  -- this should be a push instead of a poll, unfortunately, it doesn't look
-  like Linux offers such an event yet (it looks like it is very close, though)
+
+    We should be able to implement this as a push instead of a poll,
+    unfortunately, it doesn't look like Linux offers such a NETLINK event
+    yet (it looks like it is very close, though); our existing class works,
+    but uses a timer
 
 
 # Extensions
