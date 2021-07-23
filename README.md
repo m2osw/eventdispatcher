@@ -208,6 +208,29 @@ The Permanent Class is useful when your client connects to a service which
 may be restarted at any time (which is pretty much 100% of the time!) This
 makes your clients very much more stable.
 
+The following are the classes available with the datagram Unix socket
+implementation:
+
+* Base class -- opens the `AF_UNIX` socket in `SOCK_DGRAM` or `SOCK_SEQPACKET`
+mode.
+* Client class -- the client class is used to send data over a datagram socket.
+This class is not a connection, so it can't actually be used with the
+communicator. We use it to send signals such as a PING or DONE message.
+* Server class -- similar to a client, this also binds the socket so it can
+receive messages.
+* Server Connection class -- this class is a connection and it can be used
+with the communicator. If you are to send eventdispatcher messages, you
+certainly want to use the next class, though.
+* Server Message Connection class -- this class is based on the Server
+Connection class and it also implements receival and distribution via
+the dispatcher of messages. Notice that the `send_message()` function is
+static, all you need as a client is that one function (if you want to get
+a reply, you need to also implement a server).
+
+This is very similar to the UDP implementation except that packets can be
+a lot bigger. We limit messages to 64Kb instead of 1Kb. Our messages are
+generally pretty small, though.
+
 ### Unix FIFO
 
 The Unix FIFOs (see `pipe(2)`) can be used with the library. They also
@@ -264,6 +287,21 @@ reply which is useless).
 
     This will also help with the IPv6 support since the `addr::addr`
     objects make all addresses an IPv6 address.
+
+* Attempt connecting with additional addresses
+
+    The `connect()` for a TCP or a UDP connection may have multiple
+    addresses (i.e. many web services offer a list of 5, 7, 10...
+    addresses). If the `connect()` fails with the first address, then
+    it should be re-attempted with the next one. This is not very
+    useful with our services at the moment.
+
+    **Note:** these addresses may also change with time. So if you requests
+    a domain to give you an IP address at some point, it may be necessary
+    to request for new IPs when you attempt to reconnect much later. This
+    is also not currently supported as input domain names are transformed to
+    IP addresses and they stay that way _forever_ (until you restart or
+    as a programmer, until you create a new object with that domain name).
 
 * Full multithread support
 

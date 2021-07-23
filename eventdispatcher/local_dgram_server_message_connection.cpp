@@ -18,25 +18,8 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
- * \brief Implementation of the Snap Communicator class.
+ * \brief Implementation of the AF_UNIX socket class handling message packets.
  *
- * This class wraps the C poll() interface in a C++ object with many types
- * of objects:
- *
- * \li Server Connections; for software that want to offer a port to
- *     which clients can connect to; the server will call accept()
- *     once a new client connection is ready; this results in a
- *     Server/Client connection object
- * \li Client Connections; for software that want to connect to
- *     a server; these expect the IP address and port to connect to
- * \li Server/Client Connections; for the server when it accepts a new
- *     connection; in this case the server gets a socket from accept()
- *     and creates one of these objects to handle the connection
- *
- * Using the poll() function is the easiest and allows us to listen
- * on pretty much any number of sockets (on my server it is limited
- * at 16,768 and frankly over 1,000 we probably will start to have
- * real slowness issues on small VPN servers.)
  */
 
 // self
@@ -129,7 +112,6 @@ bool local_dgram_server_message_connection::send_message(
     //       in one packet. However, it has a maximum size limit
     //       which we enforce here.
     //
-    local_dgram_client client(address);
     std::string buf;
     if(!secret_code.empty())
     {
@@ -155,12 +137,22 @@ bool local_dgram_server_message_connection::send_message(
                   BOOST_PP_STRINGIZE(DATAGRAM_MAX_SIZE));
     }
 
-    if(client.send(buf.data(), buf.length()) != static_cast<ssize_t>(buf.length())) // we do not send the '\0'
+    local_dgram_client client(address);
+    int const r(client.send(buf.data(), buf.length()));
+    if(r != static_cast<ssize_t>(buf.length())) // we do not send the '\0'
     {
         // TODO: add errno to message
         int const e(errno);
         SNAP_LOG_ERROR
-            << "local_dgram_server_message_connection::send_message(): could not send Datagram message."
+            << "local_dgram_server_message_connection::send_message(): could not send Datagram message to \""
+            << address.to_uri()
+            << "\", errno: "
+            << e
+            << ", "
+            << strerror(e)
+            << " (r = "
+            << r
+            << ")."
             << SNAP_LOG_SEND;
         errno = e;
         return false;

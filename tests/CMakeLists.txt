@@ -42,7 +42,8 @@ if(Catch2_FOUND)
         catch_main.cpp
 
         catch_message.cpp
-        catch_unix.cpp
+        catch_unix_dgram.cpp
+        catch_unix_stream.cpp
         catch_version.cpp
     )
 

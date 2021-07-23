@@ -118,7 +118,7 @@ int local_dgram_client::send(char const * msg, size_t size)
     struct sockaddr_un un;
     f_address.get_un(un);
     return static_cast<int>(sendto(
-            f_socket.get()
+              f_socket.get()
             , msg
             , size
             , 0
