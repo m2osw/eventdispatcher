@@ -64,11 +64,11 @@ namespace ed
 /** \brief Initializes the file descriptor connection.
  *
  * This function creates a connection based on an existing file descriptor.
- * This is a class used to handle existing pipes or socket (opposed to other
+ * This is a class used to handle existing pipes or sockets (opposed to other
  * implementations which create a pipe, open a socket, etc.) It is especially
  * useful if you want to listen to stdin and stdout. Use the `fileno()`
- * function to get the file descriptor and create a `fd_connection`
- * object what that descriptor.
+ * function to get the file descriptor and create an `fd_connection`
+ * object with that descriptor.
  *
  * The mode parameter defines how you are to use the file descriptor. In
  * other words, a socket that is read/write could be added to two different

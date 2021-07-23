@@ -116,14 +116,15 @@ add_library(${PROJECT_NAME} SHARED
     version.cpp
 )
 
-include_directories(
-    ${ADVGETOPT_INCLUDE_DIRS}
-    ${CPPTHREAD_INCLUDE_DIRS}
-    ${LIBEXCEPT_INCLUDE_DIRS}
-    ${LIBUTF8_INCLUDE_DIRS}
-    ${SNAPLOGGER_INCLUDE_DIRS}
-    ${OPENSSL_INCLUDE_DIR}
-    ${LIBADDR_INCLUDE_DIRS}
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        ${ADVGETOPT_INCLUDE_DIRS}
+        ${CPPTHREAD_INCLUDE_DIRS}
+        ${LIBEXCEPT_INCLUDE_DIRS}
+        ${LIBUTF8_INCLUDE_DIRS}
+        ${SNAPLOGGER_INCLUDE_DIRS}
+        ${OPENSSL_INCLUDE_DIR}
+        ${LIBADDR_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}

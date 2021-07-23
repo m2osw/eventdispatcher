@@ -53,12 +53,13 @@ mkdir BUILD
 cd BUILD
 # request coverage in this build
 dist=`cd ../../../../../BUILD/Debug/dist; pwd`
-modules=$dist/share/cmake-3.5/Modules
-cmake -DCMAKE_INSTALL_PREFIX:PATH=$dist \
-    -DCMAKE_MODULE_PATH:PATH=$modules \
+modules="$dist/share/cmake-3.5/Modules;$dist/share/cmake"
+cmake -DCMAKE_INSTALL_PREFIX:PATH="$dist" \
+    -DCMAKE_PREFIX_PATH:PATH="$dist" \
+    -DCMAKE_MODULE_PATH:PATH="$modules" \
     -DCMAKE_BUILD_TYPE=Debug \
-    -D${PROJECT_NAME}_library_COVERAGE:BOOL=ON \
-    ../../..
+    -D${PROJECT_NAME}_project_COVERAGE:BOOL=ON \
+        ../../..
 cd ..
 echo
 echo "***"

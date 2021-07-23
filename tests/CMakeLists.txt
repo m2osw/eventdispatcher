@@ -30,15 +30,7 @@ if(Catch2_FOUND)
         -DCATCH_CONFIG_PREFIX_ALL
     )
 
-    include_directories(
-        ${CMAKE_BINARY_DIR}
-        ${PROJECT_SOURCE_DIR}
-        ${CATCH_INCLUDE_DIR}
-        ${LIBEXCEPT_INCLUDE_DIRS}
-        ${LIBUTF8_INCLUDE_DIRS}
-    )
-
-    add_executable( ${PROJECT_NAME}
+    add_executable(${PROJECT_NAME}
         catch_main.cpp
 
         catch_message.cpp
@@ -47,7 +39,16 @@ if(Catch2_FOUND)
         catch_version.cpp
     )
 
-    target_link_libraries( ${PROJECT_NAME}
+    target_include_directories(${PROJECT_NAME}
+        PUBLIC
+            ${CMAKE_BINARY_DIR}
+            ${PROJECT_SOURCE_DIR}
+            ${CATCH_INCLUDE_DIR}
+            ${LIBEXCEPT_INCLUDE_DIRS}
+            ${LIBUTF8_INCLUDE_DIRS}
+    )
+
+    target_link_libraries(${PROJECT_NAME}
         eventdispatcher
     )
 
