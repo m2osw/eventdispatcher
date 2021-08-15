@@ -361,8 +361,10 @@ tcp_bio_client::tcp_bio_client(
                 throw event_dispatcher_initialization_error("failed creating an SSL_CTX object");
             }
 
-            // allow up to 4 certificates in the chain otherwise fail
-            // (this is not a very strong security feature though)
+            // allow up to `depth` certificates in the chain otherwise fail
+            // (this is not a very strong security feature though); the depth
+            // can be changed before calling this function using a
+            // tcp_bio_options object
             //
             SSL_CTX_set_verify_depth(ssl_ctx.get(), opt.get_verification_depth());
 
@@ -476,7 +478,7 @@ tcp_bio_client::tcp_bio_client(
                         << "the SNI feature is turned off,"
                            " often failure to connect with SSL is because the"
                            " SSL Hello message is missing the SNI (Server Name In)."
-                           " See the tcp_bio_client::options::set_sni()."
+                           " See the tcp_bio_options::set_sni()."
                         << SNAP_LOG_SEND;
                 }
                 detail::bio_log_errors();
@@ -493,13 +495,13 @@ tcp_bio_client::tcp_bio_client(
                         << "the SNI feature is turned off,"
                            " often failure to connect with SSL is because the"
                            " SSL Hello message is missing the SNI (Server Name In)."
-                           " See the tcp_bio_client::options::set_sni()."
+                           " See the tcp_bio_options::set_sni()."
                         << SNAP_LOG_SEND;
                 }
                 detail::bio_log_errors();
                 throw event_dispatcher_initialization_error("failed establishing a secure BIO connection with server, handshake failed."
                             " Often such failures to process SSL is because the SSL Hello message is missing the SNI (Server Name In)."
-                            " See the tcp_bio_client::options::set_sni().");
+                            " See the tcp_bio_options::set_sni().");
             }
 
             // verify that the peer certificate was signed by a

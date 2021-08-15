@@ -13,15 +13,21 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
 /** \file
- * \brief Event dispatch class.
+ * \brief Options used to create a TCP client object with TLS.
  *
- * Class used to handle events.
+ * This class is used to define details of what the TCP client needs to
+ * do to create a valid TLS connection with a server.
+ *
+ * The options include two important parameters:
+ *
+ * * Host -- the host used to verify the certificate
+ * * SNI -- whether to include the Server Name In the SSL Hello message
  */
 
 // make sure we use OpenSSL with multi-thread support

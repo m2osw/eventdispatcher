@@ -24,7 +24,7 @@
  * stopping system functions such as poll(). At this point, this doesn't
  * work.
  *
- * To test with the profile, use the `-pg` command line option on your g++
+ * To test with the profiler, use the `-pg` command line option on your g++
  * command line. See the g++ docs for more info.
  */
 
