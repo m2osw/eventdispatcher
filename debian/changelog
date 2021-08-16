@@ -1,6 +1,7 @@
-eventdispatcher (1.1.32.0~bionic) bionic; urgency=high
+eventdispatcher (1.1.33.0~bionic) bionic; urgency=high
 
   * Added support for Unix sockets (stream-based for now).
+  * Added support for a LEAK message.
   * Small clean ups.
 
  -- Alexis Wilke <alexis@m2osw.com>  Wed, 21 Jul 2021 17:54:45 -0700
