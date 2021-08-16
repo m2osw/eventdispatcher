@@ -506,8 +506,15 @@ public:
     {
         // avoid more than one realloc()
         //
-        f_matches.reserve(f_matches.size() + 7);
+        f_matches.reserve(f_matches.size() + 10);
 
+        {
+            typename ed::dispatcher<T>::dispatcher_match m;
+            m.f_expr = "ALIVE";
+            m.f_execute = &T::msg_alive;
+            //m.f_match = <default>;
+            f_matches.push_back(m);
+        }
         {
             typename ed::dispatcher<T>::dispatcher_match m;
             m.f_expr = "HELP";
@@ -517,8 +524,8 @@ public:
         }
         {
             typename ed::dispatcher<T>::dispatcher_match m;
-            m.f_expr = "ALIVE";
-            m.f_execute = &T::msg_alive;
+            m.f_expr = "LEAK";
+            m.f_execute = &T::msg_leak;
             //m.f_match = <default>;
             f_matches.push_back(m);
         }

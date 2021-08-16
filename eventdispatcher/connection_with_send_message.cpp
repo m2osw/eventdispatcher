@@ -49,6 +49,13 @@
 #include    <boost/algorithm/string/join.hpp>
 
 
+// C lib
+//
+#ifdef __SANITIZE_ADDRESS__
+#include    <sanitizer/lsan_interface.h>
+#endif
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -160,7 +167,7 @@ void connection_with_send_message::msg_help(message & msg)
 /** \brief Reply to the watchdog message ALIVE.
  *
  * To check whether a service is alive, send the ALIVE message. This
- * function builds a ABSOLUTELY reply and attaches the "serial" parameter
+ * function builds an ABSOLUTELY reply and attaches the "serial" parameter
  * as is if present. It will also include the original "timestamp" parameter
  * when present.
  *
@@ -201,6 +208,33 @@ void connection_with_send_message::msg_alive(message & msg)
             << "\" with an ABSOLUTELY message."
             << SNAP_LOG_SEND;
     }
+}
+
+
+/** \brief Run the sanitizer leak checker.
+ *
+ * This function calls the function which prints out all the leaks found
+ * at this time in this software (\em leaks as in any block of memory
+ * currently allocated).
+ *
+ * The message does nothing if the library was not compiled with the
+ * sanitizer feature turned on.
+ *
+ * The message can be sent any number of times.
+ *
+ * \param[in] msg  The LEAK message, which is ignored.
+ */
+void connection_with_send_message::msg_leak(ed::message & msg)
+{
+    snap::NOT_USED(msg);
+
+#ifdef __SANITIZE_ADDRESS__
+    __lsan_do_recoverable_leak_check();
+#else
+    std::cerr << "error: leaks are not being tracked;"
+                " use the --sanitize option to turn on this feature."
+        << std::endl;
+#endif
 }
 
 

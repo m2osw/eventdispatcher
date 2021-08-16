@@ -45,6 +45,7 @@ public:
 
     virtual void                msg_help(message & msg);
     virtual void                msg_alive(message & msg);
+    virtual void                msg_leak(message & msg);
     virtual void                msg_log(message & msg);
     virtual void                msg_quitting(message & msg);
     virtual void                msg_ready(message & msg);
