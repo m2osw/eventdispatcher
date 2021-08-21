@@ -279,7 +279,7 @@ ed_signal::ed_signal(int argc, char * argv[])
     if(!snaplogger::process_logger_options(f_opt, "/etc/eventdispatcher/logger"))
     {
         // exit on any error
-        throw advgetopt::getopt_exit("logger options generated an error.", 0);
+        throw advgetopt::getopt_exit("logger options generated an error.", 1);
     }
 }
 
@@ -413,7 +413,7 @@ int main(int argc, char * argv[])
     }
     catch(advgetopt::getopt_exit const & e)
     {
-        exit(0);
+        exit(e.code());
     }
     catch(std::exception const & e)
     {

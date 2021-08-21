@@ -3,6 +3,11 @@ eventdispatcher (1.1.33.0~bionic) bionic; urgency=high
   * Added support for Unix sockets (stream-based for now).
   * Added support for a LEAK message.
   * Added a first network unit test to verify the Unix sockets.
+  * Set the name of the logrotate UDP messenger connection.
+  * ed-signal processing of logger options may end up with an getopt_exit
+    being thrown up. It now returns 1 instead of 0 as the exit code.
+  * ed-signal exit() with the getopt_exit exception code instead of 0.
+  * Removed the dev/coverage (and index.php) since it's in cmake now.
   * Small clean ups.
 
  -- Alexis Wilke <alexis@m2osw.com>  Wed, 21 Jul 2021 17:54:45 -0700

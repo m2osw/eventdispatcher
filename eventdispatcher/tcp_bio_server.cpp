@@ -488,7 +488,7 @@ int tcp_bio_server::get_socket() const
 {
     if(f_impl->f_listen)
     {
-        int c;
+        int c(-1);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
         BIO_get_fd(f_impl->f_listen.get(), &c);

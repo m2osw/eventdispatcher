@@ -73,6 +73,7 @@ logrotate_udp_messenger::logrotate_udp_messenger(
                           this
                         , ed::dispatcher<logrotate_udp_messenger>::dispatcher_match::vector_t()))
 {
+    set_name("logrotate_udp_messenger");
     set_secret_code(secret_code);
     f_dispatcher->add_communicator_commands();
 #ifdef _DEBUG
