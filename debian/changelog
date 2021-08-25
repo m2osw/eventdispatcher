@@ -1,8 +1,9 @@
 eventdispatcher (1.1.34.0~bionic) bionic; urgency=high
 
-  * Changed the default set of flags of the config_flags<>() template.
+  * The return in local_stream_server_connection::accept() doesn't require
+    and std::move() and it actually is not welcome on C++20.
 
- -- Alexis Wilke <alexis@m2osw.com>  Tue, 24 Aug 2021 20:48:36 -0700
+ -- Alexis Wilke <alexis@m2osw.com>  Tue, 24 Aug 2021 21:18:48 -0700
 
 eventdispatcher (1.1.33.0~bionic) bionic; urgency=high
 

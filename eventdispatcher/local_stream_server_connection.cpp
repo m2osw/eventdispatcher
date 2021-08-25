@@ -374,7 +374,7 @@ snap::raii_fd_t local_stream_server_connection::accept()
         }
     }
 
-    return std::move(r);
+    return r;
 }
 
 
