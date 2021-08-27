@@ -83,7 +83,8 @@ public:
 
     void                    log_message_to_ed_message(
                                       snaplogger::message const & msg
-                                    , ed::message & message);
+                                    , ed::message & message
+                                    , snaplogger::component::pointer_t extra_component = snaplogger::component::pointer_t());
 
 protected:
     addr::addr              f_server_address = addr::addr();

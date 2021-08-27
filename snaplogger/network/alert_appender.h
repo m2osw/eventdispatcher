@@ -19,22 +19,23 @@
 #pragma once
 
 /** \file
- * \brief The declaration of the TCP appender to send messages to a server.
+ * \brief The declaration of the alert appender to generate alerts.
  *
- * This file declares the TCP appender class which is used to send the logs
- * to a server listening on a TCP port.
+ * This file declares the alert appender class which is used to count the
+ * number of log messages in various ways and generate alerts whenever
+ * one of the counters becomes too large.
+ *
+ * The counters increase whenever a certain message arrives and gets
+ * decremented over a given period of time.
  */
 
 // self
 //
-#include    "base_network_appender.h"
+#include    <snaplogger/network/tcp_appender.h>
+
+#include    <snaplogger/component.h>
 
 
-
-// eventdispatcher lib
-//
-#include    <eventdispatcher/communicator.h>
-#include    <eventdispatcher/connection.h>
 
 
 
@@ -44,23 +45,25 @@ namespace snaplogger_network
 {
 
 
+constexpr char const            COMPONENT_ALERT[]   = "alert";
 
-class tcp_appender
-    : public base_network_appender
+extern snaplogger::component::pointer_t             g_alert_component;
+
+
+
+
+class alert_appender
+    : public tcp_appender
 {
 public:
-    typedef std::shared_ptr<tcp_appender>      pointer_t;
+    typedef std::shared_ptr<alert_appender>     pointer_t;
 
-                                tcp_appender(std::string const & name);
-    virtual                     ~tcp_appender() override;
+                                alert_appender(std::string const & name);
+    virtual                     ~alert_appender() override;
 
     // appender implementation
     //
     virtual void                set_config(advgetopt::getopt const & params) override;
-
-    // network_appender implementation
-    //
-    virtual void                server_address_changed() override;
 
 protected:
     // implement appender
@@ -69,16 +72,12 @@ protected:
                                           snaplogger::message const & msg
                                         , std::string const & formatted_message) override;
 
-    void                        process_message(
-                                          snaplogger::message const & msg
-                                        , std::string const & formatted_message
-                                        , snaplogger::component::pointer_t extra_component);
-
 private:
-    ed::communicator::pointer_t f_communicator = ed::communicator::pointer_t();
-    compression_t               f_compression = compression_t::COMPRESSION_NONE;
-    bool                        f_fallback_to_console = false;
-    ed::connection::pointer_t   f_connection = ed::connection::pointer_t();
+    std::int64_t                f_limit = 10;
+    std::int64_t                f_counter = 0;
+
+    std::int64_t                f_alert_limit = 0;
+    std::int64_t                f_alert_counter = 0;
 };
 
 

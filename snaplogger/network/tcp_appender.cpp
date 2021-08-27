@@ -199,12 +199,24 @@ void tcp_appender::server_address_changed()
 }
 
 
-void tcp_appender::process_message(snaplogger::message const & msg, std::string const & formatted_message)
+void tcp_appender::process_message(
+          snaplogger::message const & msg
+        , std::string const & formatted_message)
 {
-    snaplogger::guard g;
+    process_message(
+              msg
+            , formatted_message
+            , snaplogger::component::pointer_t());
+}
 
+
+void tcp_appender::process_message(
+          snaplogger::message const & msg
+        , std::string const & formatted_message
+        , snaplogger::component::pointer_t extra_component)
+{
     ed::message log_message;
-    log_message_to_ed_message(msg, log_message);
+    log_message_to_ed_message(msg, log_message, extra_component);
 
     // TODO: handle the possible compression
     //
@@ -225,6 +237,8 @@ void tcp_appender::process_message(snaplogger::message const & msg, std::string 
     //
     //    We should offer the ability to run in a thread (I think the core
     //    library already does that part so probably useless here?)
+
+    snaplogger::guard g;
 
     if(f_connection == nullptr)
     {

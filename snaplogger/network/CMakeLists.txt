@@ -28,6 +28,7 @@ configure_file(
 )
 
 add_library(${PROJECT_NAME} SHARED
+    alert_appender.cpp
     base_network_appender.cpp
     tcp_appender.cpp
     udp_appender.cpp

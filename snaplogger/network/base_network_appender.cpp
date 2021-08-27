@@ -159,10 +159,11 @@ void base_network_appender::server_address_changed()
 }
 
 
-void base_network_appender::log_message_to_ed_message(snaplogger::message const & msg, ed::message & log_message)
+void base_network_appender::log_message_to_ed_message(
+          snaplogger::message const & msg
+        , ed::message & log_message
+        , snaplogger::component::pointer_t extra_component)
 {
-    snaplogger::guard g;
-
     // WARNING: the Snap! environment already uses the "LOG" message for
     //          resetting the snaplogger so here we want to use something
     //          else to clearly distinguish between both
@@ -199,6 +200,10 @@ void base_network_appender::log_message_to_ed_message(snaplogger::message const 
     }
 
     std::string comps;
+    if(extra_component != nullptr)
+    {
+        comps += extra_component->get_name();
+    }
     snaplogger::component::set_t const & components(msg.get_components());
     for(auto c : components)
     {
