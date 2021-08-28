@@ -49,6 +49,7 @@ add_subdirectory(tests             )
 add_subdirectory(doc               )
 add_subdirectory(cmake             )
 add_subdirectory(tools             )
+add_subdirectory(examples          )
 
 # Extension to support a snaplogger server (remote logs)
 add_subdirectory(snaplogger        )
