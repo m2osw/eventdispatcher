@@ -22,7 +22,7 @@
 
 // self
 //
-#include "catch_main.h"
+#include    "catch_main.h"
 
 
 // eventdispatcher lib
@@ -59,7 +59,7 @@ int main(int argc, char * argv[])
             , EVENTDISPATCHER_VERSION_STRING
             , argc
             , argv
-            , []() { libexcept::set_collect_stack(false); }
+            , []() { libexcept::set_collect_stack(libexcept::collect_stack_t::COLLECT_STACK_NO); }
         );
 }
 

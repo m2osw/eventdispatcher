@@ -1,3 +1,9 @@
+eventdispatcher (1.1.36.0~bionic) bionic; urgency=high
+
+  * Fixed the tests to compile against new libexcept stack trace mode.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sat, 28 Aug 2021 11:29:08 -0700
+
 eventdispatcher (1.1.35.0~bionic) bionic; urgency=high
 
   * Added a client/server example.
