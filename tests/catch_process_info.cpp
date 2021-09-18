@@ -116,11 +116,15 @@ CATCH_TEST_CASE("Process Info", "[process]")
             std::uint64_t pf_minor(0);
             info.get_page_faults(pf_major, pf_minor);
 
+            // WARNING
+            // the following are rather random... as we add more tests
+            // this can increase
+            //
             std::int64_t const maj(pf_major - usage.ru_majflt);
-            CATCH_REQUIRE(labs(maj) < 10);
+            CATCH_REQUIRE(labs(maj) < 100);
 
             std::int64_t const min(pf_minor - usage.ru_minflt);
-            CATCH_REQUIRE(labs(min) < 10);
+            CATCH_REQUIRE(labs(min) < 100);
         }
 
         // TODO: see how to use the rusage data to more or less match these
