@@ -21,20 +21,41 @@
 //
 #include    "catch_main.h"
 
+
 // eventdispatcher lib
 //
 #include    <eventdispatcher/version.h>
 
 
+// cppprocess lib
+//
+#include    <cppprocess/version.h>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
+
+
 
 CATCH_TEST_CASE("Version", "[version]")
 {
-    CATCH_START_SECTION("verify runtime vs compile time version numbers")
+    CATCH_START_SECTION("verify runtime vs compile time eventdispatcher version numbers")
     {
         CATCH_REQUIRE(ed::get_major_version()   == EVENTDISPATCHER_VERSION_MAJOR);
         CATCH_REQUIRE(ed::get_release_version() == EVENTDISPATCHER_VERSION_MINOR);
         CATCH_REQUIRE(ed::get_patch_version()   == EVENTDISPATCHER_VERSION_PATCH);
         CATCH_REQUIRE(strcmp(ed::get_version_string(), EVENTDISPATCHER_VERSION_STRING) == 0);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("verify runtime vs compile time cppprocess version numbers")
+    {
+        CATCH_REQUIRE(cppprocess::get_major_version()   == CPPPROCESS_VERSION_MAJOR);
+        CATCH_REQUIRE(cppprocess::get_release_version() == CPPPROCESS_VERSION_MINOR);
+        CATCH_REQUIRE(cppprocess::get_patch_version()   == CPPPROCESS_VERSION_PATCH);
+        CATCH_REQUIRE(strcmp(cppprocess::get_version_string(), CPPPROCESS_VERSION_STRING) == 0);
     }
     CATCH_END_SECTION()
 }

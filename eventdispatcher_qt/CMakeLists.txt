@@ -27,12 +27,6 @@
 ##
 project(eventdispatcher_qt)
 
-include_directories(
-    ${SNAPDEV_INCLUDE_DIRS}
-    ${Qt5Core_INCLUDE_DIRS}
-    ${Qt5Widgets_INCLUDE_DIRS}
-)
-
 set(HEADERS
     qt_connection.h
 )
@@ -40,6 +34,13 @@ set(HEADERS
 add_library(${PROJECT_NAME} SHARED
     ${HEADERS}
     qt_connection.cpp                    # qt connection extension
+)
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        ${SNAPDEV_INCLUDE_DIRS}
+        ${Qt5Core_INCLUDE_DIRS}
+        ${Qt5Widgets_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}

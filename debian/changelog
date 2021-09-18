@@ -1,3 +1,17 @@
+eventdispatcher (1.1.37.0~bionic) bionic; urgency=high
+
+  * Added the cppprocess library.
+  * Added the signal_child class to specifically handle SIGCHLD.
+  * Prevent the communicator::run() function from being called more than once.
+  * Added the log-rotate command line options and corresponding code.
+  * Added support for a pipe mode (BIDIRECTIONAL, INPUT, OUTPUT).
+  * Allow for retrieving the other socket.
+  * Added a forked() function which only close the other socket.
+  * Added a couple of test files to verify the process library.
+  * Fixed some documentation.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Fri, 17 Sep 2021 21:52:49 -0700
+
 eventdispatcher (1.1.36.0~bionic) bionic; urgency=high
 
   * Fixed the tests to compile against new libexcept stack trace mode.

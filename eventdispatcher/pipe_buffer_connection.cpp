@@ -69,6 +69,21 @@ namespace ed
 
 
 
+/** \brief Create a pipe with a buffer.
+ *
+ * This function creates a pipe with a buffer which can then be used to
+ * manage lines of data. This version of the pipe forcibly uses the
+ * bidirectional pipe. This is so because the buffered and message
+ * classes are expected to be able to send and receive. The input
+ * or ouptut only pipes are expected to be used as replacements to the
+ * stdin, stdout, and stderr streams which are unidirectional.
+ */
+pipe_buffer_connection::pipe_buffer_connection()
+    : pipe_connection(pipe_t::PIPE_BIDIRECTIONAL)
+{
+}
+
+
 /** \brief Pipe connections accept writes.
  *
  * This function returns true when there is some data in the pipe

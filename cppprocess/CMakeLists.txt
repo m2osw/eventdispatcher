@@ -18,50 +18,16 @@
 # 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 ##
-## snaplogger daemon
+## snaplogger daemon project
 ##
-project(snaploggerd)
+project(cppprocess_project)
 
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
-    ${CMAKE_CURRENT_BINARY_DIR}/version.h
+include_directories(
+    ${PROJECT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-add_executable(${PROJECT_NAME}
-    main.cpp
-    network_component.cpp
-    snaploggerd.cpp
-    tcp_logger_connection.cpp
-    tcp_logger_server.cpp
-    udp_logger_server.cpp
-    utils.cpp
-    version.cpp
-)
-
-target_include_directories(${PROJECT_NAME}
-    PUBLIC
-        ${ADVGETOPT_INCLUDE_DIRS}
-        ${LIBADDR_INCLUDE_DIRS}
-        ${LIBEXCEPT_INCLUDE_DIRS}
-        ${SNAPLOGGER_INCLUDE_DIRS}
-)
-
-target_link_libraries(${PROJECT_NAME}
-    eventdispatcher
-    ${ADVGETOPT_LIBRARIES}
-    ${LIBADDR_LIBRARIES}
-    ${LIBEXCEPT_LIBRARIES}
-    ${SNAPLOGGER_LIBRARIES}
-)
-
-install(
-    TARGETS
-        ${PROJECT_NAME}
-
-    RUNTIME DESTINATION
-        sbin
-)
-
+add_subdirectory(cppprocess)
 
 
 # vim: ts=4 sw=4 et

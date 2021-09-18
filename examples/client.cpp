@@ -79,10 +79,11 @@ private:
 
 
 class my_client
+    : private ed::logrotate_extension
 {
 public:
     static constexpr int const  DEFAULT_PORT            = 3001;
-    static constexpr int const  DEFAULT_LOG_ROTATE_PORT = 3003;
+    static constexpr int const  DEFAULT_LOGROTATE_PORT  = 3003;
 
                                 my_client(int argc, char * argv []);
 
@@ -90,13 +91,10 @@ public:
     void                        quit();
 
 private:
-    void                        setup_logrotate_listener();
     void                        setup_connection();
 
-    advgetopt::getopt           f_opt;
+    advgetopt::getopt           f_opts;
     ed::communicator::pointer_t f_communicator = ed::communicator::pointer_t();
-    ed::logrotate_udp_messenger::pointer_t
-                                f_log_rotate_messenger = ed::logrotate_udp_messenger::pointer_t();
     client::pointer_t           f_client = client::pointer_t();
 };
 
@@ -124,28 +122,6 @@ constexpr advgetopt::option const g_options[] =
             , advgetopt::GETOPT_FLAG_REQUIRED>())
         , advgetopt::DefaultValue("127.0.0.1:3001")
         , advgetopt::Help("the host to connect to for IPC messages")
-    ),
-    advgetopt::define_option(
-          advgetopt::Name("log-rotate-listen")
-        , advgetopt::Flags(advgetopt::all_flags<
-              advgetopt::GETOPT_FLAG_GROUP_OPTIONS
-            , advgetopt::GETOPT_FLAG_COMMAND_LINE
-            , advgetopt::GETOPT_FLAG_ENVIRONMENT_VARIABLE
-            , advgetopt::GETOPT_FLAG_CONFIGURATION_FILE
-            , advgetopt::GETOPT_FLAG_REQUIRED>())
-        , advgetopt::DefaultValue("127.0.0.1:3003")
-        , advgetopt::Help("the host to listen on for the LOG message")
-    ),
-    advgetopt::define_option(
-          advgetopt::Name("log-rotate-secret")
-        , advgetopt::Flags(advgetopt::all_flags<
-              advgetopt::GETOPT_FLAG_GROUP_OPTIONS
-            , advgetopt::GETOPT_FLAG_COMMAND_LINE
-            , advgetopt::GETOPT_FLAG_ENVIRONMENT_VARIABLE
-            , advgetopt::GETOPT_FLAG_CONFIGURATION_FILE
-            , advgetopt::GETOPT_FLAG_REQUIRED>())
-        , advgetopt::DefaultValue("")
-        , advgetopt::Help("a secret code to be used along the log-rotate-listen option; use empty to not have to use a secret code")
     ),
     advgetopt::end_options()
 };
@@ -312,48 +288,28 @@ void client::msg_bye(ed::message & msg)
 
 
 my_client::my_client(int argc, char * argv [])
-    : f_opt(g_options_environment)
+    : logrotate_extension(
+          f_opts
+        , "127.0.0.1"
+        , DEFAULT_LOGROTATE_PORT)
+    , f_opts(g_options_environment)
     , f_communicator(ed::communicator::instance())	// see the event dispatcher project
 {
-    snaplogger::add_logger_options(f_opt);
-    f_opt.finish_parsing(argc, argv);
-    snaplogger::process_logger_options(f_opt, "/etc/ve/logger");
+    snaplogger::add_logger_options(f_opts);
+    add_logrotate_options();
+    f_opts.finish_parsing(argc, argv);
+    snaplogger::process_logger_options(f_opts, "/etc/ve/logger");
+    process_logrotate_options();
 
-    setup_logrotate_listener();
     setup_connection();
 }
 
 
-void my_client::setup_logrotate_listener()
-{
-    std::string const log_rotate_listen(f_opt.get_string("log-rotate-listen"));
-    if(log_rotate_listen.empty())
-    {
-        // this should never happen since we have a default
-        //
-        SNAP_LOG_FATAL
-            << "the \"log_rotate_listen=...\" must be defined."
-            << SNAP_LOG_SEND;
-        throw std::runtime_error("the \"log_rotate_listen=...\" must be defined.");
-    }
-
-    addr::addr const log_rotate_addr(addr::string_to_addr(
-          log_rotate_listen
-        , "127.0.0.1"
-        , DEFAULT_LOG_ROTATE_PORT
-        , "udp"));
-
-    f_log_rotate_messenger = std::make_shared<ed::logrotate_udp_messenger>(
-          log_rotate_addr
-        , f_opt.get_string("log-rotate-secret"));
-
-    f_communicator->add_connection(f_log_rotate_messenger);
-}
 
 
 void my_client::setup_connection()
 {
-    std::string const server(f_opt.get_string("server"));
+    std::string const server(f_opts.get_string("server"));
     if(server.empty())
     {
         // this should never happen since we have a default
@@ -385,7 +341,7 @@ int my_client::run()
 
 void my_client::quit()
 {
-    f_communicator->remove_connection(f_log_rotate_messenger);
+    disconnect_logrotate_messenger();
 }
 
 

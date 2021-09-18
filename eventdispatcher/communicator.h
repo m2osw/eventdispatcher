@@ -53,6 +53,7 @@ public:
     bool                                add_connection(connection::pointer_t connection);
     bool                                remove_connection(connection::pointer_t connection);
     void                                set_force_sort(bool status = true);
+    bool                                is_running() const;
 
     virtual bool                        run();
 
@@ -64,6 +65,7 @@ private:
 
     connection::vector_t                f_connections = connection::vector_t();
     bool                                f_force_sort = true;
+    bool                                f_running = false;
 };
 #pragma GCC diagnostic pop
 

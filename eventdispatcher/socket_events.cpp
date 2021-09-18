@@ -13,30 +13,22 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
- * \brief Implementation of the Snap Communicator class.
+ * \brief Implementation of the socket events class.
  *
- * This class wraps the C poll() interface in a C++ object with many types
- * of objects:
+ * The Linux kernel offers an interface to listen to the network stack
+ * called NETLINK. This can be used to detect the current state of the stack
+ * without having to read the /proc file system. It is expected to be faster
+ * than the other methods, although having a permanent TCP connection is
+ * possibly even faster than using this class.
  *
- * \li Server Connections; for software that want to offer a port to
- *     which clients can connect to; the server will call accept()
- *     once a new client connection is ready; this results in a
- *     Server/Client connection object
- * \li Client Connections; for software that want to connect to
- *     a server; these expect the IP address and port to connect to
- * \li Server/Client Connections; for the server when it accepts a new
- *     connection; in this case the server gets a socket from accept()
- *     and creates one of these objects to handle the connection
- *
- * Using the poll() function is the easiest and allows us to listen
- * on pretty much any number of sockets (on my server it is limited
- * at 16,768 and frankly over 1,000 we probably will start to have
- * real slowness issues on small VPN servers.)
+ * We can make use of a single NETLINK, so we have an internal class which
+ * is doing the heavy work. The socket_events connections you create actually
+ * listen through that internal class.
  */
 
 
@@ -47,10 +39,6 @@
 #include    "eventdispatcher/communicator.h"
 #include    "eventdispatcher/exception.h"
 #include    "eventdispatcher/timer.h"
-
-// #include    "eventdispatcher/tcp_bio_client.h"
-// #include    "eventdispatcher/tcp_server_client_message_connection.h"
-// #include    "eventdispatcher/thread_done_signal.h"
 
 
 // snaplogger lib
@@ -65,10 +53,8 @@
 
 // cppthread lib
 //
-// #include    <cppthread/exception.h>
 #include    <cppthread/guard.h>
 #include    <cppthread/mutex.h>
-// #include    <cppthread/thread.h>
 
 
 // libaddr lib
@@ -84,7 +70,6 @@
 
 // C lib
 //
-// #include    <sys/socket.h>
 #include    <linux/inet_diag.h>
 #include    <linux/netlink.h>
 #include    <linux/sock_diag.h>
@@ -106,8 +91,17 @@ namespace
 
 
 
-#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Weff-c++"
+/** \brief Internal structure to hold socket_events objects.
+ *
+ * Each socket_events object linked to the socket_listener are saved
+ * in this structure.
+ *
+ * \todo
+ * Look into getting a shared pointer instead of the bare pointer to
+ * the socket_events object. The idea being that the socket_events is
+ * not ready for a shared pointer on construction. So I'm not too sure
+ * how to handle that one.
+ */
 struct socket_evt
 {
     typedef std::shared_ptr<socket_evt>     pointer_t;
@@ -116,10 +110,18 @@ struct socket_evt
     bool                        f_listening = false;
     socket_events *             f_socket_events = nullptr;
 };
-#pragma GCC diagnostic pop
 
 
 
+
+/** \brief Internal class used to handle the NETLINK socket.
+ *
+ * It is not a good idea to have many connections to NETLINK when it is
+ * possible to have just one which allows us to send one request in one
+ * message to get the status of all the sockets we are listening to.
+ * For this reason, we have a single internal class listening to the
+ * NETLINK messages.
+ */
 class socket_listener
     : public timer
 {
@@ -156,9 +158,28 @@ private:
 };
 
 
+/** \brief Instance pointer of the socket_listener object.
+ *
+ * This pointer holds the socket_listener instance we use with all the
+ * socket_events objects.
+ */
 socket_listener::pointer_t      g_socket_listener = socket_listener::pointer_t();
 
 
+/** \brief Initialize the socket_listener.
+ *
+ * To create a socket_listener, you have to call the instance() function.
+ * This function, though, is the one that actually creates the instance.
+ * It opens a link to the NETLINK system of the Linux kernel. It also
+ * increases the size of that connection buffer to make sure we can handle
+ * all our messages in one go.
+ *
+ * \exception event_dispatcher_runtime_error
+ * If the opening of the AF_NETLINK socket fails, then this exception is
+ * raised.
+ *
+ * \param[in] socket_mutex  The mutex to use to lock various functions.
+ */
 socket_listener::socket_listener(cppthread::mutex & socket_mutex)
     : timer(1'000'000)
     , f_socket_mutex(socket_mutex)
@@ -175,7 +196,7 @@ socket_listener::socket_listener(cppthread::mutex & socket_mutex)
     // increase our changes to avoid memory issues
     //
     int const sndbuf(32 * 1'024);
-	if(setsockopt(
+    if(setsockopt(
               f_netlink_socket.get()
             , SOL_SOCKET
             , SO_SNDBUF
@@ -185,12 +206,12 @@ socket_listener::socket_listener(cppthread::mutex & socket_mutex)
         SNAP_LOG_WARNING
             << "the SO_SNDBUF failed against the NETLINK socket."
             << SNAP_LOG_SEND;
-	}
+    }
 
     // enough space to support up to about 1,000 messages max.
     //
     int const rcvbuf(RECEIVE_BUFFER_SIZE);
-	if(setsockopt(
+    if(setsockopt(
               f_netlink_socket.get()
             , SOL_SOCKET
             , SO_RCVBUF
@@ -200,7 +221,7 @@ socket_listener::socket_listener(cppthread::mutex & socket_mutex)
         SNAP_LOG_WARNING
             << "the SO_RCVBUF failed against the NETLINK socket."
             << SNAP_LOG_SEND;
-	}
+    }
 
 #if 0
     struct sockaddr_nl addr = {};
@@ -222,11 +243,23 @@ socket_listener::socket_listener(cppthread::mutex & socket_mutex)
 }
 
 
+/** \brief Handle the virtual table.
+ *
+ * This destructor is here primarily to handle the virtual table requirements.
+ */
 socket_listener::~socket_listener()
 {
 }
 
 
+/** \brief Retrieve the instance of the socket_listener.
+ *
+ * You have a maximum of one socket_listener per process. It would be a
+ * waste to have more than that.
+ *
+ * \note
+ * We do not currently offer a way to ever delete the instance.
+ */
 socket_listener::pointer_t socket_listener::instance()
 {
     static cppthread::mutex g_mutex;
@@ -244,6 +277,14 @@ socket_listener::pointer_t socket_listener::instance()
 }
 
 
+/** \brief Add a socket_events object to our list.
+ *
+ * The listener manages a list of socket_events objects. This function is
+ * used to add a socket_events object to that list. Once added, the object
+ * receives socket events (i.e. calls to the process_listening() function).
+ *
+ * \param[in] evts  The events we want to listen to.
+ */
 void socket_listener::add_socket_events(socket_events * evts)
 {
     if(!evts->get_addr().is_ipv4())
@@ -262,6 +303,15 @@ void socket_listener::add_socket_events(socket_events * evts)
 }
 
 
+/** \brief Signal the loss of a connection.
+ *
+ * Call this function whenever the client loses the connection to the
+ * server. This tells the socket_listener that this client is not
+ * connected anymore and thus that we should again listen for its
+ * corresponding address and port when listening for socket events.
+ *
+ * \param[in] evts  The events we want to listen to again.
+ */
 void socket_listener::lost_connection(socket_events * evts)
 {
     cppthread::guard g(f_socket_mutex);
@@ -285,6 +335,15 @@ void socket_listener::lost_connection(socket_events * evts)
 }
 
 
+/** \brief Remove a socket_events object from our list.
+ *
+ * The listener manages a list of socket_events objects. This function is
+ * used to remove a socket_events object from that list. Once removed,
+ * the object will stop receiving events (i.e. calls to the process_listening()
+ * function).
+ *
+ * \param[in] evts  The events we were listening to.
+ */
 void socket_listener::remove_socket_events(socket_events * evts)
 {
     cppthread::guard g(f_socket_mutex);
@@ -310,14 +369,28 @@ void socket_listener::remove_socket_events(socket_events * evts)
 }
 
 
+/** \brief Check whether this socket_listener is a reader.
+ *
+ * A socket_listener is always a reader so this function always returns
+ * true. When no messages are sent to us, the poll() doesn't return, so
+ * it is safe to always mark this object as a writer.
+ *
+ * \return Always true.
+ */
 bool socket_listener::is_reader() const
 {
-    cppthread::guard g(f_socket_mutex);
-
     return true;
 }
 
 
+/** \brief Check whether this socket_listener is a writer.
+ *
+ * The socket listener is made a writer whenever listening for a "socket
+ * open for connections" event. If no one is listening, then this function
+ * returns false.
+ *
+ * \return true if there is at least one user listening for a socket to appear.
+ */
 bool socket_listener::is_writer() const
 {
     cppthread::guard g(f_socket_mutex);
@@ -334,12 +407,28 @@ bool socket_listener::is_writer() const
 }
 
 
+/** \brief Get the NETLINK socket.
+ *
+ * This function return the socket connecting us to the NETLINK kernel
+ * environment. It is always expected to be connected so it should never
+ * return -1. If the connection fails (in the constructor), then the
+ * socket_listener object doesn't get created and therefore this function
+ * is not likely to ever return anything else than a valid socket descriptor.
+ *
+ * \return The NETLINK socket descriptor.
+ */
 int socket_listener::get_socket() const
 {
     return f_netlink_socket.get();
 }
 
 
+/** \brief Process a timeout.
+ *
+ * This function is used to check whether we need the listener to be
+ * enabled or not. If no one is listening for more socket status changes,
+ * then it puts the socket listener in the \em disabled state.
+ */
 void socket_listener::process_timeout()
 {
     cppthread::guard g(f_socket_mutex);
@@ -358,6 +447,19 @@ void socket_listener::process_timeout()
 }
 
 
+/** \brief Process an incoming message.
+ *
+ * The NTLINK system sends packets to us. Each packet represents one message.
+ * This function reads those messages one by one and processes them.
+ *
+ * The event of interest is SOCK_DIAG_BY_FAMILY. This includes an IP address
+ * and a port which are checked against the IP address and port of each of
+ * the socket_events object. If there is a match, then the
+ * socket_events::process_listening() function gets called.
+ *
+ * The function returns once it receives the NLMSG_DONE message or the last
+ * recvmsg() call returns 0, and of course on errors.
+ */
 void socket_listener::process_read()
 {
     sockaddr_nl nladdr = {};
@@ -557,7 +659,7 @@ void socket_listener::process_write()
         throw event_dispatcher_implementation_error(
                   "somehow the number of requests counted ("
                 + std::to_string(count)
-                + ") did not match the number of request created ("
+                + ") did not match the number of requests created ("
                 + std::to_string(idx)
                 + ").");
     }
@@ -582,6 +684,11 @@ void socket_listener::process_write()
 }
 
 
+/** \brief Forward the error to the socket-events objects.
+ *
+ * This function forwards the error to all the socket-events objects
+ * currently attached to the socket_listener object.
+ */
 void socket_listener::process_error()
 {
     cppthread::guard g(f_socket_mutex);
@@ -597,6 +704,11 @@ void socket_listener::process_error()
 }
 
 
+/** \brief Forward the HUP signal to the socket-events objects.
+ *
+ * This function forwards the HUP to all the socket-events objects currently
+ * attached to the socket_listener object.
+ */
 void socket_listener::process_hup()
 {
     cppthread::guard g(f_socket_mutex);
@@ -611,6 +723,11 @@ void socket_listener::process_hup()
 }
 
 
+/** \brief Forward the invalid error to the socket-events objects.
+ *
+ * This function forwards the invalid error to all the socket-events objects
+ * currently attached to the socket_listener object.
+ */
 void socket_listener::process_invalid()
 {
     cppthread::guard g(f_socket_mutex);

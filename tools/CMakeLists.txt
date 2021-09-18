@@ -26,8 +26,9 @@ add_executable(${PROJECT_NAME}
     ed_signal.cpp
 )
 
-include_directories(
-    ${ADVGETOPT_INCLUDE_DIRS}
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        ${ADVGETOPT_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}

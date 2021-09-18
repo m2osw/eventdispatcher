@@ -45,7 +45,6 @@ include_directories(
 
 add_subdirectory(eventdispatcher   )
 add_subdirectory(eventdispatcher_qt)
-add_subdirectory(tests             )
 add_subdirectory(doc               )
 add_subdirectory(cmake             )
 add_subdirectory(tools             )
@@ -53,5 +52,10 @@ add_subdirectory(examples          )
 
 # Extension to support a snaplogger server (remote logs)
 add_subdirectory(snaplogger        )
+
+# Extension to support a cppprocess implementation
+add_subdirectory(cppprocess        )
+
+add_subdirectory(tests             )
 
 # vim: ts=4 sw=4 et

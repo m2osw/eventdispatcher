@@ -69,8 +69,9 @@ add_library(${PROJECT_NAME} SHARED
                 pipe_message_connection.cpp
 
         signal.cpp
+            signal_child.cpp
+            signal_profiler.cpp
         signal_handler.cpp
-        signal_profiler.cpp
 
         socket_events.cpp
 

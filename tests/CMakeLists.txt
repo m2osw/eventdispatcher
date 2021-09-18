@@ -34,9 +34,17 @@ if(Catch2_FOUND)
         catch_main.cpp
 
         catch_message.cpp
+        catch_process.cpp
+        catch_process_info.cpp
         catch_unix_dgram.cpp
         catch_unix_stream.cpp
         catch_version.cpp
+    )
+
+    target_include_directories(${PROJECT_NAME}
+        PUBLIC
+            ${CMAKE_SOURCE_DIR}/cppprocess
+            ${CMAKE_BINARY_DIR}/cppprocess
     )
 
     target_include_directories(${PROJECT_NAME}
@@ -50,6 +58,7 @@ if(Catch2_FOUND)
 
     target_link_libraries(${PROJECT_NAME}
         eventdispatcher
+        cppprocess
     )
 
     add_test(unittests ${PROJECT_NAME})

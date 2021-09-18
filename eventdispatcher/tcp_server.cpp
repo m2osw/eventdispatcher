@@ -361,7 +361,11 @@ void tcp_server::set_close_on_exec(bool yes)
  * If you prevent SIGCHLD from stopping your code, you may want to allow it
  * when calling this function (that is, if you're interested in getting that
  * information immediately, otherwise it is cleaner to always block those
- * signals.)
+ * signals).
+ * \note
+ * For SIGCHLD, you may want to consider using the signal_child class which
+ * takes care of the `waitpid()` and calls your callback at the time your
+ * child process dies.
  *
  * \note
  * DO NOT use the shutdown() call since we may end up forking and using
@@ -386,6 +390,7 @@ int tcp_server::accept(int const max_wait_ms)
         // if the close is interrupted, make sure we try again otherwise
         // we could lose that stream until next restart (this could happen
         // if you have SIGCHLD)
+        //
         if(close(f_accepted_socket) == -1)
         {
             if(errno == EINTR)

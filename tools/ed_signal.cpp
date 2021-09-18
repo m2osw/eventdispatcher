@@ -28,6 +28,7 @@
 // eventdispatcher lib
 //
 #include    "eventdispatcher/communicator.h"
+#include    "eventdispatcher/signal_handler.h"
 #include    "eventdispatcher/tcp_client_message_connection.h"
 #include    "eventdispatcher/udp_server_message_connection.h"
 #include    "eventdispatcher/version.h"
@@ -406,6 +407,8 @@ void ed_signal::done()
 
 int main(int argc, char * argv[])
 {
+    ed::signal_handler::create_instance();
+
     try
     {
         ed_signal s(argc, argv);

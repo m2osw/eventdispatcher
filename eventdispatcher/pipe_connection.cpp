@@ -46,6 +46,11 @@
 #include    "eventdispatcher/exception.h"
 
 
+// C++ lib
+//
+#include    <iostream>
+
+
 // C lib
 //
 #include    <unistd.h>
@@ -58,7 +63,6 @@
 
 
 
-
 namespace ed
 {
 
@@ -66,33 +70,88 @@ namespace ed
 
 /** \brief Initializes the pipe connection.
  *
- * This function creates the pipes that are to be used to connect
- * two processes (these are actually Unix sockets). These are
- * used whenever you fork() so the parent process can very quickly
- * communicate with the child process using complex messages just
- * like you do between services and Snap Communicator.
+ * This function creates pipes to quickly communicate between two
+ * processes created with a fork() or fork() + execve().
+ *
+ * The function supports three types of pipes:
+ *
+ * * PIPE_BIDIRECTIONAL
+ *
+ *     Create Unix sockets that can be used to send and receive messages
+ *     between two processes.
+ *
+ * * PIPE_CHILD_INPUT
+ *
+ *     A pipe for the input stream of a child. This type of pipe is to
+ *     be used as a replacement to the stdin of a child process. This is
+ *     used in the cppprocess library when creating a fork() + execve()
+ *     process.
+ *
+ * * PIPE_CHILD_OUTPUT
+ *
+ *     A pipe for the output stream and error stream of a child. This
+ *     type of pipe is to be used as a replacement to the stdout and
+ *     stderr of a child process. This is used in the cppprocess when
+ *     creating a fork() + execve() process.
+ *
+ * To save file descriptors (1 or 2), it is suggested that you
+ * call the forked() function once you called fork(). It will
+ * take care of closing the descriptors used by the other side
+ * (those you do not need on your side).
  *
  * \warning
- * The sockets are opened in a non-blocking state. However, they are
- * not closed when you call fork() since they are to be used across
- * processes.
+ * The file descriptors are opened in a non-blocking state. However, they
+ * are not closed when you call fork() since they are to be used across
+ * processes. If you want to do a fork() + execve(), duplicating the
+ * necessary file descriptors and then call close().
  *
  * \warning
- * You need to create a new pipe_connection each time you want
- * to create a new child.
+ * You need to create a new pipe_connection each time you want to create
+ * a new child with fork(). If you want to create a a new process with
+ * fork() + execve(), you want to create three pipe_connection, one per
+ * stream (stdin, stdout, stderr). You can always create more if necessary
+ * in your situation.
  *
  * \exception event_dispatcher_initialization_error
- * This exception is raised if the pipes (socketpair) cannot be created.
+ * This exception is raised if the pipes (socketpair, pipe) cannot be
+ * created.
+ *
+ * \param[in] type  The type of pipe to create.
+ *
+ * \sa forked()
  */
-pipe_connection::pipe_connection()
+pipe_connection::pipe_connection(pipe_t type)
+    : f_type(type)
+    , f_parent(getpid())
 {
-    if(socketpair(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK, 0, f_socket) != 0)
+    switch(type)
     {
-        // pipe could not be created
-        throw event_dispatcher_initialization_error("somehow the pipes used for a two way pipe connection could not be created.");
-    }
+    case pipe_t::PIPE_BIDIRECTIONAL:
+        if(socketpair(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK, 0, f_socket) != 0)
+        {
+            // pipe could not be created
+            throw event_dispatcher_initialization_error("somehow the AF_LOCAL pipes used for a two way pipe connection could not be created.");
+        }
+        break;
 
-    f_parent = getpid();
+    case pipe_t::PIPE_CHILD_INPUT:
+        if(pipe(f_socket) != 0)
+        {
+            // pipe could not be created
+            throw event_dispatcher_initialization_error("somehow the FIFO pipes used for a one way pipe (child input) connection could not be created.");
+        }
+        std::swap(f_socket[0], f_socket[1]);
+        break;
+
+    case pipe_t::PIPE_CHILD_OUTPUT:
+        if(pipe(f_socket) != 0)
+        {
+            // pipe could not be created
+            throw event_dispatcher_initialization_error("somehow the FIFO pipes used for a one way pipe (child output) connection could not be created.");
+        }
+        break;
+
+    }
 }
 
 
@@ -101,10 +160,25 @@ pipe_connection::pipe_connection()
  * The destructor ensures that the pipes get closed.
  *
  * They may already have been closed if a broken pipe was detected.
+ *
+ * \sa close()
  */
 pipe_connection::~pipe_connection()
 {
     close();
+}
+
+
+/** \brief Get the type of pipe connections.
+ *
+ * This function returns the type of this connection, as specified
+ * on the contructor.
+ *
+ * \return The type of the pipe.
+ */
+pipe_t pipe_connection::type() const
+{
+    return f_type;
 }
 
 
@@ -118,13 +192,35 @@ pipe_connection::~pipe_connection()
  * Just like the system read(2) function, errno is set to the error
  * that happened when the function returns -1.
  *
+ * The function returns an error (-1, errno = EBAD) if you try to
+ * read from a read-only stream.
+ *
  * \param[in] buf  A pointer to a buffer of data.
  * \param[in] count  The number of bytes to read from the pipe connection.
  *
  * \return The number of bytes read from this pipe socket, or -1 on errors.
+ *
+ * \sa write()
  */
 ssize_t pipe_connection::read(void * buf, size_t count)
 {
+    if(f_parent == getpid())
+    {
+        if(f_type == pipe_t::PIPE_CHILD_INPUT)
+        {
+            errno = EBADF;
+            return -1;
+        }
+    }
+    else
+    {
+        if(f_type == pipe_t::PIPE_CHILD_OUTPUT)
+        {
+            errno = EBADF;
+            return -1;
+        }
+    }
+
     int const s(get_socket());
     if(s == -1)
     {
@@ -145,13 +241,35 @@ ssize_t pipe_connection::read(void * buf, size_t count)
  * Just like the system write(2) function, errno is set to the error
  * that happened when the function returns -1.
  *
+ * The function returns an error (-1, errno = EBAD) if you try to
+ * write to a read-only stream.
+ *
  * \param[in] buf  A pointer to a buffer of data.
  * \param[in] count  The number of bytes to write to the pipe connection.
  *
  * \return The number of bytes written to this pipe socket, or -1 on errors.
+ *
+ * \sa read()
  */
 ssize_t pipe_connection::write(void const * buf, size_t count)
 {
+    if(f_parent == getpid())
+    {
+        if(f_type == pipe_t::PIPE_CHILD_OUTPUT)
+        {
+            errno = EBADF;
+            return -1;
+        }
+    }
+    else
+    {
+        if(f_type == pipe_t::PIPE_CHILD_INPUT)
+        {
+            errno = EBADF;
+            return -1;
+        }
+    }
+
     int const s(get_socket());
     if(s == -1)
     {
@@ -166,6 +284,35 @@ ssize_t pipe_connection::write(void const * buf, size_t count)
 }
 
 
+/** \brief Close the other side sockets.
+ *
+ * This function closes the sockets not used by this side of the pipe.
+ * This is useful to clean up file descriptors that we otherwise endup
+ * to never use until this object is destroyed.
+ *
+ * Make sure to call this function only after you called the fork()
+ * function. Calling this too early (before the fork() call) would
+ * mean that you'd end up closing the file descriptors of the other
+ * side before the other side received the socket information.
+ *
+ * The function can safely be called multiple times.
+ *
+ * \note
+ * To close both sides, call the close() function.
+ *
+ * \sa close()
+ */
+void pipe_connection::forked()
+{
+    int const idx(f_parent == getpid() ? 1 : 0);
+    if(f_socket[idx] != -1)
+    {
+        ::close(f_socket[idx]);
+        f_socket[idx] = -1;
+    }
+}
+
+
 /** \brief Close the sockets.
  *
  * This function closes the pair of sockets managed by this
@@ -174,16 +321,50 @@ ssize_t pipe_connection::write(void const * buf, size_t count)
  * After this call, the pipe connection is closed and cannot be
  * used anymore. The read and write functions will return immediately
  * if called.
+ *
+ * The function can safely be called multiple times. It is also safe
+ * to call the forked() function and then the close() function.
+ *
+ * \sa forked()
  */
 void pipe_connection::close()
 {
     if(f_socket[0] != -1)
     {
+std::cerr << "--- close pipe 0!\n";
         ::close(f_socket[0]);
-        ::close(f_socket[1]);
         f_socket[0] = -1;
+    }
+
+    if(f_socket[1] != -1)
+    {
+std::cerr << "--- close pipe 1!\n";
+        ::close(f_socket[1]);
         f_socket[1] = -1;
     }
+}
+
+
+/** \brief This function returns the pipe of the other side.
+ *
+ * In some cases, it can be practical to find out the socket from the other
+ * side of the pipe. This function returns that other socket.
+ *
+ * \note
+ * The main reason for this function is to be able to extract the other
+ * socket and create the necessary input/output/error stream in a child
+ * process and close it.
+ *
+ * \return A pipe descriptor to listen on with poll().
+ */
+int pipe_connection::get_other_socket() const
+{
+    if(f_parent == getpid())
+    {
+        return f_socket[1];
+    }
+
+    return f_socket[0];
 }
 
 
@@ -196,6 +377,21 @@ void pipe_connection::close()
  */
 bool pipe_connection::is_reader() const
 {
+    if(f_parent == getpid())
+    {
+        if(f_type == pipe_t::PIPE_CHILD_INPUT)
+        {
+            return false;
+        }
+    }
+    else
+    {
+        if(f_type == pipe_t::PIPE_CHILD_OUTPUT)
+        {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -223,8 +419,27 @@ int pipe_connection::get_socket() const
 }
 
 
+/** \var pipe_t::PIPE_BIDIRECTIONAL
+ * \brief Used to create a bidirectional pipe.
+ *
+ * The pipe is bidirectional. You can read and write to it.
+ */
 
 
+/** \var pipe_t::PIPE_CHILD_INPUT
+ * \brief Used to create an input stream for a child.
+ *
+ * This type defines a pipe where the parent writes to the pipe and the
+ * child reads from the pipe.
+ */
+
+
+/** \var pipe_t::PIPE_CHILD_OUTPUT
+ * \brief Used to create an output stream for a child.
+ *
+ * This type defines a pipe where the parent reads from the pipe and the
+ * child writes to the pipe.
+ */
 
 
 

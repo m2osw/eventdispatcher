@@ -37,6 +37,14 @@ install(
 
 install(
     FILES
+        CppProcessConfig.cmake
+
+    DESTINATION
+        share/cmake/CppProcess
+)
+
+install(
+    FILES
         SnapLoggerNetworkConfig.cmake
 
     DESTINATION

@@ -44,6 +44,11 @@
  * a pointer to the signal_handler object, so you can save that pointer
  * and make tweaks immediately after (see examples of tweaks below).
  *
+ * Note that it is possible to call ed::signal_handler::get_instance()
+ * and never call the ed::signal_handler::create_instance() function.
+ * However, the create function will setup defaults in the handler which
+ * makes it easy to start with the expected state.
+ *
  * In sub-functions, you may tweak the setup by doing various calls such as:
  *
  * \code

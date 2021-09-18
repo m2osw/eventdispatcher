@@ -54,7 +54,8 @@
  *     };
  * \endcode
  *
- * Instantiate it in your constructor as in:
+ * Instantiate it in your constructor as in: (TODO: this was moved to the
+ * logrotate_extension class, update these docs!)
  *
  * \code
  *     std::string const logrotate_udp_listen(f_opt.get_string("logrotate-udp-listen"));
@@ -101,6 +102,13 @@
 #include    <libaddr/addr.h>
 
 
+// advgetopt lib
+//
+#include    <advgetopt/advgetopt.h>
+
+
+
+
 namespace ed
 {
 
@@ -134,6 +142,27 @@ public:
 
 private:
     dispatcher_pointer_t    f_dispatcher = dispatcher_pointer_t();
+};
+
+
+class logrotate_extension
+{
+public:
+                            logrotate_extension(
+                                      advgetopt::getopt & opts
+                                    , std::string const & default_address
+                                    , int default_port);
+
+    void                    add_logrotate_options();
+    void                    process_logrotate_options();
+    void                    disconnect_logrotate_messenger();
+
+private:
+    advgetopt::getopt &     f_opts;
+    std::string             f_default_address = std::string();
+    int                     f_default_port = -1;
+    ed::logrotate_udp_messenger::pointer_t
+                            f_logrotate_messenger = ed::logrotate_udp_messenger::pointer_t();
 };
 
 

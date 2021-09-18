@@ -36,6 +36,9 @@ namespace SNAP_CATCH2_NAMESPACE
 
 
 
+extern char ** g_argv;
+
+
 
 inline char32_t rand_char(bool full_range = false)
 {

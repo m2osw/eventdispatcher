@@ -61,6 +61,11 @@
 #include    <cppthread/thread.h>
 
 
+// snapdev lib
+//
+#include    <snapdev/safe_variable.h>
+
+
 // snaplogger lib
 //
 #include    <snaplogger/message.h>
@@ -242,6 +247,7 @@ bool communicator::remove_connection(connection::pointer_t connection)
 
     connection->connection_removed();
 
+// TODO: make this a flag so we can turn it on without having to recompile
 #if 0
 #ifdef _DEBUG
 std::for_each(
@@ -282,11 +288,26 @@ void communicator::set_force_sort(bool status)
 }
 
 
+/** \brief Check whether the run() function is still going.
+ *
+ * The f_running internal flag is set to true while within the run()
+ * function. This function tells you whether you already called the
+ * run() function and are running within a callback or you are before
+ * or after the call.
+ *
+ * \return true if the run() function is still running.
+ */
+bool communicator::is_running() const
+{
+    return f_running;
+}
+
+
 /** \brief Run until all connections are removed.
  *
- * This function "blocks" until all the events added to this
- * communicator instance are removed. Until then, it
- * wakes up and run callback functions whenever an event occurs.
+ * This function "blocks" until all the connections added to this
+ * communicator instance are removed. Until then, it wakes
+ * up and run callback functions whenever an event occurs.
  *
  * In other words, you want to add_connection() before you call
  * this function otherwise the function returns immediately.
@@ -295,13 +316,27 @@ void communicator::set_force_sort(bool status)
  * run some code once in a while, you may just use a timeout
  * event and process your repetitive events that way.
  *
+ * \note
+ * Calling exit() or a similar function from within a callback
+ * is not adviced, although it may work in most cases, it is
+ * much better/cleaner to go through your list of connections
+ * and remove them all once you are ready to quit. This also
+ * allows for a 100% valid shutdown procedure.
+ *
  * \return true if the loop exits because the list of connections is empty.
  */
 bool communicator::run()
 {
-    // the loop promises to exit once the even_base object has no
-    // more connections attached to it
-    //
+    if(f_running)
+    {
+        SNAP_LOG_FATAL
+            << "communicator::run(): recursively called from within a callback."
+            << SNAP_LOG_SEND;
+        throw event_dispatcher_recursive_call("communicator::run(): recursively called from within a callback.");
+    }
+
+    snap::safe_variable running(f_running, true);
+
     std::vector<bool> enabled;
     std::vector<struct pollfd> fds;
     f_force_sort = true;

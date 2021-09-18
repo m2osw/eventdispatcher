@@ -41,16 +41,26 @@ namespace ed
 
 
 
+enum class pipe_t
+{
+    PIPE_BIDIRECTIONAL,     // use an AF_UNIX / AF_LOCAL
+    PIPE_CHILD_INPUT,       // FIFO, parent writes/child reads
+    PIPE_CHILD_OUTPUT,      // FIFO, child writes/parent reads
+};
+
+
 class pipe_connection
     : public connection
 {
 public:
     typedef std::shared_ptr<pipe_connection>    pointer_t;
+    typedef std::vector<pointer_t>              vector_t;
 
-                                pipe_connection();
+                                pipe_connection(pipe_t type = pipe_t::PIPE_BIDIRECTIONAL);
     virtual                     ~pipe_connection() override;
 
-    void                        close();
+    pipe_t                      type() const;
+    int                         get_other_socket() const;
 
     // connection implementation
     virtual bool                is_reader() const override;
@@ -59,8 +69,11 @@ public:
     // new callbacks
     virtual ssize_t             read(void * buf, size_t count);
     virtual ssize_t             write(void const * buf, size_t count);
+    virtual void                forked();
+    virtual void                close();
 
 private:
+    pipe_t                      f_type = pipe_t::PIPE_BIDIRECTIONAL;
     pid_t                       f_parent = -1;  // the process that created these pipes (read/write to 0 if getpid() == f_parent, read/write to 1 if getpid() != f_parent)
     int                         f_socket[2] = { -1, -1 };    // socket pair
 };
