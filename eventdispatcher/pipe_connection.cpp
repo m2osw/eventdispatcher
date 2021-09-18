@@ -331,14 +331,12 @@ void pipe_connection::close()
 {
     if(f_socket[0] != -1)
     {
-std::cerr << "--- close pipe 0!\n";
         ::close(f_socket[0]);
         f_socket[0] = -1;
     }
 
     if(f_socket[1] != -1)
     {
-std::cerr << "--- close pipe 1!\n";
         ::close(f_socket[1]);
         f_socket[1] = -1;
     }
