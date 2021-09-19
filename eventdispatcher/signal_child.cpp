@@ -28,6 +28,7 @@
 //
 #include    "eventdispatcher/signal_child.h"
 
+#include    "eventdispatcher/communicator.h"
 #include    "eventdispatcher/exception.h"
 
 
@@ -44,6 +45,7 @@
 // snapdev lib
 //
 #include    <snapdev/not_used.h>
+#include    <snapdev/safe_variable.h>
 
 
 // C++ lib
@@ -387,6 +389,85 @@ signal_child::pointer_t signal_child::get_instance()
 }
 
 
+/** \brief Add this connection to the communicator.
+ *
+ * \note
+ * You should not call this function. It automatically gets called when
+ * you add a listener (see add_listener() in this class). After all, you
+ * do not need to listen to anything until you ask for it and similarly
+ * the remove gets called automatically when the listener gets removed
+ * (which again is automatic once the child dies).
+ *
+ * This function adds this connection to the communicator. This function can
+ * be called any number of times. It will increase a counter which will
+ * then be decremented by the remove_connection().
+ *
+ * This is used because the communicator::add_connection() will not add the
+ * signal_child connection more than once because many different functions
+ * and libraries may need to add it and these would not know whether to
+ * add or remove the connection and in the end we want it to be properly
+ * accounted for.
+ *
+ * You actually will not be able to add it directly using the
+ * communicator::add_connection(). It will throw if you try to do that.
+ * Instead, you must call this function.
+ */
+void signal_child::add_connection()
+{
+    if(f_count == 0)
+    {
+        // add the connection to the communicator
+        //
+        snap::safe_variable safe(f_adding_to_communicator, true, false);
+        ed::communicator::instance()->add_connection(shared_from_this());
+    }
+    ++f_count;
+}
+
+
+/** \brief Remove the connection from the communicator.
+ *
+ * \note
+ * You do not need to call this function. The listener callback function
+ * gets called and assuming the child died (i.e. a child that received a
+ * signal that killed it or one that called _exit() to terminate) this
+ * function gets called automatically.
+ *
+ * You must call this function to remove the signal child for each time you
+ * added it with the corresponding add_connection().
+ *
+ * This function is used along the add_connection() because the basic
+ * add & remove functions of the communicator do not allow you to add
+ * the same connection more than once (which makes sense), yet the signal
+ * may be added and removed by many different systems. The means it would
+ * be unlikely that you would know of all the adds and all the removes in
+ * one place.
+ *
+ * \exception event_dispatcher_count_mismatch
+ * The remove_connection() function must be called exactly once for each
+ * call to the add_connection() function. If called more than this many
+ * times, then this exception is raised.
+ */
+void signal_child::remove_connection()
+{
+    if(f_count == 0)
+    {
+        throw event_dispatcher_count_mismatch(
+            "the signal_child::remove_connection() was called more times"
+            " than the add_connection()");
+    }
+
+    --f_count;
+    if(f_count == 0)
+    {
+        // remove the connection to the communicator
+        //
+        snap::safe_variable safe(f_removing_to_communicator, true, false);
+        ed::communicator::instance()->remove_connection(shared_from_this());
+    }
+}
+
+
 /** \brief Process the SIGCHLD signal.
  *
  * This function process the SIGCHLD signal. Note that the function is
@@ -395,8 +476,6 @@ signal_child::pointer_t signal_child::get_instance()
  * only one child at a time. For this reason, we instead process all the
  * children that have died in one go and if we get called additional times
  * nothing happens.
- *
- * \
  */
 void signal_child::process_signal()
 {
@@ -470,6 +549,54 @@ void signal_child::process_signal()
 }
 
 
+/** \brief The connection was added to the communicator.
+ *
+ * The connection was added, make sure it was by us (through our own
+ * add_connection() function).
+ *
+ * \warning
+ * The test in this function works only for the very first connection.
+ * After that, the communicator prevents this callback from happening.
+ *
+ * \exception event_dispatcher_runtime_error
+ * The signal_child connection must be added by the add_connection() function.
+ * If you directly call the communicator::add_connection(), then this
+ * exception is raised.
+ */
+void signal_child::connection_added()
+{
+    if(!f_adding_to_communicator)
+    {
+        throw event_dispatcher_runtime_error(
+            "it looks like you directly called communicator::add_connection()"
+            " with the signal_child connection. This is not allowed. Make sure"
+            " to call the signal_child::add_connection() instead.");
+    }
+}
+
+
+/** \brief The connection was removed from the communicator.
+ *
+ * The connection was removed, make sure it was by us (through our own
+ * remove_connection() function).
+ *
+ * \exception event_dispatcher_runtime_error
+ * The signal_child connection must be added by the add_connection() function.
+ * If you directly call the communicator::add_connection(), then this
+ * exception is raised.
+ */
+void signal_child::connection_removed()
+{
+    if(!f_removing_to_communicator)
+    {
+        throw event_dispatcher_runtime_error(
+            "it looks like you directly called communicator::remove_connection()"
+            " with the signal_child connection. This is not allowed. Make sure"
+            " to call the signal_child::remove_connection() instead.");
+    }
+}
+
+
 /** \brief Add a listener function.
  *
  * This function adds a listener so when a SIGCHLD occurs with the specified
@@ -488,6 +615,9 @@ void signal_child::process_signal()
  *
  * The function can be called multiple times with the same child PID to
  * add multiple callbacks (useful if you vary the mask parameter).
+ *
+ * This function automatically calls the add_connection() function any
+ * time it succeeeds in adding a new child/callback listener.
  *
  * \exception event_dispatcher_invalid_parameter
  * The mask cannot be set to zero, the child identifier must be positive,
@@ -520,6 +650,7 @@ void signal_child::add_listener(
 
     cppthread::guard lock(f_mutex);
     f_listeners.emplace(f_listeners.end(), callback_t{ child, callback, mask });
+    add_connection();
 }
 
 
@@ -532,8 +663,12 @@ void signal_child::add_listener(
  * This function automatically gets called whenever the signal_child
  * detects the death of a child and finds a corresponding listener.
  *
+ * Further, this function automatically calls the remove_connection()
+ * function when it indeeds removes the specifed \p child. If found
+ * more than once, then it gets called once for each instance.
+ *
  * \warning
- * All the listener that use the sepcified \p child parameter are
+ * All the listener that use the specified \p child parameter are
  * removed from the list of listeners.
  *
  * \note
@@ -554,6 +689,7 @@ void signal_child::remove_listener(pid_t child)
         if(it->f_child == child)
         {
             it = f_listeners.erase(it);
+            remove_connection();
         }
         else
         {

@@ -44,6 +44,7 @@
 
 // C lib
 //
+#include    <fcntl.h>
 #include    <string.h>
 #include    <signal.h>
 
@@ -901,6 +902,33 @@ process::environment_map_t const & process::get_environ() const
 }
 
 
+/** \brief Set the input filename.
+ *
+ * Instead of a pipe or capturing the input, you can also specify
+ * a filename. This is similar to using the `< filename` syntax on
+ * a shell command line.
+ *
+ * \param[in] filename  The name of the input file.
+ */
+void process::set_input_filename(std::string const & filename)
+{
+    f_input_filename = filename;
+}
+
+
+/** \brief Retrieve the input filename.
+ *
+ * This function returns a copy of the input filename. This is used
+ * when you don't define an input pipe.
+ *
+ * \return The input filename.
+ */
+std::string const & process::get_input_filename() const
+{
+    return f_input_filename;
+}
+
+
 /** \brief The input to be sent to stdin.
  *
  * Add the input data to be written to the stdin pipe. Note that the input
@@ -1042,6 +1070,33 @@ ed::pipe_connection::pointer_t process::get_input_pipe() const
 }
 
 
+/** \brief Set the output filename.
+ *
+ * Instead of a pipe or capturing the output, you can also specify
+ * a filename. This is similar to using the `> filename` syntax on
+ * a shell command line.
+ *
+ * \param[in] filename  The name of the output file.
+ */
+void process::set_output_filename(std::string const & filename)
+{
+    f_output_filename = filename;
+}
+
+
+/** \brief Retrieve the output filename.
+ *
+ * This function returns a copy of the output filename. This is used
+ * when you don't define an output pipe.
+ *
+ * \return The output filename.
+ */
+std::string const & process::get_output_filename() const
+{
+    return f_output_filename;
+}
+
+
 /** \brief Setup capture of output.
  *
  * By default, the output is set to stdout or an output pipe. You can also
@@ -1070,6 +1125,22 @@ void process::set_capture_output(bool capture)
 bool process::get_capture_output() const
 {
     return f_capture_output;
+}
+
+
+/** \brief Set output capture done callback.
+ *
+ * This function lets you define a callback which gets called whenever the
+ * whole output is received.
+ *
+ * \warning
+ * You cannot use this function when you use your own output pipe.
+ *
+ * \param[in] callback  The callback to call when SIGCHLD is received.
+ */
+void process::set_output_capture_done(capture_done_t callback)
+{
+    f_output_done_callback = callback;
 }
 
 
@@ -1261,6 +1332,33 @@ void process::clear_next_process()
 process::list_t process::get_next_processes() const
 {
     return f_next;
+}
+
+
+/** \brief Set the error filename.
+ *
+ * Instead of a pipe or capturing the error, you can also specify
+ * a filename. This is similar to using the `2> filename` syntax on
+ * a shell command line.
+ *
+ * \param[in] filename  The name of the error file.
+ */
+void process::set_error_filename(std::string const & filename)
+{
+    f_error_filename = filename;
+}
+
+
+/** \brief Retrieve the error filename.
+ *
+ * This function returns a copy of the error filename. This is used
+ * when you don't define an error pipe.
+ *
+ * \return The error filename.
+ */
+std::string const & process::get_error_filename() const
+{
+    return f_error_filename;
 }
 
 
@@ -1561,10 +1659,8 @@ int process::wait()
     {
         child_signal->add_listener(
                   it->f_child
-                , std::bind(&process::child_done, this, std::placeholders::_1));
+                , std::bind(&process::child_done, it.get(), std::placeholders::_1));
     }
-
-    f_communicator->add_connection(child_signal);
 
     f_communicator->run();
 
@@ -1574,10 +1670,26 @@ int process::wait()
 
 void process::child_done(ed::child_status status)
 {
-    // remove this signal from the communicator, we're done with it
+    // note that all the child_done() callbacks get called because the
+    // communicator does not (currently) have any idea of which one needs
+    // to be called so here we make sure we only handle the correct one
     //
-    f_communicator->remove_connection(ed::signal_child::get_instance());
+#ifdef _DEBUG
+    if(status.child_pid() != f_child)
+    {
+        throw cppprocess_logic_error(
+            "child pid mismatch in process::child_done(),"
+            " please check that you used the correct PID when binding"
+            " this function.");
+    }
+#endif
+
     f_exit_code = status.exit_code();
+
+    if(f_process_done != nullptr)
+    {
+        f_process_done(status);
+    }
 }
 
 
@@ -1895,6 +2007,15 @@ void process::prepare_input(ed::pipe_connection::pointer_t output_fifo)
         return;
     }
 
+    if(!f_input_filename.empty())
+    {
+        f_input_file.reset(open(
+                  f_input_filename.c_str()
+                , O_RDONLY));
+        f_prepared_input = f_input_file.get();
+        return;
+    }
+
     if(!f_input.empty())
     {
         // the user supplied a buffer instead of a pipe, we create a pipe
@@ -1969,6 +2090,14 @@ void process::prepare_output()
         {
             f_prepared_output.push_back(f_output_pipe->get_socket());
         }
+        else if(!f_output_filename.empty())
+        {
+            f_output_file.reset(open(
+                      f_output_filename.c_str()
+                    , O_WRONLY | O_CREAT | O_TRUNC
+                    , S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IRGRP));
+            f_prepared_output.push_back(f_output_file.get());
+        }
         else if(f_capture_output)
         {
             f_intermediate_output_pipe = std::make_shared<capture_output_pipe>(this, f_output);
@@ -2038,6 +2167,16 @@ void process::prepare_error()
         return;
     }
 
+    if(!f_error_filename.empty())
+    {
+        f_error_file.reset(open(
+                  f_error_filename.c_str()
+                , O_WRONLY | O_CREAT | O_TRUNC
+                , S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IRGRP));
+        f_prepared_error = f_error_file.get();
+        return;
+    }
+
     if(f_capture_error)
     {
         f_internal_error_pipe = std::make_shared<capture_output_pipe>(this, f_error);
@@ -2072,6 +2211,27 @@ int process::kill(int sig)
 
     errno = ESRCH;
     return -1;
+}
+
+
+/** \brief Set process done callback.
+ *
+ * This function lets you define a callback which gets called whenever the
+ * SIGCHLD happens on that process.
+ *
+ * \warning
+ * At the time this function is called, the output is not likely to be
+ * ready. In most cases, the output buffer gets flushed only at the time
+ * the process exits and therefore the output on our end not yet ready.
+ * If you are interested in the output, make sure to use the
+ * set_output_capture_done() function when you want to get the final
+ * output.
+ *
+ * \param[in] callback  The callback to call when SIGCHLD is received.
+ */
+void process::set_process_done(process_done_t callback)
+{
+    f_process_done = callback;
 }
 
 
@@ -2113,12 +2273,22 @@ void process::output_pipe_done(ed::pipe_connection * p)
         f_communicator->remove_connection(f_intermediate_output_pipe);
         f_intermediate_output_pipe->close();
         f_intermediate_output_pipe.reset();
+
+        if(f_output_done_callback != nullptr)
+        {
+            f_output_done_callback(get_output());
+        }
     }
     else if(f_internal_error_pipe.get() == p)
     {
         f_communicator->remove_connection(f_internal_error_pipe);
         f_internal_error_pipe->close();
         f_internal_error_pipe.reset();
+
+        if(f_output_done_callback != nullptr)
+        {
+            f_error_done_callback(get_error());
+        }
     }
     else if(f_next.size() == 1)
     {

@@ -60,6 +60,10 @@ public:
     typedef std::map<std::string, std::string>  environment_map_t;
     typedef std::list<std::string>              string_list_t;
     typedef snap::glob_to_list<string_list_t>   argument_list_t;
+    typedef std::function<void(ed::child_status status)>
+                                                process_done_t;
+    typedef std::function<void(std::string const & capture)>
+                                                capture_done_t;
 
                                     process(std::string const & name);
                                     process(process const & rhs) = delete;
@@ -82,6 +86,8 @@ public:
 
     // what is sent to the command stdin
     //
+    void                            set_input_filename(std::string const & filename);
+    std::string const &             get_input_filename() const;
     void                            add_input(std::string const & input);
     void                            add_input(buffer_t const & input);
     std::string                     get_input(bool reset = false) const;
@@ -91,8 +97,11 @@ public:
 
     // what is received from the command stdout
     //
+    void                            set_output_filename(std::string const & filename);
+    std::string const &             get_output_filename() const;
     void                            set_capture_output(bool capture = true);
     bool                            get_capture_output() const;
+    void                            set_output_capture_done(capture_done_t callback);
     std::string                     get_output(bool reset = false) const;
     std::string                     get_trimmed_output(bool inside = false, bool reset = false) const;
     buffer_t                        get_binary_output(bool reset = false) const;
@@ -104,8 +113,11 @@ public:
 
     // what is received from the command stderr
     //
+    void                            set_error_filename(std::string const & filename);
+    std::string const &             get_error_filename() const;
     void                            set_capture_error(bool capture = true);
     bool                            get_capture_error() const;
+    void                            set_error_capture_done(capture_done_t callback);
     std::string                     get_error(bool reset = false) const;
     buffer_t                        get_binary_error(bool reset = false) const;
     void                            set_error_pipe(ed::pipe_connection::pointer_t pipe);
@@ -116,6 +128,7 @@ public:
     int                             start();
     int                             wait();
     int                             kill(int sig);
+    void                            set_process_done(process_done_t callback);
 
     // these are internal functions called by an internal pipe
     // once the capture is over
@@ -142,6 +155,7 @@ private:
     std::string                     f_command = std::string();
     argument_list_t                 f_arguments = argument_list_t();
     environment_map_t               f_environment = environment_map_t();
+    process_done_t                  f_process_done = process_done_t();
     bool                            f_forced_environment = false;
     bool                            f_running = false;
     bool                            f_capture_output = false;
@@ -149,15 +163,23 @@ private:
     buffer_t                        f_input = buffer_t();
     buffer_t                        f_output = buffer_t();
     buffer_t                        f_error = buffer_t();
+    std::string                     f_input_filename = std::string();
+    snap::raii_fd_t                 f_input_file = snap::raii_fd_t();
     ed::pipe_connection::pointer_t  f_input_pipe = ed::pipe_connection::pointer_t();
     ed::pipe_connection::pointer_t  f_internal_input_pipe = ed::pipe_connection::pointer_t();
     int                             f_prepared_input = -1;
+    std::string                     f_output_filename = std::string();
+    snap::raii_fd_t                 f_output_file = snap::raii_fd_t();
     ed::pipe_connection::pointer_t  f_output_pipe = ed::pipe_connection::pointer_t();
     ed::pipe_connection::pointer_t  f_intermediate_output_pipe = ed::pipe_connection::pointer_t();
     std::vector<int>                f_prepared_output = {};
+    capture_done_t                  f_output_done_callback = capture_done_t();
+    std::string                     f_error_filename = std::string();
+    snap::raii_fd_t                 f_error_file = snap::raii_fd_t();
     ed::pipe_connection::pointer_t  f_error_pipe = ed::pipe_connection::pointer_t();
     ed::pipe_connection::pointer_t  f_internal_error_pipe = ed::pipe_connection::pointer_t();
     int                             f_prepared_error = -1;
+    capture_done_t                  f_error_done_callback = capture_done_t();
     list_t                          f_next = list_t();
     pid_t                           f_child = -1;
     int                             f_exit_code = -1;

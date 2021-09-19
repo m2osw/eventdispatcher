@@ -49,6 +49,7 @@ DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_invalid_parameter
 DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_recursive_call);
 DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_runtime_error);
 DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_unexpected_data);
+DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_count_mismatch);
 
 
 

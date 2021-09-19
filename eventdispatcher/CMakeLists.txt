@@ -180,6 +180,7 @@ install(
         pipe_connection.h
         pipe_message_connection.h
         signal.h
+        signal_child.h
         signal_handler.h
         tcp_base.h
         tcp_bio_client.h

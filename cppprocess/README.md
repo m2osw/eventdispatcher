@@ -182,6 +182,89 @@ input to the process before you call the `start()` function.
 Note that very many Unix commands output something. In this case, though,
 it will go to your `stdout`.
 
+## Shell Equivalents
+
+### Input Pipe
+
+Using an input pipe is equivalent to:
+
+    cat <file> | <command> ...
+
+The `add_input()` and `set_input_pipe()` both give you the same
+functionality. The `add_input()` uses an internal pipe meaning that
+you do not need to supply anything more to make it all work.
+
+### Input File
+
+You can supply a path and filename as input. In this case, it has to be a
+file on disk. This is equivalent to:
+
+    <command> < <filename>
+
+The file has to exist and be readable.
+
+### Same Input
+
+By default, the input comes from `stdin`. This happens if you do not
+supply data (`add_input()`), define an input pipe (`set_input_pipe()`)
+or define an input filename (`set_input_filename()`).
+
+### Output Pipe
+
+Using the output pipe is equivalent to:
+
+    <command> ... | [capture]
+
+The capture is internal to your C++ process hence this `[capture]` entry.
+If you have multiple commands, only the last one can have such a capture
+entry.
+
+If you use the tee capability, then you can have multiple _last command_.
+
+### Output File
+
+You can supply a path and filename as output. In this case, it writes the
+output to that file. This is equivalent to:
+
+    <command> > <filename>
+
+The file has to be created or exists and can be written to.
+
+### Same Output
+
+By default, the output will be sent to `stdout`. This happens if you
+do not ask for capture, supply a pipe, or supply a filename.
+
+### Error Stream
+
+Like the output, the error stream can use a pipe, a filename, or
+the default `stderr`. The filename shell equivalent is likke so:
+
+    <command> 2> <filename>
+
+### Piping
+
+The `process` class allows for adding a _next process_. This is how
+you create a pipe between multiple processes. The equivalent of:
+
+    <command1> | <command2> | <command3> | ...
+
+The output of `<command1>` will automatically be sent to the input
+of `<command2>`, the output of `<command2>` will automatically be
+sent to `<command3>`, etc.
+
+You can still capture the final output (i.e. the output of the last
+command) and supply input to the first command.
+
+    [input] | <command1> | <command2> | <command3> | [output]
+
+The input and output can be supplied through a pipe you own or a
+buffer you prepare (`add_input()`) and the capture buffer
+(see `set_capture_output()`).
+
+And since our system works with signals, you can simply add a
+callback function which gets called once the output is ready
+for consumption and delete the process chain at that point.
 
 # Process Info
 
@@ -191,6 +274,16 @@ using the class' member functions.
 
 This gives you much information, such as how much memory, CPU, and
 I/O the process has used so far.
+
+# TODO
+
+* Support equivalent to `>>`. At this time we always truncate existing
+files.
+
+* Look at the input/output _streams_ and make use of a separate class
+which can use a common interface to support input or output with the
+several cases (supplied pipe, internal pipe [through a buffer], a
+filename, standard in/out/err). Right now, this is a huge mess!
 
 
 # License

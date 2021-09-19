@@ -2,11 +2,11 @@ eventdispatcher (1.1.37.0~bionic) bionic; urgency=high
 
   * Added the cppprocess library.
   * Added the signal_child class to specifically handle SIGCHLD.
-  * Prevent the communicator::run() function from being called more than once.
+  * Prevent the communicator::run() function from being called recursively.
   * Added the log-rotate command line options and corresponding code.
   * Added support for a pipe mode (BIDIRECTIONAL, INPUT, OUTPUT).
-  * Allow for retrieving the other socket.
-  * Added a forked() function which only close the other socket.
+  * Allow for retrieving the "other socket" (pipes).
+  * Added a forked() function which only close the other socket (pipes).
   * Added a couple of test files to verify the process library.
   * Fixed some documentation.
 

@@ -27,6 +27,16 @@
 #include    <cppprocess/process.h>
 
 
+// snapdev lib
+//
+#include    <snapdev/file_contents.h>
+
+
+// C++ lib
+//
+#include    <fstream>
+
+
 // C lib
 //
 //#include    <sys/resource.h>
@@ -272,6 +282,46 @@ CATCH_TEST_CASE("Process", "[process]")
         CATCH_REQUIRE(code == 0);
 
         CATCH_REQUIRE(tr->get_output() == "test a simple pipeline\n");
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("file based: cat | tr")
+    {
+        // Equivalent to:
+        //
+        //    cat - < input.data | tr TASP tasp > output.data
+        //
+        std::string & tmpdir(SNAP_CATCH2_NAMESPACE::g_tmp_dir());
+        std::string const input_filename(tmpdir + "/input.data");
+        std::string const output_filename(tmpdir + "/output.data");
+        {
+            std::ofstream input_data(input_filename);
+            input_data << "Test A Simple Pipeline\n";
+        }
+
+        cppprocess::process::pointer_t tr(std::make_shared<cppprocess::process>("tr"));
+        tr->set_command("tr");
+        tr->add_argument("TASP");
+        tr->add_argument("tasp");
+        tr->set_output_filename(output_filename);
+
+        // we could directly cat the file here, obviously but we want
+        // to test the `< <filename>` functionality
+        //
+        cppprocess::process p("cat");
+        p.set_command("cat");
+        p.add_argument("-");
+        p.set_input_filename(input_filename);
+        p.add_next_process(tr);
+
+        CATCH_REQUIRE(p.start() == 0);
+
+        int const code(p.wait());
+        CATCH_REQUIRE(code == 0);
+
+        snap::file_contents output(output_filename);
+        CATCH_REQUIRE(output.read_all());
+        CATCH_REQUIRE(output.contents() == "test a simple pipeline\n");
     }
     CATCH_END_SECTION()
 }

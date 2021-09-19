@@ -109,6 +109,8 @@ public:
     // signal implementation
     //
     virtual void                process_signal() override;
+    virtual void                connection_added() override;
+    virtual void                connection_removed() override;
 
     void                        add_listener(
                                       pid_t child
@@ -128,8 +130,14 @@ private:
 
     explicit                    signal_child();
 
+    void                        add_connection();
+    void                        remove_connection();
+
     callback_t::list_t          f_listeners = callback_t::list_t();
     cppthread::mutex            f_mutex = cppthread::mutex();
+    std::uint32_t               f_count = 0;
+    bool                        f_adding_to_communicator = false;
+    bool                        f_removing_to_communicator = false;
 };
 
 
