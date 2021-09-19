@@ -18,11 +18,6 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #pragma once
 
-// cppthread lib
-//
-#include    <cppthread/thread.h>
-
-
 // eventdispatcher lib
 //
 #include    <eventdispatcher/communicator.h>
@@ -187,5 +182,5 @@ private:
 
 
 
-} // namespace cppthread
+} // namespace cppprocess
 // vim: ts=4 sw=4 et

@@ -855,7 +855,7 @@ process::argument_list_t const & process::get_arguments() const
  * An environment variable is defined as a name and a value as in:
  *
  * \code
- * add_environ("HOME", "/home/cppthread");
+ * add_environ("HOME", "/home/cppprocess");
  * \endcode
  *
  * If the value is set to the empty string, then the environment variable
@@ -2315,5 +2315,5 @@ void process::output_pipe_done(ed::pipe_connection * p)
 
 
 
-} // namespace cppthread
+} // namespace cppprocess
 // vim: ts=4 sw=4 et

@@ -31,33 +31,33 @@ namespace cppprocess
 
 
 // TODO: update to proper exceptions
-/** \class cppthread_logic_error
+/** \class cppprocess_logic_error
  * \brief The library detected an unexpected combination of events.
  *
  * This exception is raised when the library checks that things are in
  * order and detects that they aren't.
  */
 
-/** \class cppthread_out_of_range
+/** \class cppprocess_out_of_range
  * \brief A value is out of range and can't be used as is.
  *
  * This exception is raised when a value is either too small or too large.
  */
 
-/** \class cppthread_exception
+/** \class cppprocess_exception
  * \brief To catch any thread exception, catch this base thread exception.
  *
  * This is the base thread exception for all the thread exceptions.
  * You may catch this exception to catch any of the thread exceptions.
  *
  * \warning
- * Some exceptions use the cppthread_logic_error and the cppthread_out_of_range
- * errors which are both not derived from the cppthread_exception. In many
+ * Some exceptions use the cppprocess_logic_error and the cppprocess_out_of_range
+ * errors which are both not derived from the cppprocess_exception. In many
  * cases, these other two exceptions should not be processed like a runtime
- * error which the cppthread_exception represents.
+ * error which the cppprocess_exception represents.
  */
 
-/** \class cppthread_already_exists
+/** \class cppprocess_already_exists
  * \brief An object already exists and can't be created again.
  *
  * Some object have to be unique within your entire process or at least within
@@ -65,7 +65,7 @@ namespace cppprocess
  * that two of the same object are created in a row.
  */
 
-/** \class cppthread_in_use_error
+/** \class cppprocess_in_use_error
  * \brief One thread runner can be attached to one thread.
  *
  * This exception is raised if a thread notices that a runner being
@@ -75,28 +75,28 @@ namespace cppprocess
  * first otherwise.)
  */
 
-/** \class cppthread_invalid_error
+/** \class cppprocess_invalid_error
  * \brief An invalid parameter or value was detected.
  *
  * This exception is raised when a parameter or a variable member or some
  * other value is out of range or generally not valid for its purpose.
  */
 
-/** \class cppthread_mutex_failed_error
+/** \class cppprocess_mutex_failed_error
  * \brief A mutex failed.
  *
  * In most cases, a mutex will fail if the input buffer is not considered
  * valid. (i.e. it was not initialized and it does not look like a mutex.)
  */
 
-/** \class cppthread_name_mismatch
+/** \class cppprocess_name_mismatch
  * \brief Two references to the same object used different names.
  *
  * This error occurs whenever an object detects two different names to
  * reference it or one of its children.
  */
 
-/** \class cppthread_not_locked_error
+/** \class cppprocess_not_locked_error
  * \brief A mutex cannot be unlocked if not locked.
  *
  * Each time we lock a mutex, we increase a counter. Each time we unlock a
@@ -105,7 +105,7 @@ namespace cppprocess
  * when such is discovered.
  */
 
-/** \class cppthread_not_locked_once_error
+/** \class cppprocess_not_locked_once_error
  * \brief When calling wait() the mutex should be locked once.
  *
  * When calling the wait() instruction, the mutex has to be locked once.
@@ -114,7 +114,7 @@ namespace cppprocess
  * need to test that it is at least locked once and not exactly once.
  */
 
-/** \class cppthread_not_started
+/** \class cppprocess_not_started
  * \brief Tried to start a thread and it failed.
  *
  * When using the thread_safe object which is created on the FIFO, one
@@ -122,7 +122,7 @@ namespace cppprocess
  * be started, this exception is raised.
  */
 
-/** \class cppthread_system_error
+/** \class cppprocess_system_error
  * \brief We called a system function and it failed.
  *
  * This exception is raised if a system function call fails.
@@ -131,5 +131,5 @@ namespace cppprocess
 
 
 
-} // namespace cppthread
+} // namespace cppprocess
 // vim: ts=4 sw=4 et
