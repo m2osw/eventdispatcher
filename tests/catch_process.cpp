@@ -78,7 +78,6 @@ CATCH_TEST_CASE("Process", "[process]")
         cppprocess::io_capture_pipe::pointer_t capture(std::make_shared<cppprocess::io_capture_pipe>());
         p.set_output_io(capture);
         CATCH_REQUIRE(p.get_output_io() == capture);
-        ed::communicator::instance()->add_connection(capture);
 
         CATCH_REQUIRE(p.get_next_processes().empty());
 
