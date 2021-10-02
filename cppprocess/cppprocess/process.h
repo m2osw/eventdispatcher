@@ -61,8 +61,6 @@ public:
     typedef snap::glob_to_list<string_list_t>   argument_list_t;
     typedef std::function<void(ed::child_status status)>
                                                 process_done_t;
-    typedef std::function<void(std::string const & capture)>
-                                                capture_done_t;
 
                                     process(std::string const & name);
                                     process(process const & rhs) = delete;
@@ -171,13 +169,11 @@ private:
     //ed::pipe_connection::pointer_t  f_output_pipe = ed::pipe_connection::pointer_t();
     ed::pipe_connection::pointer_t  f_intermediate_output_pipe = ed::pipe_connection::pointer_t();
     std::vector<int>                f_prepared_output = {};
-    capture_done_t                  f_output_done_callback = capture_done_t();
     //std::string                     f_error_filename = std::string();
     //snap::raii_fd_t                 f_error_file = snap::raii_fd_t();
     //ed::pipe_connection::pointer_t  f_error_pipe = ed::pipe_connection::pointer_t();
     //ed::pipe_connection::pointer_t  f_internal_error_pipe = ed::pipe_connection::pointer_t();
     int                             f_prepared_error = -1;
-    capture_done_t                  f_error_done_callback = capture_done_t();
     list_t                          f_next = list_t();
     pid_t                           f_child = -1;
     int                             f_exit_code = -1;
