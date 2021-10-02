@@ -44,13 +44,13 @@ DECLARE_MAIN_EXCEPTION(cppprocess_exception);
 DECLARE_EXCEPTION(cppprocess_exception, cppprocess_incorrect_pipe_type);
 DECLARE_EXCEPTION(cppprocess_exception, cppprocess_recursive_call);
 DECLARE_EXCEPTION(cppprocess_exception, cppprocess_initialization_failed);
+DECLARE_EXCEPTION(cppprocess_exception, cppprocess_in_use);
 DECLARE_EXCEPTION(cppprocess_exception, cppprocess_invalid_parameters);
 DECLARE_EXCEPTION(cppprocess_exception, cppprocess_not_started);
 
 //DECLARE_EXCEPTION(cppprocess_exception, cppprocess_already_exists);
 //DECLARE_EXCEPTION(cppprocess_exception, cppprocess_already_initialized);
 //DECLARE_EXCEPTION(cppprocess_exception, cppprocess_data_not_available);
-//DECLARE_EXCEPTION(cppprocess_exception, cppprocess_in_use_error);
 //DECLARE_EXCEPTION(cppprocess_exception, cppprocess_invalid_error);
 //DECLARE_EXCEPTION(cppprocess_exception, cppprocess_invalid_mode_error);
 //DECLARE_EXCEPTION(cppprocess_exception, cppprocess_mutex_failed_error);

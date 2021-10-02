@@ -29,9 +29,19 @@ configure_file(
 )
 
 add_library(${PROJECT_NAME} SHARED
+    io.cpp
+    io_capture_pipe.cpp
+    io_data_pipe.cpp
+    io_error_file.cpp
+    io_file.cpp
+    io_input_file.cpp
+    io_output_file.cpp
+    io_pipe.cpp
+
     process.cpp
     process_info.cpp
     process_list.cpp
+
     version.cpp
 )
 
@@ -72,10 +82,22 @@ install(
 
 install(
     FILES
+        buffer.h
         exception.h
+
+        io.h
+        io_capture_pipe.h
+        io_data_pipe.h
+        io_error_file.h
+        io_file.h
+        io_input_file.h
+        io_output_file.h
+        io_pipe.h
+
         process.h
         process_info.h
         process_list.h
+
         ${CMAKE_CURRENT_BINARY_DIR}/version.h
 
     DESTINATION

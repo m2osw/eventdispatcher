@@ -24,6 +24,10 @@
 
 // cppprocess lib
 //
+#include    <cppprocess/io_capture_pipe.h>
+#include    <cppprocess/io_data_pipe.h>
+#include    <cppprocess/io_input_file.h>
+#include    <cppprocess/io_output_file.h>
 #include    <cppprocess/process.h>
 
 
@@ -35,12 +39,6 @@
 // C++ lib
 //
 #include    <fstream>
-
-
-// C lib
-//
-//#include    <sys/resource.h>
-//#include    <sys/times.h>
 
 
 // last include
@@ -73,40 +71,30 @@ CATCH_TEST_CASE("Process", "[process]")
 
         CATCH_REQUIRE(p.get_environ().empty());
 
-        CATCH_REQUIRE(p.get_input().empty());
-        CATCH_REQUIRE(p.get_binary_input().empty());
-        CATCH_REQUIRE(p.get_input_pipe() == nullptr);
+        CATCH_REQUIRE(p.get_input_io() == nullptr);
+        CATCH_REQUIRE(p.get_output_io() == nullptr);
+        CATCH_REQUIRE(p.get_error_io() == nullptr);
 
-        CATCH_REQUIRE_FALSE(p.get_capture_output());
-        p.set_capture_output();
-        CATCH_REQUIRE(p.get_capture_output());
+        cppprocess::io_capture_pipe::pointer_t capture(std::make_shared<cppprocess::io_capture_pipe>());
+        p.set_output_io(capture);
+        CATCH_REQUIRE(p.get_output_io() == capture);
+        ed::communicator::instance()->add_connection(capture);
 
-        CATCH_REQUIRE(p.get_output().empty());
-        CATCH_REQUIRE(p.get_binary_output().empty());
-        CATCH_REQUIRE(p.get_output_pipe() == nullptr);
         CATCH_REQUIRE(p.get_next_processes().empty());
-
-        CATCH_REQUIRE(p.get_error().empty());
-        CATCH_REQUIRE(p.get_binary_error().empty());
-        CATCH_REQUIRE(p.get_error_pipe() == nullptr);
 
         CATCH_REQUIRE(p.start() == 0);
 
         int const code(p.wait());
         CATCH_REQUIRE(code == 0);
 
-        CATCH_REQUIRE(p.get_input().empty());
-        CATCH_REQUIRE(p.get_binary_input().empty());
-        CATCH_REQUIRE(p.get_input_pipe() == nullptr);
+        CATCH_REQUIRE(p.get_input_io() == nullptr);
+        CATCH_REQUIRE(p.get_output_io() == capture);
+        CATCH_REQUIRE(p.get_error_io() == nullptr);
 
-        CATCH_REQUIRE(p.get_error().empty());
-        CATCH_REQUIRE(p.get_binary_error().empty());
-        CATCH_REQUIRE(p.get_error_pipe() == nullptr);
+        CATCH_REQUIRE(capture->get_output() == "cat\n");
+        CATCH_REQUIRE(capture->get_trimmed_output() == "cat");
 
-        CATCH_REQUIRE(p.get_output() == "cat\n");
-        CATCH_REQUIRE(p.get_trimmed_output() == "cat");
-
-        cppprocess::buffer_t const output(p.get_binary_output());
+        cppprocess::buffer_t const output(capture->get_binary_output());
         CATCH_REQUIRE(output.size() == 4);
         CATCH_REQUIRE(output[0] == 'c');
         CATCH_REQUIRE(output[1] == 'a');
@@ -129,25 +117,20 @@ CATCH_TEST_CASE("Process", "[process]")
 
         CATCH_REQUIRE(p.get_environ().empty());
 
-        CATCH_REQUIRE(p.get_input().empty());
-        CATCH_REQUIRE(p.get_binary_input().empty());
-        CATCH_REQUIRE(p.get_input_pipe() == nullptr);
+        CATCH_REQUIRE(p.get_input_io() == nullptr);
+        CATCH_REQUIRE(p.get_output_io() == nullptr);
+        CATCH_REQUIRE(p.get_error_io() == nullptr);
 
-        p.add_input("Event Dispatcher Process Test\n");
+        cppprocess::io_data_pipe::pointer_t input(std::make_shared<cppprocess::io_data_pipe>());
+        CATCH_REQUIRE_FALSE(input->is_writer());
+        input->add_input("Event Dispatcher Process Test\n");
+        CATCH_REQUIRE(input->is_writer());
 
-        CATCH_REQUIRE(p.get_input() == std::string("Event Dispatcher Process Test\n"));
-        CATCH_REQUIRE(p.get_binary_input().size() == 30);
-        CATCH_REQUIRE(p.get_input_pipe() == nullptr);
+        CATCH_REQUIRE(input->get_input() == std::string("Event Dispatcher Process Test\n"));
+        CATCH_REQUIRE(input->get_binary_input().size() == 30);
 
-        CATCH_REQUIRE_FALSE(p.get_capture_output());
-        CATCH_REQUIRE(p.get_output().empty());
-        CATCH_REQUIRE(p.get_binary_output().empty());
-        CATCH_REQUIRE(p.get_output_pipe() == nullptr);
-        CATCH_REQUIRE(p.get_next_processes().empty());
-
-        CATCH_REQUIRE(p.get_error().empty());
-        CATCH_REQUIRE(p.get_binary_error().empty());
-        CATCH_REQUIRE(p.get_error_pipe() == nullptr);
+        p.set_input_io(input);
+        CATCH_REQUIRE(p.get_input_io() == input);
 
         CATCH_REQUIRE(p.start() == 0);
 
@@ -180,38 +163,39 @@ CATCH_TEST_CASE("Process", "[process]")
 
         CATCH_REQUIRE(p.get_environ().empty());
 
-        CATCH_REQUIRE(p.get_input().empty());
-        CATCH_REQUIRE(p.get_binary_input().empty());
-        CATCH_REQUIRE(p.get_input_pipe() == nullptr);
+        CATCH_REQUIRE(p.get_input_io() == nullptr);
+        CATCH_REQUIRE(p.get_output_io() == nullptr);
+        CATCH_REQUIRE(p.get_error_io() == nullptr);
 
-        p.add_input("Hello  World!\n");
+        cppprocess::io_data_pipe::pointer_t input(std::make_shared<cppprocess::io_data_pipe>());
+        CATCH_REQUIRE_FALSE(input->is_writer());
+        input->add_input("Hello  World!\n");
+        CATCH_REQUIRE(input->is_writer());
 
-        CATCH_REQUIRE(p.get_input() == std::string("Hello  World!\n"));
-        CATCH_REQUIRE(p.get_binary_input().size() == 14);
-        CATCH_REQUIRE(p.get_input_pipe() == nullptr);
+        CATCH_REQUIRE(input->get_input() == std::string("Hello  World!\n"));
+        CATCH_REQUIRE(input->get_binary_input().size() == 14);
 
-        CATCH_REQUIRE_FALSE(p.get_capture_output());
-        p.set_capture_output();
-        CATCH_REQUIRE(p.get_capture_output());
+        p.set_input_io(input);
+        CATCH_REQUIRE(p.get_input_io() == input);
 
-        CATCH_REQUIRE(p.get_output().empty());
-        CATCH_REQUIRE(p.get_binary_output().empty());
-        CATCH_REQUIRE(p.get_output_pipe() == nullptr);
+        cppprocess::io_capture_pipe::pointer_t capture(std::make_shared<cppprocess::io_capture_pipe>());
+        p.set_output_io(capture);
+        CATCH_REQUIRE(p.get_output_io() == capture);
+
+        CATCH_REQUIRE(capture->get_output().empty());
+        CATCH_REQUIRE(capture->get_trimmed_output().empty());
+        CATCH_REQUIRE(capture->get_binary_output().empty());
         CATCH_REQUIRE(p.get_next_processes().empty());
-
-        CATCH_REQUIRE(p.get_error().empty());
-        CATCH_REQUIRE(p.get_binary_error().empty());
-        CATCH_REQUIRE(p.get_error_pipe() == nullptr);
 
         CATCH_REQUIRE(p.start() == 0);
 
         int const code(p.wait());
         CATCH_REQUIRE(code == 0);
 
-        CATCH_REQUIRE(p.get_output() == "Hi  World!\n");
-        CATCH_REQUIRE(p.get_trimmed_output(true) == "Hi World!");
+        CATCH_REQUIRE(capture->get_output() == "Hi  World!\n");
+        CATCH_REQUIRE(capture->get_trimmed_output(true) == "Hi World!");
 
-        cppprocess::buffer_t const output(p.get_binary_output());
+        cppprocess::buffer_t const output(capture->get_binary_output());
         CATCH_REQUIRE(output.size() == 11);
         CATCH_REQUIRE(output[ 0] == 'H');
         CATCH_REQUIRE(output[ 1] == 'i');
@@ -241,24 +225,25 @@ CATCH_TEST_CASE("Process", "[process]")
 
         CATCH_REQUIRE(p.get_environ().empty());
 
-        CATCH_REQUIRE_FALSE(p.get_capture_error());
-        p.set_capture_error();
-        CATCH_REQUIRE(p.get_capture_error());
+        cppprocess::io_capture_pipe::pointer_t error(std::make_shared<cppprocess::io_capture_pipe>());
+        p.set_error_io(error);
+        CATCH_REQUIRE(p.get_error_io() == error);
 
-        CATCH_REQUIRE(p.get_error().empty());
-        CATCH_REQUIRE(p.get_binary_error().empty());
-        CATCH_REQUIRE(p.get_error_pipe() == nullptr);
+        CATCH_REQUIRE(error->get_output().empty());
+        CATCH_REQUIRE(error->get_trimmed_output().empty());
+        CATCH_REQUIRE(error->get_binary_output().empty());
 
         CATCH_REQUIRE(p.start() == 0);
 
         int const code(p.wait());
         CATCH_REQUIRE(code != 0);
 
-        CATCH_REQUIRE(p.get_output().empty());
+        CATCH_REQUIRE(p.get_output_io() == nullptr);
+        CATCH_REQUIRE(p.get_error_io() == error);
 
-        CATCH_REQUIRE(!p.get_error().empty());
-        // the error message can change under our feet so at this time I
-        // don't compare anything
+        CATCH_REQUIRE_FALSE(error->get_output().empty());
+        // the error message can change under our feet so at this time
+        // do not compare to a specific message
     }
     CATCH_END_SECTION()
 
@@ -268,12 +253,21 @@ CATCH_TEST_CASE("Process", "[process]")
         tr->set_command("tr");
         tr->add_argument("TASP");
         tr->add_argument("tasp");
-        tr->set_capture_output();
+
+        cppprocess::io_data_pipe::pointer_t input(std::make_shared<cppprocess::io_data_pipe>());
+        CATCH_REQUIRE_FALSE(input->is_writer());
+        input->add_input("Test A Simple Pipeline\n");
+        CATCH_REQUIRE(input->is_writer());
+
+        cppprocess::io_capture_pipe::pointer_t capture(std::make_shared<cppprocess::io_capture_pipe>());
+        tr->set_output_io(capture);
+        CATCH_REQUIRE(tr->get_output_io() == capture);
 
         cppprocess::process p("cat");
         p.set_command("cat");
         p.add_argument("-");
-        p.add_input("Test A Simple Pipeline\n");
+        p.set_input_io(input);
+        CATCH_REQUIRE(p.get_input_io() == input);
         p.add_next_process(tr);
 
         CATCH_REQUIRE(p.start() == 0);
@@ -281,7 +275,7 @@ CATCH_TEST_CASE("Process", "[process]")
         int const code(p.wait());
         CATCH_REQUIRE(code == 0);
 
-        CATCH_REQUIRE(tr->get_output() == "test a simple pipeline\n");
+        CATCH_REQUIRE(capture->get_output() == "test a simple pipeline\n");
     }
     CATCH_END_SECTION()
 
@@ -303,7 +297,10 @@ CATCH_TEST_CASE("Process", "[process]")
         tr->set_command("tr");
         tr->add_argument("TASP");
         tr->add_argument("tasp");
-        tr->set_output_filename(output_filename);
+
+        cppprocess::io_output_file::pointer_t output(std::make_shared<cppprocess::io_output_file>(output_filename));
+        output->set_truncate(true);
+        tr->set_output_io(output);
 
         // we could directly cat the file here, obviously but we want
         // to test the `< <filename>` functionality
@@ -311,7 +308,10 @@ CATCH_TEST_CASE("Process", "[process]")
         cppprocess::process p("cat");
         p.set_command("cat");
         p.add_argument("-");
-        p.set_input_filename(input_filename);
+
+        cppprocess::io_input_file::pointer_t input(std::make_shared<cppprocess::io_input_file>(input_filename));
+        p.set_input_io(input);
+
         p.add_next_process(tr);
 
         CATCH_REQUIRE(p.start() == 0);
@@ -319,9 +319,9 @@ CATCH_TEST_CASE("Process", "[process]")
         int const code(p.wait());
         CATCH_REQUIRE(code == 0);
 
-        snap::file_contents output(output_filename);
-        CATCH_REQUIRE(output.read_all());
-        CATCH_REQUIRE(output.contents() == "test a simple pipeline\n");
+        snap::file_contents final_output(output_filename);
+        CATCH_REQUIRE(final_output.read_all());
+        CATCH_REQUIRE(final_output.contents() == "test a simple pipeline\n");
     }
     CATCH_END_SECTION()
 }

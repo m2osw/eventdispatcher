@@ -1,5 +1,5 @@
 
-* See to have clients and servers for HTTP/HTTPS/HTTP2
+* See to have clients and servers for HTTP/HTTPS/HTTP2/HTTP3
   (we already have such in libsnapwebsites, only it uses `snapuri`...)
 
 * Config describing allowed messages with their parameters and values for
@@ -13,4 +13,12 @@
   and report these through some mechanism similar to the file_change system).
 
 * Finish the snaplogger network appender extension.
+
+* Add a function used to print the list of existing connections.
+  This is quite useful when trying to quit and some connections were not
+  properly removed from the list. That list could be printed by the
+  remove_connection() function or the run() function once a given flag
+  is set to true. That way we can make it easy on the users of the library.
+
+* Consider moving the cppprocess tee_pipe to eventdispatcher.
 

@@ -1,7 +1,8 @@
 
 # Introduction
 
-This sub-library is used to handle processes.
+This sub-library is used to handle processes as in a shell execution
+environment.
 
 At this time, it includes two main parts:
 
@@ -12,21 +13,23 @@ At this time, it includes two main parts:
 
 The `process` class is used to run a command (`fork()` + `execve()`). The
 class is capable of handling the input and output/error streams via pipes
-allowing you to send data to the command and receive the output.
+and files allowing you to send data to the command and receive the output
+add errors.
 
 You can also pipe multiple processes one after the other using the
-`add_next_process()`. By default, this pipes each process to the next
-process. You can also add more than one next process in which case
-the list of processes all receive a copy of the output of the previous
-process.
+`add_next_process()`. By default, this feature pipes each process to the
+next. You can also add more than one next process in which case the list
+of processes all receive a copy of the output of the previous process
+(i.e. a `tee` feature).
 
 ## Example
 
-To use the `procss` class you can use your own pipes, in which case you
-are responsible to reading and writing data from/to the process. If you
+To use the `process` class you can use your own pipes, in which case you
+are responsible for reading and writing data from/to the process. If you
 are not otherwise using the `ed::communicator`, you may also want to use
-the `process::wait()` command. In that case, you can let the `process`
-object create the necessary pipes internally.
+the `process::wait()` command. You can also let the `process` object
+create internal pipes if you want to send stdin and receive the replies
+in stdout and stderr.
 
     // create a process object
     //
@@ -66,41 +69,60 @@ object create the necessary pipes internally.
     //
     p.set_forced_environment();
 
-    // you can add input using the add_input() if you do not want to
-    // handle a pipe yourself; this will create an internal input pipe
+    // you can add input using the io_data_pipe if you do not want to
+    // handle a pipe yourself; this will create an automated input pipe;
+    // the one drawback is you have to add all the data ahead of time
+    // (before you call the process::start() function)
     //
     // the input can be a string or binary data
     //
-    // otherwise, you can define your own pipe
+    // otherwise, you can define your own pipe; derive it from
+    // cppprocess::io_pipe and implement the process_write() as required
+    // (i.e. process_write() because you are writing to the child process)
     //
-    // if you do not add any input and do not supply your own pipe,
-    // your stdin file will be passed on to the child process
+    // if you do not an input I/O object, then the process object uses
+    // your stdin file
     //
-    p.add_input("Input here");
-    // -- or --
-    p.set_input_pipe(my_input_pipe);
+    // as described below, you can add a _done_ callback to all I/O objects
+    // which gets called one the object is done; it's generally less useful
+    // for the input pipe
+    //
+    cppprocess::io_data_pipe::pointer_t input(std::make_shared<cppprocess::io_data_pipe>());
+    input->add_input("Input here");
+    p.set_input_io(input);
 
-    // by default the output is sent to stdout, which is good if you
-    // do not need it
+    // by default the output is sent to stdout, which in many cases is good
+    // if you do not need it
     //
     // if instead you want to capture the output, you can either supply
-    // your own pipe_connection object or use the internal object with;
-    // if you use the auto-capture mode, the whole output will be
+    // your own io_pipe object or use the io_capture_pipe object;
+    // if you use the io_capture_pipe, the whole output will be
     // available only once the command exited although you can try
-    // to get partial bits as it comes in
+    // to get partial data as it comes in; make sure to use the reset
+    // if you do not want data to be repeated
     //
-    // the get_output() will not work if you used your own pipe since
-    // in that case the data is directly sent to your pipe object
-    //
-    p.set_capture_output();
-    // and then later: p.get_output();
+    cppprocess::io_capture_pipe::pointer_t output(std::make_shared<cppprocess::io_capture_pipe>());
+    p.set_output_io(output);
+    // and then later: output->get_output();
     // -- or --
-    p.set_output_pipe(my_output_pipe);
+    p.set_output_io(my_output_pipe);
 
-    // simlar to stdout, you can capture stderr
+    // to know when the output is ready, you can add a _done_ callback which
+    // definition is:
     //
-    p.set_capture_error();
-    // and then later: p.get_error();
+    //     bool (done_callback)(io *, done_reason_t);
+    //
+    // at the time the callback is called, the pipe was closed by the other
+    // side so you can use the get_output() function to retrieve all the
+    // output data
+    //
+    output->add_process_done_callback(...);
+
+    // simlar to stdout, you can capture stderr and also add a callback
+    //
+    cppprocess::io_capture_pipe::pointer_t error(std::make_shared<cppprocess::io_capture_pipe>());
+    p.set_error_io(error);
+    // and then later: error->get_output();
     // -- or --
     p.set_error_pipe(my_error_pipe);
 
@@ -110,10 +132,12 @@ object create the necessary pipes internally.
     // are not using the ed::communicator, use the wait() instead
     //
     p.start();
-    // if no ed::communicator: p.wait()
+    // if no ed::communicator, use: p.wait()
 
     // with ed::communicator, you get a call to your listener (callback)
-    // that you add to the signal_child object like so
+    // that you add to the signal_child object as below. Once you received
+    // that signal, the child process died. If you pipe multiple processes,
+    // you will receive one signal per process.
     //
     // WARNING: this has to be done after the start() (i.e. you need the
     //          pid_t of the child) and before you return back to the
@@ -150,19 +174,27 @@ can use the following:
 
 One advantage here is that the arguments do not need to be escaped in any way.
 
+**IMPORTANT NOTE:** When running a command from a Qt environment, it may not
+work if you do not reassign the input, output, and error stream. Therefore
+this version may not work in a Qt application. We suggest that you define
+all three pipes with Qt apps.
+
 ## Simulate a popen("cmd", "r") call
 
 To simulate a `popen()` call with the `"r"` option, you want to capture the
 output. If you just want to run one command and get the output as a string
 all at once, then you can just use the capture flag like so:
 
+    cppprocess::io_capture_pipe::pointer_t output(std::make_shared<cppprocess::io_capture_pipe>());
+    
     cppprocess::process p("my-command");
     p.set_command("cat");
     p.add_argument("/proc/cpuinfo");
-    p.set_capture_output();
+    p.set_output_io(output);
     p.start();
     p.wait();       // if you don't use ed::communicator
-    std::string output(p.get_output());
+    
+    std::string output(output->get_output());
 
 You can also get the trimmed output, which removes extra spaces and new line
 characters before returning the output string. If the output is binary data,
@@ -173,9 +205,12 @@ then use the `get_binary_output()` to get the `buffer_t` as is.
 To simulate a `popen()` call with the `"w"` option, you want to add the
 input to the process before you call the `start()` function.
 
+    cppprocess::io_data_pipe::pointer_t input(std::make_shared<cppprocess::io_data_pipe>());
+    input->add_input("Message to send to syslog");
+    
     cppprocess::process p("my-command");
     p.set_command("logger");
-    p.add_input("Message to send to syslog");
+    p.set_input_io(input);
     p.start();
     p.wait();       // if you don't use ed::communicator
 
@@ -186,13 +221,13 @@ it will go to your `stdout`.
 
 ### Input Pipe
 
-Using an input pipe is equivalent to:
+Using an input pipe with in memory data is equivalent to:
 
     cat <file> | <command> ...
 
-The `add_input()` and `set_input_pipe()` both give you the same
-functionality. The `add_input()` uses an internal pipe meaning that
-you do not need to supply anything more to make it all work.
+The `io_data_pipe::add_input()` and `process::set_input_io()` both give you
+the same functionality. The `io_data_pipe::add_input()` uses an internal pipe
+meaning that you do not need to supply anything more to make it all work.
 
 ### Input File
 
@@ -203,11 +238,12 @@ file on disk. This is equivalent to:
 
 The file has to exist and be readable.
 
+Use the `io_input_file` for this purpose.
+
 ### Same Input
 
 By default, the input comes from `stdin`. This happens if you do not
-supply data (`add_input()`), define an input pipe (`set_input_pipe()`)
-or define an input filename (`set_input_filename()`).
+supply input (`process::set_input_io()`).
 
 ### Output Pipe
 
@@ -227,20 +263,28 @@ You can supply a path and filename as output. In this case, it writes the
 output to that file. This is equivalent to:
 
     <command> > <filename>
+     -- or --
+    <command> >> <filename>
 
 The file has to be created or exists and can be written to.
+
+The `>>` works if you do set the truncate flag to false and the append
+file to true.
 
 ### Same Output
 
 By default, the output will be sent to `stdout`. This happens if you
-do not ask for capture, supply a pipe, or supply a filename.
+do not ask for any capture (i.e do not call `set_output_io()`).
 
 ### Error Stream
 
 Like the output, the error stream can use a pipe, a filename, or
-the default `stderr`. The filename shell equivalent is likke so:
+the default `stderr`. The filename shell equivalent is like so:
 
     <command> 2> <filename>
+    <command> 2>> <filename>
+
+See the `process::set_error_io()` function.
 
 ### Piping
 
@@ -253,18 +297,19 @@ The output of `<command1>` will automatically be sent to the input
 of `<command2>`, the output of `<command2>` will automatically be
 sent to `<command3>`, etc.
 
-You can still capture the final output (i.e. the output of the last
-command) and supply input to the first command.
+You can still send data to the first command (see `io_data_pipe` or
+`io_input_file`) and capture the final output (i.e. the output of the last
+command with `io_capture_pipe` or `io_output_file`).
 
     [input] | <command1> | <command2> | <command3> | [output]
 
-The input and output can be supplied through a pipe you own or a
-buffer you prepare (`add_input()`) and the capture buffer
-(see `set_capture_output()`).
+Every command can be given its own specific capture I/O for their error
+stream, or they call can use the same error stream.
 
 And since our system works with signals, you can simply add a
 callback function which gets called once the output is ready
 for consumption and delete the process chain at that point.
+
 
 # Process Info
 
@@ -275,15 +320,40 @@ using the class' member functions.
 This gives you much information, such as how much memory, CPU, and
 I/O the process has used so far.
 
+To check out the currently running list of processes, use the `process_list`
+class. This is an extension of `std::map<>` that reads the current list
+of processes found under `/proc`. Each process is defined with a pointer to
+a `process_info` object found in said map which you can search using the
+process pid or basename.
+
+
 # TODO
 
-* Support equivalent to `>>`. At this time we always truncate existing
-files.
+* Add support for an I/O which is a file descriptor.
 
-* Look at the input/output _streams_ and make use of a separate class
-which can use a common interface to support input or output with the
-several cases (supplied pipe, internal pipe [through a buffer], a
-filename, standard in/out/err). Right now, this is a huge mess!
+* Clean up the I/O (docs, comments, etc.)
+
+* Write a tool that would allow for pipelines with tees (which would also
+  allow us to test that feature). The "piper" shell which allows for tees
+  to be created as in:
+
+        a | b | e
+          |   | f
+          | c | g
+          |   | h
+          |   | i
+          | d
+
+    In that example, command `a` output (stdout) is sent to command `b`.
+    The second output of `a` (stderr) is sent to command `c`. A third output
+    is created and sent to command `d`.
+
+    Similarly, `b` sends its output to `e` and `f`.
+
+    And `c` to `g`, `h`, `i`.
+
+    We can also support redirections (<file, >file, >>file, 2>&1, etc.) and
+    arguments as with a _regular_ shell.
 
 
 # License
