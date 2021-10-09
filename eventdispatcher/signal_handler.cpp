@@ -325,7 +325,7 @@ signal_handler::pointer_t signal_handler::create_instance(
     handler->add_terminal_signals(terminal);
     handler->add_ignored_signals(ignored);
 
-    if(callback_sig != 0)
+    if(callback_sig > 0)
     {
         handler->add_callback(callback_id, callback_sig, callback);
     }

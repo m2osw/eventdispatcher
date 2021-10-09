@@ -207,12 +207,27 @@ bool communicator::add_connection(connection::pointer_t connection)
         // calls (however, we do not count those calls, so first call
         // to the remove_connection() does remove it!)
         //
+
+        SNAP_LOG_TRACE
+            << "connection, \""
+            << connection->get_name()
+            << "\" not readded (already present in f_connections)."
+            << SNAP_LOG_SEND;
+
         return false;
     }
 
     f_connections.push_back(connection);
 
     connection->connection_added();
+
+    SNAP_LOG_TRACE
+        << "added 1 connection, \""
+        << connection->get_name()
+        << "\", there is now "
+        << f_connections.size()
+        << " connections (including this one)."
+        << SNAP_LOG_SEND;
 
     return true;
 }
@@ -240,31 +255,48 @@ bool communicator::remove_connection(connection::pointer_t connection)
         << connection->get_name()
         << "\", of "
         << f_connections.size()
-        << " connections (including this one.)"
+        << " connections (including this one)."
         << SNAP_LOG_SEND;
 
     f_connections.erase(it);
 
     connection->connection_removed();
 
-// TODO: make this a flag so we can turn it on without having to recompile
-#if 0
-#ifdef _DEBUG
-std::for_each(
-          f_connections.begin()
-        , f_connections.end()
-        , [](auto const & c)
-        {
-            SNAP_LOG_TRACE
-                << "communicator::remove_connection(): remaining connection: \""
-                << c->get_name()
-                << "\""
-                << SNAP_LOG_SEND;
-        });
-#endif
-#endif
+    if(f_debug_connections != snaplogger::severity_t::SEVERITY_OFF)
+    {
+        log_connections();
+    }
 
     return true;
+}
+
+
+/** \brief Log the list of connections.
+ *
+ * This function prints out the name of each existing connection to your
+ * logs at the specified log level (severity).
+ *
+ * The function can automatically be called when you remove a connection
+ * when the debug connections flag is turned on. This is done by calling
+ * the debug_connections() function.
+ *
+ * \param[in] severity  The logger severity level.
+ *
+ * \sa debug_connections()
+ */
+void communicator::log_connections(snaplogger::severity_t severity)
+{
+    std::for_each(
+              f_connections.begin()
+            , f_connections.end()
+            , [severity](auto const & c)
+            {
+                snaplogger::message msg(severity, __FILE__, __func__, __LINE__);
+                msg << "communicator remaining connection: \""
+                    << c->get_name()
+                    << "\"";
+                snaplogger::send_message(msg);
+            });
 }
 
 
@@ -300,6 +332,49 @@ void communicator::set_force_sort(bool status)
 bool communicator::is_running() const
 {
     return f_running;
+}
+
+
+/** \brief Debug connections being removed.
+ *
+ * Whenever one of your processes is stuck on a QUIT, it most likely
+ * is because you have one or more connections still defined in your
+ * communicator.
+ *
+ * The communicator has a list of connections and it is possible to
+ * automatically get that list in your logs whenever you remove a
+ * connection. This is often very helpful even while running because
+ * that way you can see what is still in your communicator at a given
+ * moment.
+ *
+ * By default, though, this list does not get printed in the logs to
+ * avoid wasting disk space and processing time. In a debug setup, it
+ * is really helpful to call this function.
+ *
+ * Note that the feature is available in the release version of the
+ * library. It will output the data at the DEBUG level.
+ *
+ * For the list to appear, you need to call this function with
+ * the \p severity parameter set to a value other than
+ * snaplogger::severity_t::SEVERITY_OFF.
+ *
+ * \note
+ * To optimize this feature as much as possible, you can turn it on
+ * only at the time you are calling the very last remove_connection()
+ * (or at least what you think is the very last connection). That
+ * way you avoid having the list appear all over the place.
+ *
+ * You can also directly call the log_connections() function which
+ * is what we use internally.
+ *
+ * \param[in] severity  The severity level at which to log lists of connections.
+ *
+ * \sa log_connections()
+ * \sa remove_connection()
+ */
+void communicator::debug_connections(snaplogger::severity_t severity)
+{
+    f_debug_connections = severity;
 }
 
 

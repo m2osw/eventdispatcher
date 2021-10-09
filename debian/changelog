@@ -8,7 +8,8 @@ eventdispatcher (1.1.37.0~bionic) bionic; urgency=high
   * Allow for retrieving the "other socket" (pipes).
   * Added a forked() function which only close the other socket (pipes).
   * Added a couple of test files to verify the process library.
-  * Fixed some documentation.
+  * Enhanced the tracing of add/remove/list of connections in the communicator.
+  * Fixes to documentation (especially, fixed the qt reference in the doxy).
 
  -- Alexis Wilke <alexis@m2osw.com>  Fri, 17 Sep 2021 21:52:49 -0700
 
