@@ -195,12 +195,12 @@ bool tcp_client_buffer_connection::is_writer() const
  * This function reads incoming data from a socket.
  *
  * The function is what manages our low level TCP/IP connection protocol
- * which is to read one line of data (i.e. bytes up to the next '\n'
- * character; note that '\r' are not understood.)
+ * which is to read one line of data (i.e. bytes up to the next '\\n'
+ * character; note that '\\r' are not understood.)
  *
  * Once a complete line of data was read, it is converted to UTF-8 and
  * sent to the next layer using the process_line() function passing
- * the line it just read (without the '\n') to that callback.
+ * the line it just read (without the '\\n') to that callback.
  *
  * \sa process_write()
  * \sa process_line()

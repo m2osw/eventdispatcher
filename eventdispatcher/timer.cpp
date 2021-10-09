@@ -67,7 +67,6 @@ namespace ed
  * given a chance to process the timer, you only get one single
  * signal.
  *
- * \param[in] communicator  The communicator controlling this connection.
  * \param[in] timeout_us  The timeout in microseconds.
  */
 timer::timer(std::int64_t timeout_us)

@@ -120,7 +120,7 @@ dispatcher_base::pointer_t dispatcher_support::get_dispatcher() const
  * commands that the default msg_help() wont' understand, then you
  * need to also implement the help() function.
  *
- * \param[in,out] message  The message being dispatched.
+ * \param[in,out] msg  The message being dispatched.
  *
  * \return true if the dispatcher handled the message, false if the
  *         process_message() function was called instead.
@@ -171,7 +171,7 @@ bool dispatcher_support::dispatch_message(message & msg)
  * That way we'd avoid the last entry in the match array, which would allow
  * us to have binary search (much faster).
  *
- * \param[in] message  The message to be processed.
+ * \param[in] msg  The message to be processed.
  */
 void dispatcher_support::process_message(message const & msg)
 {

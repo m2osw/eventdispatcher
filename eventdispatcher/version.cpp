@@ -22,7 +22,7 @@
  *
  * This file records the event dispatcher library version at compile time.
  *
- * The `#define` give you the library version at the time you are compiling.
+ * The macros give you the library version at the time you are compiling.
  * The functions allow you to retrieve the version of a dynamically linked
  * library.
  */

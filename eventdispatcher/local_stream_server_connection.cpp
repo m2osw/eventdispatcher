@@ -109,7 +109,7 @@ namespace ed
  * This exception is raised if the socket cannot be created, bound to
  * the specified Unix address, or listen() fails on the socket.
  *
- * \param[in] u  The Unix address to listen on.
+ * \param[in] address  The Unix address to listen on.
  * \param[in] max_connections  The number of connections to keep in the listen queue.
  * \param[in] force_reuse_addr  Whether to allow the deletion of a file
  * before the bind() call.

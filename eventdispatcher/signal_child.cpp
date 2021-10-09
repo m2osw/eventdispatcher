@@ -102,6 +102,8 @@ signal_child::pointer_t    g_signal_child = signal_child::pointer_t();
  * is still running, then you get a reply which says the child process
  * is not exited, signaled, or stopped. You can decide on which signal
  * your callback gets called.
+ *
+ * \param[in] info  The signal information as received from the system.
  */
 child_status::child_status(siginfo_t const & info)
     : f_info(info)

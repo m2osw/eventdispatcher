@@ -168,8 +168,8 @@ public:
             set_name("tcp_client_permanent_message_connection_impl::thread_signal_handler");
         }
 
-        thread_signal_handler(thread_signal_handler const & rhs) = delete;
-        thread_signal_handler & operator = (thread_signal_handler const & rhs) = delete;
+        thread_signal_handler(thread_signal_handler const &) = delete;
+        thread_signal_handler & operator = (thread_signal_handler const &) = delete;
 
         /** \brief This signal was emitted.
          *
@@ -206,8 +206,8 @@ public:
         {
         }
 
-        runner(runner const & rhs) = delete;
-        runner & operator = (runner const & rhs) = delete;
+        runner(runner const &) = delete;
+        runner & operator = (runner const &) = delete;
 
 
         /** \brief This is the actual function run by the thread.
@@ -300,6 +300,8 @@ public:
          * However, the c_str() function may change the buffer pointer.
          * Hence, to be 100% safe, you cannot call this function until
          * you make sure that the thread is fully stopped.
+         *
+         * \return The destination address.
          */
         std::string const & get_address() const
         {
@@ -315,6 +317,8 @@ public:
          * Since the variable is constant, it never gets changed
          * which means it is always safe to use it between
          * both threads.
+         *
+         * \return The port to connect to.
          */
         int get_port() const
         {
@@ -409,8 +413,8 @@ public:
      * of the tcp_client_permanent_message_connection object.
      * However, in all cases these are never run from the thread.
      *
-     * \param[in] client  A pointer to the owner of this
-     *            tcp_client_permanent_message_connection_impl object.
+     * \param[in] parent  A pointer to the owner of this
+     * tcp_client_permanent_message_connection_impl object.
      * \param[in] address  The address we are to connect to.
      * \param[in] port  The port we are to connect to.
      * \param[in] mode  The mode used to connect.
@@ -666,7 +670,7 @@ public:
      * Note that the message does not get cached if mark_done() was
      * called earlier since we are trying to close the whole connection.
      *
-     * \param[in] message  The message to send.
+     * \param[in] msg  The message to send.
      * \param[in] cache  Whether to cache the message if the connection is
      *                   currently down.
      *
@@ -882,13 +886,15 @@ tcp_client_permanent_message_connection::~tcp_client_permanent_message_connectio
  * specific order (For example, after a reconnection to snapcommunicator
  * you first need to REGISTER or CONNECT...)
  *
- * \param[in] message  The message to send to the connected server.
+ * \param[in] msg  The message to send to the connected server.
  * \param[in] cache  Whether the message should be cached.
  *
  * \return true if the message was sent, false if it was not sent, although
  *         if cache was true, it was cached
  */
-bool tcp_client_permanent_message_connection::send_message(message const & msg, bool cache)
+bool tcp_client_permanent_message_connection::send_message(
+          message const & msg
+        , bool cache)
 {
     return f_impl->send_message(msg, cache);
 }

@@ -107,6 +107,8 @@ namespace ed
  * \todo
  * Transform the dispatcher_match with classes so we can build the
  * array safely.
+ *
+ * \tparam T  The connection class to be used with this dispathcer.
  */
 template<typename T>
 class dispatcher
@@ -441,7 +443,6 @@ public:
      * \param[in] connection  The connection for which this dispatcher is
      *                        created.
      * \param[in] matches  The array of dispatch keywords and functions.
-     * \param[in] matches_size  The sizeof() of the matches array.
      */
     dispatcher<T>(T * connection, typename ed::dispatcher<T>::dispatcher_match::vector_t matches)
         : f_connection(connection)
@@ -450,8 +451,8 @@ public:
     }
 
     // prevent copies
-    dispatcher<T>(dispatcher<T> const & rhs) = delete;
-    dispatcher<T> & operator = (dispatcher<T> const & rhs) = delete;
+    dispatcher<T>(dispatcher<T> const &) = delete;
+    dispatcher<T> & operator = (dispatcher<T> const &) = delete;
 
     /** \brief Add a default array of possible matches.
      *
@@ -643,7 +644,7 @@ public:
      * true while debugging. You should remember to turn it back off once
      * you make an official version of your service to avoid the possibly
      * huge overhead of sending all those log messages. One way to do so
-     * is to place the code within #ifdef/#endif as in:
+     * is to place the code within \#ifdef/\#endif as in:
      *
      * \code
      *     #ifdef _DEBUG

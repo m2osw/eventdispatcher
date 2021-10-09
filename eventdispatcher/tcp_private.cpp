@@ -301,14 +301,14 @@ void bio_cleanup()
  * This function reads all existing errors from the OpenSSL library
  * and send them to our logs.
  *
- * \param[in] sni  Whether SNI is ON (true) or OFF (false).
+ * \return The number of errors that the function found.
  */
 int bio_log_errors()
 {
     // allow for up to 5 errors in one go, but we have a HUGE problem
     // at this time as in some cases the same error is repeated forever
     //
-    for(int i(0);; ++i)
+    for(int count(0);; ++count)
     {
         char const * filename(nullptr);
         int line(0);
@@ -319,7 +319,7 @@ int bio_log_errors()
         {
             // no more errors
             //
-            return i;
+            return count;
         }
 
         // get corresponding messages too
@@ -429,6 +429,8 @@ void bio_deleter(BIO * bio)
  *
  * This deleter is used to make sure that the SSL_CTX object gets
  * freed whenever the object holding it gets destroyed.
+ *
+ * \param[in] ssl_ctx  The SSL context to delete.
  */
 void ssl_ctx_deleter(SSL_CTX * ssl_ctx)
 {

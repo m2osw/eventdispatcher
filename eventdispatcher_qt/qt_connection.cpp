@@ -198,6 +198,8 @@ qt_connection::~qt_connection()
  *
  * This function returns the X11 socket. It may return -1 although by
  * default if we cannot determine the socket we fail with an exception.
+ *
+ * \return The file descriptor of the Qt connection.
  */
 int qt_connection::get_socket() const
 {

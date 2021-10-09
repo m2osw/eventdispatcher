@@ -168,9 +168,10 @@ namespace ed
  *      my_blocking_connection.run();
  * \endcode
  *
- * \param[in] addr  The address to connect to.
- * \param[in] port  The port to connect at.
- * \param[in] mode  The mode used to connect.
+ * \param[in] address  The address to connect to.
+ * \param[in] blocking  Whether the connection is blocking or not.
+ * \param[in] close_on_exec  Whether to force close this connection on an
+ * exec() call.
  */
 local_stream_blocking_client_message_connection::local_stream_blocking_client_message_connection(
               addr::unix const & address
@@ -503,7 +504,7 @@ void local_stream_blocking_client_message_connection::peek()
  * The function blocks until the entire message was written to the
  * socket.
  *
- * \param[in] message  The message to send to the connection.
+ * \param[in] msg  The message to send to the connection.
  * \param[in] cache  Whether to cache the message if it cannot be sent
  *                   immediately (ignored at the moment.)
  *

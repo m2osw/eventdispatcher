@@ -66,9 +66,9 @@ public:
 
 private:
                                         communicator();
-                                        communicator(communicator const & communicator) = delete;
+                                        communicator(communicator const &) = delete;
 
-    communicator &                      operator = (communicator const & communicator) = delete;
+    communicator &                      operator = (communicator const &) = delete;
 
     connection::vector_t                f_connections = connection::vector_t();
     bool                                f_force_sort = true;

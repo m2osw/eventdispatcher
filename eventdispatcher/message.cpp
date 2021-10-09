@@ -116,9 +116,9 @@ namespace ed
  *
  * The value of a parameter gets quoted when it includes a ';'. Within
  * the quotes, a Double Quote can be escaped inside by adding a backslash
- * in front of it (\"). Newline characters (as well as return carriage)
- * are also escaped using \n and \r respectively. Finally, we have to
- * escape backslashes themselves by doubling them, so \ becomes \\.
+ * in front of it (\\"). Newline characters (as well as return carriage)
+ * are also escaped using \\n and \\r respectively. Finally, we have to
+ * escape backslashes themselves by doubling them, so \\ becomes \\\\.
  *
  * Note that only parameter values support absolutely any character.
  * All the other parameters are limited to the Latin alphabet, digits,
@@ -129,8 +129,8 @@ namespace ed
  * The input message is not saved as a cached version of the message
  * because we assume it may not be 100% optimized (canonicalized.)
  *
- * \param[in] message  The string to convert into fields in this
- *                     message object.
+ * \param[in] original_message  The string to convert into fields in this
+ * message object.
  *
  * \return true if the message was successfully parsed; false when an
  *         error occurs and in that case no fields get modified.
@@ -928,7 +928,7 @@ void message::add_parameter(std::string const & name, std::string const & value)
  *
  * \sa verify_message_name()
  */
-void message::add_parameter(std::string const & name, int32_t value)
+void message::add_parameter(std::string const & name, std::int32_t value)
 {
     verify_message_name(name);
 
@@ -951,7 +951,7 @@ void message::add_parameter(std::string const & name, int32_t value)
  *
  * \sa verify_message_name()
  */
-void message::add_parameter(std::string const & name, uint32_t value)
+void message::add_parameter(std::string const & name, std::uint32_t value)
 {
     verify_message_name(name);
 
@@ -1020,7 +1020,7 @@ void message::add_parameter(std::string const & name, unsigned long long value)
  *
  * \sa verify_message_name()
  */
-void message::add_parameter(std::string const & name, int64_t value)
+void message::add_parameter(std::string const & name, std::int64_t value)
 {
     verify_message_name(name);
 
@@ -1043,7 +1043,7 @@ void message::add_parameter(std::string const & name, int64_t value)
  *
  * \sa verify_message_name()
  */
-void message::add_parameter(std::string const & name, uint64_t value)
+void message::add_parameter(std::string const & name, std::uint64_t value)
 {
     verify_message_name(name);
 

@@ -84,7 +84,7 @@ public:
         event_mask_t            get_events() const;
         std::string const &     get_filename() const;
 
-        bool                    operator < (event_t const & rhs) const;
+        bool                    operator < (event_t const &) const;
 
     private:
         std::string             f_watched_path = std::string();

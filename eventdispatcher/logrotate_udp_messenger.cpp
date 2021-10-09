@@ -65,7 +65,7 @@ namespace ed
  *     f_dispatcher->add_communicator_commands();
  * \endcode
  *
- * \param[in] addr  The address/port to listen on. Most often it is the private
+ * \param[in] address  The address/port to listen on. Most often it is the private
  * address (127.0.0.1).
  * \param[in] secret_code  A secret code to verify in order to accept UDP
  * messages.

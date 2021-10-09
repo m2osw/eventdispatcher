@@ -305,6 +305,8 @@ signal_handler::~signal_handler()
  * \param[in] callback_id  An identifier to attach the callback with.
  * \param[in] callback_sig  Signal for which you want a callback.
  * \param[in] callback  The callback function to call.
+ *
+ * \return The pointer to the signal handler.
  */
 signal_handler::pointer_t signal_handler::create_instance(
       signal_mask_t terminal
@@ -614,7 +616,10 @@ char const * signal_handler::get_signal_name(int sig)
  * \param[in] info  Information about the signal handler.
  * \param[in] context  The context from when the interrupt was generated.
  */
-void signal_handler::signal_handler_func(int sig, siginfo_t * info, void * context)
+void signal_handler::signal_handler_func(
+          int sig
+        , siginfo_t * info
+        , void * context)
 {
     // if we are called, g_signal_handler can't be nullptr
     //
@@ -644,8 +649,13 @@ void signal_handler::signal_handler_func(int sig, siginfo_t * info, void * conte
  * we use `std::terminate()`.
  *
  * \param[in] sig  The signal being processed.
+ * \param[in] info  Information about the signal handler.
+ * \param[in] context  The context from when the interrupt was generated.
  */
-void signal_handler::process_signal(int sig, siginfo_t * info, ucontext_t * ucontext)
+void signal_handler::process_signal(
+          int sig
+        , siginfo_t * info
+        , ucontext_t * ucontext)
 {
     callback_list_t callbacks;
     bool show_stack(false);

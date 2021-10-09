@@ -73,12 +73,14 @@ namespace ed
  * If the remote address is an IPv6, we need to put it between [...]
  * (i.e. [::1]:4040) so we can extract the port safely.
  *
- * \param[in] communicator  The communicator controlling this connection.
  * \param[in] addr  The address of the server to connect to.
  * \param[in] port  The port to connect to.
  * \param[in] mode  Type of connection: plain or secure.
  */
-tcp_client_connection::tcp_client_connection(std::string const & addr, int port, mode_t mode)
+tcp_client_connection::tcp_client_connection(
+          std::string const & addr
+        , int port
+        , mode_t mode)
     : tcp_bio_client(addr, port, mode)
     , f_remote_address(get_client_addr() + ":" + std::to_string(get_client_port()))
 {

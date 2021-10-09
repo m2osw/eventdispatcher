@@ -79,7 +79,8 @@ namespace ed
  * This exception is raised if the client cannot create the socket or it
  * cannot connect to the server.
  *
- * \param[in] u  The Unux address of the server to connect to.
+ * \param[in] address  The Unix address of the server to connect to.
+ * \param[in] blocking  Whether the socket has to be opened in blocking mode.
  * \param[in] close_on_exec  Whether to close this socket on an execve() call.
  */
 local_stream_client_connection::local_stream_client_connection(
@@ -92,7 +93,9 @@ local_stream_client_connection::local_stream_client_connection(
     f_address.get_un(un);
     f_socket.reset(socket(
                   un.sun_family
-                , SOCK_STREAM | SOCK_NONBLOCK | (close_on_exec ? SOCK_CLOEXEC : 0)
+                , SOCK_STREAM
+                    | (blocking ? 0 : SOCK_NONBLOCK)
+                    | (close_on_exec ? SOCK_CLOEXEC : 0)
                 , 0));
     if(f_socket == nullptr)
     {

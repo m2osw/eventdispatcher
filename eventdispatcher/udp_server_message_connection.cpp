@@ -104,16 +104,16 @@ udp_server_message_connection::udp_server_message_connection(std::string const &
  *
  * \param[in] addr  The destination address for the message.
  * \param[in] port  The destination port for the message.
- * \param[in] message  The message to send to the destination.
+ * \param[in] msg  The message to send to the destination.
  * \param[in] secret_code  The secret code to send along the message.
  *
  * \return true when the message was sent, false otherwise.
  */
 bool udp_server_message_connection::send_message(
-                  std::string const & addr
-                , int port
-                , message const & msg
-                , std::string const & secret_code)
+          std::string const & addr
+        , int port
+        , message const & msg
+        , std::string const & secret_code)
 {
     // Note: contrary to the TCP version, a UDP message does not
     //       need to include the '\n' character since it is sent

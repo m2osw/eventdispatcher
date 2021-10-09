@@ -248,8 +248,12 @@ file_changed::~file_changed()
  *
  * \param[in] watched_path  The path the user wants to watch.
  * \param[in] events  The events being added to the watch.
+ *
+ * \return true if the merge happened.
  */
-bool file_changed::merge_watch(std::string const & watched_path, event_mask_t const events)
+bool file_changed::merge_watch(
+          std::string const & watched_path
+        , event_mask_t const events)
 {
     auto const & wevent(std::find_if(
               f_watches.begin()

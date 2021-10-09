@@ -154,6 +154,8 @@ bool tcp_server_client_buffer_connection::is_writer() const
  *
  * \param[in] data  The pointer to the buffer of data to be sent.
  * \param[out] length  The number of bytes to send.
+ *
+ * \return The number of bytes written or -1 if the socket is already closed.
  */
 ssize_t tcp_server_client_buffer_connection::write(void const * data, size_t const length)
 {

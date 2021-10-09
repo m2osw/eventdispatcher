@@ -223,14 +223,16 @@ void tcp_server_client_message_connection::process_line(std::string const & line
  * fails to write the entire message. This should only happen if
  * the pipe gets severed.
  *
- * \param[in] message  The message to be processed.
+ * \param[in] msg  The message to be processed.
  * \param[in] cache  Whether to cache the message if there is no connection.
  *                   (Ignore because a client socket has to be there until
  *                   closed and then it can't be reopened by the server.)
  *
  * \return Always true, although if an error occurs the function throws.
  */
-bool tcp_server_client_message_connection::send_message(message const & msg, bool cache)
+bool tcp_server_client_message_connection::send_message(
+          message const & msg
+        , bool cache)
 {
     snap::NOT_USED(cache);
 

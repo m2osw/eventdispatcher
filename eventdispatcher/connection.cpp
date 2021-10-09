@@ -686,9 +686,6 @@ int64_t connection::get_saved_timeout_timestamp() const
  * block on you. It is important to not setup a socket you
  * listen on as non-blocking if you do not want to risk having the
  * accepted sockets non-blocking.
- *
- * \param[in] non_blocking_socket  Make socket non-block if true,
- *            blocking if false.
  */
 void connection::non_blocking() const
 {
@@ -734,6 +731,9 @@ void connection::keep_alive() const
 /** \brief Lets you know whether mark_done() was called.
  *
  * This function returns true if mark_done() was called on this connection.
+ *
+ * \return true if the connection is done (we want it to stop sending/receiving
+ * as soon as possible).
  */
 bool connection::is_done() const
 {
@@ -1055,6 +1055,20 @@ void connection::connection_added()
 void connection::connection_removed()
 {
 }
+
+
+/** \fn int connection::get_socket() const = 0
+ * \brief Retrieve this connection socket.
+ *
+ * This function returns the socket of the connection which is a file
+ * descriptor.
+ *
+ * A connection is expected to create a socket at the time it gets created.
+ * It can use that socket until it gets closed. After it gets closed, the
+ * function returns -1.
+ *
+ * \return The socket connection or -1 if the connection is closed.
+ */
 
 
 

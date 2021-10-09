@@ -49,10 +49,10 @@ public:
                                 , int max_connections = MAX_CONNECTIONS
                                 , bool reuse_addr = false
                                 , bool auto_close = false);
-                        tcp_server(tcp_server const & src) = delete;
+                        tcp_server(tcp_server const &) = delete;
                         ~tcp_server();
 
-    tcp_server &        operator = (tcp_server const & rhs) = delete;
+    tcp_server &        operator = (tcp_server const &) = delete;
 
     int                 get_socket() const;
     int                 get_max_connections() const;

@@ -416,12 +416,14 @@ void inter_thread_message_connection::process_read()
  * That's a bit complicated right now for a feature that would not
  * get tested well...
  *
- * \param[in] message  The message to send to the other side.
+ * \param[in] msg  The message to send to the other side.
  * \param[in] cache  These messages are always cached so this is ignored.
  *
  * \return true of the message was sent, false if it was cached or failed.
  */
-bool inter_thread_message_connection::send_message(message const & msg, bool cache)
+bool inter_thread_message_connection::send_message(
+      message const & msg
+    , bool cache)
 {
     snap::NOT_USED(cache);
 

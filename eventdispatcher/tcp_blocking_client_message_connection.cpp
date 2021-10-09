@@ -500,7 +500,7 @@ void tcp_blocking_client_message_connection::peek()
  * The function blocks until the entire message was written to the
  * socket.
  *
- * \param[in] message  The message to send to the connection.
+ * \param[in] msg  The message to send to the connection.
  * \param[in] cache  Whether to cache the message if it cannot be sent
  *                   immediately (ignored at the moment.)
  *

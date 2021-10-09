@@ -90,7 +90,7 @@ connection_with_send_message::~connection_with_send_message()
  * If the environment logger is not currently configured, this message
  * gets ignored.
  *
- * \param[in] message  The HELP message.
+ * \param[in] msg  The HELP message.
  *
  * \sa help()
  */
@@ -184,7 +184,7 @@ void connection_with_send_message::msg_help(message & msg)
  * This allows you to include anything you want in those parameters although
  * we suggest you use the "timestamp" only for a value representing time.
  *
- * \param[in] message  The STOP message.
+ * \param[in] msg  The STOP message.
  */
 void connection_with_send_message::msg_alive(message & msg)
 {
@@ -249,7 +249,7 @@ void connection_with_send_message::msg_leak(ed::message & msg)
  * If the environment logger is not currently configured, this message
  * is ignored.
  *
- * \param[in] message  The STOP message.
+ * \param[in] msg  The STOP message.
  */
 void connection_with_send_message::msg_log(message & msg)
 {
@@ -284,7 +284,7 @@ void connection_with_send_message::msg_log(message & msg)
  * The value 'true' means that all the daemons are being asked to stop and
  * not just you.
  *
- * \param[in] message  The STOP message.
+ * \param[in] msg  The STOP message.
  *
  * \sa msg_stop()
  * \sa stop()
@@ -305,7 +305,7 @@ void connection_with_send_message::msg_quitting(message & msg)
  * working. Some daemon, though, start working immediately no matter
  * what (i.e. snapwatchdog and snapfirewall do work either way.)
  *
- * \param[in] message  The READY message.
+ * \param[in] msg  The READY message.
  *
  * \sa ready()
  */
@@ -344,7 +344,7 @@ void connection_with_send_message::msg_ready(message & msg)
  * \note
  * In those existing implementations, we really just do a restart anyway.
  *
- * \param[in] message  The RESTART message.
+ * \param[in] msg  The RESTART message.
  *
  * \sa restart()
  */
@@ -364,7 +364,7 @@ void connection_with_send_message::msg_restart(message & msg)
  * entire system to shutdown (otherwise you would receive a QUITTING command
  * instead.)
  *
- * \param[in] message  The STOP message.
+ * \param[in] msg  The STOP message.
  *
  * \sa msg_quitting()
  */
@@ -382,7 +382,7 @@ void connection_with_send_message::msg_stop(message & msg)
  * by sending an UNKNOWN reply. This function handles the UNKNOWN command
  * by simply recording that as an error in the logs.
  *
- * \param[in] message  The UNKNOWN message we just received.
+ * \param[in] msg  The UNKNOWN message we just received.
  */
 void connection_with_send_message::msg_log_unknown(message & msg)
 {
@@ -423,7 +423,7 @@ void connection_with_send_message::msg_log_unknown(message & msg)
  *  };
  * \endcode
  *
- * \param[in] message  The message to reply to.
+ * \param[in] msg  The message to reply to.
  */
 void connection_with_send_message::msg_reply_with_unknown(message & msg)
 {
@@ -479,7 +479,7 @@ void connection_with_send_message::help(string_list_t & commands)
  * this function depending on your daemon's need. Most often this function
  * is the one that really starts your daemons process.
  *
- * \param[in,out] message  The READY message.
+ * \param[in,out] msg  The READY message.
  */
 void connection_with_send_message::ready(message & msg)
 {
@@ -501,7 +501,7 @@ void connection_with_send_message::ready(message & msg)
  * configuration file changed and your daemon is capable of reading the
  * new settings without a full restart, then just read that new config.
  *
- * \param[in,out] message  The RESTART message.
+ * \param[in,out] msg  The RESTART message.
  *
  * \sa msg_restart()
  */

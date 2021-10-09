@@ -126,12 +126,14 @@ void tcp_client_message_connection::process_line(std::string const & line)
  * This function sends a message to the client on the other side
  * of this connection.
  *
- * \param[in] message  The message to be sent.
+ * \param[in] msg  The message to be sent.
  * \param[in] cache  Ignored.
  *
  * \return Always true, although if an error occurs the function throws.
  */
-bool tcp_client_message_connection::send_message(message const & msg, bool cache)
+bool tcp_client_message_connection::send_message(
+          message const & msg
+        , bool cache)
 {
     snap::NOT_USED(cache);
 

@@ -167,6 +167,8 @@ void tcp_server_client_connection::close()
 /** \brief Retrieve the socket of this connection.
  *
  * This function returns the socket defined in this connection.
+ *
+ * \return The socket file descriptor or -1 if the connection is closed.
  */
 int tcp_server_client_connection::get_socket() const
 {

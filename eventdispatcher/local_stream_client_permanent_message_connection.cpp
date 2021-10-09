@@ -305,6 +305,8 @@ public:
          * However, the c_str() function may change the buffer pointer.
          * Hence, to be 100% safe, you cannot call this function until
          * you make sure that the thread is fully stopped.
+         *
+         * \return The destination address.
          */
         addr::unix get_address() const
         {
@@ -400,11 +402,12 @@ public:
      * of the local_stream_client_permanent_message_connection object.
      * However, in all cases these are never run from the thread.
      *
-     * \param[in] client  A pointer to the owner of this
-     *            local_stream_client_permanent_message_connection_impl object.
+     * \param[in] parent  A pointer to the owner of this
+     * local_stream_client_permanent_message_connection_impl object.
      * \param[in] address  The address we are to connect to.
-     * \param[in] port  The port we are to connect to.
-     * \param[in] mode  The mode used to connect.
+     * \param[in] blocking  Whether to open in blocking mode or not.
+     * \param[in] close_on_exec  Whether to mark the socket as requiring to
+     * be closed on an exec() call.
      */
     local_stream_client_permanent_message_connection_impl(
                   local_stream_client_permanent_message_connection * parent
@@ -655,7 +658,7 @@ public:
      * Note that the message does not get cached if mark_done() was
      * called earlier since we are trying to close the whole connection.
      *
-     * \param[in] message  The message to send.
+     * \param[in] msg  The message to send.
      * \param[in] cache  Whether to cache the message if the connection is
      *                   currently down.
      *
@@ -833,12 +836,13 @@ private:
  * computer, though, it certainly is important.
  *
  * \param[in] address  The address to listen on. It may be set to "0.0.0.0".
- * \param[in] port  The port to listen on.
- * \param[in] mode  The mode to use to open the connection.
  * \param[in] pause  The amount of time to wait before attempting a new
  *                   connection after a failure, in microseconds, or 0.
  * \param[in] use_thread  Whether a thread is used to connect to the
  *                        server.
+ * \param[in] blocking  Whether the socket is going to be blocking or not.
+ * \param[in] close_on_exec  Automatically close the connection if the process
+ * execute an exec() call.
  */
 local_stream_client_permanent_message_connection::local_stream_client_permanent_message_connection(
           addr::unix const & address
@@ -877,7 +881,7 @@ local_stream_client_permanent_message_connection::~local_stream_client_permanent
  * specific order (For example, after a reconnection to snapcommunicator
  * you first need to REGISTER or CONNECT...)
  *
- * \param[in] message  The message to send to the connected server.
+ * \param[in] msg  The message to send to the connected server.
  * \param[in] cache  Whether the message should be cached.
  *
  * \return true if the message was sent, false if it was not sent, although

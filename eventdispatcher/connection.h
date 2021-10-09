@@ -63,10 +63,10 @@ public:
     typedef std::vector<pointer_t>      vector_t;
 
                                 connection();
-                                connection(connection const & connection) = delete;
+                                connection(connection const &) = delete;
     virtual                     ~connection();
 
-    connection &                operator = (connection const & connection) = delete;
+    connection &                operator = (connection const &) = delete;
 
     void                        remove_from_communicator();
 

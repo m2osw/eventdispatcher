@@ -219,6 +219,8 @@ int fd_connection::get_socket() const
  *
  * \param[in] buf  The buffer where the data read is saved.
  * \param[in] count  The maximum number of bytes to read at once.
+ *
+ * \return The number of bytes read from the file connection.
  */
 ssize_t fd_connection::read(void * buf, size_t count)
 {

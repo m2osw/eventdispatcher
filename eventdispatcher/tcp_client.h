@@ -51,8 +51,8 @@ public:
     typedef std::shared_ptr<tcp_client>     pointer_t;
 
                         tcp_client(std::string const & addr, int port);
-                        tcp_client(tcp_client const & src) = delete;
-    tcp_client &        operator = (tcp_client const & rhs) = delete;
+                        tcp_client(tcp_client const &) = delete;
+    tcp_client &        operator = (tcp_client const &) = delete;
                         ~tcp_client();
 
     int                 get_socket() const;

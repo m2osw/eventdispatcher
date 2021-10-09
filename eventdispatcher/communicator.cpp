@@ -128,6 +128,8 @@ communicator::communicator()
  *
  * The initialization of the communicator instance is thread
  * safe.
+ *
+ * \return The communicator pointer.
  */
 communicator::pointer_t communicator::instance()
 {
