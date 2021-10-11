@@ -14,11 +14,15 @@
 
 * Finish the snaplogger network appender extension.
 
-* Add a function used to print the list of existing connections.
-  This is quite useful when trying to quit and some connections were not
-  properly removed from the list. That list could be printed by the
-  remove_connection() function or the run() function once a given flag
-  is set to true. That way we can make it easy on the users of the library.
-
 * Consider moving the cppprocess tee_pipe to eventdispatcher.
+
+* Add support for any number of timers in a connection. I often run in
+  problems with this because I need two or three different timers then
+  I have to create sub-objects, which are separate connection timers by
+  themselves. We can have an identifier to recognize which timer times
+  out and pass that parameter to the process_timeout() function.
+  Another solution would be to have a way to quickly create a timer
+  without having to create a sub-class, so that way we could keep it
+  separate (clean) and have a callback instead of a virtual function
+  (and we have a callback thingy to manage lists of callbacks in snapdev).
 
