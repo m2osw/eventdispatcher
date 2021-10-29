@@ -226,8 +226,8 @@ void base_network_appender::log_message_to_ed_message(
     log_message.add_parameter("message", msg.get_message());
 
     std::string flds;
-    snaplogger::message::field_map_t const fields(msg.get_fields());
-    for(auto f : fields)
+    snaplogger::field_map_t const fields(msg.get_fields());
+    for(auto const & f : fields)
     {
         if(!flds.empty())
         {

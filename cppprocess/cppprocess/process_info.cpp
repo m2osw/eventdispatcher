@@ -49,7 +49,7 @@
 //
 #include    <snapdev/file_contents.h>
 #include    <snapdev/tokenize_string.h>
-#include    <snapdev/string_pathinfo.h>
+#include    <snapdev/pathinfo.h>
 
 
 // C++ lib
@@ -376,7 +376,7 @@ std::string process_info::get_command()
  */
 std::string process_info::get_basename()
 {
-    return snap::string_pathinfo_basename(get_command());
+    return snap::pathinfo::basename(get_command());
 }
 
 

@@ -75,6 +75,7 @@
 //
 #include    <algorithm>
 #include    <cstring>
+#include    <limits>
 
 
 // C lib
