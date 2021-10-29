@@ -3,6 +3,7 @@
 
 [Unit]
 Description=Snap! Logger daemon
+Documentation=https://snapwebsites.org/project/snaplogger file:/usr/share/doc/snaplogger-doc/html/
 
 [Service]
 Type=simple
