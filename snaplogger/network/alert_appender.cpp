@@ -1,4 +1,4 @@
-// Copyright (c) 2021  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2021-2022  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/eventdispatcher
 // contact@m2osw.com
@@ -33,6 +33,11 @@
 //
 #include    "snaplogger/network/alert_appender.h"
 
+
+
+// advgetopt lib
+//
+#include    <advgetopt/validator_integer.h>
 
 
 // snaplogger lib

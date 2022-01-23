@@ -10,6 +10,7 @@ eventdispatcher (1.1.37.0~bionic) bionic; urgency=high
   * Added a couple of test files to verify the process library.
   * Enhanced the tracing of add/remove/list of connections in the communicator.
   * Fixes to documentation (especially, fixed the qt reference in the doxy).
+  * Changed the std::runtime_error() to our own exceptions in signal_handler.
 
  -- Alexis Wilke <alexis@m2osw.com>  Fri, 17 Sep 2021 21:52:49 -0700
 
