@@ -80,11 +80,11 @@ in stdout and stderr.
     // cppprocess::io_pipe and implement the process_write() as required
     // (i.e. process_write() because you are writing to the child process)
     //
-    // if you do not an input I/O object, then the process object uses
+    // if you do not create an input I/O object, then the process object uses
     // your stdin file
     //
     // as described below, you can add a _done_ callback to all I/O objects
-    // which gets called one the object is done; it's generally less useful
+    // which gets called once the object is done; it's generally less useful
     // for the input pipe
     //
     cppprocess::io_data_pipe::pointer_t input(std::make_shared<cppprocess::io_data_pipe>());
@@ -118,7 +118,7 @@ in stdout and stderr.
     //
     output->add_process_done_callback(...);
 
-    // simlar to stdout, you can capture stderr and also add a callback
+    // as with stdout, you can capture stderr and also add a callback
     //
     cppprocess::io_capture_pipe::pointer_t error(std::make_shared<cppprocess::io_capture_pipe>());
     p.set_error_io(error);
@@ -139,12 +139,15 @@ in stdout and stderr.
     // that signal, the child process died. If you pipe multiple processes,
     // you will receive one signal per process.
     //
+    // NOTE: that the p.wait() function uses these callback functions if
+    //       you would like to see how it is done
+    //
     // WARNING: this has to be done after the start() (i.e. you need the
     //          pid_t of the child) and before you return back to the
     //          ed::communitor::run() loop
     //
     ed::signal_child::pointer_t child_signal(ed::signal_child::get_instance());
-    child_signal->add_listener(f_child, std::bind(&my_class::process_done, this, std::placeholders::_1));
+    child_signal->add_listener(p.process_pid(), std::bind(&my_class::process_done, this, std::placeholders::_1));
     ed::communicator::instance()->add_connection(child_signal);
 
     // to prematurely stop the process, send a signal with the kill()
@@ -154,11 +157,11 @@ in stdout and stderr.
 
 **WARNING:** The pipes added to a process will have one side closed at
 the time the `process::start()` function gets called. The other side must
-be closed as soon as your done with it (especially the input since this
+be closed as soon as you are done with it (especially the input since this
 is how the child process gets an EOF on that stream). In other words,
 a pipe can be used once. Each instance of a process, new or not, must
-be given a new pipe. It is strongly advised that you use a new `process`
-object each time you run a command.
+be given a new pipe. It is strongly advised that you use a new `cppprocess`
+object each time you run a new command.
 
 ## Simulate a system() call
 

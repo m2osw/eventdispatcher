@@ -747,6 +747,62 @@ std::string const & process::get_command() const
 }
 
 
+/** \brief Generate the command line for display.
+ *
+ * This function builds the command line as it appears with its command
+ * followed by its parameters quoted as required.
+ *
+ * Internally, we do not use such a string to run the process. Instead
+ * the command line arguments are kept in a an array (argv) and the
+ * command passed directly to the execve() function.
+ *
+ * \return The command line one can use for display.
+ */
+std::string process::get_command_line() const
+{
+    std::string result(f_command);
+
+    for(auto a : f_arguments)
+    {
+        result += ' ';
+        bool single_quote(a.find('\'') != std::string::npos);
+        bool double_quote(a.find('"') != std::string::npos);
+        bool special_char(a.find_first_of("&|;#*?!`()[]<>") != std::string::npos);
+        if(single_quote && double_quote)
+        {
+            result += '\'';
+            for(auto c : a)
+            {
+                if(c == '\'')
+                {
+                    result += '\\';
+                }
+                result += c;
+            }
+            result += '\'';
+        }
+        else if(single_quote)
+        {
+            result += '"';
+            result += a;
+            result += '"';
+        }
+        else if(double_quote || special_char)
+        {
+            result += '\'';
+            result += a;
+            result += '\'';
+        }
+        else
+        {
+            result += a;
+        }
+    }
+
+    return result;
+}
+
+
 /** \brief Add an argument to the command line.
  *
  * This function adds one individual arguement to the command line.
@@ -1508,6 +1564,25 @@ process::list_t process::get_next_processes() const
 //}
 
 
+/** \brief Retrieve the child process identifier.
+ *
+ * After you called the start() function, the process identifier is defined
+ * as whatever fork() returned to the parent process. This is the pid_t
+ * as it appears in the list of processes.
+ *
+ * Before start() is called and after done() returns, the process
+ * identifier is set to -1 (i.e. no process). This means the pid is
+ * first defined a little after the new process started and cleared
+ * back to -1 a little after it exited.
+ *
+ * \return The process PID.
+ */
+pid_t process::process_pid() const
+{
+    return f_child;
+}
+
+
 /** \brief Start the process.
  *
  * This function creates all the necessary things that the process requires
@@ -1683,6 +1758,22 @@ int process::wait()
 }
 
 
+/** \brief Return the exit code of the command.
+ *
+ * This function returns the exit code of the command once it exited.
+ * Up until the exit code is know, this function returns -1.
+ *
+ * If you call the wait() function, then you also get the exit code
+ * returned unless an error occurs.
+ *
+ * \return The exit code of the process or -1 if still undefined.
+ */
+int process::exit_code() const
+{
+    return f_exit_code;
+}
+
+
 void process::child_done(ed::child_status status)
 {
     // note that all the child_done() callbacks get called because the
@@ -1705,6 +1796,8 @@ void process::child_done(ed::child_status status)
     {
         f_process_done(status);
     }
+
+    f_child = -1;
 }
 
 
