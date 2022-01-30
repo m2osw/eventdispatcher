@@ -13,9 +13,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
  * \brief Event dispatch class.
@@ -160,7 +160,7 @@ tcp_server::tcp_server(std::string const & addr, int port, int max_connections, 
         // if this fails, we ignore the error (TODO log an INFO message)
         int optval(1);
         socklen_t const optlen(sizeof(optval));
-        snap::NOT_USED(setsockopt(f_socket, SOL_SOCKET, SO_REUSEADDR, &optval, optlen));
+        snapdev::NOT_USED(setsockopt(f_socket, SOL_SOCKET, SO_REUSEADDR, &optval, optlen));
     }
 
     if(bind(f_socket, addr_info.get()->ai_addr, addr_info.get()->ai_addrlen) < 0)

@@ -264,7 +264,7 @@ void client::msg_who(ed::message & msg)
 
 void client::msg_bye(ed::message & msg)
 {
-    snap::NOT_USED(msg);
+    snapdev::NOT_USED(msg);
 
     ed::communicator::pointer_t communicator(ed::communicator::instance());
     communicator->remove_connection(shared_from_this());

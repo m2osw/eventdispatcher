@@ -376,7 +376,7 @@ std::string process_info::get_command()
  */
 std::string process_info::get_basename()
 {
-    return snap::pathinfo::basename(get_command());
+    return snapdev::pathinfo::basename(get_command());
 }
 
 
@@ -490,8 +490,8 @@ void process_info::load_stat(bool force)
 
     // read stat
     //
-    snap::file_contents s("/proc/" + std::to_string(pid) + "/stat");
-    s.size_mode(snap::file_contents::size_mode_t::SIZE_MODE_READ);
+    snapdev::file_contents s("/proc/" + std::to_string(pid) + "/stat");
+    s.size_mode(snapdev::file_contents::size_mode_t::SIZE_MODE_READ);
     if(!s.read_all())
     {
         return;
@@ -533,7 +533,7 @@ void process_info::load_stat(bool force)
     //
     std::vector<std::string> fields;
     std::string remaining(line.substr(last_paren + 2));
-    snap::tokenize_string(fields, remaining, " ");
+    snapdev::tokenize_string(fields, remaining, " ");
 
     if(fields.size() >= 1)
     {
@@ -667,8 +667,8 @@ void process_info::load_cmdline()
 
     // read cmdline
     //
-    snap::file_contents cl("/proc/" + std::to_string(pid) + "/cmdline");
-    cl.size_mode(snap::file_contents::size_mode_t::SIZE_MODE_READ);
+    snapdev::file_contents cl("/proc/" + std::to_string(pid) + "/cmdline");
+    cl.size_mode(snapdev::file_contents::size_mode_t::SIZE_MODE_READ);
     if(!cl.read_all())
     {
         return;

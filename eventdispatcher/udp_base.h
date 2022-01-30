@@ -13,9 +13,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
 /** \file
@@ -57,7 +57,7 @@ protected:
     //       (we use the f_addrinfo as is in the sendto() and bind() calls
     //       and use libaddr for the conversions already)
     //
-    snap::raii_fd_t     f_socket = snap::raii_fd_t();
+    snapdev::raii_fd_t  f_socket = snapdev::raii_fd_t();
     int                 f_port = -1;
     mutable int         f_mtu_size = 0;
     std::string         f_addr = std::string();

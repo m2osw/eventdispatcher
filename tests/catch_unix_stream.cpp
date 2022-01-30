@@ -67,7 +67,7 @@ class unix_server_client
 public:
     typedef std::shared_ptr<unix_server_client>        pointer_t;
 
-                            unix_server_client(snap::raii_fd_t s, unix_server * server);
+                            unix_server_client(snapdev::raii_fd_t s, unix_server * server);
                             unix_server_client(unix_server_client const & rhs) = delete;
     unix_server_client &    operator = (unix_server_client const & rhs) = delete;
 
@@ -186,7 +186,7 @@ void unix_client::msg_hi(ed::message & msg)
 
 
 
-unix_server_client::unix_server_client(snap::raii_fd_t s, unix_server * server)
+unix_server_client::unix_server_client(snapdev::raii_fd_t s, unix_server * server)
     : local_stream_server_client_message_connection(std::move(s))
     , f_server(server)
     , f_dispatcher(new ed::dispatcher<unix_server_client>(
@@ -204,7 +204,7 @@ unix_server_client::unix_server_client(snap::raii_fd_t s, unix_server * server)
 void unix_server_client::msg_hello(ed::message & msg)
 {
     CATCH_REQUIRE(msg.get_command() == "HELLO");
-    snap::NOT_USED(msg);
+    snapdev::NOT_USED(msg);
 
     ed::message hi;
     hi.set_command("HI");
@@ -252,7 +252,7 @@ void unix_server::done()
 
 void unix_server::process_accept()
 {
-    snap::raii_fd_t s(accept());
+    snapdev::raii_fd_t s(accept());
     CATCH_REQUIRE(s != nullptr);
 
     unix_server_client::pointer_t server_client(std::make_shared<unix_server_client>(std::move(s), this));

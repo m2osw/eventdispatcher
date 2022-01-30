@@ -13,9 +13,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
 /** \file
@@ -77,10 +77,10 @@ public:
 private:
     pid_t                       f_creator_id = -1;
 
-    snap::raii_fd_t             f_thread_a = snap::raii_fd_t();
+    snapdev::raii_fd_t          f_thread_a = snapdev::raii_fd_t();
     cppthread::fifo<message>    f_message_a = cppthread::fifo<message>();
 
-    snap::raii_fd_t             f_thread_b = snap::raii_fd_t();
+    snapdev::raii_fd_t          f_thread_b = snapdev::raii_fd_t();
     cppthread::fifo<message>    f_message_b = cppthread::fifo<message>();
 };
 

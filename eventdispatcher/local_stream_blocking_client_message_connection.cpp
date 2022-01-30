@@ -512,7 +512,7 @@ void local_stream_blocking_client_message_connection::peek()
  */
 bool local_stream_blocking_client_message_connection::send_message(message const & msg, bool cache)
 {
-    snap::NOT_USED(cache);
+    snapdev::NOT_USED(cache);
 
     int const s(get_socket());
     if(s >= 0)

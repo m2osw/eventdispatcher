@@ -69,7 +69,7 @@ private:
     bool                    f_truncate = false;
     bool                    f_append = false;
     int                     f_mode = S_IRUSR | S_IWUSR;
-    snap::raii_fd_t         f_file = snap::raii_fd_t();
+    snapdev::raii_fd_t      f_file = snapdev::raii_fd_t();
 };
 
 

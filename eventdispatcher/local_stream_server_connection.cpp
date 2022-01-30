@@ -13,9 +13,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
  * \brief Handle an AF_UNIX socket as a server.
@@ -345,11 +345,11 @@ int local_stream_server_connection::get_max_connections() const
  *
  * \return A file descriptor representing the new connection socket.
  */
-snap::raii_fd_t local_stream_server_connection::accept()
+snapdev::raii_fd_t local_stream_server_connection::accept()
 {
     struct sockaddr_un un;
     socklen_t len(sizeof(un));
-    snap::raii_fd_t r(::accept(
+    snapdev::raii_fd_t r(::accept(
               f_socket.get()
             , reinterpret_cast<sockaddr *>(&un)
             , &len));

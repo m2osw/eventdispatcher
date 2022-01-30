@@ -62,7 +62,7 @@ typedef std::map<std::string, std::string>  string_map_t;
  */
 typedef std::unique_ptr<
                   addrinfo
-                , snap::raii_pointer_deleter<
+                , snapdev::raii_pointer_deleter<
                                       addrinfo
                                     , decltype(&::freeaddrinfo)
                                     , &::freeaddrinfo>> raii_addrinfo_t;

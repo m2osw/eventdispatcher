@@ -371,7 +371,7 @@ bool message::from_message(std::string const & original_message)
 
             // also restore new lines and backslashes if any
             //
-            std::string const unsafe_value(snap::string_replace_many(
+            std::string const unsafe_value(snapdev::string_replace_many(
                     param_value,
                     {
                         { "\\\\", "\\" },
@@ -482,7 +482,7 @@ std::string message::to_message() const
             f_cached_message += p.first;
             f_cached_message += '=';
 
-            std::string safe_value(snap::string_replace_many(
+            std::string safe_value(snapdev::string_replace_many(
                     p.second,
                     {
                         { "\\", "\\\\" },

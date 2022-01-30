@@ -41,7 +41,7 @@ class local_stream_server_client_buffer_connection
 public:
     typedef std::shared_ptr<local_stream_server_client_buffer_connection>    pointer_t;
 
-                                local_stream_server_client_buffer_connection(snap::raii_fd_t client);
+                                local_stream_server_client_buffer_connection(snapdev::raii_fd_t client);
 
     bool                        has_input() const;
     bool                        has_output() const;

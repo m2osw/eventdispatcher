@@ -114,7 +114,7 @@ logrotate_udp_messenger::~logrotate_udp_messenger()
  */
 bool logrotate_udp_messenger::send_message(ed::message const & msg, bool cache)
 {
-    snap::NOT_USED(msg, cache);
+    snapdev::NOT_USED(msg, cache);
     return true;
 }
 

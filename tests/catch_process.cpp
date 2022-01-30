@@ -318,7 +318,7 @@ CATCH_TEST_CASE("Process", "[process]")
         int const code(p.wait());
         CATCH_REQUIRE(code == 0);
 
-        snap::file_contents final_output(output_filename);
+        snapdev::file_contents final_output(output_filename);
         CATCH_REQUIRE(final_output.read_all());
         CATCH_REQUIRE(final_output.contents() == "test a simple pipeline\n");
     }

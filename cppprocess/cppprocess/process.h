@@ -55,7 +55,8 @@ public:
     typedef std::list<pointer_t>                list_t;
     typedef std::map<std::string, std::string>  environment_map_t;
     typedef std::list<std::string>              string_list_t;
-    typedef snap::glob_to_list<string_list_t>   argument_list_t;
+    typedef snapdev::glob_to_list<string_list_t>
+                                                argument_list_t;
     typedef std::function<void(ed::child_status status)>
                                                 process_done_t;
 

@@ -153,7 +153,7 @@ public:
 
 private:
     cppthread::mutex &          f_socket_mutex;
-    snap::raii_fd_t             f_netlink_socket = snap::raii_fd_t();
+    snapdev::raii_fd_t          f_netlink_socket = snapdev::raii_fd_t();
     socket_evt::deque_t         f_socket_events = socket_evt::deque_t();
 };
 

@@ -716,7 +716,7 @@ void signal_handler::process_signal(
     // Abort
     //
     std::terminate();
-    snap::NOT_REACHED();
+    snapdev::NOT_REACHED();
 }
 
 

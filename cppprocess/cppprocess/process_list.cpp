@@ -105,15 +105,15 @@ void process_list::refresh()
     // of the following loop, delete those from the map
     //
     std::set<pid_t> keys;
-    snap::map_keyset(keys, *this);
+    snapdev::map_keyset(keys, *this);
 
     // gather current set of processes (pid_t)
     //
     typedef std::list<std::string>  list_t;
-    snap::glob_to_list<list_t> filenames;
+    snapdev::glob_to_list<list_t> filenames;
     filenames.read_path<
-          snap::glob_to_list_flag_t::GLOB_FLAG_IGNORE_ERRORS
-        , snap::glob_to_list_flag_t::GLOB_FLAG_ONLY_DIRECTORIES>("/proc/[0-9]*");
+          snapdev::glob_to_list_flag_t::GLOB_FLAG_IGNORE_ERRORS
+        , snapdev::glob_to_list_flag_t::GLOB_FLAG_ONLY_DIRECTORIES>("/proc/[0-9]*");
 
     for(auto f : filenames)
     {

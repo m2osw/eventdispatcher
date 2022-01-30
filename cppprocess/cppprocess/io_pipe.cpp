@@ -134,7 +134,7 @@ ed::pipe_t io_pipe::flags_to_pipe_mode(io_flags_t flags)
         throw cppprocess_invalid_parameters("io_pipe flags must be set to INPUT, OUTPUT, or both; neither is not an available option");
 
     }
-    snap::NOT_REACHED();
+    snapdev::NOT_REACHED();
     return ed::pipe_t::PIPE_BIDIRECTIONAL;
 }
 

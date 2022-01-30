@@ -623,7 +623,7 @@ public:
 
         if(client == nullptr)
         {
-            // TODO: fix address in error message using a snap::addr so
+            // TODO: fix address in error message using a addr::addr so
             //       as to handle IPv6 seamlessly.
             //
             SNAP_LOG_ERROR
@@ -1188,7 +1188,7 @@ void tcp_client_permanent_message_connection::connection_removed()
  */
 void tcp_client_permanent_message_connection::process_connection_failed(std::string const & error_message)
 {
-    snap::NOT_USED(error_message);
+    snapdev::NOT_USED(error_message);
     set_enable(true);
 }
 

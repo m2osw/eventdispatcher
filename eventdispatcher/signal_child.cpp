@@ -420,7 +420,7 @@ void signal_child::add_connection()
     {
         // add the connection to the communicator
         //
-        snap::safe_variable safe(f_adding_to_communicator, true, false);
+        snapdev::safe_variable safe(f_adding_to_communicator, true, false);
         ed::communicator::instance()->add_connection(shared_from_this());
     }
     ++f_count;
@@ -464,7 +464,7 @@ void signal_child::remove_connection()
     {
         // remove the connection to the communicator
         //
-        snap::safe_variable safe(f_removing_to_communicator, true, false);
+        snapdev::safe_variable safe(f_removing_to_communicator, true, false);
         ed::communicator::instance()->remove_connection(shared_from_this());
     }
 }
@@ -543,7 +543,7 @@ void signal_child::process_signal()
             // release the zombie, we're done
             //
             siginfo_t ignore = {};
-            snap::NOT_USED(waitid(P_PID, status.child_pid(), &ignore, WEXITED));
+            snapdev::NOT_USED(waitid(P_PID, status.child_pid(), &ignore, WEXITED));
 
             remove_listener(status.child_pid());
         }

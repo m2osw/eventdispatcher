@@ -234,7 +234,7 @@ bool tcp_server_client_message_connection::send_message(
           message const & msg
         , bool cache)
 {
-    snap::NOT_USED(cache);
+    snapdev::NOT_USED(cache);
 
     // transform the message to a string and write to the socket
     // the writing is asynchronous so the message is saved in a cache

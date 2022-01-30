@@ -275,7 +275,7 @@ tcp_bio_server::tcp_bio_server(
             //          pointer and thus we have to make sure that we
             //          do not keep it in our unique_ptr<>().
             //
-            snap::NOT_USED(bio.release());
+            snapdev::NOT_USED(bio.release());
 
             // Actually call bind() and listen() on the socket
             //

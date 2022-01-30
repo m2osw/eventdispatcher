@@ -57,7 +57,7 @@ class local_stream_server_client_connection
 public:
     typedef std::shared_ptr<local_stream_server_client_connection>    pointer_t;
 
-                                local_stream_server_client_connection(snap::raii_fd_t client);
+                                local_stream_server_client_connection(snapdev::raii_fd_t client);
 
     void                        close();
     addr::unix                  get_client_address() const;
@@ -73,7 +73,7 @@ public:
 private:
     void                        define_address();
 
-    snap::raii_fd_t             f_client = snap::raii_fd_t();
+    snapdev::raii_fd_t          f_client = snapdev::raii_fd_t();
     addr::unix                  f_address = addr::unix();
     bool                        f_address_defined = false;
 };

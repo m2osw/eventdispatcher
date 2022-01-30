@@ -832,9 +832,9 @@ bool process::add_argument(std::string const & arg, bool expand)
     }
 
     if(!f_arguments.read_path<
-              snap::glob_to_list_flag_t::GLOB_FLAG_BRACE
-            , snap::glob_to_list_flag_t::GLOB_FLAG_PERIOD
-            , snap::glob_to_list_flag_t::GLOB_FLAG_TILDE>(arg))
+              snapdev::glob_to_list_flag_t::GLOB_FLAG_BRACE
+            , snapdev::glob_to_list_flag_t::GLOB_FLAG_PERIOD
+            , snapdev::glob_to_list_flag_t::GLOB_FLAG_TILDE>(arg))
     {
         SNAP_LOG_ERROR
             << "an error occurred reading argument filenames from pattern \""
@@ -1266,11 +1266,11 @@ io::pointer_t process::get_error_io() const
 // *
 // * \return The trimmed output string.
 // *
-// * \sa snap::trim_string() (in snapdev)
+// * \sa snapdev::trim_string() (in snapdev)
 // */
 //std::string process::get_trimmed_output(bool inside, bool reset) const
 //{
-//    return snap::trim_string(get_output(reset), true, true, inside);
+//    return snapdev::trim_string(get_output(reset), true, true, inside);
 //}
 //
 //
@@ -1836,7 +1836,7 @@ int process::start_process(
         // the child can't safely return so just exit now
         //
         exit(1);
-        snap::NOT_REACHED();
+        snapdev::NOT_REACHED();
         return -1;
 
     default:
@@ -1870,7 +1870,7 @@ int process::start_process(
         return 0;
 
     }
-    snap::NOT_REACHED();
+    snapdev::NOT_REACHED();
 }
 
 
@@ -2011,7 +2011,7 @@ void process::execute_command(
             << "Starting child process \""
             << f_command
             << " "
-            << snap::join_strings(f_arguments, " ")
+            << snapdev::join_strings(f_arguments, " ")
             << "\" failed. (errno: "
             << e
             << " -- "

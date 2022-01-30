@@ -96,7 +96,7 @@ connection_with_send_message::~connection_with_send_message()
  */
 void connection_with_send_message::msg_help(message & msg)
 {
-    snap::NOT_USED(msg);
+    snapdev::NOT_USED(msg);
 
     bool need_user_help(true);
     string_list_t commands;
@@ -226,7 +226,7 @@ void connection_with_send_message::msg_alive(message & msg)
  */
 void connection_with_send_message::msg_leak(ed::message & msg)
 {
-    snap::NOT_USED(msg);
+    snapdev::NOT_USED(msg);
 
 #ifdef __SANITIZE_ADDRESS__
     __lsan_do_recoverable_leak_check();
@@ -253,7 +253,7 @@ void connection_with_send_message::msg_leak(ed::message & msg)
  */
 void connection_with_send_message::msg_log(message & msg)
 {
-    snap::NOT_USED(msg);
+    snapdev::NOT_USED(msg);
 
     if(snaplogger::is_configured())
     {
@@ -291,7 +291,7 @@ void connection_with_send_message::msg_log(message & msg)
  */
 void connection_with_send_message::msg_quitting(message & msg)
 {
-    snap::NOT_USED(msg);
+    snapdev::NOT_USED(msg);
 
     stop(true);
 }
@@ -370,7 +370,7 @@ void connection_with_send_message::msg_restart(message & msg)
  */
 void connection_with_send_message::msg_stop(message & msg)
 {
-    snap::NOT_USED(msg);
+    snapdev::NOT_USED(msg);
 
     stop(false);
 }
@@ -467,7 +467,7 @@ void connection_with_send_message::msg_reply_with_unknown(message & msg)
  */
 void connection_with_send_message::help(string_list_t & commands)
 {
-    snap::NOT_USED(commands);
+    snapdev::NOT_USED(commands);
 
     // do nothing by default -- user is expected to overload this function
 }
@@ -483,7 +483,7 @@ void connection_with_send_message::help(string_list_t & commands)
  */
 void connection_with_send_message::ready(message & msg)
 {
-    snap::NOT_USED(msg);
+    snapdev::NOT_USED(msg);
 
     // do nothing by default -- user is expected to overload this function
     //
@@ -507,7 +507,7 @@ void connection_with_send_message::ready(message & msg)
  */
 void connection_with_send_message::restart(message & msg)
 {
-    snap::NOT_USED(msg);
+    snapdev::NOT_USED(msg);
 
     // do nothing by default -- user is expected to overload this function
     //
@@ -527,7 +527,7 @@ void connection_with_send_message::restart(message & msg)
  */
 void connection_with_send_message::stop(bool quitting)
 {
-    snap::NOT_USED(quitting);
+    snapdev::NOT_USED(quitting);
 
     // do nothing by default -- user is expected to overload this function
     //

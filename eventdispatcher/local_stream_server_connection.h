@@ -64,7 +64,7 @@ public:
 
     addr::unix          get_addr() const;
     int                 get_max_connections() const;
-    snap::raii_fd_t     accept();
+    snapdev::raii_fd_t  accept();
     bool                get_close_on_exec() const;
     void                set_close_on_exec(bool yes = true);
 
@@ -76,7 +76,7 @@ public:
 private:
     addr::unix          f_address = addr::unix();
     int                 f_max_connections = MAX_CONNECTIONS;
-    snap::raii_fd_t     f_socket = snap::raii_fd_t();
+    snapdev::raii_fd_t  f_socket = snapdev::raii_fd_t();
     int                 f_accepted_socket = -1;
     bool                f_close_on_exec = false;
 };

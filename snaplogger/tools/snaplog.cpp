@@ -333,7 +333,7 @@ int main(int argc, char * argv[])
             << SNAP_LOG_SEND;
         exit(2);
     }
-    snap::NOT_REACHED();
+    snapdev::NOT_REACHED();
 }
 
 

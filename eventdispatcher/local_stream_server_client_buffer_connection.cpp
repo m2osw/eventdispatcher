@@ -84,7 +84,7 @@ namespace ed
  *
  * \param[in] client  The client to be used for reading and writing.
  */
-local_stream_server_client_buffer_connection::local_stream_server_client_buffer_connection(snap::raii_fd_t client)
+local_stream_server_client_buffer_connection::local_stream_server_client_buffer_connection(snapdev::raii_fd_t client)
     : local_stream_server_client_connection(std::move(client))
 {
     non_blocking();

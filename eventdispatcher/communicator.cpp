@@ -413,7 +413,7 @@ bool communicator::run()
         throw event_dispatcher_recursive_call("communicator::run(): recursively called from within a callback.");
     }
 
-    snap::safe_variable running(f_running, true);
+    snapdev::safe_variable running(f_running, true);
 
     std::vector<bool> enabled;
     std::vector<struct pollfd> fds;

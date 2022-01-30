@@ -233,13 +233,13 @@ void base_network_appender::log_message_to_ed_message(
         {
             flds += ',';
         }
-        std::string const safe_name(snap::string_replace_many(
+        std::string const safe_name(snapdev::string_replace_many(
                     f.first,
                     {
                         { ",", "\\," },
                         { ":", "\\:" },
                     }));
-        std::string const safe_value(snap::string_replace_many(
+        std::string const safe_value(snapdev::string_replace_many(
                     f.second,
                     {
                         { ",", "\\," },

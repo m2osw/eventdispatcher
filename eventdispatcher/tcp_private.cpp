@@ -13,9 +13,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
  * \brief Event dispatch class.
@@ -99,7 +99,7 @@ void pthreads_thread_id(CRYPTO_THREADID * tid)
 {
     // on 19.04 the macro does not use tid
     //
-    snap::NOT_USED(tid);
+    snapdev::NOT_USED(tid);
 
     CRYPTO_THREADID_set_numeric(tid, cppthread::gettid());
 }
@@ -116,7 +116,7 @@ void pthreads_thread_id(CRYPTO_THREADID * tid)
  */
 void pthreads_locking_callback(int mode, int type, char const * file, int line)
 {
-    snap::NOT_USED(file, line);
+    snapdev::NOT_USED(file, line);
 
     if(g_locks == nullptr)
     {

@@ -192,7 +192,7 @@ void unix_dgram_client::msg_hi(ed::message & msg)
 
 void unix_dgram_client::msg_reply_with_unknown(ed::message & msg)
 {
-    snap::NOT_USED(msg);
+    snapdev::NOT_USED(msg);
 }
 
 
@@ -245,7 +245,7 @@ void unix_dgram_server::done()
 void unix_dgram_server::msg_hello(ed::message & msg)
 {
     CATCH_REQUIRE(msg.get_command() == "HELLO");
-    snap::NOT_USED(msg);
+    snapdev::NOT_USED(msg);
 
     ed::message hi;
     hi.set_command("HI");
@@ -263,7 +263,7 @@ void unix_dgram_server::msg_down(ed::message & msg)
 
 void unix_dgram_server::msg_reply_with_unknown(ed::message & msg)
 {
-    snap::NOT_USED(msg);
+    snapdev::NOT_USED(msg);
 }
 
 

@@ -13,9 +13,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
  * \brief Implementation of the Snap Communicator class.
@@ -135,7 +135,7 @@ bool tcp_client_message_connection::send_message(
           message const & msg
         , bool cache)
 {
-    snap::NOT_USED(cache);
+    snapdev::NOT_USED(cache);
 
     // transform the message to a string and write to the socket
     // the writing is asynchronous so the message is saved in a cache

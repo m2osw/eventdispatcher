@@ -313,7 +313,7 @@ void client::msg_mom(ed::message & msg)
 
 void client::msg_quit(ed::message & msg)
 {
-    snap::NOT_USED(msg);
+    snapdev::NOT_USED(msg);
 
     ed::communicator::instance()->remove_connection(shared_from_this());
     f_my_daemon->quit();

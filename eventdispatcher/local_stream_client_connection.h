@@ -75,8 +75,8 @@ public:
     virtual ssize_t     write(void const * buf, size_t size);
 
 private:
-    addr::unix      f_address = addr::unix();
-    snap::raii_fd_t f_socket = snap::raii_fd_t();
+    addr::unix          f_address = addr::unix();
+    snapdev::raii_fd_t  f_socket = snapdev::raii_fd_t();
 };
 
 

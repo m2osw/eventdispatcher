@@ -13,9 +13,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
  * \brief Implementation of the Snap Communicator class.
@@ -301,7 +301,7 @@ int inter_thread_message_connection::poll(int timeout)
             process_invalid();
         }
     }
-    snap::NOT_REACHED();
+    snapdev::NOT_REACHED();
 }
 
 
@@ -425,7 +425,7 @@ bool inter_thread_message_connection::send_message(
       message const & msg
     , bool cache)
 {
-    snap::NOT_USED(cache);
+    snapdev::NOT_USED(cache);
 
     if(f_creator_id == cppthread::gettid())
     {

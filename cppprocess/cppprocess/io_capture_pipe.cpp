@@ -150,11 +150,11 @@ std::string io_capture_pipe::get_output(bool reset) const
  *
  * \return The trimmed output string.
  *
- * \sa snap::trim_string() (in snapdev)
+ * \sa snapdev::trim_string() (in snapdev)
  */
 std::string io_capture_pipe::get_trimmed_output(bool inside, bool reset) const
 {
-    return snap::trim_string(get_output(reset), true, true, inside);
+    return snapdev::trim_string(get_output(reset), true, true, inside);
 }
 
 

@@ -13,9 +13,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
  * \brief Implementation of the Unix stream server-client class.
@@ -70,7 +70,7 @@ namespace ed
  *
  * \param[in] client  The client that accept() returned.
  */
-local_stream_server_client_connection::local_stream_server_client_connection(snap::raii_fd_t client)
+local_stream_server_client_connection::local_stream_server_client_connection(snapdev::raii_fd_t client)
     : f_client(std::move(client))
 {
 }

@@ -46,7 +46,7 @@ class local_stream_server_client_message_connection
 public:
     typedef std::shared_ptr<local_stream_server_client_message_connection>    pointer_t;
 
-                                local_stream_server_client_message_connection(snap::raii_fd_t client);
+                                local_stream_server_client_message_connection(snapdev::raii_fd_t client);
 
     // connection_with_send_message implementation
     //

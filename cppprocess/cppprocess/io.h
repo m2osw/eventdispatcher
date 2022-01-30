@@ -61,7 +61,7 @@ public:
     typedef std::shared_ptr<io>     pointer_t;
     typedef std::function<bool (io *, done_reason_t)>
                                     process_io_done_t;
-    typedef snap::callback_manager<process_io_done_t>
+    typedef snapdev::callback_manager<process_io_done_t>
                                     done_callbacks_t;
 
                             io(io_flags_t flags);

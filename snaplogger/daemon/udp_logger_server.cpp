@@ -99,7 +99,7 @@ udp_logger_server::~udp_logger_server()
 
 bool udp_logger_server::send_message(ed::message const & msg, bool cache)
 {
-    snap::NOT_USED(msg, cache);
+    snapdev::NOT_USED(msg, cache);
 
     throw std::logic_error("send_message() called on UDP service: not implemented");
 }
