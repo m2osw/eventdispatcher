@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 Made to Order Software Corp.
+// Copyright (c) 2020-2022  Made to Order Software Corp.  All Rights Reserved
 // All rights reserved
 //
 // https://snapwebsites.org/project/eventdispatcher
