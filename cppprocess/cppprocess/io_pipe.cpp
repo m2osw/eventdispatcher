@@ -77,28 +77,24 @@ void io_pipe::process_hup()
 
 int io_pipe::get_fd()
 {
-std::cerr << "io_pipe fd = " << get_socket() << "\n";
     return get_socket();
 }
 
 
 int io_pipe::get_other_fd()
 {
-std::cerr << "io_pipe OTHER fd = " << get_socket() << "\n";
     return get_other_socket();
 }
 
 
 void io_pipe::close_both()
 {
-std::cerr << "io_pipe close both pipes from " << getpid() << "\n";
     close();
 }
 
 
 void io_pipe::close_other()
 {
-std::cerr << "io_pipe forked() from " << getpid() << "\n";
     forked();
 }
 

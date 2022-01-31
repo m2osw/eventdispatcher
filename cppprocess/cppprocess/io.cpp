@@ -76,12 +76,9 @@ void io::process_starting()
 
 bool io::process_done(done_reason_t reason)
 {
-std::cerr << "PROCESS done, reason = " << static_cast<int>(reason)
-<< " -- number of process done: " << f_process_done.size()
-<< "\n";
-std::cerr << "SHARED not valid? "
-<< reinterpret_cast<void *>(this)
-<< "\n";
+//std::cerr << "PROCESS done, reason = " << static_cast<int>(reason)
+//<< " -- number of process done: " << f_process_done.size()
+//<< "\n";
 
     // WARNING: we use `this` (instead of make_shared_from_this()) because
     //          the pipe_connection derives from connection which already

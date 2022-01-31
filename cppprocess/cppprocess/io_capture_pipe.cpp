@@ -56,7 +56,7 @@ io_capture_pipe::io_capture_pipe()
 
 void io_capture_pipe::process_read()
 {
-std::cerr << "PIPE got read signal -- " << get_socket() << "\n";
+//std::cerr << "PIPE got read signal -- " << get_socket() << "\n";
     if(get_socket() != -1)
     {
         // handle up to 64Kb at once
@@ -87,9 +87,9 @@ std::cerr << "PIPE got read signal -- " << get_socket() << "\n";
             //
             f_output.insert(f_output.end(), buffer, buffer + r);
 
-std::cerr << "PIPE read " << r << " bytes ["
-<< std::string(reinterpret_cast<char *>(f_output.data()), f_output.size())
-<< "]\n";
+//std::cerr << "PIPE read " << r << " bytes ["
+//<< std::string(reinterpret_cast<char *>(f_output.data()), f_output.size())
+//<< "]\n";
         }
     }
 
