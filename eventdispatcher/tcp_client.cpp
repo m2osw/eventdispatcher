@@ -213,25 +213,32 @@ std::string tcp_client::get_addr() const
  */
 int tcp_client::get_client_port() const
 {
-    struct sockaddr addr;
+    struct sockaddr_in6 addr;
+    struct sockaddr *a(reinterpret_cast<struct sockaddr *>(&addr));
     socklen_t len(sizeof(addr));
-    int r(getsockname(f_socket.get(), &addr, &len));
+    int const r(getsockname(f_socket.get(), a, &len));
     if(r != 0)
     {
         return -1;
     }
+
     // Note: I know the port is at the exact same location in both
     //       structures in Linux but it could change on other Unices
-    if(addr.sa_family == AF_INET)
+    //
+    if(a->sa_family == AF_INET
+    && len >= sizeof(sockaddr_in))
     {
         // IPv4
-        return reinterpret_cast<sockaddr_in *>(&addr)->sin_port;
+        return reinterpret_cast<sockaddr_in const *>(a)->sin_port;
     }
-    if(addr.sa_family == AF_INET6)
+
+    if(a->sa_family == AF_INET6
+    && len >= sizeof(sockaddr_in6))
     {
         // IPv6
-        return reinterpret_cast<sockaddr_in6 *>(&addr)->sin6_port;
+        return addr.sin6_port;
     }
+
     return -1;
 }
 
@@ -244,22 +251,28 @@ int tcp_client::get_client_port() const
  */
 std::string tcp_client::get_client_addr() const
 {
-    struct sockaddr addr;
+    struct sockaddr_in6 addr;
+    struct sockaddr *a(reinterpret_cast<struct sockaddr *>(&addr));
     socklen_t len(sizeof(addr));
-    int const r(getsockname(f_socket.get(), &addr, &len));
+    int const r(getsockname(f_socket.get(), a, &len));
     if(r != 0)
     {
         throw event_dispatcher_runtime_error("address not available");
     }
+
     char buf[BUFSIZ];
-    switch(addr.sa_family)
+    switch(a->sa_family)
     {
     case AF_INET:
         if(len < sizeof(struct sockaddr_in))
         {
             throw event_dispatcher_runtime_error("address size incompatible (AF_INET)");
         }
-        inet_ntop(AF_INET, &reinterpret_cast<struct sockaddr_in *>(&addr)->sin_addr, buf, sizeof(buf));
+        inet_ntop(
+              AF_INET
+            , &reinterpret_cast<struct sockaddr_in *>(a)->sin_addr
+            , buf
+            , sizeof(buf));
         break;
 
     case AF_INET6:
@@ -267,13 +280,14 @@ std::string tcp_client::get_client_addr() const
         {
             throw event_dispatcher_runtime_error("address size incompatible (AF_INET6)");
         }
-        inet_ntop(AF_INET6, &reinterpret_cast<struct sockaddr_in6 *>(&addr)->sin6_addr, buf, sizeof(buf));
+        inet_ntop(AF_INET6, &addr.sin6_addr, buf, sizeof(buf));
         break;
 
     default:
         throw event_dispatcher_runtime_error("unknown address family");
 
     }
+
     return buf;
 }
 
