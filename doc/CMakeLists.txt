@@ -21,6 +21,8 @@
 ##
 ## Documentation
 ##
+project(eventdispatcher-documentation)
+
 AddDoxygenTarget(eventdispatcher
     ${EVENTDISPATCHER_VERSION_MAJOR}
     ${EVENTDISPATCHER_VERSION_MINOR}
