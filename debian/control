@@ -78,7 +78,7 @@ Description: Run processes with pipes in and out.
 Package: cppprocess-dev
 Section: libs
 Architecture: any
-Depends: eventdispatcher (= ${binary:Version}), ${shlibs:Depends},
+Depends: cppprocess (= ${binary:Version}), ${shlibs:Depends},
  ${misc:Depends}
 Description: Run processes with pipes in and out.
  This is the cppprocess development library and headers.
@@ -86,8 +86,7 @@ Description: Run processes with pipes in and out.
 Package: cppprocess-doc
 Section: libs
 Architecture: any
-Depends: eventdispatcher (= ${binary:Version}), ${shlibs:Depends},
- ${misc:Depends}
+Suggests: cppprocess
 Description: Documentation about the cppprocess with pipes in and out.
  This is the cppprocess documentation.
 
