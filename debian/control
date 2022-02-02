@@ -65,6 +65,32 @@ Description: C++ library for easy event based networking and communication.
  This library provides an additional connection to support Qt as one of the
  input sockets.
 
+Package: cppprocess
+Section: libs
+Architecture: any
+Depends: eventdispatcher (= ${binary:Version}), ${shlibs:Depends},
+ ${misc:Depends}
+Description: Run processes with pipes in and out.
+ This library is capable of running processes like a Unix shell. It starts
+ them with a pipe as input and a pipe as output to send and collect data
+ and it supports piping between multiple processes.
+
+Package: cppprocess-dev
+Section: libs
+Architecture: any
+Depends: eventdispatcher (= ${binary:Version}), ${shlibs:Depends},
+ ${misc:Depends}
+Description: Run processes with pipes in and out.
+ This is the cppprocess development library and headers.
+
+Package: cppprocess-doc
+Section: libs
+Architecture: any
+Depends: eventdispatcher (= ${binary:Version}), ${shlibs:Depends},
+ ${misc:Depends}
+Description: Documentation about the cppprocess with pipes in and out.
+ This is the cppprocess documentation.
+
 Package: snaplogger-network
 Section: libs
 Architecture: any
