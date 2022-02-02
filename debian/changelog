@@ -1,3 +1,9 @@
+eventdispatcher (1.1.45.0~bionic) bionic; urgency=high
+
+  * I also added socket_events.h ...
+
+ -- Alexis Wilke <alexis@m2osw.com>  Wed, 02 Feb 2022 07:45:41 -0800
+
 eventdispatcher (1.1.44.0~bionic) bionic; urgency=high
 
   * Actually install the local_*.h headers.

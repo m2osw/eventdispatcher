@@ -196,6 +196,7 @@ install(
         signal.h
         signal_child.h
         signal_handler.h
+        socket_events.h
         tcp_base.h
         tcp_bio_client.h
         tcp_bio_options.h
