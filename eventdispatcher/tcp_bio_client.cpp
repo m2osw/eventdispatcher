@@ -748,24 +748,33 @@ int tcp_bio_client::get_client_port() const
         return -1;
     }
 
-    sockaddr addr;
+    sockaddr_in6 addr;
+    sockaddr *a(reinterpret_cast<sockaddr *>(&addr));
     socklen_t len(sizeof(addr));
-    int const r(getsockname(s, &addr, &len));
+    int const r(getsockname(s, a, &len));
     if(r != 0)
     {
         return -1;
     }
     // Note: I know the port is at the exact same location in both
     //       structures in Linux but it could change on other Unices
-    switch(addr.sa_family)
+    switch(a->sa_family)
     {
     case AF_INET:
         // IPv4
-        return reinterpret_cast<sockaddr_in *>(&addr)->sin_port;
+        if(len < sizeof(sockaddr_in))
+        {
+            return -1;
+        }
+        return reinterpret_cast<sockaddr_in *>(a)->sin_port;
 
     case AF_INET6:
         // IPv6
-        return reinterpret_cast<sockaddr_in6 *>(&addr)->sin6_port;
+        if(len < sizeof(sockaddr_in6))
+        {
+            return -1;
+        }
+        return addr.sin6_port;
 
     default:
         return -1;

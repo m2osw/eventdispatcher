@@ -247,12 +247,16 @@ int tcp_client::get_client_port() const
  * This function retrieve the IP address of the client (your computer).
  * This is retrieved from the socket using the getsockname() function.
  *
+ * \exception event_dispatcher_runtime_error
+ * The function raises this exception if the address we retrieve doesn't
+ * match its type properly;
+ *
  * \return The IP address as a string.
  */
 std::string tcp_client::get_client_addr() const
 {
-    struct sockaddr_in6 addr;
-    struct sockaddr *a(reinterpret_cast<struct sockaddr *>(&addr));
+    sockaddr_in6 addr;
+    sockaddr *a(reinterpret_cast<sockaddr *>(&addr));
     socklen_t len(sizeof(addr));
     int const r(getsockname(f_socket.get(), a, &len));
     if(r != 0)
@@ -264,19 +268,19 @@ std::string tcp_client::get_client_addr() const
     switch(a->sa_family)
     {
     case AF_INET:
-        if(len < sizeof(struct sockaddr_in))
+        if(len < sizeof(sockaddr_in))
         {
             throw event_dispatcher_runtime_error("address size incompatible (AF_INET)");
         }
         inet_ntop(
               AF_INET
-            , &reinterpret_cast<struct sockaddr_in *>(a)->sin_addr
+            , &reinterpret_cast<sockaddr_in *>(a)->sin_addr
             , buf
             , sizeof(buf));
         break;
 
     case AF_INET6:
-        if(len < sizeof(struct sockaddr_in6))
+        if(len < sizeof(sockaddr_in6))
         {
             throw event_dispatcher_runtime_error("address size incompatible (AF_INET6)");
         }
