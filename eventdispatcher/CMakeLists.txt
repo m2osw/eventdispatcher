@@ -174,6 +174,20 @@ install(
         fd_connection.h
         file_changed.h
         inter_thread_message_connection.h
+        local_dgram_base.h
+        local_dgram_client.h
+        local_dgram_server_connection.h
+        local_dgram_server.h
+        local_dgram_server_message_connection.h
+        local_stream_blocking_client_message_connection.h
+        local_stream_client_buffer_connection.h
+        local_stream_client_connection.h
+        local_stream_client_message_connection.h
+        local_stream_client_permanent_message_connection.h
+        local_stream_server_client_buffer_connection.h
+        local_stream_server_client_connection.h
+        local_stream_server_client_message_connection.h
+        local_stream_server_connection.h
         logrotate_udp_messenger.h
         message.h
         pipe_buffer_connection.h
