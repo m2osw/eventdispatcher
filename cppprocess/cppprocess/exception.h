@@ -47,20 +47,7 @@ DECLARE_EXCEPTION(cppprocess_exception, cppprocess_initialization_failed);
 DECLARE_EXCEPTION(cppprocess_exception, cppprocess_in_use);
 DECLARE_EXCEPTION(cppprocess_exception, cppprocess_invalid_parameters);
 DECLARE_EXCEPTION(cppprocess_exception, cppprocess_not_started);
-
-//DECLARE_EXCEPTION(cppprocess_exception, cppprocess_already_exists);
-//DECLARE_EXCEPTION(cppprocess_exception, cppprocess_already_initialized);
-//DECLARE_EXCEPTION(cppprocess_exception, cppprocess_data_not_available);
-//DECLARE_EXCEPTION(cppprocess_exception, cppprocess_invalid_error);
-//DECLARE_EXCEPTION(cppprocess_exception, cppprocess_invalid_mode_error);
-//DECLARE_EXCEPTION(cppprocess_exception, cppprocess_mutex_failed_error);
-//DECLARE_EXCEPTION(cppprocess_exception, cppprocess_name_mismatch);
-//DECLARE_EXCEPTION(cppprocess_exception, cppprocess_not_found);
-//DECLARE_EXCEPTION(cppprocess_exception, cppprocess_not_locked_error);
-//DECLARE_EXCEPTION(cppprocess_exception, cppprocess_not_locked_once_error);
-//DECLARE_EXCEPTION(cppprocess_exception, cppprocess_openproc);
-//DECLARE_EXCEPTION(cppprocess_exception, cppprocess_system_error);
-//DECLARE_EXCEPTION(cppprocess_exception, cppprocess_unknown_flag);
+DECLARE_EXCEPTION(cppprocess_exception, cppprocess_directory_not_found);
 
 
 

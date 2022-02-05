@@ -69,90 +69,6 @@ namespace
 
 
 
-
-//class direct_input_data
-//    : public ed::pipe_connection
-//{
-//public:
-//                            direct_input_data(process * p, buffer_t const & input);
-//                            direct_input_data(direct_input_data const &) = delete;
-//    direct_input_data &     operator = (direct_input_data const &) = delete;
-//
-//    // pipe_connection implementation
-//    //
-//    virtual bool            is_writer() const override;
-//    virtual void            process_write() override;
-//
-//    virtual void            process_error() override;
-//    virtual void            process_invalid() override;
-//    virtual void            process_hup() override;
-//
-//private:
-//    process *               f_process = nullptr;
-//    buffer_t const &        f_input;
-//    std::size_t             f_pos = 0;
-//};
-//
-//
-//direct_input_data::direct_input_data(process * p, buffer_t const & input)
-//    : pipe_connection(ed::pipe_t::PIPE_CHILD_INPUT)
-//    , f_process(p)
-//    , f_input(input)
-//{
-//    set_name("direct_input_data");
-//}
-//
-//
-//bool direct_input_data::is_writer() const
-//{
-//    return f_pos < f_input.size();
-//}
-//
-//
-//void direct_input_data::process_write()
-//{
-//    std::size_t const size(f_input.size() - f_pos);
-//    if(size > 0)
-//    {
-//        ssize_t const r(write(f_input.data() + f_pos, size));
-//        if(r > 0)
-//        {
-//            f_pos += r;
-//
-//            if(f_pos >= f_input.size())
-//            {
-//                f_process->input_pipe_done();
-//            }
-//        }
-//    }
-//}
-//
-//
-//void direct_input_data::process_error()
-//{
-//    f_process->input_pipe_done();
-//}
-//
-//
-//void direct_input_data::process_invalid()
-//{
-//    f_process->input_pipe_done();
-//}
-//
-//
-//void direct_input_data::process_hup()
-//{
-//    f_process->input_pipe_done();
-//}
-
-
-
-
-
-
-
-
-
 /** \brief A direct output to input pipe.
  *
  * When piping one command to another, then this pipe object gets used.
@@ -191,98 +107,6 @@ void direct_output_to_input_pipe::forked()
 }
 
 
-
-
-
-
-
-//class capture_output_pipe
-//    : public ed::pipe_connection
-//{
-//public:
-//                                capture_output_pipe(process * p, buffer_t & output);
-//                                capture_output_pipe(capture_output_pipe const &) = delete;
-//    capture_output_pipe &       operator = (capture_output_pipe const &) = delete;
-//
-//    // pipe_connection implementation
-//    //
-//    virtual void                process_read() override;
-//
-//    virtual void                process_error() override;
-//    virtual void                process_invalid() override;
-//    virtual void                process_hup() override;
-//
-//private:
-//    process *                   f_process = nullptr;
-//    buffer_t &                  f_output;
-//};
-//
-//
-//capture_output_pipe::capture_output_pipe(process * p, buffer_t & output)
-//    : pipe_connection(ed::pipe_t::PIPE_CHILD_OUTPUT)
-//    , f_process(p)
-//    , f_output(output)
-//{
-//    set_name("capture_output_pipe");
-//}
-//
-//
-//void capture_output_pipe::process_read()
-//{
-//    if(get_socket() != -1)
-//    {
-//        // handle up to 64Kb at once
-//        //
-//        char buffer[1'024 * 64];
-//        errno = 0;
-//        ssize_t const r(read(&buffer[0], sizeof(buffer)));
-//        if(r < 0
-//        && errno != 0
-//        && errno != EAGAIN
-//        && errno != EWOULDBLOCK)
-//        {
-//            int const e(errno);
-//            SNAP_LOG_ERROR
-//                << "an error occurred while reading from pipe (errno: "
-//                << e
-//                << " -- "
-//                << strerror(e)
-//                << ")."
-//                << SNAP_LOG_SEND;
-//            process_error();
-//            return;
-//        }
-//
-//        if(r > 0)
-//        {
-//            // append to output buffer
-//            //
-//            f_output.insert(f_output.end(), buffer, buffer + r);
-//        }
-//    }
-//
-//    // process the next level
-//    //
-//    pipe_connection::process_read();
-//}
-//
-//
-//void capture_output_pipe::process_error()
-//{
-//    f_process->output_pipe_done(this);
-//}
-//
-//
-//void capture_output_pipe::process_invalid()
-//{
-//    f_process->output_pipe_done(this);
-//}
-//
-//
-//void capture_output_pipe::process_hup()
-//{
-//    f_process->output_pipe_done(this);
-//}
 
 
 
@@ -589,9 +413,8 @@ void tee_pipe::connection_removed()
  *     a.start();       // runs `a | b | c`
  * \endcode
  *
- * When piping processes in this way, pipes are used and the more powerful
- * scheme is used (fork() + execvpe() instead of a simpler popen() or even
- * a system() call).
+ * When piping processes in this way, intermediate pipes are used to send
+ * the output of one process to the input of the next process.
  *
  * Also, when piping processes, you can only add one input pipe to the
  * very first process and one output pipe to the very last process. You
@@ -705,6 +528,49 @@ bool process::get_forced_environment() const
 }
 
 
+/** \brief Define the working directory for this command.
+ *
+ * With a system() call, you can have a complete script running your
+ * command and that script can include a "cd /some/path" at the start
+ * to force a current working directory.
+ *
+ * Our process does not allow for such. The command must be one executable
+ * which can be run with execvpe().
+ *
+ * So to allow for the execution of a process in a directory other than
+ * the current directory, you must assign a working directory before
+ * calling the start() command.
+ *
+ * The directory must exist or the command will fail to start.
+ *
+ * \param[in] directory  The directory in this command will run.
+ *
+ * \sa start()
+ */
+void process::set_working_directory(std::string const & directory)
+{
+    f_working_directory = directory;
+}
+
+
+/** \brief Retrieve a reference to the working directory path.
+ *
+ * By default the working directory path is the empty path which is
+ * interpreted as "do not change directory before execution".
+ *
+ * You can change the working directory of a child process by setting
+ * the directory with the set_working_directory().
+ *
+ * \return The current working directory of this command.
+ *
+ * \sa set_working_directory()
+ */
+std::string const & process::get_working_directory() const
+{
+    return f_working_directory;
+}
+
+
 /** \brief Define the command to run.
  *
  * The command name may be a full path or just the command filename.
@@ -754,7 +620,7 @@ std::string const & process::get_command() const
  *
  * Internally, we do not use such a string to run the process. Instead
  * the command line arguments are kept in a an array (argv) and the
- * command passed directly to the execve() function.
+ * command passed directly to the execvpe() function.
  *
  * \return The command line one can use for display.
  */
@@ -1067,283 +933,6 @@ io::pointer_t process::get_error_io() const
 }
 
 
-///** \brief Set the input filename.
-// *
-// * Instead of a pipe or capturing the input, you can also specify
-// * a filename. This is similar to using the `< filename` syntax on
-// * a shell command line.
-// *
-// * \param[in] filename  The name of the input file.
-// */
-//void process::set_input_filename(std::string const & filename)
-//{
-//    f_input_filename = filename;
-//}
-//
-//
-///** \brief Retrieve the input filename.
-// *
-// * This function returns a copy of the input filename. This is used
-// * when you don't define an input pipe.
-// *
-// * \return The input filename.
-// */
-//std::string const & process::get_input_filename() const
-//{
-//    return f_input_filename;
-//}
-//
-//
-///** \brief Setup a pipe to send the child input to.
-// *
-// * This function is used to setup a pipe to replace stdin of the process.
-// * You are expected to send data to that pipe and the child is expected
-// * to read from this pipe and process the data as expected.
-// *
-// * \warning
-// * Only the very first process in a list of processes can be assigned
-// * an input pipe. If other processes are given an input pipe, then
-// * the start() function will throw an error.
-// *
-// * \param[in] pipe  The pipe used to send data to the child process.
-// *
-// * \sa get_input_pipe()
-// */
-//void process::set_input_pipe(ed::pipe_connection::pointer_t pipe)
-//{
-//    if(pipe->type() != ed::pipe_t::PIPE_CHILD_INPUT)
-//    {
-//        throw cppprocess_incorrect_pipe_type("incorrect pipe type, expected a PIPE_CHILD_INPUT type of pipe for the input.");
-//    }
-//
-//    f_input_pipe = pipe;
-//}
-//
-//
-///** \brief Retrieve the child input pipe.
-// *
-// * This function returns a pointer to the input pipe. This pipe can be used
-// * to send data to the child process while it runs. It will send the data
-// * to the child's stdin stream.
-// *
-// * This pipe works with the eventdispatcher communicator so it is non-blocking
-// * and you can add data as space becomes available in the pipe without getting
-// * stuck doing so. This means you can also handle the output and error pipes
-// * as they get filled up.
-// *
-// * \return A pointer to the pipe connection used for the process input.
-// *
-// * \sa set_input_pipe()
-// */
-//ed::pipe_connection::pointer_t process::get_input_pipe() const
-//{
-//    return f_input_pipe;
-//}
-//
-//
-///** \brief Set the output filename.
-// *
-// * Instead of a pipe or capturing the output, you can also specify
-// * a filename. This is similar to using the `> filename` syntax on
-// * a shell command line.
-// *
-// * \param[in] filename  The name of the output file.
-// */
-//void process::set_output_filename(std::string const & filename)
-//{
-//    f_output_filename = filename;
-//}
-//
-//
-///** \brief Retrieve the output filename.
-// *
-// * This function returns a copy of the output filename. This is used
-// * when you don't define an output pipe.
-// *
-// * \return The output filename.
-// */
-//std::string const & process::get_output_filename() const
-//{
-//    return f_output_filename;
-//}
-//
-//
-///** \brief Setup capture of output.
-// *
-// * By default, the output is set to stdout or an output pipe. You can also
-// * request that the process class capture the output to a buffer by calling
-// * this function with true.
-// *
-// * If you setup an output pipe, this flag is ignored.
-// *
-// * \param[in] capture  Whether to capture the output (true) or not (false).
-// */
-//void process::set_capture_output(bool capture)
-//{
-//    f_capture_output = capture;
-//}
-//
-//
-///** \brief Check whether the output will be captured or not.
-// *
-// * This function returns the capture flag.
-// *
-// * When the capture flag is true, the process output will be captured in an
-// * internal buffer.
-// *
-// * \return true if the output is to be captured by the process object.
-// */
-//bool process::get_capture_output() const
-//{
-//    return f_capture_output;
-//}
-//
-//
-///** \brief Set output capture done callback.
-// *
-// * This function lets you define a callback which gets called whenever the
-// * whole output is received.
-// *
-// * \warning
-// * You cannot use this function when you use your own output pipe.
-// *
-// * \param[in] callback  The callback to call when SIGCHLD is received.
-// */
-//void process::set_output_capture_done(capture_done_t callback)
-//{
-//    f_output_done_callback = callback;
-//}
-//
-//
-///** \brief Read the output of the command.
-// *
-// * This function reads the output of the process. This function converts
-// * the output to UTF-8. Note that if some bytes are missing this function
-// * is likely to fail. If you are reading the data little by little as it
-// * comes in, you may want to use the get_binary_output() function
-// * instead. That way you can detect characters such as the "\n" and at
-// * that point convert the data from the previous "\n" you found in the
-// * buffer to that new "\n". This will generate valid UTF-8 strings.
-// *
-// * This function is most often used by users of commands that process
-// * one given input and generate one given output all at once.
-// *
-// * \param[in] reset  Whether the output so far should be cleared.
-// *
-// * \return The current output buffer.
-// *
-// * \sa get_binary_output()
-// */
-//std::string process::get_output(bool reset) const
-//{
-//    std::string const output(reinterpret_cast<char const *>(f_output.data()), f_output.size());
-//    if(reset)
-//    {
-//        const_cast<process *>(this)->f_output.clear();
-//    }
-//    return output;
-//}
-//
-//
-///** \brief Get the trimmed output.
-// *
-// * The get_output() function returns the output as is, with all the
-// * characters. Quite often, though, you do not want the ending `'\n'`,
-// * introductory spaces or tabs, or even multiple spaces when aligned
-// * column output is used by the process.
-// *
-// * This function can be used to trimmed all of that junk for you. It
-// * will always remove the starting and ending spaces and new line,
-// * carriage return characters.
-// *
-// * When \p inside is true, it also replaces multiple spaces within
-// * the string in a single space. This feature also replaces all spaces
-// * with 0x20 (`' '`).
-// *
-// * \param[in] inside  Whether to remove double, triple, etc. spaces inside
-// * the string.
-// * \param[in] reset  Whether to reset the value after this call.
-// *
-// * \return The trimmed output string.
-// *
-// * \sa snapdev::trim_string() (in snapdev)
-// */
-//std::string process::get_trimmed_output(bool inside, bool reset) const
-//{
-//    return snapdev::trim_string(get_output(reset), true, true, inside);
-//}
-//
-//
-///** \brief Read the output of the command as a binary buffer.
-// *
-// * This function reads the output of the process in binary (untouched).
-// *
-// * This function does not fail like the get_output() which attempts to
-// * convert the output of the function to UTF-8. Also the output of the
-// * command may not be UTF-8 in which case you would have to use the
-// * binary version and use a different conversion.
-// *
-// * \param[in] reset  Whether the output so far should be cleared.
-// *
-// * \return The current output buffer.
-// *
-// * \sa get_output()
-// */
-//buffer_t process::get_binary_output(bool reset) const
-//{
-//    buffer_t const output(f_output);
-//    if(reset)
-//    {
-//        const_cast<process *>(this)->f_output.clear();
-//    }
-//    return output;
-//}
-//
-//
-///** \brief Setup a pipe where the process output is to be written.
-// *
-// * This function is used to setup a pipe which will receive data from
-// * the stdout of the command being started by the process object.
-// *
-// * The pipe is going to be setup as non-blocking, which means you can
-// * attempt a very large read (pipes on Linux are generally supporting
-// * about 64Kb of data) and your process won't be blocked if the amount
-// * of data is smaller that what you requested.
-// *
-// * \warning
-// * Only the very last process or a list of piped processes can be
-// * assigned an output pipe.
-// *
-// * \param[in] pipe  The pipe to attach to this process output.
-// *
-// * \sa get_output_pipe()
-// */
-//void process::set_output_pipe(ed::pipe_connection::pointer_t pipe)
-//{
-//    if(pipe->type() != ed::pipe_t::PIPE_CHILD_OUTPUT)
-//    {
-//        throw cppprocess_incorrect_pipe_type("incorrect pipe type, expected a PIPE_CHILD_OUTPUT type of pipe for the output.");
-//    }
-//
-//    f_output_pipe = pipe;
-//}
-//
-//
-///** \brief Retrieve the pointer to the output pipe.
-// *
-// * This function retrieves the pointer of the current output pipe.
-// * By default, this is a null pointer.
-// *
-// * \return The callback interface pointer.
-// *
-// * \sa set_output_pipe()
-// */
-//ed::pipe_connection::pointer_t process::get_output_pipe() const
-//{
-//    return f_output_pipe;
-//}
-
-
 /** \brief Pipe the output of this process to the next process.
  *
  * This function is used to pipe processes one after the other.
@@ -1406,164 +995,6 @@ process::list_t process::get_next_processes() const
 }
 
 
-///** \brief Set the error filename.
-// *
-// * Instead of a pipe or capturing the error, you can also specify
-// * a filename. This is similar to using the `2> filename` syntax on
-// * a shell command line.
-// *
-// * \param[in] filename  The name of the error file.
-// */
-//void process::set_error_filename(std::string const & filename)
-//{
-//    f_error_filename = filename;
-//}
-//
-//
-///** \brief Retrieve the error filename.
-// *
-// * This function returns a copy of the error filename. This is used
-// * when you don't define an error pipe.
-// *
-// * \return The error filename.
-// */
-//std::string const & process::get_error_filename() const
-//{
-//    return f_error_filename;
-//}
-//
-//
-///** \brief Setup capture of the error stream.
-// *
-// * By default, the error stream is set to stderr. You can also request that
-// * the process object captures the error stream to a buffer by calling
-// * this function with true.
-// *
-// * If you setup an error pipe, this flag is ignored.
-// *
-// * \param[in] capture  Whether to capture the error stream (true) or not (false).
-// */
-//void process::set_capture_error(bool capture)
-//{
-//    f_capture_error = capture;
-//}
-//
-//
-///** \brief Check whether the error stream will be captured or not.
-// *
-// * This function returns the capture flag for the error stream.
-// *
-// * When the capture flag is true, the process error stream will be captured
-// * in an internal buffer.
-// *
-// * \return true if the error stream is to be captured by the process object.
-// */
-//bool process::get_capture_error() const
-//{
-//    return f_capture_error;
-//}
-//
-//
-///** \brief Read the error output of the command.
-// *
-// * This function reads the error output stream of the process. This
-// * function converts the output to UTF-8. Note that if some bytes are
-// * missing this function is likely to fail. If you are reading the
-// * data little by little as it comes in, you may want to use the
-// * get_binary_output() function instead. That way you can detect
-// * characters such as the "\n" and at that point convert the data
-// * from the previous "\n" you found in the buffer to that new "\n".
-// * This will generate valid UTF-8 strings.
-// *
-// * This function is most often used when stderr is to be saved
-// * in a different file than the default.
-// *
-// * \todo
-// * Look at validating the UTF-8 data.
-// *
-// * \param[in] reset  Whether the error output so far should be cleared.
-// *
-// * \return The current error output buffer.
-// *
-// * \sa get_binary_error()
-// */
-//std::string process::get_error(bool reset) const
-//{
-//    std::string const error(reinterpret_cast<char const *>(f_error.data()), f_error.size());
-//    if(reset)
-//    {
-//        const_cast<process *>(this)->f_error.clear();
-//    }
-//    return error;
-//}
-//
-//
-///** \brief Read the error output of the command as a binary buffer.
-// *
-// * This function reads the error output of the process in binary (untouched).
-// *
-// * This function does not fail like get_error() which attempts to
-// * convert the output of the function to UTF-8. Also the error output
-// * of the command may not be UTF-8 in which case you would have to use
-// * the binary version and use a different conversion.
-// *
-// * \param[in] reset  Whether the error output so far should be cleared.
-// *
-// * \return The current error output buffer.
-// *
-// * \sa get_error()
-// */
-//buffer_t process::get_binary_error(bool reset) const
-//{
-//    buffer_t const error(f_error);
-//    if(reset)
-//    {
-//        const_cast<process *>(this)->f_error.clear();
-//    }
-//    return error;
-//}
-//
-//
-///** \brief Setup a pipe where the process errors are to be written.
-// *
-// * This function is used to setup a pipe which will receive data from
-// * the stderr of the command being started by the process object.
-// *
-// * The pipe is going to be setup as non-blocking, which means you can
-// * attempt a very large read (pipes on Linux are generally supporting
-// * about 64Kb of data) and your process won't be blocked if the amount
-// * of data is smaller than what you requested.
-// *
-// * \param[in] callback  The callback class that is called on output arrival.
-// *
-// * \sa get_error_pipe()
-// */
-//void process::set_error_pipe(ed::pipe_connection::pointer_t pipe)
-//{
-//    if(pipe->type() != ed::pipe_t::PIPE_CHILD_OUTPUT)
-//    {
-//        throw cppprocess_incorrect_pipe_type("incorrect pipe type, expected a PIPE_CHILD_OUTPUT type of pipe for the error.");
-//    }
-//
-//    f_error_pipe = pipe;
-//}
-//
-//
-///** \brief Retrieve the pointer to the error pipe.
-// *
-// * This function retrieves the pointer of the current error pipe.
-// * By default, this is a null pointer.
-// *
-// * \return The callback interface pointer.
-// *
-// * \sa set_error_pipe()
-// */
-//ed::pipe_connection::pointer_t process::get_error_pipe() const
-//{
-//    return f_error_pipe;
-//}
-
-
 /** \brief Retrieve the child process identifier.
  *
  * After you called the start() function, the process identifier is defined
@@ -1586,43 +1017,68 @@ pid_t process::process_pid() const
 /** \brief Start the process.
  *
  * This function creates all the necessary things that the process requires
- * and start the command.
+ * and start the command or chain of commands.
  *
  * If the function encounters problems before it can run the child process,
- * it returns -1 instead.
+ * it returns -1.
  *
- * The function always uses `fork()` and `execvpe()`. That way we handle
- * one single case, which is much easier to maintain. The process is started
- * in the background. This function doesn't wait for the process to be done.
+ * The function uses `fork()` and `execvpe()` to start each process. That
+ * way the processes are started in the background. This function doesn't
+ * wait for the processes to be done.
  *
- * The input can be a buffer where you add data using add_input(). It can
- * also be setup with your own pipe_connection object. If neither is
- * specified, the process is given your stdin as a default.
+ * The input can be set to your own io_data_pipe or io_input_file object. If
+ * neither is specified, the process is given your stdin.
  *
- * The output can automatically be captured or you can setup your own
- * pipe_connection object to receive the output. If neither is specified,
- * the process is given your stdout as a default.
+ * The output can be set your own io_capture_pipe or io_output_file object.
+ * If neither is specified, the process is given your stdout.
  *
- * Like the output, the error stream can be captured or sent to your own
- * pipe. It otherwise defaults to stderr.
+ * Like the output, the error stream can be captured (io_capture_pipe) or
+ * sent to a file (io_error_file). It otherwise defaults to stderr. Note
+ * that an io_error_file is very much the same of an io_output_file (it
+ * derives from it). It allows you to distinguish the two type of object
+ * if such a need arise in your code.
  *
- * If you are not using ed::communicator (or at least you did not call the
- * ed::communicator::run() function), you can wait on the process with
+ * If you are not using ed::communicator (or at least you did not yet call
+ * the ed::communicator::run() function), you can wait on the process with
  * the wait() function. This function will call the ed::communicator::run()
  * loop. If you supplied your own pipes, you'll want to make sure to close
  * them and remove them from the ed::communicator once done with them
  * otherwise the wait() function will be stuck forever. The SIGCHLD signal
  * is also automatically handled by the wait() function.
  *
+ * If you are already using the ed::communicator loop, then you only want
+ * to respond to the events that you receive and the pipes get closed and
+ * the executables exit. The process can be assigned a callback using the
+ * set_process_done() function. The I/O objects (pipes, files) can be
+ * assigned a callback with the io::add_process_done_callback() function.
+ *
+ * If some of the process setup is considered invalid (a parameter is
+ * set when it is not expected), then the call may generate an exception.
+ * In that case, you will have to fix your initialization to make everything
+ * work. One possible issue, when you create a chained set of processes, is
+ * to add an output capture pipe on a process other than the very last one.
+ * Note that in case of a chain, some processes may have been created
+ * successfully and be running before an exception is raised.
+ *
+ * \note
+ * There is one callback per process. However, the pipes can be assigned
+ * any number of callbacks.
+ *
+ * \todo
+ * Verify all the data before we start any processes. If we are to raise
+ * an error, then we should do so before any fork() + execvpe().
+ *
  * \return 0 on success or -1 if an error occurs.
  *
  * \sa wait()
- * \sa add_input()
- * \sa set_input_pipe()
- * \sa set_capture_output()
- * \sa get_output()
- * \sa set_capture_error()
- * \sa get_error()
+ * \sa set_input_io()
+ * \sa get_input_io()
+ * \sa set_output_io()
+ * \sa get_output_io()
+ * \sa set_error_io()
+ * \sa get_error_io()
+ * \sa set_working_directory()
+ * \sa set_process_done()
  */
 int process::start()
 {
@@ -1801,6 +1257,26 @@ void process::child_done(ed::child_status status)
 }
 
 
+/** \brief Prepare the FIFOs and start the process.
+ *
+ * This function prepares the input and output FIFOs and then it starts
+ * the child process with the fork() and then a call to the
+ * execute_command() function is calls the execvpe() in the child process.
+ *
+ * The parent process also closses the other other side of the pipes so
+ * everything exits as expected.
+ *
+ * The call fails if (1) the process is already marked as running, (2) the
+ * fork command fails. It may also raise an exception if it detects an
+ * invalid parameter or the setup is considered invalid.
+ *
+ * \param[in] output_fifo  The output FIFO in a chain or nullptr.
+ * \param[in] output_index  The output index in the chain.
+ * \param[in] input_fifo  The input FIFO in a chain or nullptr.
+ *
+ * \return 0 in case the fork() happened successfully, -1 if the fork()
+ * failed or the function detected that the process was already running.
+ */
 int process::start_process(
           ed::pipe_connection::pointer_t output_fifo
         , int output_index
@@ -1809,6 +1285,7 @@ int process::start_process(
     if(f_running)
     {
         // already running
+        //
         return -1;
     }
 
@@ -1856,7 +1333,6 @@ int process::start_process(
 //
 //        if(f_intermediate_output_pipe != nullptr)
 //        {
-//std::cerr << "--- intermediate output pipe forked()\n";
 //            f_intermediate_output_pipe->forked();
 //        }
 
@@ -1874,6 +1350,23 @@ int process::start_process(
 }
 
 
+/** \brief Execute the command.
+ *
+ * This function calls the execvpe() function after initializing all the
+ * pipes, the working directory, the arguments, the environment, etc.
+ *
+ * The function returns if an error occurs, otherwise it never returns
+ * since it calls the execvpe() function.
+ *
+ * The function accepts input and output FIFO pointers because of the
+ * piping capability of the class. The input and output FIFO may be
+ * intermediate pipes and not the pipes you defined as the input of
+ * the chain and the output of the chain.
+ *
+ * \param[in] output_fifo  The pipe to use as the output.
+ * \param[in] output_index  Index in the list of piped processes.
+ * \param[in] input_fifo  The pipe to use as the input.
+ */
 void process::execute_command(
           ed::pipe_connection::pointer_t output_fifo
         , int output_index
@@ -1883,6 +1376,22 @@ void process::execute_command(
     //
     try
     {
+        if(!f_working_directory.empty())
+        {
+            int const r(chdir(f_working_directory.c_str()));
+            if(r != 0)
+            {
+                int const e(errno);
+                throw cppprocess_directory_not_found(
+                            "chdir() to \""
+                            + f_working_directory
+                            + "\" failed with: errno="
+                            + std::to_string(e)
+                            + ", "
+                            + strerror(e));
+            }
+        }
+
         // convert arguments so we can use them with execvpe()
         //
         std::vector<char const *> args_strings;
@@ -2019,28 +1528,26 @@ void process::execute_command(
             << ")"
             << SNAP_LOG_SEND;
     }
-    catch(libexcept::exception_t const & e)
+    catch(cppprocess::cppprocess_exception const & e)
     {
         SNAP_LOG_FATAL
-            << "process::run(): snap_exception caught: "
+            << "process::execute_command(): cppprocess exception caught in child process: "
             << e.what()
             << SNAP_LOG_SEND;
     }
     catch(std::exception const & e)
     {
-        // the snap_logic_exception is not a snap_exception
-        // and other libraries may generate other exceptions
-        // (i.e. libtld, libQtCassandra...)
+        // other libraries may generate other exceptions
         //
         SNAP_LOG_FATAL
-            << "process::run(): std::exception caught: "
+            << "process::execute_command(): std::exception caught in child process: "
             << e.what()
             << SNAP_LOG_SEND;
     }
     catch(...)
     {
         SNAP_LOG_FATAL
-            << "process::run(): unknown exception caught!"
+            << "process::execute_command(): unknown exception caught in child process!"
             << SNAP_LOG_SEND;
     }
 }
@@ -2077,43 +1584,9 @@ void process::prepare_input(ed::pipe_connection::pointer_t output_fifo)
             throw cppprocess_invalid_parameters("you cannot pipe a command (add_next()) and define your own input pipe.");
         }
 
-        //f_prepared_input = output_fifo->get_other_socket();
         f_prepared_input = output_fifo->get_socket();
         return;
     }
-
-//    // user specified pipe
-//    //
-//    if(f_input_pipe != nullptr)
-//    {
-//        if(!f_input.empty())
-//        {
-//            throw cppprocess_invalid_parameters("you cannot define pipe and input data in the same process.");
-//        }
-//
-//        f_prepared_input = f_input_pipe->get_other_socket();
-//        return;
-//    }
-//
-//    if(!f_input_filename.empty())
-//    {
-//        f_input_file.reset(open(
-//                  f_input_filename.c_str()
-//                , O_RDONLY));
-//        f_prepared_input = f_input_file.get();
-//        return;
-//    }
-//
-//    if(!f_input.empty())
-//    {
-//        // the user supplied a buffer instead of a pipe, we create a pipe
-//        // to send that buffer which will be pretty much automatic
-//        //
-//        f_internal_input_pipe = std::make_shared<direct_input_data>(this, f_input);
-//        f_prepared_input = f_internal_input_pipe->get_other_socket();
-//        f_communicator->add_connection(f_internal_input_pipe);
-//        return;
-//    }
 
     if(f_input != nullptr)
     {
@@ -2176,34 +1649,9 @@ void process::prepare_output()
     {
     case 0:
         // no piping to another process:
-        //   1. use the user output if defined (f_output_pipe)
-        //   2. use internal output if f_capture_output is true
-        //   3. use stdout
+        //   1. use the user output if defined (f_output)
+        //   2. otherwise fallback on the use stdout
         //
-        //if(f_output_pipe != nullptr)
-        //{
-        //    f_prepared_output.push_back(f_output_pipe->get_socket());
-        //}
-        //else if(!f_output_filename.empty())
-        //{
-        //    f_output_file.reset(open(
-        //              f_output_filename.c_str()
-        //            , O_WRONLY | O_CREAT | O_TRUNC
-        //            , S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IRGRP));
-        //    f_prepared_output.push_back(f_output_file.get());
-        //}
-        //else if(f_capture_output)
-        //{
-        //    f_intermediate_output_pipe = std::make_shared<capture_output_pipe>(this, f_output);
-        //    f_prepared_output.push_back(f_intermediate_output_pipe->get_other_socket());
-        //    f_communicator->add_connection(f_intermediate_output_pipe);
-        //}
-        //else
-        //{
-        //    // as a fallback, pass our stdout
-        //    //
-        //    f_prepared_output.push_back(STDOUT_FILENO);
-        //}
         if(f_output != nullptr)
         {
             f_output->process_starting();
@@ -2262,36 +1710,6 @@ void process::prepare_output()
  */
 void process::prepare_error()
 {
-//    // user specified pipe
-//    //
-//    if(f_error_pipe != nullptr)
-//    {
-//        f_prepared_error = f_error_pipe->get_other_socket();
-//        return;
-//    }
-//
-//    if(!f_error_filename.empty())
-//    {
-//        f_error_file.reset(open(
-//                  f_error_filename.c_str()
-//                , O_WRONLY | O_CREAT | O_TRUNC
-//                , S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IRGRP));
-//        f_prepared_error = f_error_file.get();
-//        return;
-//    }
-//
-//    if(f_capture_error)
-//    {
-//        f_internal_error_pipe = std::make_shared<capture_output_pipe>(this, f_error);
-//        f_prepared_error = f_internal_error_pipe->get_other_socket();
-//        f_communicator->add_connection(f_internal_error_pipe);
-//        return;
-//    }
-//
-//    // as a fallback, pass our stderr
-//    //
-//    f_prepared_error = STDERR_FILENO;
-
     if(f_error != nullptr)
     {
         f_error->process_starting();

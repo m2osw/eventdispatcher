@@ -71,6 +71,8 @@ public:
     void                            set_forced_environment(bool forced = true);
     bool                            get_forced_environment() const;
 
+    void                            set_working_directory(std::string const & name);
+    std::string const &             get_working_directory() const;
     void                            set_command(std::string const & name);
     std::string const &             get_command() const;
     std::string                     get_command_line() const;
@@ -120,6 +122,7 @@ private:
 
     ed::communicator::pointer_t     f_communicator = ed::communicator::pointer_t();
     std::string const               f_name = std::string();
+    std::string                     f_working_directory = std::string();
     std::string                     f_command = std::string();
     argument_list_t                 f_arguments = argument_list_t();
     environment_map_t               f_environment = environment_map_t();
