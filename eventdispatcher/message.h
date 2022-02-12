@@ -53,8 +53,18 @@ public:
     typedef std::vector<message>        vector_t;
     typedef string_map_t                parameters_t;
 
+    enum class format_t
+    {
+        MESSAGE_FORMAT_STRING,
+        MESSAGE_FORMAT_JSON,
+    };
+
     bool                    from_message(std::string const & msg);
-    std::string             to_message() const;
+    bool                    from_string(std::string const & msg);
+    bool                    from_json(std::string const & msg);
+    std::string             to_message(format_t format = format_t::MESSAGE_FORMAT_STRING) const;
+    std::string             to_string() const;
+    std::string             to_json() const;
 
     std::string const &     get_sent_from_server() const;
     void                    set_sent_from_server(std::string const & server);
@@ -90,6 +100,7 @@ private:
     std::string             f_command = std::string();
     parameters_t            f_parameters = parameters_t();
     mutable std::string     f_cached_message = std::string();
+    mutable std::string     f_cached_json = std::string();
 };
 
 

@@ -203,25 +203,49 @@ CATCH_TEST_CASE("message", "[message]")
         CATCH_REQUIRE(msg.get_parameter("length") == "-35");
         CATCH_REQUIRE(msg.get_integer_parameter("length") == -35);
 
-        std::string const m(msg.to_message());
+        {
+            std::string const m(msg.to_message());
 
-        ed::message rcv;
+            ed::message rcv;
 
-        CATCH_REQUIRE(rcv.get_command().empty());
-        CATCH_REQUIRE_FALSE(rcv.has_parameter("name"));
-        CATCH_REQUIRE_FALSE(rcv.has_parameter("length"));
+            CATCH_REQUIRE(rcv.get_command().empty());
+            CATCH_REQUIRE_FALSE(rcv.has_parameter("name"));
+            CATCH_REQUIRE_FALSE(rcv.has_parameter("length"));
 
-        rcv.from_message(m);
+            rcv.from_message(m);
 
-        CATCH_REQUIRE_FALSE(rcv.get_command().empty());
-        CATCH_REQUIRE(rcv.get_command() == "FIRE");
+            CATCH_REQUIRE_FALSE(rcv.get_command().empty());
+            CATCH_REQUIRE(rcv.get_command() == "FIRE");
 
-        CATCH_REQUIRE(rcv.has_parameter("name"));
-        CATCH_REQUIRE(rcv.get_parameter("name") == "Charles");
+            CATCH_REQUIRE(rcv.has_parameter("name"));
+            CATCH_REQUIRE(rcv.get_parameter("name") == "Charles");
 
-        CATCH_REQUIRE(rcv.has_parameter("length"));
-        CATCH_REQUIRE(rcv.get_parameter("length") == "-35");
-        CATCH_REQUIRE(rcv.get_integer_parameter("length") == -35);
+            CATCH_REQUIRE(rcv.has_parameter("length"));
+            CATCH_REQUIRE(rcv.get_parameter("length") == "-35");
+            CATCH_REQUIRE(rcv.get_integer_parameter("length") == -35);
+        }
+
+        {
+            std::string const m(msg.to_message(ed::message::format_t::MESSAGE_FORMAT_JSON));
+
+            ed::message rcv;
+
+            CATCH_REQUIRE(rcv.get_command().empty());
+            CATCH_REQUIRE_FALSE(rcv.has_parameter("name"));
+            CATCH_REQUIRE_FALSE(rcv.has_parameter("length"));
+
+            rcv.from_message(m);
+
+            CATCH_REQUIRE_FALSE(rcv.get_command().empty());
+            CATCH_REQUIRE(rcv.get_command() == "FIRE");
+
+            CATCH_REQUIRE(rcv.has_parameter("name"));
+            CATCH_REQUIRE(rcv.get_parameter("name") == "Charles");
+
+            CATCH_REQUIRE(rcv.has_parameter("length"));
+            CATCH_REQUIRE(rcv.get_parameter("length") == "-35");
+            CATCH_REQUIRE(rcv.get_integer_parameter("length") == -35);
+        }
     }
     CATCH_END_SECTION()
 
@@ -245,31 +269,102 @@ CATCH_TEST_CASE("message", "[message]")
         CATCH_REQUIRE(msg.get_parameter("length") == "-35");
         CATCH_REQUIRE(msg.get_integer_parameter("length") == -35);
 
-        std::string const m(msg.to_message());
+        CATCH_REQUIRE_FALSE(msg.has_parameter("range"));
+        msg.add_parameter("range", "+101");
+        CATCH_REQUIRE(msg.has_parameter("range"));
+        CATCH_REQUIRE(msg.get_parameter("range") == "+101");
+        CATCH_REQUIRE(msg.get_integer_parameter("range") == 101);
 
-        ed::message rcv;
+        CATCH_REQUIRE_FALSE(msg.has_parameter("valid"));
+        msg.add_parameter("valid", "true");
+        CATCH_REQUIRE(msg.has_parameter("valid"));
+        CATCH_REQUIRE(msg.get_parameter("valid") == "true");
 
-        CATCH_REQUIRE(rcv.get_command().empty());
-        CATCH_REQUIRE_FALSE(rcv.has_parameter("name"));
-        CATCH_REQUIRE_FALSE(rcv.has_parameter("length"));
+        CATCH_REQUIRE_FALSE(msg.has_parameter("correct"));
+        msg.add_parameter("correct", "false");
+        CATCH_REQUIRE(msg.has_parameter("correct"));
+        CATCH_REQUIRE(msg.get_parameter("correct") == "false");
 
-        rcv.from_message(m);
+        CATCH_REQUIRE_FALSE(msg.has_parameter("void"));
+        msg.add_parameter("void", "");
+        CATCH_REQUIRE(msg.has_parameter("void"));
+        CATCH_REQUIRE(msg.get_parameter("void") == "");
 
-        CATCH_REQUIRE_FALSE(rcv.get_command().empty());
-        CATCH_REQUIRE(rcv.get_command() == "FIRE");
+        {
+            std::string const m(msg.to_message());
 
-        CATCH_REQUIRE(rcv.has_parameter("name"));
-        CATCH_REQUIRE(rcv.get_parameter("name") == "Charles");
+            ed::message rcv;
 
-        CATCH_REQUIRE(rcv.has_parameter("length"));
-        CATCH_REQUIRE(rcv.get_parameter("length") == "-35");
-        CATCH_REQUIRE(rcv.get_integer_parameter("length") == -35);
+            CATCH_REQUIRE(rcv.get_command().empty());
+            CATCH_REQUIRE_FALSE(rcv.has_parameter("name"));
+            CATCH_REQUIRE_FALSE(rcv.has_parameter("length"));
+
+            rcv.from_message(m);
+
+            CATCH_REQUIRE_FALSE(rcv.get_command().empty());
+            CATCH_REQUIRE(rcv.get_command() == "FIRE");
+
+            CATCH_REQUIRE(rcv.has_parameter("name"));
+            CATCH_REQUIRE(rcv.get_parameter("name") == "Charles");
+
+            CATCH_REQUIRE(rcv.has_parameter("length"));
+            CATCH_REQUIRE(rcv.get_parameter("length") == "-35");
+            CATCH_REQUIRE(rcv.get_integer_parameter("length") == -35);
+
+            CATCH_REQUIRE(rcv.has_parameter("range"));
+            CATCH_REQUIRE(rcv.get_parameter("range") == "+101");
+            CATCH_REQUIRE(rcv.get_integer_parameter("range") == 101);
+
+            CATCH_REQUIRE(rcv.has_parameter("valid"));
+            CATCH_REQUIRE(rcv.get_parameter("valid") == "true");
+
+            CATCH_REQUIRE(rcv.has_parameter("correct"));
+            CATCH_REQUIRE(rcv.get_parameter("correct") == "false");
+
+            CATCH_REQUIRE(rcv.has_parameter("void"));
+            CATCH_REQUIRE(rcv.get_parameter("void") == "");
+        }
+
+        {
+            std::string const m(msg.to_json());
+
+std::cerr << "JSON [" << m << "]\n";
+            ed::message rcv;
+
+            CATCH_REQUIRE(rcv.get_command().empty());
+            CATCH_REQUIRE_FALSE(rcv.has_parameter("name"));
+            CATCH_REQUIRE_FALSE(rcv.has_parameter("length"));
+
+            // this statement prints out an error message
+            CATCH_REQUIRE_FALSE(rcv.from_string(m));
+
+            CATCH_REQUIRE(rcv.from_json(m));
+
+            CATCH_REQUIRE_FALSE(rcv.get_command().empty());
+            CATCH_REQUIRE(rcv.get_command() == "FIRE");
+
+            CATCH_REQUIRE(rcv.has_parameter("name"));
+            CATCH_REQUIRE(rcv.get_parameter("name") == "Charles");
+
+            CATCH_REQUIRE(rcv.has_parameter("length"));
+            CATCH_REQUIRE(rcv.get_parameter("length") == "-35");
+            CATCH_REQUIRE(rcv.get_integer_parameter("length") == -35);
+
+            CATCH_REQUIRE(rcv.has_parameter("range"));
+            CATCH_REQUIRE(rcv.get_parameter("range") == "101"); // we lose the '+' sign in JSON
+            CATCH_REQUIRE(rcv.get_integer_parameter("range") == 101);
+
+            CATCH_REQUIRE(rcv.has_parameter("valid"));
+            CATCH_REQUIRE(rcv.get_parameter("valid") == "true");
+
+            CATCH_REQUIRE(rcv.has_parameter("correct"));
+            CATCH_REQUIRE(rcv.get_parameter("correct") == "false");
+
+            CATCH_REQUIRE(rcv.has_parameter("void"));
+            CATCH_REQUIRE(rcv.get_parameter("void") == "");
+        }
     }
     CATCH_END_SECTION()
-
-    // TODO:
-    //void                    reply_to(message const & msg);
-    //parameters_t const &    get_all_parameters() const;
 }
 
 

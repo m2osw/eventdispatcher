@@ -49,6 +49,7 @@
 
 // advgetopt lib
 //
+#include    <advgetopt/validator_double.h>
 #include    <advgetopt/validator_integer.h>
 
 
@@ -57,14 +58,15 @@
 #include    <snaplogger/message.h>
 
 
+// libutf8 lib
+//
+#include    <libutf8/json_tokens.h>
+
+
 // snapdev lib
 //
 #include    <snapdev/string_replace_many.h>
-
-
-// boost lib
-//
-#include    <boost/algorithm/string.hpp>
+#include    <snapdev/trim_string.h>
 
 
 // last include
@@ -83,11 +85,33 @@ namespace ed
  * This function transformed the input string in a set of message
  * fields.
  *
- * The message format supported is:
+ * The message formats supported are:
  *
  * \code
- *      ( '<' sent-from-server ':' sent-from-service ' ')? ( ( server ':' )? service '/' )? command ' ' ( parameter_name '=' value ';' )*
+ *      // String
+ *      ( '<' sent-from-server ':' sent-from-service ' ')?
+ *      ( ( server ':' )? service '/' )?
+ *      command
+ *      ' ' ( parameter_name '=' value ';' )*
+ *
+ *      // JSON
+ *      {
+ *        "sent-from-server":"<name>",      // optional
+ *        "sent-from-service":"<name>",     // optional
+ *        "server":"<name>",                // optional
+ *        "service":"<service>",            // optional
+ *        "command":"<command>",
+ *        "parameters":                     // optional
+ *        {
+ *          "<name>":"<value>",
+ *          ...
+ *        }
+ *      }
  * \endcode
+ *
+ * Note that the String and JSON formats are written on a single line.
+ * Here it is shown on multiple line to make it easier to read.
+ * In a String message, the last ';' is optional.
  *
  * The sender "\<sent-from-server:sent-from-service" names are added by
  * snapcommunicator when it receives a message which is destined for
@@ -135,12 +159,56 @@ namespace ed
  * \return true if the message was successfully parsed; false when an
  *         error occurs and in that case no fields get modified.
  *
+ * \sa from_string()
+ * \sa from_json()
  * \sa to_message()
  * \sa get_sent_from_server()
  * \sa get_sent_from_service()
  * \sa reply_to()
  */
 bool message::from_message(std::string const & original_message)
+{
+    std::string const msg(snapdev::trim_string(original_message));
+
+    if(msg.empty())
+    {
+        SNAP_LOG_ERROR
+            << "message is empty or only composed of blanks ("
+            << original_message
+            << ")."
+            << SNAP_LOG_SEND;
+        return false;
+    }
+
+    if(msg[0] == '{')
+    {
+        return from_json(msg);
+    }
+    else
+    {
+        return from_string(msg);
+    }
+}
+
+
+/** \brief Parse the message as a Snap! message string.
+ *
+ * This function parses the input as a string as defined by the Snap!
+ * message string format.
+ *
+ * \note
+ * You are expected to use the from_message() function instead of
+ * directly calling this function. This means the message can either
+ * be a Snap! String message or a JSON message.
+ *
+ * \param[in] original_message  The message to be parsed.
+ *
+ * \return true if the message was successfully parsed.
+ *
+ * \sa from_message()
+ * \sa from_json()
+ */
+bool message::from_string(std::string const & original_message)
 {
     std::string sent_from_server;
     std::string sent_from_service;
@@ -152,8 +220,7 @@ bool message::from_message(std::string const & original_message)
     // someone using telnet to test sending messages will include a '\r'
     // so run a trim on the message in case it is there
     //
-    std::string msg(original_message);
-    boost::trim(msg);
+    std::string msg(snapdev::trim_string(original_message));
     char const * m(msg.c_str());
 
     // sent-from indicated?
@@ -397,6 +464,314 @@ bool message::from_message(std::string const & original_message)
 }
 
 
+/** \brief Parse the JSON message.
+ *
+ * This function expects the input string to be a JSON message. It will
+ * then parse that message and save the field information in this message
+ * object.
+ *
+ * If the parsing fails (i.e. there is a missing comma, etc.), then the
+ * function returns false and none of the message fields get modified.
+ *
+ * \todo
+ * See if we have full access to the as2js in which case using that JSON
+ * parser would make this a lot smaller than the libutf8 library parser.
+ *
+ * \param[in] msg  The message to parse.
+ *
+ * \return true if the message was successfully parsed, false otherwise
+ * and none of the fields will be modified.
+ *
+ * \sa from_string()
+ * \sa from_message()
+ */
+bool message::from_json(std::string const & msg)
+{
+    std::string sent_from_server;
+    std::string sent_from_service;
+    std::string server;
+    std::string service;
+    std::string command;
+    parameters_t parameters;
+
+    libutf8::json_tokens tokens(msg);
+    libutf8::token_t t(tokens.next_token());
+    if(t == libutf8::token_t::TOKEN_END)
+    {
+        SNAP_LOG_ERROR
+            << "JSON message is empty, which is not considered valid."
+            << SNAP_LOG_SEND;
+        return false;
+    }
+    if(t != libutf8::token_t::TOKEN_OPEN_OBJECT)
+    {
+        SNAP_LOG_ERROR
+            << "JSON does not start with a '{' (an object definition)."
+            << SNAP_LOG_SEND;
+        return false;
+    }
+    for(;;)
+    {
+        t = tokens.next_token();
+        if(t == libutf8::token_t::TOKEN_END)
+        {
+            SNAP_LOG_ERROR
+                << "JSON message not properly closed, '}' missing."
+                << SNAP_LOG_SEND;
+            return false;
+        }
+        if(t != libutf8::token_t::TOKEN_STRING)
+        {
+            SNAP_LOG_ERROR
+                << "JSON message expected a string defining the field name."
+                << SNAP_LOG_SEND;
+            return false;
+        }
+        std::string const name(tokens.string());
+
+        t = tokens.next_token();
+        if(t != libutf8::token_t::TOKEN_COLON)
+        {
+            SNAP_LOG_ERROR
+                << "JSON message expected a colon after an object field name."
+                << SNAP_LOG_SEND;
+            return false;
+        }
+
+        t = tokens.next_token();
+        if(t == libutf8::token_t::TOKEN_OPEN_OBJECT)
+        {
+            // this has to be the list of parameters, make sure the field
+            // name is correct
+            //
+            if(name != "parameters")
+            {
+                SNAP_LOG_ERROR
+                    << "JSON message expected an object to define parameters."
+                    << SNAP_LOG_SEND;
+                return false;
+            }
+
+            t = tokens.next_token();
+            if(t != libutf8::token_t::TOKEN_CLOSE_OBJECT)
+            {
+                for(;;)
+                {
+                    if(t != libutf8::token_t::TOKEN_STRING)
+                    {
+                        SNAP_LOG_ERROR
+                            << "JSON message expected a string defining the parameter name."
+                            << SNAP_LOG_SEND;
+                        return false;
+                    }
+                    std::string const parameter_name(tokens.string());
+
+                    t = tokens.next_token();
+                    if(t != libutf8::token_t::TOKEN_COLON)
+                    {
+                        SNAP_LOG_ERROR
+                            << "JSON message expected a colon after an object parameter name."
+                            << SNAP_LOG_SEND;
+                        return false;
+                    }
+
+                    t = tokens.next_token();
+                    switch(t)
+                    {
+                    case libutf8::token_t::TOKEN_STRING:
+                        // for strings, we may have encoded some characters
+                        //
+                        parameters[parameter_name] = snapdev::string_replace_many(
+                                                            tokens.string(),
+                                                            {
+                                                                { "\\\"", "\"" },
+                                                                { "\\\\", "\\" },
+                                                                { "\\n", "\n" },
+                                                                { "\\r", "\r" }
+                                                            });
+                        break;
+
+                    case libutf8::token_t::TOKEN_NUMBER:
+                        // TODO: we may want to make sure we do not lose precision here
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+                        if(tokens.number() == floor(tokens.number()))
+                        {
+                            // avoid the ".00000" for integers
+                            //
+                            parameters[parameter_name] = std::to_string(static_cast<std::int64_t>(tokens.number()));
+                        }
+                        else
+                        {
+                            parameters[parameter_name] = std::to_string(tokens.number());
+                        }
+#pragma GCC diagnostic pop
+                        break;
+
+                    case libutf8::token_t::TOKEN_TRUE:
+                        parameters[parameter_name] = "true";
+                        break;
+
+                    case libutf8::token_t::TOKEN_FALSE:
+                        parameters[parameter_name] = "false";
+                        break;
+
+                    case libutf8::token_t::TOKEN_NULL:
+                        parameters[parameter_name] = std::string();
+                        break;
+
+                    default:
+                        SNAP_LOG_ERROR
+                            << "JSON message expected a parameter value."
+                            << SNAP_LOG_SEND;
+                        return false;
+
+                    }
+
+                    t = tokens.next_token();
+                    if(t == libutf8::token_t::TOKEN_CLOSE_OBJECT)
+                    {
+                        break;
+                    }
+                    if(t != libutf8::token_t::TOKEN_COMMA)
+                    {
+                        SNAP_LOG_ERROR
+                            << "JSON message parameter expected to be followed by '}' or ','."
+                            << SNAP_LOG_SEND;
+                        return false;
+                    }
+
+                    t = tokens.next_token();
+                }
+            }
+        }
+        else
+        {
+            if(t != libutf8::token_t::TOKEN_STRING)
+            {
+                SNAP_LOG_ERROR
+                    << "JSON message expected a string as the field value."
+                    << SNAP_LOG_SEND;
+                return false;
+            }
+
+            if(name == "sent-from-server")
+            {
+                sent_from_server = tokens.string();
+            }
+            else if(name == "sent-from-service")
+            {
+                sent_from_service = tokens.string();
+            }
+            else if(name == "server")
+            {
+                server = tokens.string();
+            }
+            else if(name == "service")
+            {
+                service = tokens.string();
+            }
+            else if(name == "command")
+            {
+                command = tokens.string();
+            }
+            else
+            {
+                // we just ignore unknown names for forward compatibility
+                //
+                SNAP_LOG_NOTICE
+                    << "JSON message expected a known field. \""
+                    << name
+                    << "\" was not recognized."
+                    << SNAP_LOG_SEND;
+            }
+        }
+
+        t = tokens.next_token();
+        if(t == libutf8::token_t::TOKEN_CLOSE_OBJECT)
+        {
+            t = tokens.next_token();
+            if(t != libutf8::token_t::TOKEN_END)
+            {
+                SNAP_LOG_ERROR
+                    << "JSON message followed by more data after the last '}'."
+                    << SNAP_LOG_SEND;
+                return false;
+            }
+            break;
+        }
+        if(t != libutf8::token_t::TOKEN_COMMA)
+        {
+            SNAP_LOG_ERROR
+                << "JSON message parameter expected to be followed by '}' or ','."
+                << SNAP_LOG_SEND;
+            return false;
+        }
+    }
+
+    f_sent_from_server = sent_from_server;
+    f_sent_from_service = sent_from_service;
+    f_server = server;
+    f_service = service;
+    f_command = command;
+    f_parameters.swap(parameters);
+    f_cached_message.clear();
+
+    return true;
+}
+
+
+/** \brief Transform all the message parameters in a string.
+ *
+ * This function transforms all the message parameters in a string
+ * and returns the result. The string is a message we can send over
+ * TCP/IP (if you make sure to add a "\n", note that the
+ * send_message() does that automatically) or over UDP/IP.
+ *
+ * \note
+ * The function caches the result so calling the function many times
+ * will return the same string and thus the function is very fast
+ * after the first call (assuming you do not modify the message on
+ * each call to to_message().)
+ *
+ * \note
+ * The sent-from information gets saved in the message only if both,
+ * the server name and service name it was sent from are defined.
+ *
+ * \exception event_dispatcher_invalid_message
+ * This function raises an exception if the message command was not
+ * defined since a command is always mandatory.
+ *
+ * \param[in] format  The format the message will be defined as.
+ *
+ * \return The converted message as a string.
+ *
+ * \sa to_string()
+ * \sa to_json()
+ * \sa to_binary()
+ * \sa get_sent_from_server()
+ * \sa get_sent_from_service()
+ * \sa set_reply_to_server()
+ * \sa set_reply_to_service()
+ */
+std::string message::to_message(format_t format) const
+{
+    switch(format)
+    {
+    case format_t::MESSAGE_FORMAT_STRING:
+        return to_string();
+
+    case format_t::MESSAGE_FORMAT_JSON:
+        return to_json();
+
+    }
+
+    throw event_dispatcher_invalid_parameter(
+                      "unsupported message format: "
+                    + std::to_string(static_cast<int>(format)));
+}
+
+
 /** \brief Transform all the message parameters in a string.
  *
  * This function transforms all the message parameters in a string
@@ -425,7 +800,7 @@ bool message::from_message(std::string const & original_message)
  * \sa set_reply_to_server()
  * \sa set_reply_to_service()
  */
-std::string message::to_message() const
+std::string message::to_string() const
 {
     if(f_cached_message.empty())
     {
@@ -448,7 +823,8 @@ std::string message::to_message() const
             f_cached_message += ' ';
         }
 
-        // add server and optionally the destination server name if both are defined
+        // add service and optionally the destination server name
+        // if both are defined
         //
         // ['<' <sent-from-server> ':' <sent-from-service> ' ']
         //      [[<server> ':'] <name> '/']
@@ -482,21 +858,26 @@ std::string message::to_message() const
             f_cached_message += p.first;
             f_cached_message += '=';
 
-            std::string safe_value(snapdev::string_replace_many(
-                    p.second,
-                    {
+            std::vector<std::pair<std::string, std::string>> search_and_replace{
                         { "\\", "\\\\" },
                         { "\n", "\\n" },
                         { "\r", "\\r" }
-                    }));
+                    };
 
-            if(safe_value.find(';') != std::string::npos
-            || (!safe_value.empty() && safe_value[0] == '\"'))
+            // do we need quoting?
+            //
+            bool const quote(p.second.find(';') != std::string::npos
+                          || (!p.second.empty() && p.second[0] == '\"'));
+            if(quote)
             {
-                // escape the double quotes
-                //
-                boost::algorithm::replace_all(safe_value, "\"", "\\\"");
+                search_and_replace.push_back({ "\"", "\\\"" });
+            }
 
+            std::string const safe_value(snapdev::string_replace_many(
+                                        p.second, search_and_replace));
+
+            if(quote)
+            {
                 // quote the resulting parameter and save in f_cached_message
                 //
                 f_cached_message += '"';
@@ -515,6 +896,152 @@ std::string message::to_message() const
     }
 
     return f_cached_message;
+}
+
+
+/** \brief Transform all the message parameters in a JSON string.
+ *
+ * This function transforms all the message parameters in a string
+ * and returns the result. The string is a JSON object we can send over
+ * TCP/IP (if you make sure to add a "\n", note that the
+ * send_message() does that automatically) or over UDP/IP.
+ *
+ * \note
+ * The function caches the result so calling the function many times
+ * will return the same string and thus the function is very fast
+ * after the first call (assuming you do not modify the message before
+ * calling to_json() again.)
+ *
+ * \note
+ * The sent-from information gets saved in the message only if both,
+ * the server name and service name it was sent from are defined.
+ *
+ * \exception event_dispatcher_invalid_message
+ * This function raises an exception if the message command was not
+ * defined since a command is always mandatory.
+ *
+ * \return The converted message as a string.
+ *
+ * \sa get_sent_from_server()
+ * \sa get_sent_from_service()
+ * \sa set_reply_to_server()
+ * \sa set_reply_to_service()
+ */
+std::string message::to_json() const
+{
+    if(f_cached_json.empty())
+    {
+        if(f_command.empty())
+        {
+            throw event_dispatcher_invalid_message("message::to_json(): cannot build a valid JSON message without at least a command.");
+        }
+
+        f_cached_json += '{';
+
+        // add info about the sender
+        //
+        if(!f_sent_from_server.empty())
+        {
+            f_cached_json += "\"sent-from-server\":\"";
+            f_cached_json += f_sent_from_server;
+            f_cached_json += "\",";
+        }
+        if(!f_sent_from_service.empty())
+        {
+            f_cached_json += "\"sent-from-service\":\"";
+            f_cached_json += f_sent_from_service;
+            f_cached_json += "\",";
+        }
+
+        // add service and optionally the destination server name
+        // if both are defined
+        //
+        if(!f_service.empty())
+        {
+            if(!f_server.empty())
+            {
+                f_cached_json += "\"server\":\"";
+                f_cached_json += f_server;
+                f_cached_json += "\",";
+            }
+            f_cached_json += "\"service\":\"";
+            f_cached_json += f_service;
+        }
+
+        // command
+        //
+        f_cached_json += "\"command\":\"";
+        f_cached_json += f_command;
+        f_cached_json += '"';
+
+        // add parameters if any
+        //
+        if(!f_parameters.empty())
+        {
+            f_cached_json += ",\"parameters\":{";
+            bool first(true);
+            for(auto p : f_parameters)
+            {
+                if(first)
+                {
+                    first = false;
+                    f_cached_json += '"';
+                }
+                else
+                {
+                    f_cached_json += ",\"";
+                }
+                f_cached_json += p.first;
+                f_cached_json += "\":";
+
+                if(p.second == "true")
+                {
+                    f_cached_json += "true";
+                }
+                else if(p.second == "false")
+                {
+                    f_cached_json += "false";
+                }
+                else
+                {
+                    double number(0.0);
+                    if(advgetopt::validator_double::convert_string(p.second, number))
+                    {
+                        // +<number> is not allowed in JSON, so make sure we
+                        // do not include the plus sign
+                        //
+                        if(p.second[0] == '+')
+                        {
+                            f_cached_json += p.second.substr(1);
+                        }
+                        else
+                        {
+                            f_cached_json += p.second;
+                        }
+                    }
+                    else
+                    {
+                        f_cached_json += '"';
+                        f_cached_json += snapdev::string_replace_many(
+                                p.second,
+                                {
+                                    { "\\", "\\\\" },
+                                    { "\"", "\\\"" },
+                                    { "\n", "\\n" },
+                                    { "\r", "\\r" },
+                                });
+                        f_cached_json += '"';
+                    }
+                }
+
+            }
+            f_cached_json += '}';
+        }
+
+        f_cached_json += '}';
+    }
+
+    return f_cached_json;
 }
 
 
@@ -1237,7 +1764,7 @@ void verify_message_name(std::string const & name, bool can_be_empty, bool can_b
     if(!can_be_empty
     && name.empty())
     {
-        std::string err("a message name cannot be empty.");
+        std::string const err("a message name cannot be empty.");
         SNAP_LOG_FATAL
             << err
             << SNAP_LOG_SEND;
