@@ -1,3 +1,9 @@
+eventdispatcher (1.1.48.0~bionic) bionic; urgency=high
+
+  * Renamed "unsafe" value as "original" value instead.                             
+                                                                                
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 13 Feb 2022 06:39:57 -0800
+
 eventdispatcher (1.1.47.0~bionic) bionic; urgency=high
 
   * Added support for JSON encoded messages.

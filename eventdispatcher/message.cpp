@@ -438,7 +438,7 @@ bool message::from_string(std::string const & original_message)
 
             // also restore new lines and backslashes if any
             //
-            std::string const unsafe_value(snapdev::string_replace_many(
+            std::string const original_value(snapdev::string_replace_many(
                     param_value,
                     {
                         { "\\\\", "\\" },
@@ -448,7 +448,7 @@ bool message::from_string(std::string const & original_message)
 
             // we got a valid parameter, add it
             //
-            parameters[param_name] = unsafe_value;
+            parameters[param_name] = original_value;
         }
     }
 
