@@ -1,7 +1,13 @@
+eventdispatcher (1.1.49.0~bionic) bionic; urgency=high
+
+  * Added a stub for the process_info::get_cpu_percent() function.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 20 Feb 2022 07:24:00 -0800
+
 eventdispatcher (1.1.48.0~bionic) bionic; urgency=high
 
-  * Renamed "unsafe" value as "original" value instead.                             
-                                                                                
+  * Renamed "unsafe" value as "original" value instead.
+
  -- Alexis Wilke <alexis@m2osw.com>  Sun, 13 Feb 2022 06:39:57 -0800
 
 eventdispatcher (1.1.47.0~bionic) bionic; urgency=high

@@ -225,6 +225,21 @@ process_state_t process_info::get_state(bool force)
 }
 
 
+/** \brief Get the percent usage of CPU by this process.
+ *
+ * \todo
+ * Implement. At this time, this is not done because it requires reading
+ * information about all the threads and compute the percent which is
+ * not that simple. Also, right now we do not really need this info.
+ *
+ * \return Always -1 (until it gets implemented).
+ */
+int process_info::get_cpu_percent()
+{
+    return -1;
+}
+
+
 /** \brief Get the amount of time spent by this process.
  *
  * This function gives you information about the four variables

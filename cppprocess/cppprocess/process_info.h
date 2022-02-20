@@ -18,18 +18,18 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #pragma once
 
-// advgetopt lib
+// advgetopt
 //
 #include    <advgetopt/utils.h>
 
 
-// C++ lib
+// C++
 //
 #include    <memory>
 #include    <string>
 
 
-// C lib
+// C
 //
 #include    <unistd.h>
 
@@ -88,7 +88,7 @@ public:
     // CPU info, priority
     //
     process_state_t         get_state(bool force = true);
-    //unsigned                get_cpu_percent();
+    int                     get_cpu_percent();
     void                    get_times(unsigned long long & utime, unsigned long long & stime, unsigned long long & cutime, unsigned long long & cstime);
     int                     get_priority();
     int                     get_nice();
