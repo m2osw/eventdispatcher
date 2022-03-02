@@ -200,221 +200,22 @@ bool tcp_server_client_connection::is_reader() const
 
 /** \brief Retrieve a copy of the client's address.
  *
- * This function makes a copy of the address of this client connection
- * to the \p address parameter and returns the length.
+ * This function retrieves a copy of the client's address and returns it.
  *
- * If the function returns zero, then the \p address buffer is not
- * modified and no address is defined in this connection.
- *
- * \param[out] address  The reference to an address variable where the
- *                      client's address gets copied.
- *
- * \return Return the length of the address which may be smaller than
- *         sizeof(address). If zero, then no address is defined.
- *
- * \sa get_addr()
+ * \return A reference to the client's address.
  */
-size_t tcp_server_client_connection::get_client_address(sockaddr_storage & address) const
+addr::addr tcp_server_client_connection::get_client_address() 
 {
-    // make sure the address is defined and the socket open
-    //
-    if(const_cast<tcp_server_client_connection *>(this)->define_address() != 0)
+    if(f_address.is_default())
     {
-        return 0;
-    }
-
-    address = f_address;
-    return f_length;
-}
-
-
-/** \brief Retrieve the address in the form of a string.
- *
- * Like the get_addr() of the tcp client and server classes, this
- * function returns the address in the form of a string which can
- * easily be used to log information and other similar tasks.
- *
- * \todo
- * Look at using libaddr for the conversion.
- *
- * \return The client's address in the form of a string.
- */
-std::string tcp_server_client_connection::get_client_addr() const
-{
-    // make sure the address is defined and the socket open
-    //
-    if(!const_cast<tcp_server_client_connection *>(this)->define_address())
-    {
-        return std::string();
-    }
-
-    size_t const max_length(std::max(INET_ADDRSTRLEN, INET6_ADDRSTRLEN) + 1);
-
-// in release mode this should not be dynamic (although the syntax is so
-// the warning would happen), but in debug it is likely an alloca()
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wvla"
-    char buf[max_length];
-#pragma GCC diagnostic pop
-
-    char const * r(nullptr);
-
-    if(f_address.ss_family == AF_INET)
-    {
-        r = inet_ntop(AF_INET, &reinterpret_cast<sockaddr_in const &>(f_address).sin_addr, buf, max_length);
-    }
-    else
-    {
-        r = inet_ntop(AF_INET6, &reinterpret_cast<sockaddr_in6 const &>(f_address).sin6_addr, buf, max_length);
-    }
-
-    if(r == nullptr)
-    {
-        int const e(errno);
-        std::string err("inet_ntop() could not convert IP address (errno: ");
-        err += std::to_string(e);
-        err += " -- ";
-        err += strerror(e);
-        err += ").";
-        SNAP_LOG_FATAL << err << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error(err);
-    }
-
-    return buf;
-}
-
-
-/** \brief Retrieve the port.
- *
- * This function returns the port of the socket on our side.
- *
- * If the port is not available (not connected?), then -1 is returned.
- *
- * \return The client's port in host order.
- */
-int tcp_server_client_connection::get_client_port() const
-{
-    // make sure the address is defined and the socket open
-    //
-    if(!const_cast<tcp_server_client_connection *>(this)->define_address())
-    {
-        return -1;
-    }
-
-    if(f_address.ss_family == AF_INET)
-    {
-        return ntohs(reinterpret_cast<sockaddr_in const &>(f_address).sin_port);
-    }
-    else
-    {
-        return ntohs(reinterpret_cast<sockaddr_in6 const &>(f_address).sin6_port);
-    }
-}
-
-
-/** \brief Retrieve the address in the form of a string.
- *
- * Like the get_addr() of the tcp client and server classes, this
- * function returns the address in the form of a string which can
- * easily be used to log information and other similar tasks.
- *
- * \todo
- * Look at using libaddr for the conversion.
- *
- * \return The client's address in the form of a string.
- */
-std::string tcp_server_client_connection::get_client_addr_port() const
-{
-    // get the current address and port
-    std::string const addr(get_client_addr());
-    int const port(get_client_port());
-
-    // make sure they are defined
-    if(addr.empty()
-    || port < 0)
-    {
-        return std::string();
-    }
-
-    // calculate the result
-    std::string buf;
-    buf.reserve(addr.length() + (3 + 5));
-    if(f_address.ss_family == AF_INET)
-    {
-        buf += addr;
-        buf += ':';
-    }
-    else
-    {
-        buf += '[';
-        buf += addr;
-        buf += "]:";
-    }
-    buf += std::to_string(port);
-
-    return buf;
-}
-
-
-/** \brief Retrieve the socket address if we have not done so yet.
- *
- * This function make sure that the f_address and f_length parameters are
- * defined. This is done by calling the getsockname() function.
- *
- * If f_length is still zero, then it is expected that address was not
- * yet read.
- *
- * Note that the function returns -1 if the socket is now -1 (i.e. the
- * connection is closed) whether or not the function worked before.
- *
- * \return false if the address cannot be defined, true otherwise
- */
-bool tcp_server_client_connection::define_address()
-{
-    int const s(get_socket());
-    if(s == -1)
-    {
-        return false;
-    }
-
-    if(f_length == 0)
-    {
-        // address not defined yet, retrieve with with getsockname()
-        //
-        f_length = sizeof(f_address);
-        if(getsockname(s, reinterpret_cast<struct sockaddr *>(&f_address), &f_length) != 0)
+        int const s(get_socket());
+        if(s >= 0)
         {
-            int const e(errno);
-            SNAP_LOG_ERROR
-                << "getsockname() failed retrieving IP address (errno: "
-                << e
-                << " -- "
-                << strerror(e)
-                << ")."
-                << SNAP_LOG_SEND;
-            f_length = 0;
-            return false;
-        }
-        if(f_address.ss_family != AF_INET
-        && f_address.ss_family != AF_INET6)
-        {
-            SNAP_LOG_ERROR
-                << "address family ("
-                << f_address.ss_family
-                << ") returned by getsockname() is not understood, it is neither an IPv4 nor IPv6."
-                << SNAP_LOG_SEND;
-            f_length = 0;
-            return false;
-        }
-        if(f_length < sizeof(f_address))
-        {
-            // reset the rest of the structure, just in case
-            //
-            memset(reinterpret_cast<char *>(&f_address) + f_length, 0, sizeof(f_address) - f_length);
+            f_address.set_from_socket(s, false);
         }
     }
 
-    return true;
+    return f_address;
 }
 
 

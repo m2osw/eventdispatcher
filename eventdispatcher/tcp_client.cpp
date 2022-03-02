@@ -32,13 +32,13 @@
 #include    "eventdispatcher/utils.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-//// C lib
-////
+// C
+//
 #include    <netdb.h>
 #include    <arpa/inet.h>
 #include    <string.h>
@@ -69,60 +69,31 @@ namespace ed
 /** \brief Construct a tcp_client object.
  *
  * The tcp_client constructor initializes a TCP client object by connecting
- * to the specified server. The server is defined with the \p addr and
- * \p port specified as parameters.
+ * to the specified server. The server is defined by the \p address object.
  *
- * \exception tcp_client_server_parameter_error
+ * \exception event_dispatcher_invalid_parameter
  * This exception is raised if the \p port parameter is out of range or the
  * IP address is an empty string or otherwise an invalid address.
  *
- * \exception tcp_client_server_runtime_error
+ * \exception event_dispatcher_runtime_error
  * This exception is raised if the client cannot create the socket or it
  * cannot connect to the server.
  *
- * \param[in] addr  The address of the server to connect to. It must be valid.
- * \param[in] port  The port the server is listening on.
+ * \param[in] address  The address of the server to connect to. It must be valid.
  */
-tcp_client::tcp_client(std::string const & addr, int port)
-    : f_port(port)
-    , f_addr(addr)
+tcp_client::tcp_client(addr::addr const & address)
+    : f_address(address)
 {
-    if(f_port < 0 || f_port >= 65536)
+    if(f_address.is_default())
     {
-        throw event_dispatcher_invalid_parameter("invalid port for a client socket");
+        throw event_dispatcher_invalid_parameter("the default address is not valid for a client socket");
     }
-    if(f_addr.empty())
+    if(f_address.get_protocol() != IPPROTO_TCP)
     {
-        throw event_dispatcher_invalid_parameter("an empty address is not valid for a client socket");
-    }
-
-    addrinfo hints;
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-    std::string const port_str(std::to_string(f_port));
-    addrinfo * addrinfo(nullptr);
-    int const r(getaddrinfo(addr.c_str(), port_str.c_str(), &hints, &addrinfo));
-    raii_addrinfo_t addr_info(addrinfo);
-    if(r != 0
-    || addrinfo == nullptr)
-    {
-        int const e(errno);
-        std::string err("getaddrinfo() failed to parse the address or port \"");
-        err += addr;
-        err += ":";
-        err += port_str;
-        err += "\" strings (errno: ";
-        err += std::to_string(e);
-        err += " -- ";
-        err += strerror(e);
-        err += ")";
-        SNAP_LOG_FATAL << err << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error(err);
+        throw event_dispatcher_invalid_parameter("the address presents a protocol other than the expected TCP");
     }
 
-    f_socket.reset(socket(addr_info.get()->ai_family, SOCK_STREAM, IPPROTO_TCP));
+    f_socket.reset(address.create_socket(0));
     if(f_socket < 0)
     {
         int const e(errno);
@@ -136,17 +107,19 @@ tcp_client::tcp_client(std::string const & addr, int port)
         throw event_dispatcher_runtime_error("could not create socket for client");
     }
 
-    if(connect(f_socket.get(), addr_info.get()->ai_addr, addr_info.get()->ai_addrlen) < 0)
+    if(f_address.connect(f_socket.get()) != 0)
     {
         int const e(errno);
+        std::stringstream ss;
+        ss << "tcp_client() -- failed to connect() socket (errno: "
+           << e
+           << " -- "
+           << strerror(e)
+           << ")";
         SNAP_LOG_FATAL
-            << "connect() failed to connect a socket (errno: "
-            << e
-            << " -- "
-            << strerror(e)
-            << ")"
+            << ss
             << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error("could not connect client socket to \"" + f_addr + "\"");
+        throw event_dispatcher_runtime_error(ss.str());
     }
 }
 
@@ -185,23 +158,34 @@ int tcp_client::get_socket() const
  */
 int tcp_client::get_port() const
 {
-    return f_port;
+    return f_address.get_port();
 }
 
 /** \brief Get the TCP server address.
  *
- * This function returns the address used when creating the TCP address as is.
+ * This function returns the address used when creating the TCP address.
  * Note that this is the address of the server where the client is connected
  * and not the address where the client is running (although it may be the
  * same.)
  *
  * Use the get_client_addr() function to retrieve the client's TCP address.
  *
- * \return The TCP client address.
+ * \return The TCP server address.
  */
 std::string tcp_client::get_addr() const
 {
-    return f_addr;
+    return f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_ONLY);
+}
+
+/** \brief Get the TCP server address.
+ *
+ * This function returns a copy of the address as specified in the contructor.
+ *
+ * \return The TCP server address/
+ */
+addr::addr tcp_client::get_address() const
+{
+    return f_address;
 }
 
 /** \brief Get the TCP client port.
@@ -210,6 +194,9 @@ std::string tcp_client::get_addr() const
  * This is retrieved from the socket using the getsockname() function.
  *
  * \return The port or -1 if it cannot be determined.
+ *
+ * \sa get_client_addr()
+ * \sa get_client_address()
  */
 int tcp_client::get_client_port() const
 {
@@ -252,6 +239,9 @@ int tcp_client::get_client_port() const
  * match its type properly;
  *
  * \return The IP address as a string.
+ *
+ * \sa get_client_port()
+ * \sa get_client_address()
  */
 std::string tcp_client::get_client_addr() const
 {
@@ -293,6 +283,27 @@ std::string tcp_client::get_client_addr() const
     }
 
     return buf;
+}
+
+/** \brief Get the TCP client address.
+ *
+ * This function retrieve the IP address of the client (your computer).
+ * This is retrieved from the socket using the getsockname() function.
+ *
+ * \exception event_dispatcher_runtime_error
+ * The function raises this exception if the address we retrieve doesn't
+ * match its type properly;
+ *
+ * \return The IP address as a string.
+ *
+ * \sa get_client_port()
+ * \sa get_client_address()
+ */
+addr::addr tcp_client::get_client_address() const
+{
+    addr::addr a;
+    a.set_from_socket(f_socket.get(), true);
+    return a;
 }
 
 /** \brief Read data from the socket.

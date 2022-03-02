@@ -45,11 +45,10 @@ public:
 
     static size_t const         DATAGRAM_MAX_SIZE = 1024;
 
-                                udp_server_message_connection(std::string const & addr, int port);
+                                udp_server_message_connection(addr::addr const & address);
 
     static bool                 send_message(
-                                          std::string const & addr
-                                        , int port
+                                          addr::addr const & address
                                         , message const & msg
                                         , std::string const & secret_code = std::string());
 

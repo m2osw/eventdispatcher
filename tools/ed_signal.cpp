@@ -198,8 +198,7 @@ public:
 
                                     tcp_signal(
                                           ed_signal * parent
-                                        , std::string const & addr
-                                        , int port
+                                        , addr::addr const & addr
                                         , ed::tcp_bio_client::mode_t mode);
     virtual                         ~tcp_signal() override;
                                     tcp_signal(tcp_signal const &) = delete;
@@ -238,10 +237,9 @@ private:
 
 tcp_signal::tcp_signal(
               ed_signal * parent
-            , std::string const & addr
-            , int port
+            , addr::addr const & address
             , ed::tcp_bio_client::mode_t mode)
-    : tcp_client_message_connection(addr, port, mode)
+    : tcp_client_message_connection(address, mode)
     , f_parent(parent)
 {
 }
@@ -355,8 +353,7 @@ int ed_signal::run()
 
         f_tcp_connection = std::make_shared<tcp_signal>(
                   this
-                , server.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_ONLY)
-                , server.get_port()
+                , server
                 , encrypt
                         ? ed::tcp_bio_client::mode_t::MODE_SECURE
                         : ed::tcp_bio_client::mode_t::MODE_PLAIN
@@ -389,8 +386,7 @@ int ed_signal::run()
         // we're done (no need for the communicator itself)
         //
         ed::udp_server_message_connection::send_message(
-                  server.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_ONLY)
-                , server.get_port()
+                  server
                 , msg
                 , secret_code);
     }

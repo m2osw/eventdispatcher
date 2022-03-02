@@ -100,8 +100,8 @@ namespace ed
  *          : public ed::local_stream_blocking_client_message_connection
  *      {
  *      public:
- *          my_blocking_connection(std::string const & addr, int port, mode_t mode)
- *              : local_stream_blocking_client_message_connection(addr, port, mode)
+ *          my_blocking_connection(addr::unix const & address, mode_t mode)
+ *              : local_stream_blocking_client_message_connection(a, mode)
  *          {
  *              // need to register with communicator
  *              message register_message;

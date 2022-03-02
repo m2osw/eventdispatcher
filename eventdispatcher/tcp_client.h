@@ -25,12 +25,17 @@
  */
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/raii_generic_deleter.h>
 
 
-// C++ lib
+// libaddr
+//
+#include    <libaddr/addr.h>
+
+
+// C++
 //
 #include    <string>
 #include    <memory>
@@ -50,7 +55,7 @@ class tcp_client
 public:
     typedef std::shared_ptr<tcp_client>     pointer_t;
 
-                        tcp_client(std::string const & addr, int port);
+                        tcp_client(addr::addr const & address);
                         tcp_client(tcp_client const &) = delete;
     tcp_client &        operator = (tcp_client const &) = delete;
                         ~tcp_client();
@@ -59,7 +64,9 @@ public:
     int                 get_port() const;
     int                 get_client_port() const;
     std::string         get_addr() const;
+    addr::addr          get_address() const;
     std::string         get_client_addr() const;
+    addr::addr          get_client_address() const;
 
     int                 read(char * buf, size_t size);
     int                 read_line(std::string & line);
@@ -67,8 +74,7 @@ public:
 
 private:
     snapdev::raii_fd_t  f_socket = snapdev::raii_fd_t();
-    int                 f_port = -1;
-    std::string         f_addr = std::string();
+    addr::addr          f_address = addr::addr();
 };
 
 

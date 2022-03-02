@@ -1,6 +1,10 @@
 eventdispatcher (1.1.49.0~bionic) bionic; urgency=high
 
+  * Use addr::addr from libaddr instead of std::string + parsing each time.
+  * Changed the get_addr()/get_port() into get_address() returning addr::addr.
   * Added a stub for the process_info::get_cpu_percent() function.
+  * Fixed the logrotate documentation to reference the proper variables.
+  * Fixed other documentation here and there.
 
  -- Alexis Wilke <alexis@m2osw.com>  Sun, 20 Feb 2022 07:24:00 -0800
 

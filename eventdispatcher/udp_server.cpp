@@ -13,14 +13,20 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
- * \brief Event dispatch class.
+ * \brief UDP server class implementation.
  *
- * Class used to handle events.
+ * This file is the implementation of the UDP server.
+ *
+ * A UDP server accepts UDP packets from any number of clients (contrary to
+ * a TCP connection which is one on one). Without the proper implementation,
+ * a UDP _connection_ is generally considered insecure. Also unless you
+ * handle a form of acknowledgement, there is no way to know whether a
+ * packet made it to the other end.
  */
 
 // to get the POLLRDHUP definition
@@ -36,12 +42,12 @@
 #include    "eventdispatcher/exception.h"
 
 
-// snapwebsites lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// C lib
+// C
 //
 #include    <arpa/inet.h>
 #include    <poll.h>
@@ -62,14 +68,11 @@ namespace ed
 
 /** \brief Initialize a UDP server object.
  *
- * This function initializes a UDP server object making it ready to
+ * This function initializes one UDP server object making it ready to
  * receive messages.
  *
- * The server address and port are specified in the constructor so
- * if you need to receive messages from several different addresses
- * and/or port, you'll have to create a server for each.
- *
- * The address is a string and it can represent an IPv4 or IPv6
+ * The server address and port are specified in the constructor
+ * as a libaddr `addr` object. It can represent an IPv4 or IPv6
  * address.
  *
  * Note that this function calls bind() to listen to the socket
@@ -81,147 +84,105 @@ namespace ed
  * socket will be closed by the operating system.
  *
  * \warning
- * We only make use of the first address found by getaddrinfo(). All
- * the other addresses are ignored.
- *
- * \warning
  * Remember that the multicast feature under Linux is shared by all
  * processes running on that server. Any one process can listen for
  * any and all multicast messages from any other process. Our
  * implementation limits the multicast from a specific IP. However.
  * other processes can also receive your packets and there is nothing
- * you can do to prevent that.
+ * you can do to prevent that. Multicast is only supported with IPv4
+ * addresses. We currently do not allow the default address as the
+ * multicast address.
  *
- * \exception udp_client_server_runtime_error
- * The udp_client_server_runtime_error exception is raised when the address
- * and port combination cannot be resolved or if the socket cannot be
- * opened.
+ * \exception event_dispatcher_runtime_error
+ * The event_dispatcher_runtime_error exception is raised when the socket
+ * cannot be opened.
  *
- * \param[in] addr  The address we receive on.
- * \param[in] port  The port we receive from.
- * \param[in] family  The family used to search for 'addr'.
- * \param[in] multicast_addr  A multicast address.
+ * \param[in] address  The address we receive on.
+ * \param[in] multicast_address  A multicast address.
  */
-udp_server::udp_server(std::string const & addr, int port, int family, std::string const * multicast_addr)
-    : udp_base(addr, port, family)
+udp_server::udp_server(
+          addr::addr const & address
+        , addr::addr const & multicast_address)
+    : udp_base(address)
 {
     int r(0);
-    raii_addrinfo_t multicast_addrinfo;
 
-    std::stringstream decimal_port;
-    decimal_port << f_port;
-    std::string port_str(decimal_port.str());
-
-    if(multicast_addr != nullptr)
+    if(!multicast_address.is_default())
     {
         // in multicast we have to bind to the multicast IP (or IN_ANYADDR
         // which right now we do not support)
         //
-        addrinfo hints = addrinfo();
-        hints.ai_family = AF_UNSPEC;
-        hints.ai_socktype = SOCK_DGRAM;
-        hints.ai_protocol = IPPROTO_UDP;
-
-        // we use the multicast address, but the same port as for
-        // the other address
-        //
-        addrinfo * a(nullptr);
-        r = getaddrinfo(multicast_addr->c_str(), port_str.c_str(), &hints, &a);
-        if(r != 0 || a == nullptr)
+        if(!multicast_address.is_ipv4()
+        || !f_address.is_ipv4())
         {
-            throw event_dispatcher_runtime_error(
-                      "invalid address or port for UDP multicast socket: \""
-                    + *multicast_addr
-                    + "\"");
-        }
-        multicast_addrinfo = raii_addrinfo_t(a);
-
-        if(multicast_addrinfo->ai_family != AF_INET
-        || f_addrinfo->ai_family != AF_INET)
-        {
-            throw event_dispatcher_runtime_error(
-                      "the UDP multicast implementation only supports IPv4 at the moment: \""
-                    + *multicast_addr
-                    + "\"");
+            std::stringstream ss;
+            ss << "the UDP multicast implementation only supports IPv4 at the moment; multicast: \""
+               << multicast_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+               << "\", address: \""
+               << f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+               << "\".";
+            SNAP_LOG_FATAL
+                << ss
+                << SNAP_LOG_SEND;
+            throw event_dispatcher_runtime_error(ss.str());
         }
 
-        r = bind(f_socket.get(), multicast_addrinfo->ai_addr, multicast_addrinfo->ai_addrlen);
+        r = multicast_address.bind(get_socket());
+        if(r != 0)
+        {
+            int const e(errno);
+            std::stringstream ss;
+            ss << "the multicast address bind() function failed with errno: "
+               << e
+               << " ("
+               << strerror(e)
+               << "); address "
+               << multicast_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT);
+            SNAP_LOG_FATAL
+                << ss
+                << SNAP_LOG_SEND;
+            throw event_dispatcher_runtime_error(ss.str());
+        }
     }
     else
     {
-        // bind to the very first address
-        //
-        r = bind(f_socket.get(), f_addrinfo->ai_addr, f_addrinfo->ai_addrlen);
-    }
-
-    if(r != 0)
-    {
-        int const e(errno);
-
-        // reverse the address from the f_addrinfo so we know exactly
-        // which one was picked
-        //
-        char addr_buf[256];
-        switch(f_addrinfo->ai_family)
+        r = f_address.bind(get_socket());
+        if(r != 0)
         {
-        case AF_INET:
-            inet_ntop(AF_INET
-                    , &reinterpret_cast<struct sockaddr_in *>(f_addrinfo->ai_addr)->sin_addr
-                    , addr_buf
-                    , sizeof(addr_buf));
-            break;
+            int const e(errno);
 
-        case AF_INET6:
-            inet_ntop(AF_INET6
-                    , &reinterpret_cast<struct sockaddr_in6 *>(f_addrinfo->ai_addr)->sin6_addr
-                    , addr_buf
-                    , sizeof(addr_buf));
-            break;
-
-        default:
-            strncpy(addr_buf, "Unknown Address Family", sizeof(addr_buf));
-            break;
-
-        }
-
-        SNAP_LOG_ERROR
-                << "the bind() function failed with errno: "
-                << e
-                << " ("
-                << strerror(e)
-                << "); address length "
-                << f_addrinfo->ai_addrlen
-                << " and address is \""
-                << addr_buf
-                << "\""
+            std::stringstream ss;
+            ss << "the bind() function failed with errno: "
+               << e
+               << " ("
+               << strerror(e)
+               << "); address "
+               << f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT);
+            SNAP_LOG_FATAL
+                << ss
                 << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error("could not bind UDP socket to \"" + f_addr + ":" + std::to_string(port) + "\"");
+            throw event_dispatcher_runtime_error(ss.str());
+        }
     }
 
     // are we creating a server to listen to multicast packets?
     //
-    if(multicast_addrinfo != nullptr)
+    if(!multicast_address.is_default())
     {
-        ip_mreqn mreq = {};
+        sockaddr_in m = {};
+        sockaddr_in a = {};
 
-        // both addresses must have the right size
-        //
-        if(multicast_addrinfo->ai_addrlen <= sizeof(mreq.imr_multiaddr)
-        || f_addrinfo->ai_addrlen <= sizeof(mreq.imr_address))
-        {
-            throw event_dispatcher_runtime_error(
-                      "invalid address type for UDP multicast: \""
-                    + addr + ":" + port_str
-                    + "\" or \""
-                    + *multicast_addr + ":" + port_str + "\" (sizes: "
-                    + std::to_string(multicast_addrinfo->ai_addrlen) + ", "
-                    + std::to_string(f_addrinfo->ai_addrlen) + ", "
-                    + std::to_string(sizeof(mreq.imr_address)) + ")");
-        }
+        multicast_address.get_ipv4(m);
+        f_address.get_ipv4(a);
 
-        memcpy(&mreq.imr_multiaddr, &reinterpret_cast<sockaddr_in *>(multicast_addrinfo->ai_addr)->sin_addr, sizeof(mreq.imr_multiaddr));
-        memcpy(&mreq.imr_address, &reinterpret_cast<sockaddr_in *>(f_addrinfo->ai_addr)->sin_addr, sizeof(mreq.imr_address));
-        mreq.imr_ifindex = 0;   // no specific interface
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+        ip_mreqn mreq = {
+            .imr_multiaddr = m.sin_addr,
+            .imr_address = a.sin_addr,
+            .imr_ifindex = 0,                   // no specific interface
+        };
+#pragma GCC diagnostic pop
 
         r = setsockopt(f_socket.get(), IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
         if(r < 0)
@@ -229,8 +190,9 @@ udp_server::udp_server(std::string const & addr, int port, int family, std::stri
             int const e(errno);
             throw event_dispatcher_runtime_error(
                       "IP_ADD_MEMBERSHIP failed for: \""
-                    + addr + ":" + port_str
-                    + "\" or \"" + *multicast_addr + ":" + port_str
+                    + f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+                    + "\" or \""
+                    + multicast_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
                     + "\", errno: "
                     + std::to_string(e) + ", " + strerror(e));
         }

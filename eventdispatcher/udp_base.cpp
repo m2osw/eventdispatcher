@@ -31,12 +31,17 @@
 #include    "eventdispatcher/exception.h"
 
 
-// libaddr lib
+// libaddr
 //
 #include    <libaddr/iface.h>
 
 
-// C lib
+// C++
+//
+#include    <sstream>
+
+
+// C
 //
 #include    <net/if.h>
 #include    <netinet/ip.h>
@@ -63,83 +68,37 @@ namespace ed
  *
  * The port is expected to be a host side port number (i.e. 59200).
  *
- * The \p addr parameter is a textual address. It may be an IPv4 or IPv6
- * address and it can represent a host name or an address defined with
- * just numbers. If the address cannot be resolved then an error occurs
- * and the constructor throws.
+ * The \p address parameter is a libaddr address. It may be an IPv4 or IPv6
+ * address and it correspond to a host name or be an address defined with
+ * just numbers.
  *
  * \note
  * The socket is open in this process. If you fork() and exec() then the
  * socket gets closed by the operating system (i.e. close on exec()).
  *
- * \warning
- * We only make use of the first address found by getaddrinfo(). All
- * the other addresses are ignored.
- *
- * \todo
- * Add a constructor that supports a libaddr::addr object instead of
- * just a string address.
- *
  * \exception udp_client_server_parameter_error
- * The \p addr parameter is empty or the port is out of the supported range.
+ * The \p address parameter is empty or the port is out of the supported range.
  *
  * \exception udp_client_server_runtime_error
  * The server could not be initialized properly. Either the address cannot be
  * resolved, the port is incompatible or not available, or the socket could
  * not be created.
  *
- * \param[in] addr  The address to convert to a numeric IP.
- * \param[in] port  The port number.
- * \param[in] family  The family used to search for 'addr'.
+ * \param[in] address  The address and port.
  */
-udp_base::udp_base(std::string const & addr, int port, int family)
-    : f_port(port)
-    , f_addr(addr)
+udp_base::udp_base(addr::addr const & address)
+    : f_address(address)
 {
-    // the address can't be an empty string
+    // create the socket
     //
-    if(f_addr.empty())
-    {
-        throw event_dispatcher_invalid_parameter("the address cannot be an empty string");
-    }
-
-    // the port must be between 0 and 65535
-    // (although 0 won't work right as far as I know)
-    //
-    if(f_port < 0 || f_port >= 65536)
-    {
-        throw event_dispatcher_invalid_parameter("invalid port for a client socket");
-    }
-
-    // for the getaddrinfo() function, convert the port to a string
-    //
-    std::string const port_str(std::to_string(f_port));
-
-    // define the getaddrinfo() hints
-    // we are only interested by addresses representing datagrams and
-    // acceptable by the UDP protocol
-    //
-    struct addrinfo hints = addrinfo();
-    hints.ai_family = family;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_protocol = IPPROTO_UDP;
-
-    // retrieve the list of addresses defined by getaddrinfo()
-    //
-    struct addrinfo * info;
-    int const r(getaddrinfo(addr.c_str(), port_str.c_str(), &hints, &info));
-    if(r != 0 || info == nullptr)
-    {
-        throw event_dispatcher_invalid_parameter("invalid address or port: \"" + addr + ":" + port_str + "\"");
-    }
-    f_addrinfo = raii_addrinfo_t(info);
-
-    // now create the socket with the very first socket family
-    //
-    f_socket.reset(socket(f_addrinfo->ai_family, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_UDP));
+    f_socket.reset(socket(f_address.get_family(), SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_UDP));
     if(f_socket == nullptr)
     {
-        throw event_dispatcher_runtime_error(("could not create socket for: \"" + addr + ":" + port_str + "\"").c_str());
+        std::stringstream ss;
+        ss << "could not create socket for: \""
+           << f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+           << "\".";
+        throw event_dispatcher_runtime_error(ss.str());
     }
 }
 
@@ -241,50 +200,30 @@ int udp_base::get_mtu_size() const
     if(f_socket != nullptr
     && f_mtu_size == 0)
     {
-        addr::addr a;
-        switch(f_addrinfo->ai_family)
+        std::string iface_name;
+        addr::iface::pointer_t i(find_addr_interface(f_address));
+        if(i != nullptr)
         {
-        case AF_INET:
-            a.set_ipv4(*reinterpret_cast<struct sockaddr_in *>(f_addrinfo->ai_addr));
-            break;
+            iface_name = i->get_name();
+        }
 
-        case AF_INET6:
-            a.set_ipv6(*reinterpret_cast<struct sockaddr_in6 *>(f_addrinfo->ai_addr));
-            break;
-
-        default:
+        if(iface_name.empty())
+        {
             f_mtu_size = -1;
             errno = EBADF;
-            break;
-
         }
-        if(f_mtu_size == 0)
+        else
         {
-            std::string iface_name;
-            addr::iface::pointer_t i(find_addr_interface(a));
-            if(i != nullptr)
+            ifreq ifr = {};
+            strncpy(ifr.ifr_name, iface_name.c_str(), sizeof(ifr.ifr_name) - 1);
+            if(ioctl(f_socket.get(), SIOCGIFMTU, &ifr) == 0)
             {
-                iface_name = i->get_name();
-            }
-
-            if(iface_name.empty())
-            {
-                f_mtu_size = -1;
-                errno = EBADF;
+                f_mtu_size = ifr.ifr_mtu;
             }
             else
             {
-                ifreq ifr = {};
-                strncpy(ifr.ifr_name, iface_name.c_str(), sizeof(ifr.ifr_name) - 1);
-                if(ioctl(f_socket.get(), SIOCGIFMTU, &ifr) == 0)
-                {
-                    f_mtu_size = ifr.ifr_mtu;
-                }
-                else
-                {
-                    f_mtu_size = -1;
-                    // errno -- defined by ioctl()
-                }
+                f_mtu_size = -1;
+                // errno -- defined by ioctl()
             }
         }
     }
@@ -340,19 +279,6 @@ int udp_base::get_mss_size() const
 }
 
 
-/** \brief Retrieve the port used by this UDP client.
- *
- * This function returns the port used by this UDP client. The port is
- * defined as an integer, host side.
- *
- * \return The port as expected in a host integer.
- */
-int udp_base::get_port() const
-{
-    return f_port;
-}
-
-
 /** \brief Retrieve a copy of the address.
  *
  * This function returns a copy of the address as it was specified in the
@@ -363,9 +289,9 @@ int udp_base::get_port() const
  *
  * \return A string with a copy of the constructor input address.
  */
-std::string udp_base::get_addr() const
+addr::addr udp_base::get_address() const
 {
-    return f_addr;
+    return f_address;
 }
 
 

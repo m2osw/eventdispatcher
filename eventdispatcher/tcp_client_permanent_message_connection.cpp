@@ -195,13 +195,11 @@ public:
     public:
         runner(
                       tcp_client_permanent_message_connection_impl * parent_impl
-                    , std::string const & address
-                    , int port
+                    , addr::addr const & address
                     , tcp_bio_client::mode_t mode)
             : cppthread::runner("background tcp_client_permanent_message_connection for asynchronous connections")
             , f_parent_impl(parent_impl)
             , f_address(address)
-            , f_port(port)
             , f_mode(mode)
         {
         }
@@ -249,7 +247,7 @@ public:
                 // we cannot directly create the right type of
                 // object otherwise...)
                 //
-                f_tcp_connection = std::make_shared<tcp_bio_client>(f_address, f_port, f_mode);
+                f_tcp_connection = std::make_shared<tcp_bio_client>(f_address, f_mode);
                 return;
             }
             catch(event_dispatcher_initialization_error const & e)
@@ -279,9 +277,7 @@ public:
             // WARNING: our logger is not multi-thread safe quiet yet
             //SNAP_LOG_ERROR
             //    << "connection to "
-            //    << f_address
-            //    << ":"
-            //    << f_port
+            //    << f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_BRACKETS | addr::addr::string_ip_t::STRING_IP_PORT)
             //    << " failed with: "
             //    << f_last_error
             //    << " ("
@@ -303,26 +299,9 @@ public:
          *
          * \return The destination address.
          */
-        std::string const & get_address() const
+        addr::addr const & get_address() const
         {
             return f_address;
-        }
-
-
-        /** \brief Retrieve the port to connect to.
-         *
-         * This function returns the port passed in on creation.
-         *
-         * \note
-         * Since the variable is constant, it never gets changed
-         * which means it is always safe to use it between
-         * both threads.
-         *
-         * \return The port to connect to.
-         */
-        int get_port() const
-        {
-            return f_port;
         }
 
 
@@ -396,8 +375,7 @@ public:
 
     private:
         tcp_client_permanent_message_connection_impl *  f_parent_impl = nullptr;
-        std::string const                               f_address;
-        int const                                       f_port;
+        addr::addr const                                f_address;
         tcp_bio_client::mode_t const                    f_mode;
         tcp_bio_client::pointer_t                       f_tcp_connection = tcp_bio_client::pointer_t();
         std::string                                     f_last_error = std::string();
@@ -416,16 +394,14 @@ public:
      * \param[in] parent  A pointer to the owner of this
      * tcp_client_permanent_message_connection_impl object.
      * \param[in] address  The address we are to connect to.
-     * \param[in] port  The port we are to connect to.
      * \param[in] mode  The mode used to connect.
      */
     tcp_client_permanent_message_connection_impl(
                   tcp_client_permanent_message_connection * parent
-                , std::string const & address
-                , int port
+                , addr::addr const & address
                 , tcp_bio_client::mode_t mode)
         : f_parent(parent)
-        , f_thread_runner(this, address, port, mode)
+        , f_thread_runner(this, address, mode)
         , f_thread("background connection handler thread", &f_thread_runner)
     {
     }
@@ -623,14 +599,9 @@ public:
 
         if(client == nullptr)
         {
-            // TODO: fix address in error message using a addr::addr so
-            //       as to handle IPv6 seamlessly.
-            //
             SNAP_LOG_ERROR
                 << "connection to "
-                << f_thread_runner.get_address()
-                << ":"
-                << f_thread_runner.get_port()
+                << f_thread_runner.get_address().to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
                 << " failed with: "
                 << f_thread_runner.get_last_error()
                 << SNAP_LOG_SEND;
@@ -727,38 +698,24 @@ public:
     }
 
 
-    /** \brief Return the address and size of the remote computer.
+    /** \brief Return the address of the remote computer.
      *
-     * This function retrieve the socket address.
+     * This function retrieve a copy of the socket address of the remote
+     * computer (also called the peer).
      *
-     * \param[out] address  The binary address of the remote computer.
-     *
-     * \return The size of the sockaddr structure, 0 if no address is available.
-     */
-    size_t get_client_address(sockaddr_storage & address) const
-    {
-        if(f_messenger != nullptr)
-        {
-            return f_messenger->get_client_address(address);
-        }
-        memset(&address, 0, sizeof(address));
-        return 0;
-    }
-
-
-    /** \brief Return the address of the f_message object.
-     *
-     * This function returns the address of the message object.
+     * If the connection is not currently valid, then the returned address
+     * is the default address (all zeroes). You can determine such by
+     * calling the addr::is_default() function.
      *
      * \return The address of the remote computer.
      */
-    std::string get_client_addr() const
+    addr::addr get_client_address() const
     {
         if(f_messenger != nullptr)
         {
-            return f_messenger->get_client_addr();
+            return f_messenger->get_client_address();
         }
-        return std::string();
+        return addr::addr();
     }
 
 
@@ -845,8 +802,8 @@ private:
  * the thread is probably not required. For connections to a remote
  * computer, though, it certainly is important.
  *
- * \param[in] address  The address to listen on. It may be set to "0.0.0.0".
- * \param[in] port  The port to listen on.
+ * \param[in] address  The address and port to listen on.
+ *                     It may be set to "0.0.0.0".
  * \param[in] mode  The mode to use to open the connection.
  * \param[in] pause  The amount of time to wait before attempting a new
  *                   connection after a failure, in microseconds, or 0.
@@ -854,13 +811,12 @@ private:
  *                        server.
  */
 tcp_client_permanent_message_connection::tcp_client_permanent_message_connection(
-            std::string const & address
-          , int port
+            addr::addr const & address
           , tcp_bio_client::mode_t mode
           , std::int64_t const pause
           , bool const use_thread)
     : timer(pause < 0 ? -pause : 0)
-    , f_impl(std::make_shared<detail::tcp_client_permanent_message_connection_impl>(this, address, port, mode))
+    , f_impl(std::make_shared<detail::tcp_client_permanent_message_connection_impl>(this, address, mode))
     , f_pause(llabs(pause))
     , f_use_thread(use_thread)
 {
@@ -981,33 +937,15 @@ void tcp_client_permanent_message_connection::mark_done(bool messenger)
 
 /** \brief Retrieve a copy of the client's address.
  *
- * This function makes a copy of the address of this client connection
- * to the \p address parameter and returns the length.
+ * This function makes a copy of the address of this client connection.
  *
- * \param[in] address  The reference to an address variable where the
- *                     address gets copied.
- *
- * \return Return the length of the address which may be smaller than
- *         sizeof(struct sockaddr). If zero, then no address is defined.
+ * \return Return the client's address.
  *
  * \sa get_addr()
  */
-size_t tcp_client_permanent_message_connection::get_client_address(sockaddr_storage & address) const
+addr::addr tcp_client_permanent_message_connection::get_client_address() const
 {
-    return f_impl->get_client_address(address);
-}
-
-
-/** \brief Retrieve the remote computer address as a string.
- *
- * This function returns the address of the remote computer as a string.
- * It will be a canonicalized IP address.
- *
- * \return The canonicalized IP address.
- */
-std::string tcp_client_permanent_message_connection::get_client_addr() const
-{
-    return f_impl->get_client_addr();
+    return f_impl->get_client_address();
 }
 
 

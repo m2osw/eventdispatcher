@@ -29,7 +29,12 @@
 #include    "eventdispatcher/tcp_bio_options.h"
 
 
-// C++ lib
+// libaddr
+//
+#include    <libaddr/addr.h>
+
+
+// C++
 //
 #include    <memory>
 
@@ -66,8 +71,7 @@ public:
     };
 
                         tcp_bio_client(
-                                  std::string const & addr
-                                , int port
+                                  addr::addr const & address
                                 , mode_t mode = mode_t::MODE_PLAIN
                                 , tcp_bio_options const & opt = tcp_bio_options());
                         tcp_bio_client(tcp_bio_client const & src) = delete;
@@ -78,10 +82,8 @@ public:
     void                close();
 
     int                 get_socket() const;
-    int                 get_port() const;
-    int                 get_client_port() const;
-    std::string         get_addr() const;
-    std::string         get_client_addr() const;
+    addr::addr          get_address() const;
+    addr::addr          get_client_address();
 
     int                 read(char * buf, size_t size);
     int                 read_line(std::string & line);
@@ -92,6 +94,8 @@ private:
 
                         tcp_bio_client();
 
+    addr::addr          f_address = addr::addr();
+    addr::addr          f_client_address = addr::addr();
     std::shared_ptr<detail::tcp_bio_client_impl>
                         f_impl = std::shared_ptr<detail::tcp_bio_client_impl>();
 };

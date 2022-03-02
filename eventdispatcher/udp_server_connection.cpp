@@ -62,17 +62,15 @@ namespace ed
  * listener which wakes up whenever a send() is sent to this listener
  * address and port.
  *
- * \param[in] addr  The address to listen on. It may be set to "0.0.0.0".
- * \param[in] port  The port to listen on.
- * \param[in] family  The family used to search for 'addr' (IPv4 or IPv6).
- * \param[in] multicast_addr  A multicast address (224.x.x.x) or nullptr.
+ * \param[in] address  The address and port to listen on. The address can be
+ * the default address.
+ * \param[in] multicast_addr  A multicast address (224.x.x.x) or the default
+ * address.
  */
 udp_server_connection::udp_server_connection(
-              std::string const & addr
-            , int port
-            , int family
-            , std::string const * multicast_addr)
-    : udp_server(addr, port, family, multicast_addr)
+              addr::addr const & address
+            , addr::addr const & multicast_address)
+    : udp_server(address, multicast_address)
 {
 }
 

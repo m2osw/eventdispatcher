@@ -79,15 +79,15 @@ namespace ed
  * This is the most useful client in our Snap! Communicator
  * as it directly sends and receives messages.
  *
- * \todo
- * Convert the socket address to string using libaddr.
- *
  * \param[in] client  The client representing the in/out socket.
  */
 tcp_server_client_message_connection::tcp_server_client_message_connection(tcp_bio_client::pointer_t client)
     : tcp_server_client_buffer_connection(client)
 {
     // TODO: somehow the port seems wrong (i.e. all connections return the same port)
+    //       I changed this to do the getpeername() at the time you call the
+    //       get_remote_address() and I use the addr::addr get_from_socket()
+    //       so now it may work? I need to test it again
 
     // make sure the socket is defined and well
     //
@@ -98,83 +98,6 @@ tcp_server_client_message_connection::tcp_server_client_message_connection(tcp_b
             << "called with a closed client connection."
             << SNAP_LOG_SEND;
         throw std::runtime_error("tcp_server_client_message_connection() called with a closed client connection.");
-    }
-
-    struct sockaddr_storage address = sockaddr_storage();
-    socklen_t length(sizeof(address));
-    if(getpeername(socket, reinterpret_cast<struct sockaddr *>(&address), &length) != 0)
-    {
-        int const e(errno);
-        SNAP_LOG_ERROR
-            << "getpeername() failed retrieving IP address (errno: "
-            << e
-            << " -- "
-            << strerror(e)
-            << ")."
-            << SNAP_LOG_SEND;
-        throw std::runtime_error("getpeername() failed to retrieve IP address in tcp_server_client_message_connection()");
-    }
-    if(address.ss_family != AF_INET
-    && address.ss_family != AF_INET6)
-    {
-        SNAP_LOG_ERROR
-            << "address family ("
-            << address.ss_family
-            << ") returned by getpeername() is not understood, it is neither an IPv4 nor IPv6."
-            << SNAP_LOG_SEND;
-        throw std::runtime_error("getpeername() returned an address which is not understood in tcp_server_client_message_connection()");
-    }
-    if(length < sizeof(address))
-    {
-        // reset the rest of the structure, just in case
-        memset(reinterpret_cast<char *>(&address) + length, 0, sizeof(address) - length);
-    }
-
-    constexpr size_t max_length(std::max(INET_ADDRSTRLEN, INET6_ADDRSTRLEN) + 1);
-
-// in release mode this should not be dynamic (although the syntax is so
-// the warning would happen), but in debug it is likely an alloca()
-//
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wvla"
-    char buf[max_length];
-#pragma GCC diagnostic pop
-
-    char const * r(nullptr);
-
-    if(address.ss_family == AF_INET)
-    {
-        r = inet_ntop(AF_INET, &reinterpret_cast<struct sockaddr_in const &>(address).sin_addr, buf, max_length);
-    }
-    else
-    {
-        r = inet_ntop(AF_INET6, &reinterpret_cast<struct sockaddr_in6 const &>(address).sin6_addr, buf, max_length);
-    }
-
-    if(r == nullptr)
-    {
-        int const e(errno);
-        std::string err("inet_ntop() could not convert IP address (errno: ");
-        err += std::to_string(e);
-        err += " -- ";
-        err += strerror(e);
-        err += ").";
-        SNAP_LOG_FATAL << err << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error(err);
-    }
-
-    if(address.ss_family == AF_INET)
-    {
-        f_remote_address = buf;
-        f_remote_address += ':';
-        f_remote_address += std::to_string(static_cast<int>(ntohs(reinterpret_cast<sockaddr_in const &>(address).sin_port)));
-    }
-    else
-    {
-        f_remote_address = "[";
-        f_remote_address += buf;
-        f_remote_address += "]:";
-        f_remote_address += std::to_string(static_cast<int>(ntohs(reinterpret_cast<sockaddr_in6 const &>(address).sin6_port)));
     }
 }
 
@@ -270,8 +193,17 @@ bool tcp_server_client_message_connection::send_message(
  *
  * \return The remote host address and connection port.
  */
-std::string const & tcp_server_client_message_connection::get_remote_address() const
+addr::addr tcp_server_client_message_connection::get_remote_address()
 {
+    if(f_remote_address.is_default())
+    {
+        int const s(get_socket());
+        if(s >= 0)
+        {
+            f_remote_address.set_from_socket(s, true);
+        }
+    }
+
     return f_remote_address;
 }
 

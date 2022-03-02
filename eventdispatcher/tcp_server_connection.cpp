@@ -45,11 +45,6 @@
 #include    "eventdispatcher/tcp_server_connection.h"
 
 
-// libaddr lib
-//
-#include    <libaddr/addr_parser.h>
-
-
 // last include
 //
 #include    <snapdev/poison.h>
@@ -110,15 +105,14 @@ namespace ed
  * \param[in] reuse_addr  Whether to mark the socket with the SO_REUSEADDR flag.
  */
 tcp_server_connection::tcp_server_connection(
-                  std::string const & addr
-                , int port
+                  addr::addr const & address
                 , std::string const & certificate
                 , std::string const & private_key
                 , mode_t mode
                 , int max_connections
                 , bool reuse_addr)
     : tcp_bio_server(
-              addr::string_to_addr(addr, "", port, "tcp")
+              address
             , max_connections
             , reuse_addr
             , certificate

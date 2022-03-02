@@ -30,6 +30,11 @@
 #include    "eventdispatcher/utils.h"
 
 
+// libaddr
+//
+#include    <libaddr/addr.h>
+
+
 
 namespace ed
 {
@@ -48,20 +53,14 @@ public:
     int                 get_mtu_size() const;
     int                 get_mss_size() const;
     int                 get_port() const;
-    std::string         get_addr() const;
+    addr::addr          get_address() const;
 
 protected:
-                        udp_base(std::string const & addr, int port, int family);
+                        udp_base(addr::addr const & address);
 
-    // TODO: convert the port + addr into a libaddr addr object?
-    //       (we use the f_addrinfo as is in the sendto() and bind() calls
-    //       and use libaddr for the conversions already)
-    //
     snapdev::raii_fd_t  f_socket = snapdev::raii_fd_t();
-    int                 f_port = -1;
     mutable int         f_mtu_size = 0;
-    std::string         f_addr = std::string();
-    raii_addrinfo_t     f_addrinfo = raii_addrinfo_t();
+    addr::addr          f_address = addr::addr();
 };
 
 

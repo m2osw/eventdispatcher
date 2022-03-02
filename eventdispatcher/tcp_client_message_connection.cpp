@@ -72,18 +72,16 @@ namespace ed
  * This is the most useful client in our Snap! Communicator
  * as it directly sends and receives messages.
  *
- * \param[in] addr  The address to connect to.
- * \param[in] port  The port to connect to.
+ * \param[in] address  The address to connect to.
  * \param[in] mode  Use this mode to connect as (PLAIN, ALWAYS_SECURE or SECURE).
  * \param[in] blocking  Whether to keep the socket blocking or make it
  *                      non-blocking.
  */
 tcp_client_message_connection::tcp_client_message_connection(
-              std::string const & addr
-            , int const port
+              addr::addr const & address
             , mode_t const mode
             , bool const blocking)
-    : tcp_client_buffer_connection(addr, port, mode, blocking)
+    : tcp_client_buffer_connection(address, mode, blocking)
 {
 }
 

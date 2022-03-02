@@ -73,7 +73,7 @@ namespace ed
 logrotate_udp_messenger::logrotate_udp_messenger(
           addr::addr const & address
         , std::string const & secret_code)
-    : ed::udp_server_message_connection(address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_BRACKETS), address.get_port())
+    : ed::udp_server_message_connection(address)
     , f_dispatcher(std::make_shared<ed::dispatcher<logrotate_udp_messenger>>(
                           this
                         , ed::dispatcher<logrotate_udp_messenger>::dispatcher_match::vector_t()))

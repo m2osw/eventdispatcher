@@ -42,10 +42,8 @@ class udp_server
 public:
     typedef std::shared_ptr<udp_server>     pointer_t;
 
-                        udp_server(std::string const & addr
-                                 , int port
-                                 , int family = AF_UNSPEC
-                                 , std::string const * multicast_addr = nullptr);
+                        udp_server(addr::addr const & addr
+                                 , addr::addr const & multicast_addr = addr::addr());
     virtual             ~udp_server() override;
 
     int                 recv(char * msg, size_t max_size);

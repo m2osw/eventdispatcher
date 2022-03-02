@@ -41,7 +41,7 @@ class udp_client
 public:
     typedef std::shared_ptr<udp_client>     pointer_t;
 
-                        udp_client(std::string const & addr, int port, int family = AF_UNSPEC);
+                        udp_client(addr::addr const & address);
                         ~udp_client();
 
     int                 send(char const * msg, size_t size);

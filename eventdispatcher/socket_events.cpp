@@ -762,10 +762,10 @@ void socket_listener::process_invalid()
  * must attempt to connect and fail on the connect until the remote service
  * is available.
  *
- * \param[in] a  The address and port to poll for a `listen()`.
+ * \param[in] address  The address and port to poll for a `listen()`.
  */
-socket_events::socket_events(addr::addr const & a)
-    : f_addr(a)
+socket_events::socket_events(addr::addr const & address)
+    : f_addr(address)
 {
     socket_listener::instance()->add_socket_events(this);
 }

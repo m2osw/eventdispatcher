@@ -52,8 +52,7 @@ namespace snaplogger_daemon
 
 tcp_logger_server::tcp_logger_server(addr::addr const & listen)
     : tcp_server_connection(
-              listen.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_ONLY)
-            , listen.get_port()
+              listen
             , std::string()
             , std::string()
             , ed::tcp_bio_server::mode_t::MODE_PLAIN

@@ -56,8 +56,7 @@ public:
     static std::int64_t const   DEFAULT_PAUSE_BEFORE_RECONNECTING = 60LL * 1000000LL;  // 1 minute
 
                                 tcp_client_permanent_message_connection(
-                                          std::string const & address
-                                        , int port
+                                          addr::addr const & address
                                         , tcp_bio_client::mode_t mode = tcp_bio_client::mode_t::MODE_PLAIN
                                         , std::int64_t const pause = DEFAULT_PAUSE_BEFORE_RECONNECTING
                                         , bool const use_thread = true);
@@ -67,8 +66,7 @@ public:
     void                        disconnect();
     void                        mark_done();
     void                        mark_done(bool messenger);
-    size_t                      get_client_address(struct sockaddr_storage & address) const;
-    std::string                 get_client_addr() const;
+    addr::addr                  get_client_address() const;
 
     // connection_with_send_message implementation
     virtual bool                send_message(message const & msg, bool cache = false) override;

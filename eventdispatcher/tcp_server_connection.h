@@ -19,9 +19,9 @@
 #pragma once
 
 /** \file
- * \brief Event dispatch class.
+ * \brief TCP Server connection class.
  *
- * Class used to handle events.
+ * Class used to handle a TCP connection.
  */
 
 // self
@@ -44,8 +44,7 @@ public:
     typedef std::shared_ptr<tcp_server_connection>    pointer_t;
 
                                 tcp_server_connection(
-                                      std::string const & addr
-                                    , int port
+                                      addr::addr const & addr
                                     , std::string const & certificate
                                     , std::string const & private_key
                                     , mode_t mode = mode_t::MODE_PLAIN

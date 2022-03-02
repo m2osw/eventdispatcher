@@ -31,7 +31,7 @@
 #include    "eventdispatcher/utils.h"
 
 
-// addr lib
+// libaddr
 //
 #include    <libaddr/addr.h>
 
@@ -67,7 +67,7 @@ public:
     };
 
                                 tcp_bio_server(
-                                      addr::addr const & addr_port
+                                      addr::addr const & address
                                     , int max_connections
                                     , bool reuse_addr
                                     , std::string const & certificate

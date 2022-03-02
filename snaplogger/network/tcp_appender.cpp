@@ -104,9 +104,7 @@ ed::dispatcher<appender_connection>::dispatcher_match::vector_t const g_appender
 
 
 appender_connection::appender_connection(addr::addr const & server_address)
-    : tcp_client_permanent_message_connection(
-              server_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_ONLY)
-            , server_address.get_port())
+    : tcp_client_permanent_message_connection(server_address)
     , f_dispatcher(new ed::dispatcher<appender_connection>(
               this
             , g_appender_connection_messages))

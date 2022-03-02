@@ -47,12 +47,12 @@
 #include    "eventdispatcher/utils.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// C++ lib
+// C++
 //
 #include    <algorithm>
 #include    <cstring>
@@ -82,17 +82,15 @@ namespace ed
  *      my_reader.writer().write(buf, buf_size);
  * \endcode
  *
- * \param[in] addr  The address to connect to.
- * \param[in] port  The port to connect to.
+ * \param[in] address  The address to connect to.
  * \param[in] mode  The mode to connect as (PLAIN or SECURE).
  * \param[in] blocking  If true, keep a blocking socket, other non-blocking.
  */
 tcp_client_buffer_connection::tcp_client_buffer_connection(
-              std::string const & addr
-            , int const port
+              addr::addr const & address
             , mode_t const mode
             , bool const blocking)
-    : tcp_client_connection(addr, port, mode)
+    : tcp_client_connection(address, mode)
 {
     if(!blocking)
     {

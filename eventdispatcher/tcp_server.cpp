@@ -18,7 +18,7 @@
 // 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
- * \brief Event dispatch class.
+ * \brief TCP server definition.
  *
  * Class used to handle events.
  */
@@ -97,26 +97,20 @@ namespace ed
  * This exception is raised if the socket cannot be created, bound to
  * the specified IP address and port, or listen() fails on the socket.
  *
- * \param[in] addr  The address to listen on. It may be set to "0.0.0.0".
- * \param[in] port  The port to listen on.
+ * \param[in] address  The address to listen on. It may be set to "0.0.0.0".
  * \param[in] max_connections  The number of connections to keep in the listen queue.
  * \param[in] reuse_addr  Whether to mark the socket with the SO_REUSEADDR flag.
  * \param[in] auto_close  Automatically close the client socket in accept and the destructor.
  */
-tcp_server::tcp_server(std::string const & addr, int port, int max_connections, bool reuse_addr, bool auto_close)
+tcp_server::tcp_server(
+          addr::addr const & address
+        , int max_connections
+        , bool reuse_addr
+        , bool auto_close)
     : f_max_connections(max_connections <= 0 ? MAX_CONNECTIONS : max_connections)
-    , f_port(port)
-    , f_addr(addr)
+    , f_address(address)
     , f_auto_close(auto_close)
 {
-    if(f_addr.empty())
-    {
-        throw event_dispatcher_invalid_parameter("the address cannot be an empty string.");
-    }
-    if(f_port < 0 || f_port >= 65536)
-    {
-        throw event_dispatcher_invalid_parameter("invalid port for a client socket.");
-    }
     if(f_max_connections < 5)
     {
         f_max_connections = 5;
@@ -126,55 +120,46 @@ tcp_server::tcp_server(std::string const & addr, int port, int max_connections, 
         f_max_connections = 1000;
     }
 
-    addrinfo hints;
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-    std::string port_str(std::to_string(f_port));
-    addrinfo * addrinfo(nullptr);
-    int const r(getaddrinfo(addr.c_str(), port_str.c_str(), &hints, &addrinfo));
-    raii_addrinfo_t addr_info(addrinfo);
-    if(r != 0
-    || addrinfo == nullptr)
-    {
-        throw event_dispatcher_runtime_error("invalid address or port: \"" + addr + ":" + port_str + "\"");
-    }
-
-    f_socket = socket(addr_info.get()->ai_family, SOCK_STREAM, IPPROTO_TCP);
+    f_socket = f_address.create_socket(
+                  (reuse_addr
+                        ? addr::addr::SOCKET_FLAG_REUSE
+                        : 0));
     if(f_socket < 0)
     {
         int const e(errno);
-        std::string err("socket() failed to create a socket descriptor (errno: ");
-        err += std::to_string(e);
-        err += " -- ";
-        err += strerror(e);
-        err += ")";
+        SNAP_LOG_ERROR
+            << "addr::create_socket() failed to create a socket descriptor (errno: "
+            << std::to_string(e)
+            << " -- "
+            << strerror(e)
+            << ")"
+            << SNAP_LOG_SEND;
         throw event_dispatcher_runtime_error("could not create socket for client");
     }
 
-    // this should be optional as reusing an address for TCP/IP is not 100% safe
-    if(reuse_addr)
-    {
-        // try to mark the socket address as immediately reusable
-        // if this fails, we ignore the error (TODO log an INFO message)
-        int optval(1);
-        socklen_t const optlen(sizeof(optval));
-        snapdev::NOT_USED(setsockopt(f_socket, SOL_SOCKET, SO_REUSEADDR, &optval, optlen));
-    }
-
-    if(bind(f_socket, addr_info.get()->ai_addr, addr_info.get()->ai_addrlen) < 0)
+    if(f_address.bind(f_socket) != 0)
     {
         close(f_socket);
-        throw event_dispatcher_runtime_error("could not bind the socket to \"" + f_addr + "\"");
+        std::stringstream ss;
+        ss << "could not bind the socket to \""
+           << f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+           << "\"\n";
+        SNAP_LOG_ERROR
+            << ss
+            << SNAP_LOG_SEND;
+        throw event_dispatcher_runtime_error(ss.str());
     }
 
     // start listening, we expect the caller to then call accept() to
     // acquire connections
+    //
     if(listen(f_socket, f_max_connections) < 0)
     {
         close(f_socket);
-        throw event_dispatcher_runtime_error("could not listen to the socket bound to \"" + f_addr + "\"");
+        throw event_dispatcher_runtime_error(
+                  "could not listen to the socket bound to \""
+                + f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+                + "\"");
     }
 }
 
@@ -228,20 +213,7 @@ int tcp_server::get_max_connections() const
 }
 
 
-/** \brief Return the server port.
- *
- * This function returns the port the server was created with. This port
- * is exactly what the server currently uses. It cannot be changed.
- *
- * \return The server port.
- */
-int tcp_server::get_port() const
-{
-    return f_port;
-}
-
-
-/** \brief Retrieve the server IP address.
+/** \brief Retrieve the server IP address and port.
  *
  * This function returns the IP address used to bind the socket. This
  * is the address clients have to use to connect to the server unless
@@ -252,9 +224,9 @@ int tcp_server::get_port() const
  *
  * \return The server IP address.
  */
-std::string tcp_server::get_addr() const
+addr::addr tcp_server::get_address() const
 {
-    return f_addr;
+    return f_address;
 }
 
 
@@ -385,7 +357,8 @@ void tcp_server::set_close_on_exec(bool yes)
 int tcp_server::accept(int const max_wait_ms)
 {
     // auto-close?
-    if(f_auto_close && f_accepted_socket != -1)
+    if(f_auto_close
+    && f_accepted_socket != -1)
     {
         // if the close is interrupted, make sure we try again otherwise
         // we could lose that stream until next restart (this could happen

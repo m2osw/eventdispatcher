@@ -47,7 +47,7 @@ public:
 
                                 tcp_server_client_message_connection(tcp_bio_client::pointer_t client);
 
-    std::string const &         get_remote_address() const;
+    addr::addr                  get_remote_address();
 
     // connection_with_send_message implementation
     virtual bool                send_message(message const & msg, bool cache = false) override;
@@ -56,7 +56,7 @@ public:
     virtual void                process_line(std::string const & line) override;
 
 private:
-    std::string                 f_remote_address = std::string();
+    addr::addr                  f_remote_address = addr::addr();
 };
 
 

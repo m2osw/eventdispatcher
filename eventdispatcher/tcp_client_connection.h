@@ -44,11 +44,10 @@ public:
     typedef std::shared_ptr<tcp_client_connection>    pointer_t;
 
                                 tcp_client_connection(
-                                      std::string const & addr
-                                    , int port
+                                      addr::addr const & address
                                     , mode_t mode = mode_t::MODE_PLAIN);
 
-    std::string const &         get_remote_address() const;
+    addr::addr const &          get_remote_address() const;
 
     // connection implementation
     virtual bool                is_reader() const override;
@@ -59,7 +58,7 @@ public:
     virtual ssize_t             write(void const * buf, size_t count);
 
 private:
-    std::string const           f_remote_address = std::string();
+    addr::addr const            f_remote_address = addr::addr();
 };
 
 

@@ -30,6 +30,11 @@
 #include    "eventdispatcher/utils.h"
 
 
+// libaddr
+//
+#include    <libaddr/addr.h>
+
+
 
 namespace ed
 {
@@ -44,8 +49,7 @@ public:
     typedef std::shared_ptr<tcp_server>     pointer_t;
 
                         tcp_server(
-                                  std::string const & addr
-                                , int port
+                                  addr::addr const & address
                                 , int max_connections = MAX_CONNECTIONS
                                 , bool reuse_addr = false
                                 , bool auto_close = false);
@@ -56,8 +60,7 @@ public:
 
     int                 get_socket() const;
     int                 get_max_connections() const;
-    int                 get_port() const;
-    std::string         get_addr() const;
+    addr::addr          get_address() const;
     bool                get_keepalive() const;
     void                set_keepalive(bool yes = true);
     bool                get_close_on_exec() const;
@@ -70,7 +73,7 @@ private:
     int                 f_max_connections = MAX_CONNECTIONS;
     int                 f_socket = -1;
     int                 f_port = -1;
-    std::string         f_addr = std::string();
+    addr::addr          f_address = addr::addr();
     int                 f_accepted_socket = -1;
     bool                f_keepalive = true;
     bool                f_auto_close = false;

@@ -43,8 +43,7 @@ public:
     typedef std::shared_ptr<tcp_client_buffer_connection>    pointer_t;
 
                                 tcp_client_buffer_connection(
-                                          std::string const & addr
-                                        , int port
+                                          addr::addr const & address
                                         , mode_t const mode = mode_t::MODE_PLAIN
                                         , bool const blocking = false);
 

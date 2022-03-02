@@ -77,9 +77,7 @@ ed::dispatcher<udp_logger_server>::dispatcher_match::vector_t const g_messages =
 udp_logger_server::udp_logger_server(
           addr::addr const & listen
         , std::string const & secret_code)
-    : udp_server_message_connection(
-              listen.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_ONLY)
-            , listen.get_port())
+    : udp_server_message_connection(listen)
     , f_dispatcher(std::make_shared<ed::dispatcher<udp_logger_server>>(
               this
             , g_messages))

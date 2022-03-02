@@ -8,32 +8,32 @@
 //
 
 
-// snaplogger lib
+// snaplogger 
 //
 #include    <snaplogger/options.h>
 
 
-// libaddr lib
+// libaddr
 //
 #include    <libaddr/addr.h>
 #include    <libaddr/addr_parser.h>
 
 
-// advgetopt lib
+// advgetopt
 //
 #include    <advgetopt/advgetopt.h>
 #include    <advgetopt/options.h>
 #include    <advgetopt/exception.h>
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/logrotate_udp_messenger.h>
 #include    <eventdispatcher/tcp_client_permanent_message_connection.h>
 #include    <eventdispatcher/version.h>
 
 
-// boost lib
+// boost
 //
 #include    <boost/preprocessor/stringize.hpp>
 
@@ -219,9 +219,7 @@ ed::dispatcher<client>::dispatcher_match::vector_t const g_messages =
 client::client(
           my_client * c
         , addr::addr const & a)
-    : tcp_client_permanent_message_connection(
-              a.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_ONLY)
-            , a.get_port())
+    : tcp_client_permanent_message_connection(a)
     , f_my_client(c)
     , f_dispatcher(new ed::dispatcher<client>(
               this

@@ -302,12 +302,12 @@ void ssl_trace(
 /** \brief Construct a tcp_bio_client object.
  *
  * The tcp_bio_client constructor initializes a BIO connector and connects
- * to the specified server. The server is defined with the \p addr and
- * \p port specified as parameters. The connection tries to use TLS if
- * the \p mode parameter is set to MODE_SECURE. Note that you may force
- * a secure connection using MODE_SECURE_REQUIRED. With MODE_SECURE,
+ * to the specified server. The server is defined with the \p address
+ * specified as parameter. The connection tries to use TLS if the \p mode
+ * parameter is set to MODE_SECURE. Note that you may force a secure
+ * connection using MODE_SECURE_REQUIRED. With MODE_SECURE,
  * the connection to the server can be obtained even if a secure
- * connection could not be made to work.
+ * connection was not available.
  *
  * \todo
  * Create another client with BIO_new_socket() so one can create an SSL
@@ -321,25 +321,20 @@ void ssl_trace(
  * This exception is raised if the client cannot create the socket or it
  * cannot connect to the server.
  *
- * \param[in] addr  The address of the server to connect to. It must be valid.
- * \param[in] port  The port the server is listening on.
+ * \param[in] address  The address of the server to connect to. It must be valid.
  * \param[in] mode  Whether to use SSL when connecting.
  * \param[in] opt  Additional options.
  */
 tcp_bio_client::tcp_bio_client(
-              std::string const & addr
-            , int port
+              addr::addr const & address
             , mode_t mode
             , tcp_bio_options const & opt)
-    : f_impl(std::make_shared<detail::tcp_bio_client_impl>())
+    : f_address(address)
+    , f_impl(std::make_shared<detail::tcp_bio_client_impl>())
 {
-    if(port < 0 || port >= 65536)
+    if(address.is_default())
     {
-        throw event_dispatcher_invalid_parameter("invalid port for a client socket");
-    }
-    if(addr.empty())
-    {
-        throw event_dispatcher_invalid_parameter("an empty address is not valid for a client socket");
+        throw event_dispatcher_invalid_parameter("the default address is not valid for a client socket");
     }
 
     detail::bio_initialize();
@@ -437,15 +432,13 @@ tcp_bio_client::tcp_bio_client(
             if(opt.get_sni())
             {
                 std::string host(opt.get_host());
-                in6_addr ignore;
                 if(host.empty()
-                && inet_pton(AF_INET, addr.c_str(), &ignore) == 0   // must fail
-                && inet_pton(AF_INET6, addr.c_str(), &ignore) == 0) // must fail
+                && !address.is_hostname_an_ip())
                 {
                     // addr is not an IP address written as is,
                     // it must be a hostname
                     //
-                    host = addr;
+                    host = address.get_hostname();
                 }
                 if(!host.empty())
                 {
@@ -464,8 +457,8 @@ tcp_bio_client::tcp_bio_client(
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
-            BIO_set_conn_hostname(bio.get(), const_cast<char *>(addr.c_str()));
-            BIO_set_conn_port(bio.get(), const_cast<char *>(std::to_string(port).c_str()));
+            BIO_set_conn_hostname(bio.get(), const_cast<char *>(address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_ONLY).c_str()));
+            BIO_set_conn_port(bio.get(), const_cast<char *>(std::to_string(address.get_port()).c_str()));
 #pragma GCC diagnostic pop
 
             // connect to the server (open the socket)
@@ -563,8 +556,8 @@ tcp_bio_client::tcp_bio_client(
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
-            BIO_set_conn_hostname(bio.get(), const_cast<char *>(addr.c_str()));
-            BIO_set_conn_port(bio.get(), const_cast<char *>(std::to_string(port).c_str()));
+            BIO_set_conn_hostname(bio.get(), const_cast<char *>(address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_ONLY).c_str()));
+            BIO_set_conn_port(bio.get(), const_cast<char *>(std::to_string(address.get_port()).c_str()));
 #pragma GCC diagnostic pop
 
             // connect to the server (open the socket)
@@ -684,152 +677,46 @@ int tcp_bio_client::get_socket() const
 }
 
 
-/** \brief Get the TCP client port.
+/** \brief Return a reference to the address used to connect.
  *
- * This function returns the port used when creating the TCP client.
- * Note that this is the port the server is listening to and not the port
- * the TCP client is currently connected to.
+ * This function returns a reference to the address used to connect to
+ * a server. This is the server IP address and port information.
  *
- * \note
- * If the connection was closed, return -1.
+ * If specified, the host (i.e. the domain name) used can be retrieved
+ * using the get_host() function of the addr object returned.
  *
- * \return The TCP client port.
+ * \return The address as specified in the constructor.
  */
-int tcp_bio_client::get_port() const
+addr::addr tcp_bio_client::get_address() const
 {
-    if(f_impl->f_bio)
-    {
-        return std::atoi(BIO_get_conn_port(f_impl->f_bio.get()));
-    }
-
-    return -1;
+    return f_address;
 }
 
 
-/** \brief Get the TCP server address.
+/** \brief Get the address of the client computer.
  *
- * This function returns the address used when creating the TCP address as is.
- * Note that this is the address of the server where the client is connected
- * and not the address where the client is running (although it may be the
- * same.)
+ * This function retrieves the address and port of the client computer
+ * (i.e. yourself). The port will have been auto-selected, so this is
+ * useful if you need that information which is not otherwise available.
  *
- * Use the get_client_addr() function to retrieve the client's TCP address.
+ * The function caches the information, which will continue to be available
+ * even after the connection is closed (assuming it was retrieved at least
+ * once while the connection was up).
  *
- * \note
- * If the connection was closed, this function returns "".
- *
- * \return The TCP client address.
+ * \return A reference to the remote computer address.
  */
-std::string tcp_bio_client::get_addr() const
+addr::addr tcp_bio_client::get_client_address()
 {
-    if(f_impl->f_bio)
+    if(f_client_address.is_default())
     {
-        return BIO_get_conn_hostname(f_impl->f_bio.get());
-    }
-
-    return "";
-}
-
-
-/** \brief Get the TCP client port.
- *
- * This function retrieve the port of the client (used on your computer).
- * This is retrieved from the socket using the getsockname() function.
- *
- * \return The port or -1 if it cannot be determined.
- */
-int tcp_bio_client::get_client_port() const
-{
-    // get_socket() returns -1 if f_bio is nullptr
-    //
-    int const s(get_socket());
-    if(s < 0)
-    {
-        return -1;
-    }
-
-    sockaddr_in6 addr;
-    sockaddr *a(reinterpret_cast<sockaddr *>(&addr));
-    socklen_t len(sizeof(addr));
-    int const r(getsockname(s, a, &len));
-    if(r != 0)
-    {
-        return -1;
-    }
-    // Note: I know the port is at the exact same location in both
-    //       structures in Linux but it could change on other Unices
-    switch(a->sa_family)
-    {
-    case AF_INET:
-        // IPv4
-        if(len < sizeof(sockaddr_in))
+        int const s(get_socket());
+        if(s > 0)
         {
-            return -1;
+            f_client_address.set_from_socket(s, false);
         }
-        return reinterpret_cast<sockaddr_in *>(a)->sin_port;
-
-    case AF_INET6:
-        // IPv6
-        if(len < sizeof(sockaddr_in6))
-        {
-            return -1;
-        }
-        return addr.sin6_port;
-
-    default:
-        return -1;
-
-    }
-    snapdev::NOT_REACHED();
-}
-
-
-/** \brief Get the TCP client address.
- *
- * This function retrieve the IP address of the client (your computer).
- * This is retrieved from the socket using the getsockname() function.
- *
- * \note
- * The function returns an empty string if the connection was lost
- * or purposefully closed.
- *
- * \return The IP address as a string.
- */
-std::string tcp_bio_client::get_client_addr() const
-{
-    // the socket may be invalid, i.e. f_bio may have been deallocated.
-    //
-    int const s(get_socket());
-    if(s < 0)
-    {
-        return std::string();
     }
 
-    sockaddr addr;
-    socklen_t len(sizeof(addr));
-    int const r(getsockname(s, &addr, &len));
-    if(r != 0)
-    {
-        throw event_dispatcher_runtime_error("failed reading address");
-    }
-    char buf[BUFSIZ];
-    switch(addr.sa_family)
-    {
-    case AF_INET:
-        // TODO: verify that 'r' >= sizeof(something)
-        inet_ntop(AF_INET, &reinterpret_cast<struct sockaddr_in *>(&addr)->sin_addr, buf, sizeof(buf));
-        break;
-
-    case AF_INET6:
-        // TODO: verify that 'r' >= sizeof(something)
-        inet_ntop(AF_INET6, &reinterpret_cast<struct sockaddr_in6 *>(&addr)->sin6_addr, buf, sizeof(buf));
-        break;
-
-    default:
-        throw event_dispatcher_runtime_error("unknown address family");
-
-    }
-    return buf;
+    return f_client_address;
 }
 
 

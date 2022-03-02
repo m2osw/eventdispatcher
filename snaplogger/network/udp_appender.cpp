@@ -117,8 +117,7 @@ void udp_appender::process_message(snaplogger::message const & msg, std::string 
     // send message via UDP
     //
     bool const success(ed::udp_server_message_connection::send_message(
-                  f_server_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_ONLY)
-                , f_server_address.get_port()
+                  f_server_address
                 , log_message
                 , f_secret_code));
     if(!success)

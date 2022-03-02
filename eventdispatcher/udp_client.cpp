@@ -65,12 +65,10 @@ namespace ed
  * resolved, the port is incompatible or not available, or the socket could
  * not be created.
  *
- * \param[in] addr  The address to convert to a numeric IP.
- * \param[in] port  The port number.
- * \param[in] family  The family used to search for 'addr'.
+ * \param[in] address  The address and port.
  */
-udp_client::udp_client(std::string const & addr, int port, int family)
-    : udp_base(addr, port, family)
+udp_client::udp_client(addr::addr const & address)
+    : udp_base(address)
 {
 }
 
@@ -119,6 +117,10 @@ udp_client::~udp_client()
  * the pipe is only used by these UDP packets. Too much and the dropping is
  * going to increase steadily.
  *
+ * \todo
+ * See whether we could always use the IPv6 to avoid the duplication of the
+ * client.
+ *
  * \param[in] msg  The message to send.
  * \param[in] size  The number of bytes representing this message.
  *
@@ -127,7 +129,30 @@ udp_client::~udp_client()
  */
 int udp_client::send(char const * msg, size_t size)
 {
-    return static_cast<int>(sendto(f_socket.get(), msg, size, 0, f_addrinfo->ai_addr, f_addrinfo->ai_addrlen));
+    if(f_address.is_ipv4())
+    {
+        sockaddr_in a;
+        f_address.get_ipv4(a);
+        return static_cast<int>(sendto(
+                      f_socket.get()
+                    , msg
+                    , size
+                    , 0
+                    , reinterpret_cast<sockaddr const *>(&a)
+                    , sizeof(a)));
+    }
+    else
+    {
+        sockaddr_in6 a;
+        f_address.get_ipv6(a);
+        return static_cast<int>(sendto(
+                      f_socket.get()
+                    , msg
+                    , size
+                    , 0
+                    , reinterpret_cast<sockaddr const *>(&a)
+                    , sizeof(a)));
+    }
 }
 
 

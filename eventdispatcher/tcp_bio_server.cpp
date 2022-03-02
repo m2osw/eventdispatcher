@@ -35,27 +35,27 @@
 #include    "eventdispatcher/tcp_private.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/not_used.h>
 
 
-// C++ lib
+// C++
 //
 #include    <algorithm>
 
 
-// OpenSSL lib
+// OpenSSL
 //
 #include    <openssl/ssl.h>
 
 
-// C lib
+// C
 //
 #include    <fcntl.h>
 
@@ -131,7 +131,7 @@ public:
  * defined at 128 (Ubuntu 16.04.1). See:
  * /usr/include/x86_64-linux-gnu/bits/socket.h
  *
- * \param[in] addr_port  The address and port defined in an addr object.
+ * \param[in] address  The address and port defined in an addr object.
  * \param[in] max_connections  The number of connections to keep in the listen queue.
  * \param[in] reuse_addr  Whether to mark the socket with the SO_REUSEADDR flag.
  * \param[in] certificate  The server certificate filename (PEM).
@@ -139,7 +139,7 @@ public:
  * \param[in] mode  The mode used to create the listening socket.
  */
 tcp_bio_server::tcp_bio_server(
-          addr::addr const & addr_port
+          addr::addr const & address
         , int max_connections
         , bool reuse_addr
         , std::string const & certificate
@@ -253,7 +253,7 @@ tcp_bio_server::tcp_bio_server(
             // create a listening connection
             //
             std::shared_ptr<BIO> listen;  // use reset(), see SNAP-507
-            listen.reset(BIO_new_accept(addr_port.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT).c_str()), detail::bio_deleter);
+            listen.reset(BIO_new_accept(address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT).c_str()), detail::bio_deleter);
             if(!listen)
             {
                 detail::bio_log_errors();
@@ -302,7 +302,7 @@ tcp_bio_server::tcp_bio_server(
     case mode_t::MODE_PLAIN:
         {
             std::shared_ptr<BIO> listen; // use reset(), see SNAP-507
-            listen.reset(BIO_new_accept(addr_port.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT).c_str()), detail::bio_deleter);
+            listen.reset(BIO_new_accept(address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT).c_str()), detail::bio_deleter);
             if(!listen)
             {
                 detail::bio_log_errors();

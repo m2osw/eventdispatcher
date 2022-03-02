@@ -40,8 +40,7 @@ class tcp_blocking_client_message_connection
 {
 public:
                                 tcp_blocking_client_message_connection(
-                                          std::string const & addr
-                                        , int port
+                                          addr::addr const & address
                                         , mode_t mode = mode_t::MODE_PLAIN);
 
     void                        run();

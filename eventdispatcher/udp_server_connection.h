@@ -44,10 +44,8 @@ public:
     typedef std::shared_ptr<udp_server_connection>    pointer_t;
 
                                 udp_server_connection(
-                                      std::string const & addr
-                                    , int port
-                                    , int family = AF_UNSPEC
-                                    , std::string const * multicast_addr = nullptr);
+                                      addr::addr const & addr
+                                    , addr::addr const & multicast_address = addr::addr());
 
     // connection implementation
     virtual bool                is_reader() const override;

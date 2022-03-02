@@ -9,25 +9,25 @@
 //
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/options.h>
 
 
-// libaddr lib
+// libaddr
 //
 #include    <libaddr/addr.h>
 #include    <libaddr/addr_parser.h>
 
 
-// advgetopt lib
+// advgetopt
 //
 #include    <advgetopt/advgetopt.h>
 #include    <advgetopt/options.h>
 #include    <advgetopt/exception.h>
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/dispatcher.h>
 #include    <eventdispatcher/logrotate_udp_messenger.h>
@@ -36,7 +36,7 @@
 #include    <eventdispatcher/version.h>
 
 
-// boost lib
+// boost
 //
 #include    <boost/preprocessor/stringize.hpp>
 
@@ -334,8 +334,7 @@ void client::msg_quit(ed::message & msg)
 
 listener::listener(my_daemon * d, addr::addr const & a)
     : tcp_server_connection(
-            a.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_ONLY)
-          , a.get_port()
+            a
           , std::string()       // no SSL
           , std::string())
     , f_my_daemon(d)

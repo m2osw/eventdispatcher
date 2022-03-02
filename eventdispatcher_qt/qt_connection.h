@@ -42,7 +42,7 @@ public:
     // implements connection
     virtual int                 get_socket() const override;
     virtual bool                is_reader() const override;
-    void                        process_timeout() override;
+    virtual void                process_timeout() override;
     virtual void                process_read() override;
 
 private:

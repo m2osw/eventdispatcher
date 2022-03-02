@@ -51,10 +51,7 @@ public:
     virtual                     ~tcp_server_client_connection() override;
 
     void                        close();
-    size_t                      get_client_address(sockaddr_storage & address) const;
-    std::string                 get_client_addr() const;
-    int                         get_client_port() const;
-    std::string                 get_client_addr_port() const;
+    addr::addr                  get_client_address();
 
     // connection implementation
     virtual bool                is_reader() const override;
@@ -65,11 +62,8 @@ public:
     virtual ssize_t             write(void const * buf, size_t count);
 
 private:
-    bool                        define_address();
-
     tcp_bio_client::pointer_t   f_client = tcp_bio_client::pointer_t();
-    sockaddr_storage            f_address = sockaddr_storage();
-    socklen_t                   f_length = 0;
+    addr::addr                  f_address = addr::addr();
 };
 
 

@@ -80,11 +80,10 @@ namespace ed
  * when sending. Instead we create a client that we immediately
  * destruct once the message was sent.
  *
- * \param[in] addr  The address to listen on.
- * \param[in] port  The port to listen on.
+ * \param[in] address  The address and port to listen on.
  */
-udp_server_message_connection::udp_server_message_connection(std::string const & addr, int port)
-    : udp_server_connection(addr, port)
+udp_server_message_connection::udp_server_message_connection(addr::addr const & address)
+    : udp_server_connection(address)
 {
     // allow for looping over all the messages in one go
     //
@@ -102,16 +101,14 @@ udp_server_message_connection::udp_server_message_connection(std::string const &
  * The function returns true when the message was successfully sent.
  * This does not mean it was received.
  *
- * \param[in] addr  The destination address for the message.
- * \param[in] port  The destination port for the message.
+ * \param[in] address  The destination address and port for the message.
  * \param[in] msg  The message to send to the destination.
  * \param[in] secret_code  The secret code to send along the message.
  *
  * \return true when the message was sent, false otherwise.
  */
 bool udp_server_message_connection::send_message(
-          std::string const & addr
-        , int port
+          addr::addr const & address
         , message const & msg
         , std::string const & secret_code)
 {
@@ -120,7 +117,7 @@ bool udp_server_message_connection::send_message(
     //       in one UDP packet. However, it has a maximum size
     //       limit which we enforce here.
     //
-    udp_client client(addr, port);
+    udp_client client(address);
     std::string buf;
     if(!secret_code.empty())
     {
@@ -133,7 +130,9 @@ bool udp_server_message_connection::send_message(
         buf = msg.to_message();
     }
 
-    // TODO: this maximum size needs to be checked dynamically
+    // TODO: this maximum size needs to be checked dynamically;
+    //       also it's not forbidden to send a multiple packet
+    //       UDP buffer, it's just more likely to fail
     //
     if(buf.length() > DATAGRAM_MAX_SIZE)
     {

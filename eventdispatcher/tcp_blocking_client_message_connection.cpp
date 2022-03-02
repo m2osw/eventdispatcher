@@ -52,22 +52,22 @@
 #include    "eventdispatcher/exception.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/not_used.h>
 
 
-// C++ lib
+// C++
 //
 #include    <cstring>
 
 
-// C lib
+// C
 //
 #include    <poll.h>
 #include    <sys/resource.h>
@@ -100,8 +100,8 @@ namespace ed
  *          : public ed::tcp_blocking_client_message_connection
  *      {
  *      public:
- *          my_blocking_connection(std::string const & addr, int port, mode_t mode)
- *              : tcp_blocking_client_message_connection(addr, port, mode)
+ *          my_blocking_connection(addr::addr const & address, int port, mode_t mode)
+ *              : tcp_blocking_client_message_connection(address, port, mode)
  *          {
  *              // need to register with communicator
  *              message register_message;
@@ -168,15 +168,13 @@ namespace ed
  *      my_blocking_connection.run();
  * \endcode
  *
- * \param[in] addr  The address to connect to.
- * \param[in] port  The port to connect at.
+ * \param[in] address  The address to connect to.
  * \param[in] mode  The mode used to connect.
  */
 tcp_blocking_client_message_connection::tcp_blocking_client_message_connection(
-              std::string const & addr
-            , int const port
+              addr::addr const & address
             , mode_t const mode)
-    : tcp_client_message_connection(addr, port, mode, true)
+    : tcp_client_message_connection(address, mode, true)
 {
 }
 

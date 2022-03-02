@@ -49,7 +49,7 @@
  *     {
  *     ...
  *     private:
- *         logrotate_udp_messenger::pointer_t    f_udp_messenger = logrotate_udp_messenger::pointer_t();
+ *         logrotate_udp_messenger::pointer_t    f_logrotate_messenger = logrotate_udp_messenger::pointer_t();
  *     ...
  *     };
  * \endcode
@@ -57,36 +57,45 @@
  * Instantiate it in your constructor as in: (TODO: this was moved to the
  * logrotate_extension class, update these docs!)
  *
+ * See also the logrotate_extension which does the f_opts management for you.
+ *
  * \code
- *     std::string const logrotate_udp_listen(f_opt.get_string("logrotate-udp-listen"));
- *     if(logrotate_udp_listen.empty())
+ *     std::string const logrotate_listen(f_opts.get_string("logrotate-listen"));
+ *     if(logrotate_listen.empty())
  *     {
  *         SNAP_LOG_FATAL
- *             << "the \"udp_listen=...\" must be defined."
+ *             << "the \"logrotate_listen=...\" must be defined."
  *             << SNAP_LOG_SEND;
- *         throw std::runtime_error("the \"udp_listen=...\" parameter must be defined.");
+ *         throw std::runtime_error("the \"logrotate_listen=...\" parameter must be defined.");
  *     }
- *     addr::addr const logrotate_udp_addr(addr::string_to_addr(
- *           logrotate_udp_listen
+ *     addr::addr const logrotate_addr(addr::string_to_addr(
+ *           logrotate_listen
  *         , "127.0.0.1"
  *         , DEFAULT_LOGROTATE_UDP_PORT
  *         , "udp"));
  *
  *     f_logrotate_udp_messenger = std::make_shared<ed::logrotate_udp_messenger>(
  *           logrotate_udp_addr
- *         , f_opt.get_string("logrotate_secret_code"));
- *     f_communicator->add_connection(f_logrotate_udp_messenger);
+ *         , f_opts.get_string("logrotate_secret_code"));
+ *     f_communicator->add_connection(f_logrotate_messenger);
  * \endcode
  *
- * Note that the logrotate_secret_code is not required. You can set it to
+ * Note that the `logrotate_secret_code` is not required. You can set it to
  * the empty string, especially if this code is to run on backend computers.
  *
  * In order to quit your application cleanly, don't forget to remove that
  * connection from the communicator:
  *
  * \code
- *     f_communicator->remove_connection(f_logrotate_udp_messenger);
+ *     f_communicator->remove_connection(f_logrotate_messenger);
  * \endcode
+ *
+ * \todo
+ * Update example with the logrotate_extension.
+ *
+ * \todo
+ * Look into an implementation that uses the local stream UDP instead of
+ * an INET UDP. This will make it a lot safer.
  */
 
 

@@ -56,7 +56,6 @@
 // C lib
 //
 #include    <string.h>
-//#include    <signal.h>
 
 
 // last include
