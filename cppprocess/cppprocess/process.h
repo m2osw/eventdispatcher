@@ -84,9 +84,9 @@ public:
 
     void                            set_input_io(io::pointer_t input);
     io::pointer_t                   get_input_io() const;
-    void                            set_output_io(io::pointer_t input);
+    void                            set_output_io(io::pointer_t output);
     io::pointer_t                   get_output_io() const;
-    void                            set_error_io(io::pointer_t input);
+    void                            set_error_io(io::pointer_t output);
     io::pointer_t                   get_error_io() const;
 
     // what is received from the command stdout
