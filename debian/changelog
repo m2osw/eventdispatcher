@@ -1,3 +1,9 @@
+eventdispatcher (1.1.50.0~bionic) bionic; urgency=high
+
+  * Added the Environment Variable Into.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sat, 05 Mar 2022 21:20:55 -0800
+
 eventdispatcher (1.1.49.0~bionic) bionic; urgency=high
 
   * Use addr::addr from libaddr instead of std::string + parsing each time.
