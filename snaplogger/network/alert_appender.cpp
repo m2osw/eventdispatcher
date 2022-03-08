@@ -35,17 +35,17 @@
 
 
 
-// advgetopt lib
+// advgetopt
 //
 #include    <advgetopt/validator_integer.h>
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    "snaplogger/guard.h"
 
 
-// C++ lib
+// C++
 //
 #include    <iostream>
 
@@ -99,17 +99,29 @@ void alert_appender::set_config(advgetopt::getopt const & opts)
 
     // COUNTER
     //
-    std::string const counter_field(get_name() + "::counter");
-    if(opts.is_defined(counter_field))
+    std::string const standard_field(get_name() + "::standard");
+    if(opts.is_defined(standard_field))
     {
-        std::string const counter(opts.get_string(counter_field));
         // TODO: determine how we want to count what
-        f_limit = 10;
+        //
+        std::string const standard(opts.get_string(standard_field));
+        if(standard == "off")
+        {
+            f_limit = -1;
+        }
+        else if(standard == "instant")
+        {
+            f_limit = 0;
+        }
+        else
+        {
+            advgetopt::validator_integer::convert_string(standard, f_limit);
+        }
     }
 
     // ALERT
     //
-    std::string const alert_field(get_name() + "::alter");
+    std::string const alert_field(get_name() + "::alert");
     if(opts.is_defined(alert_field))
     {
         std::string const alert(opts.get_string(alert_field));
@@ -145,24 +157,25 @@ void alert_appender::process_message(
             forward = f_alert_counter >= f_alert_limit;
             if(forward)
             {
-                --f_alert_counter;
+                f_alert_counter = 0;
             }
         }
-        else
+        else if(f_limit >= 0)
         {
             ++f_counter;
             forward = f_counter >= f_limit;
             if(forward)
             {
-                --f_counter;
+                f_counter = 0;
             }
         }
+        // else -- ignore that message
     }
 
     if(forward)
     {
         // the alert component should be added, I should be able to add
-        // that component, but the msg is const and we do no thave a copy
+        // that component, but the msg is const and we do not have a copy
         // option at the moment
         //
         if(!msg.has_component(g_alert_component)
@@ -184,8 +197,6 @@ void alert_appender::process_message(
         }
     }
 }
-
-
 
 
 

@@ -54,7 +54,19 @@ snaplogger::message::pointer_t ed_message_to_log_message(ed::message const & mes
     snaplogger::severity_t severity(snaplogger::severity_t::SEVERITY_ERROR);
     if(message.has_parameter("severity"))
     {
-        severity = static_cast<snaplogger::severity_t>(message.get_integer_parameter("severity"));
+        std::string const & name(message.get_parameter("severity"));
+        snaplogger::severity::pointer_t s(snaplogger::get_severity(name));
+        if(s == nullptr)
+        {
+            SNAP_LOG_WARNING
+                << "unknown severity \""
+                << name
+                << SNAP_LOG_SEND;
+        }
+        else
+        {
+            severity = s->get_severity();
+        }
     }
 
     std::string filename;
@@ -80,6 +92,25 @@ snaplogger::message::pointer_t ed_message_to_log_message(ed::message const & mes
             , filename.c_str()
             , function.c_str()
             , line));
+
+    if(message.has_parameter("timestamp"))
+    {
+// TODO: once we have stdc++20, remove all defaults & pragma
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+        timespec const timestamp =
+        {
+            .tv_sec = message.get_integer_parameter("timestamp"),
+            .tv_nsec = 0,
+        };
+#pragma GCC diagnostic pop
+        msg->set_timestamp(timestamp);
+    }
+
+    if(message.has_parameter("message"))
+    {
+        *msg << message.get_parameter("message");
+    }
 
     if(message.has_parameter("recursive"))
     {
@@ -118,7 +149,6 @@ snaplogger::message::pointer_t ed_message_to_log_message(ed::message const & mes
         msg->add_component(g_remote_component);
     }
     msg->add_component(g_network_component);
-
 
     if(message.has_parameter("fields"))
     {

@@ -39,17 +39,17 @@
 #include    "eventdispatcher/thread_done_signal.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/not_used.h>
 
 
-// cppthread lib
+// cppthread
 //
 #include    <cppthread/exception.h>
 #include    <cppthread/guard.h>
@@ -57,12 +57,12 @@
 #include    <cppthread/thread.h>
 
 
-// C++ lib
+// C++
 //
 #include    <cstring>
 
 
-// C lib
+// C
 //
 #include    <sys/socket.h>
 

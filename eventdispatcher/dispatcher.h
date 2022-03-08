@@ -32,7 +32,7 @@
 #include    "eventdispatcher/utils.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 

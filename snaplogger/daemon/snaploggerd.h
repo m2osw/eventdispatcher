@@ -30,12 +30,12 @@
 #include    "snaplogger/daemon/udp_logger_server.h"
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
-#include    "eventdispatcher/logrotate_udp_messenger.h"
+#include    <eventdispatcher/logrotate_udp_messenger.h>
 
 
-// advgetopt lib
+// advgetopt
 //
 #include    <advgetopt/advgetopt.h>
 
@@ -67,8 +67,7 @@ public:
 private:
     advgetopt::getopt               f_opts;
     ed::communicator::pointer_t     f_communicator = ed::communicator::pointer_t();
-    ed::logrotate_udp_messenger::pointer_t
-                                    f_logrotate_connection = ed::logrotate_udp_messenger::pointer_t();
+    ed::logrotate_extension         f_logrotate;
     tcp_logger_server::pointer_t    f_tcp_server = tcp_logger_server::pointer_t();
     udp_logger_server::pointer_t    f_udp_server = udp_logger_server::pointer_t();
 };

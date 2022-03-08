@@ -24,12 +24,7 @@
  * This file declares the base appender class.
  */
 
-// self
-//
-//#include    "snaplogger/appender.h"
-
-
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/dispatcher.h>
 #include    <eventdispatcher/tcp_server_client_message_connection.h>
@@ -50,7 +45,7 @@ public:
                                 tcp_logger_connection(ed::tcp_bio_client::pointer_t client);
     virtual                     ~tcp_logger_connection() override;
 
-    void                        msg_logger_message(ed::message & message);
+    void                        msg_logger_message(ed::message & m);
 
 private:
     ed::dispatcher<tcp_logger_connection>::pointer_t

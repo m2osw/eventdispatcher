@@ -28,34 +28,35 @@
  */
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/version.h>
 
-// snaplogger network lib
+
+// snaplogger network
 //
 #include    <snaplogger/network/tcp_appender.h>
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/logger.h>
 #include    <snaplogger/message.h>
 #include    <snaplogger/options.h>
 
 
-// getopt lib
+// getopt
 //
 #include    <advgetopt/advgetopt.h>
 #include    <advgetopt/exception.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/not_reached.h>
 
 
-// boost lib
+// boost
 //
 #include    <boost/preprocessor/stringize.hpp>
 
@@ -298,6 +299,8 @@ int snaplog::run()
     }
 
     snaplogger::send_message(msg);
+
+    //ed::communicator::instance()->run();
 
     return 0;
 }

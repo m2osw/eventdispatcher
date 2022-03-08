@@ -25,7 +25,7 @@
  * to connect and send us LOG_MESSAGE messages.
  */
 
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/communicator.h>
 #include    <eventdispatcher/tcp_server_connection.h>

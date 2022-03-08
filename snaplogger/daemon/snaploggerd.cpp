@@ -33,27 +33,27 @@
 
 
 
-// advgetopt lib
+// advgetopt
 //
-#include    "advgetopt/exception.h"
+#include    <advgetopt/exception.h>
 
 
-// snaplogger lib
+// snaplogger
 //
-#include    "snaplogger/options.h"
+#include    <snaplogger/options.h>
 
 
-// libaddr lib
+// libaddr
 //
-#include    "libaddr/addr_parser.h"
+#include    <libaddr/addr_parser.h>
 
 
-// boost lib
+// boost
 //
 #include    <boost/preprocessor/stringize.hpp>
 
 
-// C++ lib
+// C++
 //
 #include    <iostream>
 
@@ -81,50 +81,33 @@ const advgetopt::option g_options[] =
             , advgetopt::GETOPT_FLAG_ENVIRONMENT_VARIABLE
             , advgetopt::GETOPT_FLAG_CONFIGURATION_FILE
             , advgetopt::GETOPT_FLAG_REQUIRED>())
-        , advgetopt::DefaultValue("")
+        , advgetopt::DefaultValue("127.0.0.1:4040")
+        , advgetopt::EnvironmentVariableName("CONTROLLER_LISTEN")
         , advgetopt::Help("an IP:Port to connect to the \"snapcommunicator\" RCP service")
     ),
     advgetopt::define_option(
-          advgetopt::Name("logrotate-listen")
-        , advgetopt::Flags(advgetopt::all_flags<
+          advgetopt::Name("tcp-listen")
+        , advgetopt::Flags(advgetopt::any_flags<
               advgetopt::GETOPT_FLAG_GROUP_OPTIONS
             , advgetopt::GETOPT_FLAG_COMMAND_LINE
             , advgetopt::GETOPT_FLAG_ENVIRONMENT_VARIABLE
             , advgetopt::GETOPT_FLAG_CONFIGURATION_FILE
             , advgetopt::GETOPT_FLAG_REQUIRED>())
-        , advgetopt::DefaultValue("127.0.0.1:4988")
-        , advgetopt::Help("the host to listen on for the logrotate LOG message")
+        , advgetopt::DefaultValue("127.0.0.1:4043")
+        , advgetopt::Help("The server TCP connection listening for LOGGER messages.")
+        , advgetopt::EnvironmentVariableName("CONTROLLER_LISTEN")
     ),
     advgetopt::define_option(
-          advgetopt::Name("logrotate-secret-code")
-        , advgetopt::Flags(advgetopt::all_flags<
+          advgetopt::Name("udp-listen")
+        , advgetopt::Flags(advgetopt::any_flags<
               advgetopt::GETOPT_FLAG_GROUP_OPTIONS
             , advgetopt::GETOPT_FLAG_COMMAND_LINE
             , advgetopt::GETOPT_FLAG_ENVIRONMENT_VARIABLE
             , advgetopt::GETOPT_FLAG_CONFIGURATION_FILE
             , advgetopt::GETOPT_FLAG_REQUIRED>())
-        , advgetopt::DefaultValue("")
-        , advgetopt::Help("a secret code to be used along the logrotate-listen option; use empty to not have to use a secret code")
-    ),
-    advgetopt::define_option(
-        advgetopt::Name("tcp-listen")
-      , advgetopt::Flags(advgetopt::any_flags<
-            advgetopt::GETOPT_FLAG_GROUP_OPTIONS
-          , advgetopt::GETOPT_FLAG_COMMAND_LINE
-          , advgetopt::GETOPT_FLAG_ENVIRONMENT_VARIABLE
-          , advgetopt::GETOPT_FLAG_CONFIGURATION_FILE
-          , advgetopt::GETOPT_FLAG_REQUIRED>())
-      , advgetopt::Help("The server TCP connection listening for LOGGER messages.")
-    ),
-    advgetopt::define_option(
-        advgetopt::Name("udp-listen")
-      , advgetopt::Flags(advgetopt::any_flags<
-            advgetopt::GETOPT_FLAG_GROUP_OPTIONS
-          , advgetopt::GETOPT_FLAG_COMMAND_LINE
-          , advgetopt::GETOPT_FLAG_ENVIRONMENT_VARIABLE
-          , advgetopt::GETOPT_FLAG_CONFIGURATION_FILE
-          , advgetopt::GETOPT_FLAG_REQUIRED>())
-      , advgetopt::Help("The server UDP connection listening for LOGGER messages.")
+        , advgetopt::DefaultValue("127.0.0.1:4043")
+        , advgetopt::Help("The server UDP connection listening for LOGGER messages.")
+        , advgetopt::EnvironmentVariableName("UDP_LISTEN")
     ),
     advgetopt::define_option(
           advgetopt::Name("udp-listen-secret-code")
@@ -136,6 +119,7 @@ const advgetopt::option g_options[] =
             , advgetopt::GETOPT_FLAG_REQUIRED>())
         , advgetopt::DefaultValue("")
         , advgetopt::Help("a secret code to be used along the udp-listen option; use empty to not have to use a secret code")
+        , advgetopt::EnvironmentVariableName("UDP_LISTEN_SECRET_CODE")
     ),
     advgetopt::end_options()
 };
@@ -197,38 +181,27 @@ advgetopt::options_environment const g_options_environment =
 snaploggerd::snaploggerd(int argc, char * argv[])
     : f_opts(g_options_environment)
     , f_communicator(ed::communicator::instance())
+    , f_logrotate(f_opts, "127.0.0.1", 4988)
 {
     snaplogger::add_logger_options(f_opts);
+    f_logrotate.add_logrotate_options();
     f_opts.finish_parsing(argc, argv);
     if(!snaplogger::process_logger_options(f_opts, "/etc/snaploggerd/logger"))
     {
         // exit on any error
         throw advgetopt::getopt_exit("logger options generated an error.", 0);
     }
+    f_logrotate.process_logrotate_options();
 
     // TODO: implement the controller listener
     //       we first need a replacement to the snapcontroller daemon
     {
-        std::string controller_listen(f_opts.get_string("controller-listen"));
+        std::string const controller_listen(f_opts.get_string("controller-listen"));
         addr::addr const listen(addr::string_to_addr(
               controller_listen
             , "127.0.0.1"
             , DEFAULT_CONTROLLER_PORT
             , "udp"));
-    }
-
-    std::string logrotate_listen(f_opts.get_string("logrotate-listen"));
-    if(!logrotate_listen.empty())
-    {
-        addr::addr const listen(addr::string_to_addr(
-              logrotate_listen
-            , "127.0.0.1"
-            , DEFAULT_LOGROTATE_PORT
-            , "udp"));
-        f_logrotate_connection = std::make_shared<ed::logrotate_udp_messenger>(
-              listen
-            , f_opts.get_string("logrotate-secret-code"));
-        f_communicator->add_connection(f_logrotate_connection);
     }
 }
 

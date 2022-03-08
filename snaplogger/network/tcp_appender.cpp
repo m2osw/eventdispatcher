@@ -29,18 +29,18 @@
 
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    "snaplogger/guard.h"
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/dispatcher.h>
 #include    <eventdispatcher/tcp_client_permanent_message_connection.h>
 
 
-// C++ lib
+// C++
 //
 #include    <iostream>
 
@@ -208,6 +208,24 @@ void tcp_appender::process_message(
 }
 
 
+/** \brief Process the appender's message.
+ *
+ * This function converts the input logger message in an event dispatcher
+ * message and then it sends it to the event dispatcher TCP connection.
+ *
+ * If the connection is not up yet, then the message gets cached. The class
+ * uses a permanent TCP connection which will auto-connect and auto-reconnect
+ * as required for that purpose.
+ *
+ * The function adds the \p extra_component while converting the message.
+ * At this time, that \p extra_component is expected to be the "alert"
+ * component.
+ *
+ * \param[in] msg  The snaplogger message to process.
+ * \param[in] formatted_message  The message, already formatted, if the
+ * sending to the other side fails.
+ * \param[in] extra_component  The "alter" component or nullptr.
+ */
 void tcp_appender::process_message(
           snaplogger::message const & msg
         , std::string const & formatted_message

@@ -25,17 +25,17 @@
  * network appenders.
  */
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/appender.h>
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/message.h>
 
 
-// libaddr lib
+// libaddr
 //
 #include    <libaddr/addr.h>
 

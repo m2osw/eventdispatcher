@@ -91,10 +91,11 @@ tcp_logger_connection::~tcp_logger_connection()
 }
 
 
-void tcp_logger_connection::msg_logger_message(ed::message & message)
+void tcp_logger_connection::msg_logger_message(ed::message & m)
 {
-    snaplogger::message::pointer_t msg(ed_message_to_log_message(message));
+    snaplogger::message::pointer_t msg(ed_message_to_log_message(m));
     msg->add_component(g_tcp_component);
+    snaplogger::send_message(*msg);
 }
 
 

@@ -18,9 +18,9 @@
 # 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 ##
-## snaplogger daemon appenders (i.e. network extension)
+## snaplogger daemon appenders (i.e. network plugin extension)
 ##
-project(snaplogger-network)
+project(snaplogger_network) # use underscores (_) for plugins
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
@@ -28,6 +28,8 @@ configure_file(
 )
 
 add_library(${PROJECT_NAME} SHARED
+    snaplogger_network.cpp
+
     alert_appender.cpp
     base_network_appender.cpp
     tcp_appender.cpp

@@ -103,10 +103,11 @@ bool udp_logger_server::send_message(ed::message const & msg, bool cache)
 }
 
 
-void udp_logger_server::msg_logger_message(ed::message & message)
+void udp_logger_server::msg_logger_message(ed::message & m)
 {
-    snaplogger::message::pointer_t msg(ed_message_to_log_message(message));
+    snaplogger::message::pointer_t msg(ed_message_to_log_message(m));
     msg->add_component(g_udp_component);
+    snaplogger::send_message(*msg);
 }
 
 

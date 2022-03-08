@@ -264,4 +264,3 @@ void base_network_appender::log_message_to_ed_message(
 
 } // snaplogger_network namespace
 // vim: ts=4 sw=4 et
-
