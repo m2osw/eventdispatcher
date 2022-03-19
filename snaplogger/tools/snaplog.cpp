@@ -121,7 +121,7 @@ const advgetopt::option g_options[] =
             , advgetopt::GETOPT_FLAG_REQUIRED
             , advgetopt::GETOPT_FLAG_COMMAND_LINE
             , advgetopt::GETOPT_FLAG_GROUP_COMMANDS>())
-        , advgetopt::Help("the message to log")
+        , advgetopt::Help("the message to log (you may also use --message ... after a --fields or --components)")
     ),
     advgetopt::define_option(
           advgetopt::Name("severity")
@@ -300,7 +300,10 @@ int snaplog::run()
 
     snaplogger::send_message(msg);
 
-    //ed::communicator::instance()->run();
+    // TODO: make sure that once the log was sent that we exit... if it fails
+    //       it never exits at the moment (i.e. add a timer)
+    //
+    ed::communicator::instance()->run();
 
     return 0;
 }

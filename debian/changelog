@@ -12,6 +12,8 @@ eventdispatcher (1.1.51.0~bionic) bionic; urgency=high
   * Fixed spelling of the "alert" field.
   * Reset alert counters back to zero instead of just `--`.
   * Removed `snaplogger-network` as a library of `snaplog`. It's a plugin.
+  * Fixed the get_socket() of the BIO, the input parameter must be initialized.
+  * get_socket() sets errno to EBADF is the BIO is not allocated.
 
  -- Alexis Wilke <alexis@m2osw.com>  Mon, 07 Mar 2022 21:37:49 -0800
 

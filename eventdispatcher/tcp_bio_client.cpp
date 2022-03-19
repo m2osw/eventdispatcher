@@ -24,7 +24,7 @@
  */
 
 // make sure we use OpenSSL with multi-thread support
-// (TODO: move to .cpp once we have the impl!)
+//
 #define OPENSSL_THREAD_DEFINES
 
 // self
@@ -475,7 +475,7 @@ tcp_bio_client::tcp_bio_client(
                         << SNAP_LOG_SEND;
                 }
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("SSL BIO_do_connect() failed connecting BIO object to server");
+                throw event_dispatcher_failed_connecting("SSL BIO_do_connect() failed connecting BIO object to server");
             }
 
             // encryption handshake
@@ -663,16 +663,17 @@ void tcp_bio_client::close()
  */
 int tcp_bio_client::get_socket() const
 {
-    if(f_impl->f_bio)
+    if(f_impl->f_bio != nullptr)
     {
-        int c;
+        int socket(-1);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
-        BIO_get_fd(f_impl->f_bio.get(), &c);
+        BIO_get_fd(f_impl->f_bio.get(), &socket);
 #pragma GCC diagnostic pop
-        return c;
+        return socket;
     }
 
+    errno = EBADF;
     return -1;
 }
 
@@ -757,7 +758,7 @@ addr::addr tcp_bio_client::get_client_address()
  */
 int tcp_bio_client::read(char * buf, size_t size)
 {
-    if(!f_impl->f_bio)
+    if(f_impl->f_bio == nullptr)
     {
         errno = EBADF;
         return -1;
@@ -890,7 +891,7 @@ int tcp_bio_client::write(char const * buf, size_t size)
     //    << size
     //    << SNAP_LOG_SEND;
 #endif
-    if(!f_impl->f_bio)
+    if(f_impl->f_bio == nullptr)
     {
         errno = EBADF;
         return -1;

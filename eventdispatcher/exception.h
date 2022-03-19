@@ -42,6 +42,8 @@ DECLARE_LOGIC_ERROR(event_dispatcher_implementation_error);
 
 DECLARE_MAIN_EXCEPTION(event_dispatcher_exception);
 
+DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_count_mismatch);
+DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_failed_connecting);
 DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_initialization_error);
 DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_initialization_missing);
 DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_invalid_callback);
@@ -51,7 +53,6 @@ DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_invalid_signal);
 DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_recursive_call);
 DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_runtime_error);
 DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_unexpected_data);
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_count_mismatch);
 
 
 
