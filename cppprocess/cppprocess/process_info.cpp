@@ -335,7 +335,7 @@ std::uint64_t process_info::get_rss_size()
  *
  * This function return the name as found in the `comm` file. This name
  * is usually the first 15 letters of the command name. This name can
- * be changed so it may different from the one found in the `cmdline`.
+ * be changed so it may differ from the one found in the `cmdline`.
  * We most often change our thread names to reflect what they are
  * used for.
  *
