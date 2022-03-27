@@ -18,9 +18,9 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #pragma once
 
-// cppthread
+// serverplugins
 //
-#include    <cppthread/plugins.h>
+#include    <serverplugins/plugin.h>
 
 
 
@@ -36,10 +36,10 @@ namespace snaplogger_network
  * use for this class.
  */
 class snaplogger_network
-    : public cppthread::plugin
+    : public serverplugins::plugin
 {
 public:
-    CPPTHREAD_PLUGIN_DEFAULTS(snaplogger_network)
+    SERVERPLUGINS_DEFAULTS(snaplogger_network);
 
 private:
 };

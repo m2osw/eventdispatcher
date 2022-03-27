@@ -22,6 +22,11 @@
 #include    "snaplogger_network.h"
 
 
+// serverplugins
+//
+#include    "serverplugins/factory.h"
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -32,12 +37,12 @@ namespace snaplogger_network
 {
 
 
-CPPTHREAD_PLUGIN_START(snaplogger_network, 5, 3)
-    , ::cppthread::plugin_description("snaplogger network plugin extension to allow sending log messages to other servers via TCP or UDP.")
-    , ::cppthread::plugin_help_uri("https://snapwebsites.org/project/eventdispatcher")
-    , ::cppthread::plugin_categorization_tag("snaplogger")
-    , ::cppthread::plugin_categorization_tag("network")
-CPPTHREAD_PLUGIN_END(snaplogger_network)
+SERVERPLUGINS_START(snaplogger_network, 5, 3)
+    , ::serverplugins::description("snaplogger network plugin extension to allow sending log messages to other servers via TCP or UDP.")
+    , ::serverplugins::help_uri("https://snapwebsites.org/project/eventdispatcher")
+    , ::serverplugins::categorization_tag("snaplogger")
+    , ::serverplugins::categorization_tag("network")
+SERVERPLUGINS_END(snaplogger_network)
 
 
 
