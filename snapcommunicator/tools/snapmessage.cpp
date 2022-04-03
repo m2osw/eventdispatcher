@@ -16,45 +16,57 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
-// snapwebsites lib
+// snapcommunicator
 //
-#include <snapwebsites/log.h>
-#include <snapwebsites/qstring_stream.h>
-#include <snapwebsites/snap_console.h>
-#include <snapwebsites/snapwebsites.h>
+#include    <snapcommunicator/daemon/version.h>
 
 
-// snapdev lib
+// eventdispatcher
 //
-#include <snapdev/not_reached.h>
-#include <snapdev/not_used.h>
+#include    <eventdispatcher/cui_connection.h>
+#include    <eventdispatcher/tcp_client_message_connection.h>
 
-
-// advgetopt lib
+// snaplogger
 //
-#include <advgetopt/advgetopt.h>
-#include <advgetopt/exception.h>
+#include    <snaplogger/message.h>
 
 
-// C++ lib
+// snapdev
 //
-#include <atomic>
+#include    <snapdev/not_reached.h>
+#include    <snapdev/not_used.h>
 
 
-// ncurses lib
+// advgetopt
 //
-#include <ncurses.h>
+#include    <advgetopt/advgetopt.h>
+#include    <advgetopt/exception.h>
 
 
-// readline lib
+// boost
 //
-#include <readline/readline.h>
-#include <readline/history.h>
+#include    <boost/preprocessor/stringize.hpp>
+
+
+// C++
+//
+#include    <atomic>
+
+
+// ncurses
+//
+#include    <ncurses.h>
+
+
+// readline
+//
+#include    <readline/readline.h>
+#include    <readline/history.h>
 
 
 // last include
 //
-#include <snapdev/poison.h>
+#include    <snapdev/poison.h>
 
 
 
@@ -205,6 +217,8 @@ advgetopt::options_environment const g_command_line_options_environment =
     .f_options = g_command_line_options,
     .f_options_files_directory = nullptr,
     .f_environment_variable_name = "SNAPMESSAGE",
+    .f_environment_variable_intro = nullptr,
+    .f_section_variables_name = nullptr,
     .f_configuration_files = nullptr,
     .f_configuration_filename = "snapmessage.conf",
     .f_configuration_directories = g_configuration_directories,
@@ -212,7 +226,7 @@ advgetopt::options_environment const g_command_line_options_environment =
     .f_help_header = "Usage: %p [-<opt>] [<message> ...]\n"
                      "where -<opt> is one or more of:",
     .f_help_footer = "%c",
-    .f_version = SNAPWEBSITES_VERSION_STRING,
+    .f_version = SNAPCOMMUNICATOR_VERSION_STRING,
     .f_license = "GNU GPL v2",
     .f_copyright = "Copyright (c) 2013-"
                    BOOST_PP_STRINGIZE(UTC_BUILD_YEAR)
@@ -235,13 +249,13 @@ advgetopt::options_environment const g_command_line_options_environment =
 
 
 class tcp_message_connection
-    : public snap::snap_communicator::snap_tcp_client_message_connection
+    : public ed::tcp_client_message_connection
 {
 public:
     typedef std::shared_ptr<tcp_message_connection> message_pointer_t;
 
-    tcp_message_connection(std::string const & addr, int port, mode_t const mode)
-        : snap_tcp_client_message_connection(addr, port, mode, false)
+    tcp_message_connection(addr::addr const & address, mode_t const mode)
+        : snap_tcp_client_message_connection(address, mode, false)
     {
     }
 
@@ -251,30 +265,30 @@ public:
 
     virtual void process_error() override
     {
-        snap_tcp_client_message_connection::process_error();
+        tcp_client_message_connection::process_error();
 
         std::cerr << "error: an error occurred while handling a message." << std::endl;
     }
 
     virtual void process_hup() override
     {
-        snap_tcp_client_message_connection::process_hup();
+        tcp_client_message_connection::process_hup();
 
         std::cerr << "error: the connection hang up on us, while handling a message." << std::endl;
     }
 
     virtual void process_invalid() override
     {
-        snap_tcp_client_message_connection::process_invalid();
+        tcp_client_message_connection::process_invalid();
 
         std::cerr << "error: the connection is invalid." << std::endl;
     }
 
-    virtual void process_message(snap::snap_communicator_message const & message) override
+    virtual void process_message(ed::message const & message) override
     {
         std::cout << "success: received message: "
                   << message.to_message()
-                  << std::endl;
+                  << '\n'
     }
 
 private:
@@ -523,21 +537,25 @@ private:
 
 
 
-class cui_connection
-    : public snap::snap_console
+class console_connection
+    : public ed::cui_connection
 {
 public:
-    typedef std::shared_ptr<cui_connection>     pointer_t;
+    typedef std::shared_ptr<console_connection>     pointer_t;
 
-    cui_connection(connection::pointer_t connection)
-        : snap_console(history_file)
+    console_connection(connection::pointer_t connection)
+        : cui_connection(history_file)
         , f_connection(connection)
     {
+        if(g_console != nullptr)
+        {
+            throw std::logic_error("there can be only one console_connection");
+        }
         g_console = this;
     }
 
-    cui_connection(cui_connection const & rhs) = delete;
-    cui_connection & operator = (cui_connection const & rhs) = delete;
+    console_connection(console_connection const & rhs) = delete;
+    console_connection & operator = (console_connection const & rhs) = delete;
 
     void reset_prompt()
     {
@@ -767,13 +785,13 @@ private:
         output("  F2 -- create a message in a popup window");
     }
 
-    static cui_connection *     g_console /* = nullptr; done below because it's static */;
+    static console_connection *     g_console /* = nullptr; done below because it's static */;
 
     connection::weak_pointer_t  f_connection = connection::weak_pointer_t();
     WINDOW *                    f_win_message = nullptr;
 };
 
-cui_connection * cui_connection::g_console = nullptr;
+console_connection * console_connection::g_console = nullptr;
 
 
 
@@ -873,12 +891,12 @@ public:
         // add a CUI connection to the snap_communicator
         //
         {
-            cui_connection::pointer_t cui(std::make_shared<cui_connection>(f_connection));
+            console_connection::pointer_t cui(std::make_shared<console_connection>(f_connection));
             cui->reset_prompt();
             cui->set_message_dialog_key_binding();
-            if(!snap::snap_communicator::instance()->add_connection(cui))
+            if(!ed::communicator::instance()->add_connection(cui))
             {
-                std::cerr << "error: could not add CUI snap_console to list of snap_communicator connections." << std::endl;
+                std::cerr << "error: could not add CUI console to list of ed::communicator connections." << std::endl;
                 return 1;
             }
         }

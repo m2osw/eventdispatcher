@@ -17,20 +17,18 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#pragma once
 
 /** \file
- * \brief Definition of the load_timer class.
+ * \brief Implementation of load_timer object.
  *
- * The load average of the computer is collected on all computers and
- * shared between all the Snap! Communicators. This is used to know
- * whether a computer is overloaded and make use of another in that
- * case.
+ * We use a timer to know when to check the load average of the computer.
+ * This is used to know whether a computer is too heavily loaded and
+ * so whether it should or not be accessed.
  */
 
 // self
 //
-#include    "version.h"
+#include    "load_timer.h"
 
 
 //// snapwebsites lib
@@ -80,6 +78,9 @@
 //#include <sys/resource.h>
 
 
+// included last
+//
+#include <snapdev/poison.h>
 
 
 
@@ -92,19 +93,34 @@ namespace sc
 
 
 
-class load_timer
-    : public snap::snap_communicator::snap_timer
+/** \class load_timer
+ * \brief Provide a tick to offer load balancing information.
+ *
+ * This class is an implementation of a timer to offer load balancing
+ * information between various front and backend computers in the cluster.
+ */
+
+
+/** \brief The timer initialization.
+ *
+ * The timer ticks once per second to retrieve the current load of the
+ * system and forward it to whichever computer that requested the
+ * information.
+ *
+ * \param[in] cs  The snap communicator server we are listening for.
+ */
+load_timer::load_timer(server::pointer_t cs)
+    : timer(1'000'000LL)  // 1 second in microseconds
+    , f_server(cs)
 {
-public:
-                        load_timer(snap_communicator_server::pointer_t cs)
+    set_enable(false);
+}
 
-    // snap::snap_communicator::snap_timer implementation
-    virtual void        process_timeout() override;
 
-private:
-    snap_communicator_server::pointer_t
-                        f_communicator_server = snap_communicator_server::pointer_t();
-};
+void load_timer::process_timeout()
+{
+    f_server->process_load_balancing();
+}
 
 
 

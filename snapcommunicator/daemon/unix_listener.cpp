@@ -27,7 +27,7 @@
 
 // self
 //
-#include    "listener.h"
+#include    "unix_listener.h"
 
 
 //// snapwebsites lib
@@ -92,9 +92,7 @@ namespace sc
 
 
 
-
-
-/** \class listener
+/** \class unix_listener
  * \brief Handle new connections from clients.
  *
  * This class is an implementation of the snap server connection so we can
@@ -112,38 +110,25 @@ namespace sc
  * \warning
  * At this time the \p max_connections parameter is ignored.
  *
- * \param[in] addr  The address to listen on. Most often it is 0.0.0.0.
- * \param[in] port  The port to listen on.
+ * \param[in] address  The address:port to listen on. Most often it is
+ * 0.0.0.0:4040 (plain connection) or 0.0.0.0:4041 (secure connection).
  * \param[in] certificate  The filename of a PEM file with a certificate.
  * \param[in] private_key  The filename of a PEM file with a private key.
  * \param[in] max_connections  The maximum number of connections to keep
- *            waiting; if more arrive, refuse them until we are done with
- *            some existing connections.
+ *                             waiting; if more arrive, refuse them until
+ *                             we are done with some existing connections.
  * \param[in] local  Whether this connection expects local services only.
  * \param[in] server_name  The name of the server running this instance.
+ * \param[in] secure  Whether to create a secure (true) or non-secure (false)
+ *                    connection.
  */
-listener::listener(
-          snap_communicator_server::pointer_t cs
-        , std::string const & addr
-        , int port
-        , std::string const & certificate
-        , std::string const & private_key
+unix_listener::unix_listener(
+          server::pointer_t cs
+        , addr::unix const & address
         , int max_connections
-        , bool local
-        , QString const & server_name)
-    : snap_tcp_server_connection(
-              addr
-            , port
-            , certificate
-            , private_key
-            // convert client mode to a server mode
-            , cs->connection_mode() == tcp_client_server::bio_client::mode_t::MODE_PLAIN
-                    ? tcp_client_server::bio_server::mode_t::MODE_PLAIN
-                    : tcp_client_server::bio_server::mode_t::MODE_SECURE
-            , max_connections
-            , true)
-    , f_communicator_server(cs)
-    , f_local(local)
+        , std::string const & server_name)
+    : local_stream_server_connection(address, max_connections)
+    , f_server(cs)
     , f_server_name(server_name)
 {
 }
@@ -159,11 +144,20 @@ void listener::process_accept()
     {
         // an error occurred, report in the logs
         int const e(errno);
-        SNAP_LOG_ERROR("somehow accept() failed with errno: ")(e)(" -- ")(strerror(e));
+        SNAP_LOG_ERROR
+            << "somehow accept() failed with errno: "
+            << e
+            << " -- "
+            << strerror(e)
+            << SNAP_LOG_SEND;
         return;
     }
 
-    service_connection::pointer_t connection(new service_connection(f_communicator_server, new_client, f_server_name));
+    service_connection::pointer_t connection(
+            std::shared_ptr<service_connection>(
+                      f_server
+                    , new_client
+                    , f_server_name));
 
     // TBD: is that a really weak test?
     //

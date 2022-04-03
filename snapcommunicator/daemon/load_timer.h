@@ -17,19 +17,25 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#pragma once
 
 /** \file
- * \brief Implementation of the ping connection.
+ * \brief Definition of the load_timer class.
  *
+ * The load average of the computer is collected on all computers and
+ * shared between all the Snap! Communicators. This is used to know
+ * whether a computer is overloaded and make use of another in that
+ * case.
  */
 
 // self
 //
-#include    "ping.h"
+#include    "server.h"
 
 
-//// snapwebsites lib
-////
+// eventdispatcher
+//
+#include    "eventdispatcher/timer.h"
 //#include <snapwebsites/chownnm.h>
 //#include <snapwebsites/flags.h>
 //#include <snapwebsites/glob_dir.h>
@@ -87,39 +93,20 @@ namespace sc
 
 
 
-/** \class ping
- * \brief Handle UDP messages from clients.
- *
- * This class is an implementation of the snap server connection so we can
- * handle new connections from various clients.
- */
-
-
-
-/** \brief The messenger initialization.
- *
- * The messenger receives UDP messages from various sources (mainly
- * backends at this point.)
- *
- * \param[in] cs  The snap communicator server we are listening for.
- * \param[in] addr  The address to listen on. Most often it is 127.0.0.1.
- *                  for the UDP because we currently only allow for
- *                  local messages.
- * \param[in] port  The port to listen on.
- */
-ping::ping(snap_communicator_server::pointer_t cs, std::string const & addr, int port)
-    : snap_udp_server_message_connection(addr, port)
-    , f_communicator_server(cs)
+class load_timer
+    : public ed::timer
 {
-}
+public:
+                        load_timer(server::pointer_t cs);
+
+    // snap::snap_communicator::snap_timer implementation
+    virtual void        process_timeout() override;
+
+private:
+    server::pointer_t   f_server = server::pointer_t();
+};
 
 
-void ping::process_message(snap::snap_communicator_message const & message)
-{
-    f_communicator_server->process_message(shared_from_this(), message, true);
-}
 
-
-
-} // sc namespace
+} // namespace sc
 // vim: ts=4 sw=4 et

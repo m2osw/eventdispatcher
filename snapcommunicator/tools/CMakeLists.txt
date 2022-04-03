@@ -19,28 +19,6 @@
 
 
 ###############################################################################
-## Snap send signals
-##
-project(snapsignal)
-
-add_executable(${PROJECT_NAME}
-    snapsignal.cpp
-)
-
-target_link_libraries(${PROJECT_NAME}
-    eventdispatcher
-)
-
-install(
-    TARGETS
-        ${PROJECT_NAME}
-
-    RUNTIME DESTINATION
-        bin
-)
-
-
-###############################################################################
 ## A tool used mainly to help debug sending/receiving messages between services
 ##
 project(snapmessage)
@@ -65,33 +43,8 @@ install(
 
 
 #################################################################################
-## Snap send SIGINT to stop a daemon
-## (TODO: make all our daemon work with the default systemctl stop command)
-##
-project(snapstop)
-
-add_executable(${PROJECT_NAME}
-    snapstop.cpp
-)
-
-target_link_libraries(${PROJECT_NAME}
-    eventdispatcher
-    ${ADVGETOPT_LIBRARIES}
-    ${LIBTLD_LIBRARIES}
-)
-
-install(
-    TARGETS
-        ${PROJECT_NAME}
-
-    RUNTIME DESTINATION
-        bin
-)
-
-
-#################################################################################
 ## Get snapcommunicator cluster status (UP/DOWN and/or COMPLETE/INCOMPLETE)
-## TODO: put that status in out Fluid Settings
+## TODO: put that status in our Fluid Settings
 ##
 project(snapclusterstatus)
 

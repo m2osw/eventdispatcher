@@ -108,8 +108,8 @@ namespace sc
  * The constructor saves the communicator server pointer
  * so one can access it from any derived version.
  */
-base_connection::base_connection(snap_communicator_server::pointer_t cs)
-    : f_communicator_server(cs)
+base_connection::base_connection(server::pointer_t cs)
+    : f_server(cs)
 {
 }
 
@@ -118,7 +118,7 @@ base_connection::base_connection(snap_communicator_server::pointer_t cs)
  *
  * Everything is otherwise automatically released.
  */
-virtual base_connection::~base_connection()
+base_connection::~base_connection()
 {
 }
 
@@ -137,7 +137,7 @@ virtual base_connection::~base_connection()
  */
 void base_connection::connection_started()
 {
-    f_started_on = snap::snap_communicator::get_current_date();
+    f_started_on = time(nullptr);
     f_ended_on = -1;
 }
 
@@ -175,7 +175,7 @@ void base_connection::connection_ended()
     if(f_started_on != -1
     && f_ended_on == -1)
     {
-        f_ended_on = snap::snap_communicator::get_current_date();
+        f_ended_on = time(nullptr);
     }
 }
 
@@ -199,7 +199,7 @@ int64_t base_connection::get_connection_ended() const
  * \param[in] server_name  The name of the server that is on the other
  *                         side of this connection.
  */
-void base_connection::set_server_name(QString const & server_name)
+void base_connection::set_server_name(std::string const & server_name)
 {
     f_server_name = server_name;
 }
@@ -224,7 +224,7 @@ QString base_connection::get_server_name() const
  * \param[in] my_address  The address of the server that is on the
  *                        other side of this connection.
  */
-void base_connection::set_my_address(QString const & my_address)
+void base_connection::set_my_address(addr::addr const & my_address)
 {
     f_my_address = my_address;
 }
@@ -238,7 +238,7 @@ void base_connection::set_my_address(QString const & my_address)
  * \return The address of the server that is on the
  *         other side of this connection.
  */
-QString base_connection::get_my_address() const
+addr::addr base_connection::get_my_address() const
 {
     return f_my_address;
 }
@@ -293,9 +293,10 @@ connection_type_t base_connection::get_connection_type() const
  *
  * \param[in] services  The list of services this server handles.
  */
-void base_connection::set_services(QString const & services)
+void base_connection::set_services(set::string const & services)
 {
-    snap::snap_string_list list(services.split(','));
+    std::set<std::string> list;
+    snapdev::tokenize_string(list, services, { "," });
     for(auto const & s : list)
     {
         f_services[s] = true;
@@ -312,7 +313,7 @@ void base_connection::set_services(QString const & services)
  */
 void base_connection::get_services(sorted_list_of_strings_t & services)
 {
-    services.unite(f_services);
+    f_services.merge(services);
 }
 
 
@@ -325,9 +326,9 @@ void base_connection::get_services(sorted_list_of_strings_t & services)
  *
  * \return true if the service is known.
  */
-bool base_connection::has_service(QString const & name)
+bool base_connection::has_service(std::string const & name)
 {
-    return f_services.contains(name);
+    return f_services.find(name) != f_services.end();
 }
 
 
@@ -344,9 +345,10 @@ bool base_connection::has_service(QString const & name)
  *
  * \param[in] services  The list of services heard of.
  */
-void base_connection::set_services_heard_of(QString const & services)
+void base_connection::set_services_heard_of(std::string const & services)
 {
-    snap::snap_string_list list(services.split(','));
+    std::set<std::string> list;
+    snapdev::tokenize_string(list, services, { "," });
     for(auto const & s : list)
     {
         f_services_heard_of[s] = true;
@@ -363,7 +365,7 @@ void base_connection::set_services_heard_of(QString const & services)
  */
 void base_connection::get_services_heard_of(sorted_list_of_strings_t & services)
 {
-    services.unite(f_services_heard_of);
+    f_services_heard_of.merge(services);
 }
 
 
@@ -379,13 +381,13 @@ void base_connection::get_services_heard_of(sorted_list_of_strings_t & services)
  *
  * \param[in] commands  The list of understood commands.
  */
-void base_connection::set_commands(QString const & commands)
+void base_connection::set_commands(std::string const & commands)
 {
     snap::snap_string_list cmds(commands.split(','));
     for(auto const & c : cmds)
     {
-        QString const name(c.trimmed());
-        if(!name.isEmpty())
+        std::string const name(c.trimmed());
+        if(!name.empty())
         {
             f_understood_commands[name] = true;
         }
@@ -401,9 +403,9 @@ void base_connection::set_commands(QString const & commands)
  *
  * \return true if the command is supported, false otherwise.
  */
-bool base_connection::understand_command(QString const & command)
+bool base_connection::understand_command(std::string const & command)
 {
-    return f_understood_commands.contains(command);
+    return f_understood_commands.find(command) != f_understood_commands.end();
 }
 
 
@@ -433,9 +435,13 @@ bool base_connection::has_commands() const
  *
  * \param[in] command  The command to remove.
  */
-void base_connection::remove_command(QString const & command)
+void base_connection::remove_command(std::string const & command)
 {
-    f_understood_commands.remove(command);
+    auto it(f_understood_commands.find(command));
+    if(it != f_understood_commands.end())
+    {
+        f_understood_commands.erase(it);
+    }
 }
 
 
@@ -494,5 +500,6 @@ bool base_connection::wants_loadavg() const
 }
 
 
-} // sc namespace
+
+} // namespace sc
 // vim: ts=4 sw=4 et

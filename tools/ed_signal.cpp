@@ -25,38 +25,38 @@
  */
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
-#include    "eventdispatcher/communicator.h"
-#include    "eventdispatcher/signal_handler.h"
-#include    "eventdispatcher/tcp_client_message_connection.h"
-#include    "eventdispatcher/udp_server_message_connection.h"
-#include    "eventdispatcher/version.h"
+#include    <eventdispatcher/communicator.h>
+#include    <eventdispatcher/signal_handler.h>
+#include    <eventdispatcher/tcp_client_message_connection.h>
+#include    <eventdispatcher/udp_server_message_connection.h>
+#include    <eventdispatcher/version.h>
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/logger.h>
 #include    <snaplogger/message.h>
 #include    <snaplogger/options.h>
 
 
-// addr lib
+// libaddr
 //
 #include    <libaddr/addr_parser.h>
 
 
-// getopt lib
+// getopt
 //
 #include    <advgetopt/exception.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/not_reached.h>
 
 
-// boost lib
+// boost
 //
 #include    <boost/preprocessor/stringize.hpp>
 
@@ -199,7 +199,7 @@ public:
 
                                     tcp_signal(
                                           ed_signal * parent
-                                        , addr::addr const & addr
+                                        , addr::addr const & address
                                         , ed::tcp_bio_client::mode_t mode);
     virtual                         ~tcp_signal() override;
                                     tcp_signal(tcp_signal const &) = delete;
@@ -229,7 +229,7 @@ public:
     void                            done();
 
 private:
-    advgetopt::getopt               f_opt;
+    advgetopt::getopt               f_opts;
     ed::communicator::pointer_t     f_communicator = ed::communicator::pointer_t();
     tcp_signal::pointer_t           f_tcp_connection = tcp_signal::pointer_t();
 };
@@ -273,11 +273,11 @@ void tcp_signal::process_line(std::string const & line)
 
 
 ed_signal::ed_signal(int argc, char * argv[])
-    : f_opt(g_options_environment)
+    : f_opts(g_options_environment)
 {
-    snaplogger::add_logger_options(f_opt);
-    f_opt.finish_parsing(argc, argv);
-    if(!snaplogger::process_logger_options(f_opt, "/etc/eventdispatcher/logger"))
+    snaplogger::add_logger_options(f_opts);
+    f_opts.finish_parsing(argc, argv);
+    if(!snaplogger::process_logger_options(f_opts, "/etc/eventdispatcher/logger"))
     {
         // exit on any error
         throw advgetopt::getopt_exit("logger options generated an error.", 1);
@@ -290,11 +290,11 @@ int ed_signal::run()
     ed::message msg;
 
     {
-        if(!f_opt.is_defined("message"))
+        if(!f_opts.is_defined("message"))
         {
             throw std::runtime_error("the --message parameter is required");
         }
-        std::string const cmd(f_opt.get_string("message"));
+        std::string const cmd(f_opts.get_string("message"));
         if(cmd.empty())
         {
             throw std::runtime_error("the --message parameter cannot be an empty string");
@@ -303,10 +303,10 @@ int ed_signal::run()
     }
 
     {
-        std::size_t const max(f_opt.size("param"));
+        std::size_t const max(f_opts.size("param"));
         for(std::size_t idx(0); idx < max; ++idx)
         {
-            std::string const param(f_opt.get_string("param", idx));
+            std::string const param(f_opts.get_string("param", idx));
             std::string::size_type const pos(param.find('='));
             if(pos == std::string::npos)
             {
@@ -320,9 +320,9 @@ int ed_signal::run()
     }
 
     bool use_tcp(false);
-    if(f_opt.is_defined("type"))
+    if(f_opts.is_defined("type"))
     {
-        std::string const type(f_opt.get_string("type"));
+        std::string const type(f_opts.get_string("type"));
         if(type == "tcp")
         {
             use_tcp = true;
@@ -334,7 +334,7 @@ int ed_signal::run()
     }
 
     addr::addr const server(addr::string_to_addr(
-          f_opt.get_string("server")
+          f_opts.get_string("server")
         , "127.0.0.1"
         , DEFAULT_PORT
         , use_tcp ? "tcp" : "udp"));
@@ -342,9 +342,9 @@ int ed_signal::run()
     if(use_tcp)
     {
         bool encrypt(false);
-        if(f_opt.is_defined("encrypt"))
+        if(f_opts.is_defined("encrypt"))
         {
-            std::string const e(f_opt.get_string("encrypt"));
+            std::string const e(f_opts.get_string("encrypt"));
             encrypt = advgetopt::is_true(e);
             if(!encrypt && !advgetopt::is_false(e))
             {
@@ -360,7 +360,7 @@ int ed_signal::run()
                         : ed::tcp_bio_client::mode_t::MODE_PLAIN
             );
 
-        if(f_opt.is_defined("reply"))
+        if(f_opts.is_defined("reply"))
         {
             f_tcp_connection->show_reply();
         }
@@ -378,9 +378,9 @@ int ed_signal::run()
     else
     {
         std::string secret_code;
-        if(f_opt.is_defined("secret_code"))
+        if(f_opts.is_defined("secret_code"))
         {
-            secret_code = f_opt.get_string("secret-code");
+            secret_code = f_opts.get_string("secret-code");
         }
 
         // very simple in this case we can just send the message and

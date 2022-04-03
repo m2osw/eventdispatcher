@@ -43,6 +43,7 @@ add_library(${PROJECT_NAME} SHARED
 
         fd_connection.cpp
             fd_buffer_connection.cpp
+                cui_connection.cpp
 
         file_changed.cpp
 
@@ -136,6 +137,8 @@ target_link_libraries(${PROJECT_NAME}
     ${SNAPLOGGER_LIBRARIES}
     ${OPENSSL_LIBRARIES}
     ${LIBADDR_LIBRARIES}
+    ncurses
+    readline
 )
 
 

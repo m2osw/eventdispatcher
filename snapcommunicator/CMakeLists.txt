@@ -22,9 +22,9 @@
 ##
 project(snapcommunicator_project)
 
-add_subdirectory(src)
-add_subdirectory(doc)
-add_subdirectory(tools)
+add_subdirectory(daemon)
+add_subdirectory(doc   )
+add_subdirectory(tools )
 
 
 # vim: ts=4 sw=4 et

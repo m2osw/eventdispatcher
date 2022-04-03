@@ -17,21 +17,24 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#pragma once
 
 /** \file
- * \brief Implementation of an interrupt handler.
+ * \brief The declaration of the service class.
  *
- * This class is used to allow for a clean exit by Ctrl-C.
+ * The service class is the one used whenever a service connects to the
+ * snapcommunicator daemon.
  */
 
 // self
 //
-#include    "interrupt.h"
+#include    "base_connection.h"
+#include    "server.h"
 
 
-//// snapwebsites lib
-////
-//#include <snapwebsites/chownnm.h>
+// eventdispatcher
+//
+#include    <eventdispatcher/local_stream_server_client_message_connection.h>
 //#include <snapwebsites/flags.h>
 //#include <snapwebsites/glob_dir.h>
 //#include <snapwebsites/loadavg.h>
@@ -76,13 +79,6 @@
 //#include <sys/resource.h>
 
 
-// included last
-//
-#include <snapdev/poison.h>
-
-
-
-
 
 
 
@@ -90,52 +86,35 @@ namespace sc
 {
 
 
-
-
-
-
-
-/** \class interrupt_impl
- * \brief Handle the SIGINT that is expected to stop the server.
- *
- * This class is an implementation of the snap_signal that listens
- * on the SIGINT.
- */
-
-
-
-
-/** \brief The interrupt initialization.
- *
- * The interrupt uses the signalfd() function to obtain a way to listen on
- * incoming Unix signals.
- *
- * Specifically, it listens on the SIGINT signal, which is the equivalent
- * to the Ctrl-C.
- *
- * \param[in] cs  The snapcommunicator we are listening for.
- */
-interrupt_impl::interrupt_impl(snap_communicator_server::pointer_t cs)
-    : snap_signal(SIGINT)
-    , f_communicator_server(cs)
+class unix_connection
+    : public ed::local_stream_server_client_message_connection
+    , public base_connection
 {
-    unblock_signal_on_destruction();
-    set_name("snap communicator interrupt");
-}
+public:
+    typedef std::shared_ptr<unix_connection>    pointer_t;
 
+                        unix_connection(
+                                  server::pointer_t cs
+                                , snapdev::raii_fd_t client
+                                , std::string const & server_name);
+    virtual             ~unix_connection() override;
 
-/** \brief Call the stop function of the snapcommunicator object.
- *
- * When this function is called, the signal was received and thus we are
- * asked to quit as soon as possible.
- */
-void interrupt_impl::process_signal()
-{
-    // we simulate the STOP, so pass 'false' (i.e. not quitting)
-    //
-    f_communicator_server->shutdown(false);
-}
+    // snap::snap_communicator::snap_tcp_server_client_message_connection implementation
+    virtual void        process_message(ed::message const & msg) override;
 
+    void                send_status();
+    virtual void        process_timeout() override;
+    virtual void        process_error() override;
+    virtual void        process_hup() override;
+    virtual void        process_invalid() override;
+    void                properly_named();
+    addr::addr const &  get_address() const;
+
+private:
+    std::string const   f_server_name;
+    addr::addr          f_address = addr::addr();
+    bool                f_named = false;
+};
 
 
 

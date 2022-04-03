@@ -20,23 +20,21 @@
 #pragma once
 
 /** \file
- * \brief Definition of the ping listener.
+ * \brief Definition of the Gossip connection.
  *
- * The system can be pinged via a UDP connection.
- *
- * This is an addition to the normal TCP connection of the Snap!
- * Communicator when you want to send a quick message and you do not
- * need to wait for an answer.
+ * The Gossip connection is used to let another communicator know about
+ * us when it is expected that this other communicator connect to us
+ * (based of our respective IP addresses).
  */
 
 // self
 //
-#include "version.h"
+#include    "server.h"
 
 
-//// snapwebsites lib
-////
-//#include <snapwebsites/chownnm.h>
+// eventdispatcher
+//
+#include    <eventdispatcher/tcp_client_permanent_message_connection.h>
 //#include <snapwebsites/flags.h>
 //#include <snapwebsites/glob_dir.h>
 //#include <snapwebsites/loadavg.h>
@@ -83,27 +81,45 @@
 
 
 
+
+
+
+
+
 namespace sc
 {
 
 
-
-class ping_impl
-    : public snap::snap_communicator::snap_udp_server_message_connection
+class gossip_to_remote_snap_communicator
+    : public ed::tcp_client_permanent_message_connection
 {
 public:
-    typedef std::shared_ptr<ping_impl>  pointer_t;
+    typedef std::shared_ptr<gossip_to_remote_snap_communicator> pointer_t;
 
-                        ping_impl(snap_communicator_server::pointer_t cs, std::string const & addr, int port);
+    static int64_t const        FIRST_TIMEOUT = 5LL * 1000000L;  // 5 seconds before first attempt
 
-    // snap::snap_communicator::snap_server_connection implementation
-    virtual void        process_message(snap::snap_communicator_message const & message) override;
+                                gossip_to_remote_snap_communicator(
+                                          remote_communicator_connections::pointer_t rcs
+                                        , std::string const & addr
+                                        , int port);
+
+    // connection implementation
+    virtual void                process_timeout();
+
+    // tcp_client_permanent_message_connection implementation
+    virtual void                process_message(ed::message const & message) override;
+    virtual void                process_connection_failed(std::string const & error_message) override;
+    virtual void                process_connected() override;
+
+    void                        kill();
 
 private:
-    snap_communicator_server::pointer_t
-                        f_communicator_server;
+    std::string const           f_addr;
+    int const                   f_port = 0;
+    int64_t                     f_wait = FIRST_TIMEOUT;
+    remote_connections::pointer_t
+                                f_remote_communicators = remote_connections::pointer_t();
 };
-
 
 
 } // sc namespace

@@ -21,6 +21,7 @@
 ##
 ## Documentation
 ##
+find_package(SnapDoxygen)
 AddDoxygenTarget(snapcommunicator
     ${EVENTDISPATCHER_VERSION_MAJOR}
     ${EVENTDISPATCHER_VERSION_MINOR}

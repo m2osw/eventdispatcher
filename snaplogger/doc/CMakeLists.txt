@@ -21,6 +21,7 @@
 ##
 ## Documentation
 ##
+find_package(SnapDoxygen)
 AddDoxygenTarget(snaplogger-network
     ${EVENTDISPATCHER_VERSION_MAJOR}
     ${EVENTDISPATCHER_VERSION_MINOR}

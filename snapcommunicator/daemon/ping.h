@@ -17,56 +17,52 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#pragma once
 
+/** \file
+ * \brief Definition of the ping listener.
+ *
+ * The system can be pinged via a UDP connection.
+ *
+ * This is an addition to the normal TCP connection of the Snap!
+ * Communicator when you want to send a quick message and you do not
+ * need to wait for an answer.
+ */
 
 // self
 //
-#include    "snapcommunicator.h"
+#include    "server.h"
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
-#include    <eventdispatcher/signal_handler.h>
-
-
-// snapdev lib
-//
-#include <snapdev/not_reached.h>
-
-
-// last include
-//
-#include <snapdev/poison.h>
+#include    <eventdispatcher/udp_server_message_connection.h>
 
 
 
-
-int main(int argc, char * argv[])
+namespace sc
 {
-    ed::signal_handler::create_instance();
-
-    try
-    {
-        sc::snapcommunicator::pointer_t communicator(std::make_shared<snapcommunicator>(argc, argv));
-        return communicator->run();
-    }
-    catch(std::exception const & e)
-    {
-        SNAP_LOG_FATAL
-            << "exception caught: "
-            << e.what()
-            << SNAP_LOG_SEND;
-        return 1;
-    }
-    catch(...)
-    {
-        SNAP_LOG_FATAL
-            << "unknown exception caught!"
-            << SNAP_LOG_SEND;
-        return 1;
-    }
-    snap::NOT_REACHED();
-}
 
 
+
+class ping
+    : public ed::udp_server_message_connection
+{
+public:
+    typedef std::shared_ptr<ping>  pointer_t;
+
+                        ping(
+                              server::pointer_t cs
+                            , std::string const & addr);
+
+    // ed::udp_server_message_connection implementation
+    virtual void        process_message(ed::message const & message) override;
+
+private:
+    server::pointer_t   f_server = server::pointer_t();
+};
+
+
+
+} // sc namespace
 // vim: ts=4 sw=4 et

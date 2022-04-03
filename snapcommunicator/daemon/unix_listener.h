@@ -20,20 +20,21 @@
 #pragma once
 
 /** \file
- * \brief The declaration of the service class.
+ * \brief Implementation of the listener object.
  *
- * The service class is the one used whenever a service connects to the
- * snapcommunicator daemon.
+ * The listener object is the one that accepts connections from the outside.
  */
+
+
 
 // self
 //
-#include "version.h"
+#include    "server.h"
 
 
-//// snapwebsites lib
-////
-//#include <snapwebsites/chownnm.h>
+// eventdispatcher
+//
+#include    <eventdispatcher/local_stream_server_connection.h>
 //#include <snapwebsites/flags.h>
 //#include <snapwebsites/glob_dir.h>
 //#include <snapwebsites/loadavg.h>
@@ -81,40 +82,31 @@
 
 
 
+
+
+
+
 namespace sc
 {
 
 
-class service_connection
-    : public snap::snap_communicator::snap_tcp_server_client_message_connection
-    , public base_connection
+class unix_listener
+    : public ed::local_stream_server_connection
 {
 public:
-    typedef std::shared_ptr<service_connection>    pointer_t;
+                        unix_listener(
+                              server::pointer_t cs
+                            , addr::unix const & address
+                            , int max_connections
+                            , std::string const & server_name);
 
-                        service_connection(
-                                  snap_communicator_server::pointer_t cs
-                                , tcp_client_server::bio_client::pointer_t client
-                                , std::string const & server_name);
-    virtual             ~service_connection() override;
-
-    // snap::snap_communicator::snap_tcp_server_client_message_connection implementation
-    virtual void        process_message(snap::snap_communicator_message const & message) override;
-
-    void                send_status();
-    virtual void        process_timeout() override;
-    virtual void        process_error() override;
-    virtual void        process_hup() override;
-    virtual void        process_invalid() override;
-    void                properly_named();
-    addr::addr const &  get_address() const;
+    // ed::local_stream_server_connection
+    virtual void        process_accept() override
 
 private:
+    server::pointer_t   f_server = server::pointer_t();
     std::string const   f_server_name;
-    addr::addr          f_address = addr::addr();
-    bool                f_named = false;
 };
-
 
 
 } // sc namespace

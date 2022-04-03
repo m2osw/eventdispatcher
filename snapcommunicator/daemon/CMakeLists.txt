@@ -27,14 +27,6 @@ configure_file(
     ${CMAKE_CURRENT_BINARY_DIR}/version.h
 )
 
-target_include_directories(${PROJECT_NAME}
-    PUBLIC
-        ${ADVGETOPT_INCLUDE_DIRS}
-        ${LIBADDR_INCLUDE_DIRS}
-        ${LIBEXCEPT_INCLUDE_DIRS}
-        ${SNAPLOGGER_INCLUDE_DIRS}
-)
-
 add_executable(${PROJECT_NAME}
     main.cpp
 
@@ -44,10 +36,20 @@ add_executable(${PROJECT_NAME}
     listener.cpp
     load_timer.cpp
     ping.cpp
-    remote.cpp
+    remote_connections.cpp
+    remote_snapcommunicator.cpp
     server.cpp
-    service.cpp
+    service_connection.cpp
+    unix_connection.cpp
     utils.cpp
+)
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        ${ADVGETOPT_INCLUDE_DIRS}
+        ${LIBADDR_INCLUDE_DIRS}
+        ${LIBEXCEPT_INCLUDE_DIRS}
+        ${SNAPLOGGER_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}

@@ -29,12 +29,12 @@
 
 // self
 //
-#include    "version.h"
+#include    "server.h"
 
 
-//// snapwebsites lib
-////
-//#include <snapwebsites/chownnm.h>
+// eventdispatcher
+//
+#include    <eventdispatcher/tcp_server_connection.h>
 //#include <snapwebsites/flags.h>
 //#include <snapwebsites/glob_dir.h>
 //#include <snapwebsites/loadavg.h>
@@ -91,26 +91,25 @@ namespace sc
 
 
 class listener
-    : public snap::snap_communicator::snap_tcp_server_connection
+    : public ed::tcp_server_connection
 {
 public:
-                    listener(
-                        snap_communicator_server::pointer_t cs
-                        , std::string const & addr
-                        , int port
-                        , std::string const & certificate
-                        , std::string const & private_key
-                        , int max_connections
-                        , bool local
-                        , std::string const & server_name);
+                        listener(
+                              server::pointer_t cs
+                            , addr::addr const & addr
+                            , std::string const & certificate
+                            , std::string const & private_key
+                            , int max_connections
+                            , bool local
+                            , std::string const & server_name);
 
-    // snap::snap_communicator::snap_server_connection implementation
-    virtual void    process_accept() override
+    // ed::tcp_server_connection
+    virtual void        process_accept() override
 
 private:
-    snap_communicator_server::pointer_t     f_communicator_server;
-    bool const                              f_local = false;
-    std::string const                       f_server_name;
+    server::pointer_t   f_server = server::pointer_t();
+    bool const          f_local = false;
+    std::string const   f_server_name;
 };
 
 

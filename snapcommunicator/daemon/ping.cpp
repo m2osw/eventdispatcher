@@ -19,16 +19,13 @@
 // 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
- * \brief Implementation of load_timer object.
+ * \brief Implementation of the ping connection.
  *
- * We use a timer to know when to check the load average of the computer.
- * This is used to know whether a computer is too heavily loaded and
- * so whether it should or not be accessed.
  */
 
 // self
 //
-#include    "timer.h"
+#include    "ping.h"
 
 
 //// snapwebsites lib
@@ -78,9 +75,6 @@
 //#include <sys/resource.h>
 
 
-// included last
-//
-#include <snapdev/poison.h>
 
 
 
@@ -93,33 +87,35 @@ namespace sc
 
 
 
-/** \class load_timer
- * \brief Provide a tick to offer load balancing information.
+/** \class ping
+ * \brief Handle UDP messages from clients.
  *
- * This class is an implementation of a timer to offer load balancing
- * information between various front and backend computers in the cluster.
+ * This class is an implementation of the snap server connection so we can
+ * handle new connections from various clients.
  */
 
 
-/** \brief The timer initialization.
+
+/** \brief The messenger initialization.
  *
- * The timer ticks once per second to retrieve the current load of the
- * system and forward it to whichever computer that requested the
- * information.
+ * The messenger receives UDP messages from various sources (mainly
+ * backends at this point).
  *
  * \param[in] cs  The snap communicator server we are listening for.
+ * \param[in] address  The address and port to listen on. Most often it is
+ *                     127.0.0.1 for the UDP because we currently only allow
+ *                     for local messages.
  */
-load_timer::load_timer(snap_communicator_server::pointer_t cs)
-    : snap_timer(1000000LL)  // 1 second in microseconds
-    , f_communicator_server(cs)
+ping::ping(server::pointer_t cs, addr::addr const & address)
+    : udp_server_message_connection(address)
+    , f_server(cs)
 {
-    set_enable(false);
 }
 
 
-void load_timer::process_timeout()
+void ping::process_message(ed::message const & msg)
 {
-    f_communicator_server->process_load_balancing();
+    f_server->process_message(shared_from_this(), msg, true);
 }
 
 

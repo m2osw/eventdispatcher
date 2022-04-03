@@ -41,26 +41,26 @@
 //#include <snapwebsites/qcompatibility.h>
 //#include <snapwebsites/snap_communicator.h>
 //#include <snapwebsites/snapwebsites.h>
+
+
+// snapdev
 //
+#include <snapdev/join_strings.h>
+#include <snapdev/tokenize_string.h>
+
+
+// libaddr lib
 //
-//// snapdev lib
-////
-//#include <snapdev/not_used.h>
-//#include <snapdev/tokenize_string.h>
-//
-//
-//// libaddr lib
-////
 //#include <libaddr/addr_exception.h>
-//#include <libaddr/addr_parser.h>
+#include <libaddr/addr_parser.h>
 //#include <libaddr/iface.h>
+
+
+// snaplogger
 //
-//
-//// Qt lib
-////
-//#include <QFile>
-//
-//
+#include    <snaplogger/message.h>
+
+
 //// C++ lib
 ////
 //#include <atomic>
@@ -95,12 +95,30 @@ namespace
 {
 
 
-constexpr sorted_list_of_strings_t const g_valid_types =
+/** \brief List of valid types.
+ *
+ * A service is expected to be assigned a valid type. The following are
+ * considered valid:
+ *
+ * \li proxy -- this is a frontend which is used to proxy traffic in
+ * some way (i.e. to a specific server, as a load balancer, etc.)
+ *
+ * \li frontend -- this is the frontend which directly communicates with
+ * a remote client (opposed to any service running on your Snap! C++
+ * computers)
+ *
+ * \li backend -- this is a service running as a backend; it is not
+ * accessible from a remote computer outside of the Snap! C++ cluster
+ *
+ * \li database -- this is a service specifically running a database;
+ * in most cases, this is also a backend service
+ */
+sorted_list_of_strings_t const g_valid_types =
 {
-      "apache"
+      "proxy"
     , "frontend"
     , "backend"
-    , "cassandra"
+    , "database"
 };
 
 
@@ -124,7 +142,7 @@ constexpr sorted_list_of_strings_t const g_valid_types =
 sorted_list_of_strings_t canonicalize_services(std::string const & services)
 {
     sorted_list_of_strings_t list;
-    snap::tokenize_string(list, services, ",", true, " ");
+    snapdev::tokenize_string(list, services, ",", true, " ");
     return list;
 }
 
@@ -142,10 +160,10 @@ sorted_list_of_strings_t canonicalize_services(std::string const & services)
 std::string canonicalize_server_types(std::string const & server_types)
 {
     sorted_list_of_strings_t raw_types;
-    snap::tokenize_string(raw_types, server_types, ",", true, " ");
+    snapdev::tokenize_string(raw_types, server_types, ",", true, " ");
 
     sorted_list_of_strings_t types;
-    set_intersection(
+    std::set_intersection(
               raw_types.begin()
             , raw_types.end()
             , g_valid_types.begin()
@@ -155,7 +173,7 @@ std::string canonicalize_server_types(std::string const & server_types)
     if(types.size() != raw_types.size())
     {
         sorted_list_of_strings_t unwanted;
-        set_intersection(
+        std::set_difference(
                   raw_types.begin()
                 , raw_types.end()
                 , g_valid_types.begin()
@@ -164,14 +182,14 @@ std::string canonicalize_server_types(std::string const & server_types)
 
         SNAP_LOG_WARNING
             << "received "
-            << raw_types.size() - types.size()
+            << unwanted.size()
             << " invalid server type(s): \""
-            << snap::join_strings(unwanted, ", ")
+            << snapdev::join_strings(unwanted, ", ")
             << "\", ignoring."
             << SNAP_LOG_SEND;
     }
 
-    return snap::join_strings(unwanted, ",");
+    return snapdev::join_strings(types, ",");
 }
 
 
@@ -204,12 +222,13 @@ std::string canonicalize_server_types(std::string const & server_types)
  */
 std::string canonicalize_neighbors(std::string const & neighbors)
 {
-    addr_parser p;
-    p.set_flag(addr::addr_parser::flag_t::REQUIRED_ADDRESSES, true);
-    p.set_flag(addr::addr_parser::flag_t::MULTI_ADDRESSES_COMMAS_AND_SPACES, true);
+    addr::addr_parser p;
+    p.set_allow(addr::allow_t::ALLOW_REQUIRED_ADDRESS, true);
+    p.set_allow(addr::allow_t::ALLOW_MULTI_ADDRESSES_COMMAS, true);
+    p.set_allow(addr::allow_t::ALLOW_MULTI_ADDRESSES_SPACES, true);
     p.set_default_port(4040);
     p.set_protocol("tcp");
-    addr_range::vector_t list(p.parse(neighbors));
+    addr::addr_range::vector_t list(p.parse(neighbors));
 
     std::string result;
     result.reserve(neighbors.length());

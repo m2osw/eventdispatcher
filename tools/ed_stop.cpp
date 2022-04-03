@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
         //
         if(!opt.is_defined("service"))
         {
-            std::cerr << "snapstop: error: --service parameter is mandatory." << std::endl;
+            std::cerr << "ed-stop: error: --service parameter is mandatory." << std::endl;
             exit(1);
         }
 
@@ -135,12 +135,12 @@ int main(int argc, char *argv[])
             // this happens when $MAINPID is not defined in the .service
             // as in:
             //
-            //    ExecStop=/usr/bin/snapstop --timeout 300 --service "$MAINPID"
+            //    ExecStop=/usr/bin/ed-stop --timeout 300 --service "$MAINPID"
             //
             // we just ignore this case silently; it means that the backend
             // is for sure not running anyway
             //
-            //std::cerr << "snapstop: error: --service parameter can't be empty." << std::endl;
+            //std::cerr << "ed-stop: error: --service parameter can't be empty." << std::endl;
             exit(0);
         }
 
@@ -163,19 +163,60 @@ int main(int argc, char *argv[])
                 service_pid = service_pid * 10 + *s - '0';
             }
         }
-
-        if(service_pid <= 0)
+        if(service_pid == 0)
         {
-            if(service_pid == 0)
+            std::cerr << "ed-stop: error: --service 0 is not valid." << std::endl;
+            exit(1);
+        }
+
+        if(service_pid < 0)
+        {
+            // get PID using systemctl
+            //
+            std::string cmd("systemctl show --property MainPID --value ");
+            cmd += service;
+            FILE * pid(popen(cmd.c_str(), "r"));
+            if(pid == nullptr)
             {
-                std::cerr << "snapstop: error: --service 0 is not valid." << std::endl;
+                std::cerr
+                    << "ed-stop: error: server named \""
+                    << service
+                    << "\" not found.\n";
                 exit(1);
             }
+            char buf[32];
+            size_t sz(fread(buf, 1, sizeof(buf), pid));
+            if(sz == 0)
+            {
+                std::cerr
+                    << "ed-stop: error: could not read PID of server named \""
+                    << service
+                    << "\".\n";
+                exit(1);
+            }
+            if(sz >= sizeof(buf))
+            {
+                std::cerr
+                    << "ed-stop: error: the read PID of server named \""
+                    << service
+                    << "\" looks too long.\n";
+                exit(1);
+            }
+            buf[sz] = '\0';
 
-            // TODO: load PID from a PID file for the named service...
-            //
-            std::cerr << "snapstop: error: --service <name> not supported yet, this will require us to create a corresponding pid." << std::endl;
-            exit(1);
+            service_pid = 0;
+            for(char const * s(buf); *s != '\0'; ++s)
+            {
+                if(*s < '0' || *s > '9')
+                {
+                    std::cerr
+                        << "ed-stop: error: the PID returned by systemctl \""
+                        << buf
+                        << "\" is not a valid number.\n";
+                    exit(1);
+                }
+                service_pid = service_pid * 10 + *s - '0';
+            }
         }
 
         // verify that we have a process with that PID
@@ -184,11 +225,11 @@ int main(int argc, char *argv[])
         {
             if(errno == EPERM)
             {
-                std::cerr << "snapstop: error: not permitted to send signal to --service " << service_pid << ". Do nothing." << std::endl;
+                std::cerr << "ed-stop: error: not permitted to send signal to --service " << service_pid << ". Do nothing." << std::endl;
             }
             else
             {
-                std::cerr << "snapstop: error: --service " << service_pid << " is not running. Do nothing." << std::endl;
+                std::cerr << "ed-stop: error: --service " << service_pid << " is not running. Do nothing." << std::endl;
             }
             exit(1);
         }
@@ -202,7 +243,7 @@ int main(int argc, char *argv[])
             int const r(kill(service_pid, SIGINT));
             if(r != 0)
             {
-                perror("snapstop: kill() failed: ");
+                perror("ed-stop: kill() failed: ");
                 exit(1);
             }
 
@@ -265,7 +306,7 @@ int main(int argc, char *argv[])
             int const r(kill(service_pid, SIGTERM));
             if(r != 0)
             {
-                perror("snapstop: kill() failed: ");
+                perror("ed-stop: kill() failed: ");
                 exit(1);
             }
 
@@ -298,19 +339,25 @@ int main(int argc, char *argv[])
 
         // it timed out!?
         //
-        std::cerr << "snapstop: kill() had no effect within the timeout period." << std::endl;
-        return 0;
+        std::cerr << "ed-stop: kill() had no effect within the timeout period." << std::endl;
+        exit(0);
     }
-    catch( advgetopt::getopt_exit const & except )
+    catch(advgetopt::getopt_exit const & e)
     {
-        return except.code();
+        return e.code();
     }
     catch(std::exception const & e)
     {
         // clean error on exception
-        std::cerr << "snapstop: exception: " << e.what() << std::endl;
-        return 1;
+        std::cerr << "ed-stop: exception: " << e.what() << std::endl;
     }
+    catch(...)
+    {
+        // clean error on exception
+        std::cerr << "ed-stop: an unknown exception occurred.\n";
+    }
+    exit(1);
 }
+
 
 // vim: ts=4 sw=4 et

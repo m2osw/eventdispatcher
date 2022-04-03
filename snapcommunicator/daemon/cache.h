@@ -20,18 +20,22 @@
 #pragma once
 
 /** \file
- * \brief Declaration of the message cache structure.
+ * \brief Declaration of the message cache facility.
  *
  * The Snap! Communicator is able to memorize messages it receives when the
- * destination is not yet known. The structure here is used to manage that
+ * destination is not yet available. The class here is used to manage that
  * cache.
  */
 
-// eventdispatcher lib
+// eventdispatcher
 //
-#include <eventdispatcher/message.h>
+#include    <eventdispatcher/message.h>
 
 
+// C++
+//
+#include    <functional>
+#include    <list>
 
 
 
@@ -40,16 +44,28 @@ namespace sc
 
 
 
-// TODO: change to a class
-struct message_cache
+class cache
 {
-    typedef std::vector<message_cache>  vector_t;
+public:
+    void                cache_message(ed::message const & msg);
+    void                remove_old_messages();
+    void                process_messages(std::function<bool(ed::message const & msg)> callback);
 
-    time_t              f_timeout_timestamp = 0;            // when that message is to be removed from the cache even if it wasn't sent to its destination
-    ed::message         f_message = ed::message();          // the message
+private:
+    class message_cache
+    {
+    public:
+        typedef std::list<message_cache>  list_t;
+
+        time_t              f_timeout_timestamp = 0;            // when that message is to be removed from the cache even if it wasn't sent to its destination
+        ed::message         f_message = ed::message();          // the message
+    };
+
+    message_cache::list_t
+                        f_message_cache = message_cache::list_t();
 };
 
 
 
-} // sc namespace
+} // namespace sc
 // vim: ts=4 sw=4 et

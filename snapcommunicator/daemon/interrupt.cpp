@@ -19,17 +19,16 @@
 // 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
- * \brief Various utilities.
+ * \brief Implementation of an interrupt handler.
  *
- * Useful types and functions for the Snap! Communicator.
+ * This class is used to allow for a clean exit on an Ctrl-C.
  */
 
+// self
+//
+#include    "interrupt.h"
 
-//// self
-////
-//#include "version.h"
-//
-//
+
 //// snapwebsites lib
 ////
 //#include <snapwebsites/chownnm.h>
@@ -58,23 +57,28 @@
 //// Qt lib
 ////
 //#include <QFile>
-
-
-// C++ lib
 //
-#include <set>
-#include <string>
+//
+//// C++ lib
+////
+//#include <atomic>
+//#include <cmath>
 //#include <fstream>
 //#include <iomanip>
 //#include <sstream>
 //#include <thread>
 
 
-//// C lib
-////
+// C lib
+//
 //#include <grp.h>
 //#include <pwd.h>
-//#include <sys/resource.h>
+#include    <signal.h>
+
+
+// included last
+//
+#include <snapdev/poison.h>
 
 
 
@@ -82,12 +86,47 @@ namespace sc
 {
 
 
-typedef std::set<std::string>                 sorted_list_of_strings_t;
+
+/** \class interrupt
+ * \brief Handle the SIGINT that is expected to stop the server.
+ *
+ * This class is an implementation of the snap_signal that listens
+ * on the SIGINT.
+ */
 
 
-sorted_list_of_strings_t    canonicalize_services(std::string const & services);
-std::string                 canonicalize_server_types(std::string const & server_types)
-std::string                 canonicalize_neighbors(std::string const & neighbors)
+
+/** \brief The interrupt initialization.
+ *
+ * The interrupt uses the signalfd() function to obtain a way to listen on
+ * incoming Unix signals.
+ *
+ * Specifically, it listens on the SIGINT signal, which is the equivalent
+ * to the Ctrl-C.
+ *
+ * \param[in] cs  The snapcommunicator we are listening for.
+ */
+interrupt::interrupt(server::pointer_t cs)
+    : signal(SIGINT)
+    , f_server(cs)
+{
+    unblock_signal_on_destruction();
+    set_name("snap communicator interrupt");
+}
+
+
+/** \brief Call the stop function of the snapcommunicator object.
+ *
+ * When this function is called, the signal was received and thus we are
+ * asked to quit as soon as possible.
+ */
+void interrupt::process_signal()
+{
+    // we simulate the STOP, so pass 'false' (i.e. not quitting)
+    //
+    f_server->shutdown(false);
+}
+
 
 
 } // sc namespace

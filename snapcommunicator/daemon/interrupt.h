@@ -28,12 +28,12 @@
 
 // self
 //
-#include    "version.h"
+#include    "server.h"
 
 
-//// snapwebsites lib
-////
-//#include <snapwebsites/chownnm.h>
+// eventdispatcher
+//
+#include    <eventdispatcher/signal.h>
 //#include <snapwebsites/flags.h>
 //#include <snapwebsites/glob_dir.h>
 //#include <snapwebsites/loadavg.h>
@@ -85,22 +85,22 @@ namespace sc
 
 
 
-
-class interrupt_impl
-    : public snap::snap_communicator::snap_signal
+class interrupt
+    : public ed::signal
 {
 public:
-    typedef std::shared_ptr<interrupt_impl>     pointer_t;
+    typedef std::shared_ptr<interrupt>     pointer_t;
 
-                        interrupt_impl(snap_communicator_server::pointer_t cs);
-    virtual             ~interrupt_impl() override {}
+                        interrupt(server::pointer_t cs);
+    virtual             ~interrupt() override {}
 
     // snap::snap_communicator::snap_signal implementation
     virtual void        process_signal() override;
 
 private:
-    snap_communicator_server::pointer_t     f_communicator_server;
+    server::pointer_t   f_server;
 };
+
 
 
 } // sc namespace

@@ -21,8 +21,7 @@
 ##
 ## Documentation
 ##
-project(cppprocess-documentation)
-
+find_package(SnapDoxygen)
 AddDoxygenTarget(cppprocess
     ${EVENTDISPATCHER_VERSION_MAJOR}
     ${EVENTDISPATCHER_VERSION_MINOR}

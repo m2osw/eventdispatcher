@@ -50,12 +50,8 @@ add_subdirectory(doc               )
 add_subdirectory(cmake             )
 add_subdirectory(tools             )
 add_subdirectory(examples          )
-
-# Extension to support a snaplogger server (remote logs)
-add_subdirectory(snaplogger        )
-
-# Extension to support a cppprocess implementation
-add_subdirectory(cppprocess        )
+add_subdirectory(snaplogger        )    # Extension to support a snaplogger server (remote logs)
+add_subdirectory(cppprocess        )    # Extension to support a cppprocess implementation
 
 add_subdirectory(tests             )
 

@@ -215,7 +215,7 @@ void logrotate_extension::add_logrotate_options()
 
 /** \brief Call this function after you finalized option processing.
  *
- * This function act on the logrotate various command line options.
+ * This function acts on the logrotate various command line options.
  * Assuming the command line options were valid, this function will
  * open a UDP port which will listen for `LOG` messages . On such
  * a message, it will trigger a reopening of any file the logger
