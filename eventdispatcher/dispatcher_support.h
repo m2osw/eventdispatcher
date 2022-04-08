@@ -42,10 +42,10 @@ public:
 
     void                        set_dispatcher(dispatcher_base::pointer_t d);
     dispatcher_base::pointer_t  get_dispatcher() const;
-    bool                        dispatch_message(message & msg);
 
-    // new callback
-    virtual void                process_message(message const & message);
+    // new callbacks
+    virtual bool                dispatch_message(message & msg);
+    virtual void                process_message(message & msg);
 
 private:
     dispatcher_base::weak_t     f_dispatcher = dispatcher_base::weak_t();

@@ -46,7 +46,7 @@ public:
     typedef std::shared_ptr<pipe_message_connection>    pointer_t;
 
     // connection_with_send_message
-    virtual bool                send_message(message const & msg, bool cache = false) override;
+    virtual bool                send_message(message & msg, bool cache = false) override;
 
     // tcp_server_client_buffer_connection implementation
     virtual void                process_line(std::string const & line) override;

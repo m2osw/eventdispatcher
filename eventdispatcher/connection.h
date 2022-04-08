@@ -60,6 +60,7 @@ class connection
 {
 public:
     typedef std::shared_ptr<connection> pointer_t;
+    typedef std::weak_ptr<connection>   weak_pointer_t;
     typedef std::vector<pointer_t>      vector_t;
 
                                 connection();

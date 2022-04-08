@@ -27,6 +27,7 @@
 // self
 //
 #include    "eventdispatcher/tcp_bio_options.h"
+#include    "eventdispatcher/utils.h"
 
 
 // libaddr
@@ -62,13 +63,6 @@ class tcp_bio_client
 {
 public:
     typedef std::shared_ptr<tcp_bio_client>     pointer_t;
-
-    enum class mode_t
-    {
-        MODE_PLAIN,             // avoid SSL/TLS
-        MODE_SECURE,            // WARNING: may return a non-verified connection
-        MODE_ALWAYS_SECURE      // fails if cannot be 100% secure
-    };
 
                         tcp_bio_client(
                                   addr::addr const & address

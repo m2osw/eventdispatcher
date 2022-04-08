@@ -55,7 +55,7 @@ public:
                                         , std::string const & secret_code);
     virtual                     ~udp_logger_server() override;
 
-    virtual bool                send_message(ed::message const & msg, bool cache = false) override;
+    virtual bool                send_message(ed::message & msg, bool cache = false) override;
 
     void                        msg_logger_message(ed::message & m);
 

@@ -95,7 +95,7 @@ udp_logger_server::~udp_logger_server()
 }
 
 
-bool udp_logger_server::send_message(ed::message const & msg, bool cache)
+bool udp_logger_server::send_message(ed::message & msg, bool cache)
 {
     snapdev::NOT_USED(msg, cache);
 

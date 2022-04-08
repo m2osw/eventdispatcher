@@ -55,7 +55,7 @@ tcp_logger_server::tcp_logger_server(addr::addr const & listen)
               listen
             , std::string()
             , std::string()
-            , ed::tcp_bio_server::mode_t::MODE_PLAIN
+            , ed::mode_t::MODE_PLAIN
             , -1
             , true)
     , f_communicator(ed::communicator::instance())

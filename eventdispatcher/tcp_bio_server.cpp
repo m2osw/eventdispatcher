@@ -165,6 +165,7 @@ tcp_bio_server::tcp_bio_server(
 
     switch(mode)
     {
+    case mode_t::MODE_ALWAYS_SECURE:
     case mode_t::MODE_SECURE:
         {
             // the following code is based on the example shown in the man page

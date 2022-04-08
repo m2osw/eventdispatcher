@@ -53,7 +53,7 @@ public:
 
     static bool                 send_message(
                                           addr::unix const & address
-                                        , message const & msg
+                                        , message & msg
                                         , std::string const & secret_code = std::string());
 
     // connection implementation

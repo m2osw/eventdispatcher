@@ -169,6 +169,7 @@ install(
         communicator.h
         connection.h
         connection_with_send_message.h
+        cui_connection.h
         dispatcher_base.h
         dispatcher.h
         dispatcher_support.h

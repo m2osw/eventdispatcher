@@ -143,13 +143,12 @@ public:
         }
 
         // tcp_server_client_message_connection implementation
-        virtual void process_message(message const & msg)
+        virtual void process_message(message & msg)
         {
             // We call the dispatcher from our parent since the child
             // (this messenger) is not given a dispatcher
             //
-            message copy(msg);
-            f_parent->dispatch_message(copy);
+            f_parent->dispatch_message(msg);
         }
 
     private:
@@ -196,7 +195,7 @@ public:
         runner(
                       tcp_client_permanent_message_connection_impl * parent_impl
                     , addr::addr const & address
-                    , tcp_bio_client::mode_t mode)
+                    , mode_t mode)
             : cppthread::runner("background tcp_client_permanent_message_connection for asynchronous connections")
             , f_parent_impl(parent_impl)
             , f_address(address)
@@ -376,7 +375,7 @@ public:
     private:
         tcp_client_permanent_message_connection_impl *  f_parent_impl = nullptr;
         addr::addr const                                f_address;
-        tcp_bio_client::mode_t const                    f_mode;
+        mode_t const                                    f_mode;
         tcp_bio_client::pointer_t                       f_tcp_connection = tcp_bio_client::pointer_t();
         std::string                                     f_last_error = std::string();
     };
@@ -399,7 +398,7 @@ public:
     tcp_client_permanent_message_connection_impl(
                   tcp_client_permanent_message_connection * parent
                 , addr::addr const & address
-                , tcp_bio_client::mode_t mode)
+                , mode_t mode)
         : f_parent(parent)
         , f_thread_runner(this, address, mode)
         , f_thread("background connection handler thread", &f_thread_runner)
@@ -648,7 +647,7 @@ public:
      * \return true if the message was forwarded, false if the message
      *         was ignored or cached.
      */
-    bool send_message(message const & msg, bool cache)
+    bool send_message(message & msg, bool cache)
     {
         if(f_messenger != nullptr)
         {
@@ -812,7 +811,7 @@ private:
  */
 tcp_client_permanent_message_connection::tcp_client_permanent_message_connection(
             addr::addr const & address
-          , tcp_bio_client::mode_t mode
+          , mode_t mode
           , std::int64_t const pause
           , bool const use_thread)
     : timer(pause < 0 ? -pause : 0)
@@ -849,7 +848,7 @@ tcp_client_permanent_message_connection::~tcp_client_permanent_message_connectio
  *         if cache was true, it was cached
  */
 bool tcp_client_permanent_message_connection::send_message(
-          message const & msg
+          message & msg
         , bool cache)
 {
     return f_impl->send_message(msg, cache);

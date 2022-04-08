@@ -150,13 +150,12 @@ public:
         }
 
         // local_stream_server_client_message_connection implementation
-        virtual void process_message(message const & msg)
+        virtual void process_message(message & msg)
         {
             // We call the dispatcher from our parent since the child
             // (this messenger) is not given a dispatcher
             //
-            message copy(msg);
-            f_parent->dispatch_message(copy);
+            f_parent->dispatch_message(msg);
         }
 
     private:
@@ -665,7 +664,7 @@ public:
      * \return true if the message was forwarded, false if the message
      *         was ignored or cached.
      */
-    bool send_message(message const & msg, bool cache)
+    bool send_message(message & msg, bool cache)
     {
         if(f_messenger != nullptr)
         {
@@ -887,7 +886,7 @@ local_stream_client_permanent_message_connection::~local_stream_client_permanent
  * \return true if the message was sent, false if it was not sent, although
  *         if cache was true, it was cached
  */
-bool local_stream_client_permanent_message_connection::send_message(message const & msg, bool cache)
+bool local_stream_client_permanent_message_connection::send_message(message & msg, bool cache)
 {
     return f_impl->send_message(msg, cache);
 }

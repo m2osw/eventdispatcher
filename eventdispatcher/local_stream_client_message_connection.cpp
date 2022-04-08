@@ -133,7 +133,7 @@ void local_stream_client_message_connection::process_line(std::string const & li
  * \return Always true, although if an error occurs the function throws.
  */
 bool local_stream_client_message_connection::send_message(
-      message const & msg
+      message & msg
     , bool cache)
 {
     snapdev::NOT_USED(cache);

@@ -60,12 +60,6 @@ class tcp_bio_server
 public:
     typedef std::shared_ptr<tcp_bio_server>     pointer_t;
 
-    enum class mode_t
-    {
-        MODE_PLAIN,             // no encryption
-        MODE_SECURE             // use TLS encryption
-    };
-
                                 tcp_bio_server(
                                       addr::addr const & address
                                     , int max_connections

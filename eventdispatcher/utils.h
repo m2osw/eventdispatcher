@@ -49,6 +49,14 @@ namespace ed
 
 
 
+enum class mode_t
+{
+    MODE_PLAIN,             // avoid SSL/TLS
+    MODE_SECURE,            // WARNING: may return a non-verified connection
+    MODE_ALWAYS_SECURE      // fails if cannot be 100% secure
+};
+
+
 typedef std::vector<std::string>            string_list_t;
 typedef std::map<std::string, std::string>  string_map_t;
 

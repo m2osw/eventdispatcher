@@ -57,7 +57,7 @@ public:
 
                                 tcp_client_permanent_message_connection(
                                           addr::addr const & address
-                                        , tcp_bio_client::mode_t mode = tcp_bio_client::mode_t::MODE_PLAIN
+                                        , mode_t mode = mode_t::MODE_PLAIN
                                         , std::int64_t const pause = DEFAULT_PAUSE_BEFORE_RECONNECTING
                                         , bool const use_thread = true);
     virtual                     ~tcp_client_permanent_message_connection() override;
@@ -69,7 +69,7 @@ public:
     addr::addr                  get_client_address() const;
 
     // connection_with_send_message implementation
-    virtual bool                send_message(message const & msg, bool cache = false) override;
+    virtual bool                send_message(message & msg, bool cache = false) override;
 
     // connection implementation
     virtual void                process_timeout() override;

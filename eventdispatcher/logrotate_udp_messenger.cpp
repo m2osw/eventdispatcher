@@ -112,7 +112,7 @@ logrotate_udp_messenger::~logrotate_udp_messenger()
  *
  * \return Always returns true (as if the message was sent successfully).
  */
-bool logrotate_udp_messenger::send_message(ed::message const & msg, bool cache)
+bool logrotate_udp_messenger::send_message(ed::message & msg, bool cache)
 {
     snapdev::NOT_USED(msg, cache);
     return true;

@@ -92,6 +92,11 @@ public:
     std::int64_t            get_integer_parameter(std::string const & name) const;
     parameters_t const &    get_all_parameters() const;
 
+    template<typename T>
+    void                    user_data(std::shared_ptr<T> data) { f_user_data = data; }
+    template<typename T>
+    std::shared_ptr<T>      user_data() { return std::static_pointer_cast<T>(f_user_data); }
+
 private:
     std::string             f_sent_from_server = std::string();
     std::string             f_sent_from_service = std::string();
@@ -101,6 +106,7 @@ private:
     parameters_t            f_parameters = parameters_t();
     mutable std::string     f_cached_message = std::string();
     mutable std::string     f_cached_json = std::string();
+    std::shared_ptr<void>   f_user_data = std::shared_ptr<void>();
 };
 
 

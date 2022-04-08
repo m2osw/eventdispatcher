@@ -47,7 +47,7 @@ public:
     void                        peek();
 
     // connection_with_send_message
-    virtual bool                send_message(message const & msg, bool cache = false) override;
+    virtual bool                send_message(message & msg, bool cache = false) override;
 
     // connection callback
     virtual void                process_error() override;

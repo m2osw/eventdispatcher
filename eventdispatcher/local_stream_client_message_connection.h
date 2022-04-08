@@ -52,7 +52,7 @@ public:
 
     // connection_with_send_message implementation
     //
-    virtual bool                send_message(message const & msg, bool cache = false) override;
+    virtual bool                send_message(message & msg, bool cache = false) override;
 
     // local_stream_client_buffer_connection implementation
     //

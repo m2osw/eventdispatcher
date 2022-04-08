@@ -79,6 +79,54 @@ connection_with_send_message::~connection_with_send_message()
 
 
 
+/** \brief Reply to the watchdog message ALIVE.
+ *
+ * To check whether a service is alive, send the ALIVE message. This
+ * function builds an ABSOLUTELY reply and attaches the "serial" parameter
+ * as is if present. It will also include the original "timestamp" parameter
+ * when present.
+ *
+ * The function also adds one field named "reply_timestamp" with the Unix
+ * time when the reply is being sent.
+ *
+ * \note
+ * The "serial" parameter is expected to be used to make sure that no messages
+ * are lost, or if loss is expected, to see whether loss is heavy or not.
+ *
+ * \note
+ * The "serial" and "timestamp" parameters do not get checked. If present
+ * in the original message, they get copied verbatim to the destination.
+ * This allows you to include anything you want in those parameters although
+ * we suggest you use the "timestamp" only for a value representing time.
+ *
+ * \param[in] msg  The STOP message.
+ */
+void connection_with_send_message::msg_alive(message & msg)
+{
+    message absolutely;
+    absolutely.user_data(msg.user_data<void>());
+    absolutely.reply_to(msg);
+    absolutely.set_command("ABSOLUTELY");
+    if(msg.has_parameter("serial"))
+    {
+        absolutely.add_parameter("serial", msg.get_parameter("serial"));
+    }
+    if(msg.has_parameter("timestamp"))
+    {
+        absolutely.add_parameter("timestamp", msg.get_parameter("timestamp"));
+    }
+    absolutely.add_parameter("reply_timestamp", time(nullptr));
+    if(!send_message(absolutely, false))
+    {
+        SNAP_LOG_WARNING
+            << "could not reply to \""
+            << msg.get_command()
+            << "\" with an ABSOLUTELY message."
+            << SNAP_LOG_SEND;
+    }
+}
+
+
 /** \brief Build the HELP reply and send it.
  *
  * When a daemon registers with the snapcommunicator, it sends a REGISTER
@@ -151,6 +199,7 @@ void connection_with_send_message::msg_help(message & msg)
     //       sending COMMANDS will fail.)
     //
     message reply;
+    reply.user_data(msg.user_data<void>());
     reply.set_command("COMMANDS");
     reply.add_parameter("list", boost::algorithm::join(commands, ","));
     if(!send_message(reply, false))
@@ -164,56 +213,9 @@ void connection_with_send_message::msg_help(message & msg)
 }
 
 
-/** \brief Reply to the watchdog message ALIVE.
- *
- * To check whether a service is alive, send the ALIVE message. This
- * function builds an ABSOLUTELY reply and attaches the "serial" parameter
- * as is if present. It will also include the original "timestamp" parameter
- * when present.
- *
- * The function also adds one field named "reply_timestamp" with the Unix
- * time when the reply is being sent.
- *
- * \note
- * The "serial" parameter is expected to be used to make sure that no messages
- * are lost, or if loss is expected, to see whether loss is heavy or not.
- *
- * \note
- * The "serial" and "timestamp" parameters do not get checked. If present
- * in the original message, they get copied verbatim to the destination.
- * This allows you to include anything you want in those parameters although
- * we suggest you use the "timestamp" only for a value representing time.
- *
- * \param[in] msg  The STOP message.
- */
-void connection_with_send_message::msg_alive(message & msg)
-{
-    message absolutely;
-    absolutely.reply_to(msg);
-    absolutely.set_command("ABSOLUTELY");
-    if(msg.has_parameter("serial"))
-    {
-        absolutely.add_parameter("serial", msg.get_parameter("serial"));
-    }
-    if(msg.has_parameter("timestamp"))
-    {
-        absolutely.add_parameter("timestamp", msg.get_parameter("timestamp"));
-    }
-    absolutely.add_parameter("reply_timestamp", time(nullptr));
-    if(!send_message(absolutely, false))
-    {
-        SNAP_LOG_WARNING
-            << "could not reply to \""
-            << msg.get_command()
-            << "\" with an ABSOLUTELY message."
-            << SNAP_LOG_SEND;
-    }
-}
-
-
 /** \brief Run the sanitizer leak checker.
  *
- * This function calls the function which prints out all the leaks found
+ * This function calls the function printing out all the leaks found
  * at this time in this software (\em leaks as in any block of memory
  * currently allocated).
  *
@@ -221,6 +223,13 @@ void connection_with_send_message::msg_alive(message & msg)
  * sanitizer feature turned on.
  *
  * The message can be sent any number of times.
+ *
+ * \note
+ * This is a debug message only.
+ *
+ * \todo
+ * Find a solution which actually works. The LSAN system doesn't offer
+ * to (correctly) print the list of leaks at a given time.
  *
  * \param[in] msg  The LEAK message, which is ignored.
  */
@@ -343,6 +352,10 @@ void connection_with_send_message::msg_ready(message & msg)
  * it would be very complicated to allow for changes to occur.)
  * \note
  * In those existing implementations, we really just do a restart anyway.
+ * \note
+ * The new versions will be using fluid-settings. We can still support
+ * a RESTART message, but a RELOADCONFIG (as we had in snapcommunicator)
+ * should not be used.
  *
  * \param[in] msg  The RESTART message.
  *
@@ -390,9 +403,10 @@ void connection_with_send_message::msg_log_unknown(message & msg)
     // and got an UNKNOWN reply
     //
     SNAP_LOG_ERROR
-        << "we sent unknown command \""
+        << "we sent command \""
         << msg.get_parameter("command")
-        << "\" and probably did not get the expected result."
+        << "\" and the destination replied with \"UNKNOWN\""
+           " so we probably did not get the expected result."
         << SNAP_LOG_SEND;
 }
 
@@ -428,6 +442,7 @@ void connection_with_send_message::msg_log_unknown(message & msg)
 void connection_with_send_message::msg_reply_with_unknown(message & msg)
 {
     message unknown;
+    unknown.user_data(msg.user_data<void>());
     unknown.reply_to(msg);
     unknown.set_command("UNKNOWN");
     unknown.add_parameter("command", msg.get_command());
@@ -437,6 +452,14 @@ void connection_with_send_message::msg_reply_with_unknown(message & msg)
             << "could not reply to \""
             << msg.get_command()
             << "\" with UNKNOWN message."
+            << SNAP_LOG_SEND;
+    }
+    else
+    {
+        SNAP_LOG_MINOR
+            << "unknown command \""
+            << msg.get_command()
+            << "\"."
             << SNAP_LOG_SEND;
     }
 }
@@ -454,9 +477,9 @@ void connection_with_send_message::msg_reply_with_unknown(message & msg)
  * as in:
  *
  * \code
- *      commands << "MSG1";
- *      commands << "MSG2";
- *      commands << "MSG3";
+ *      commands.push_back("MSG1");
+ *      commands.push_back("MSG2");
+ *      commands.push_back("MSG3");
  * \endcode
  *
  * This allows you to handle those three messages with a single entry in

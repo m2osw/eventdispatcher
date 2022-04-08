@@ -83,7 +83,7 @@ namespace ed
  *
  * \return Always true, although if an error occurs the function throws.
  */
-bool pipe_message_connection::send_message(message const & msg, bool cache)
+bool pipe_message_connection::send_message(message & msg, bool cache)
 {
     snapdev::NOT_USED(cache);
 

@@ -41,7 +41,7 @@ public:
     virtual                     ~connection_with_send_message();
 
     // new callbacks
-    virtual bool                send_message(message const & msg, bool cache = false) = 0;
+    virtual bool                send_message(message & msg, bool cache = false) = 0;
 
     virtual void                msg_help(message & msg);
     virtual void                msg_alive(message & msg);
@@ -84,7 +84,7 @@ public:
      * function to discover which connections failed.
      */
     template<class C>
-    bool broadcast_message(C & container, message const & msg, bool cache = false)
+    bool broadcast_message(C & container, message & msg, bool cache = false)
     {
         bool result(true);
         for(auto c : container)

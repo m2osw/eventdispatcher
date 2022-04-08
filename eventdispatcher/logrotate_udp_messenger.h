@@ -147,7 +147,7 @@ public:
     virtual                 ~logrotate_udp_messenger() override;
 
     // connection_with_send_message implementation
-    virtual bool            send_message(ed::message const & msg, bool cache = false) override;
+    virtual bool            send_message(ed::message & msg, bool cache = false) override;
 
 private:
     dispatcher_pointer_t    f_dispatcher = dispatcher_pointer_t();

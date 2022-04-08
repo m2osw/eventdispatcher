@@ -154,7 +154,7 @@ void tcp_server_client_message_connection::process_line(std::string const & line
  * \return Always true, although if an error occurs the function throws.
  */
 bool tcp_server_client_message_connection::send_message(
-          message const & msg
+          message & msg
         , bool cache)
 {
     snapdev::NOT_USED(cache);

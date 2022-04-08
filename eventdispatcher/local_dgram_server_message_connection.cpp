@@ -104,7 +104,7 @@ local_dgram_server_message_connection::local_dgram_server_message_connection(
  */
 bool local_dgram_server_message_connection::send_message(
                   addr::unix const & address
-                , message const & msg
+                , message & msg
                 , std::string const & secret_code)
 {
     // Note: contrary to the Stream version, a Datagram message does not

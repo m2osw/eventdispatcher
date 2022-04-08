@@ -131,7 +131,7 @@ namespace ed
  *          //
  *          // Please, consider using the dispatcher instead
  *          //
- *          virtual void process_message(message const & message)
+ *          virtual void process_message(message & message)
  *          {
  *              QString const command(message.get_command());
  *              if(command == "LOCKED")
@@ -504,7 +504,7 @@ void tcp_blocking_client_message_connection::peek()
  *
  * \return true if the message was sent successfully, false otherwise.
  */
-bool tcp_blocking_client_message_connection::send_message(message const & msg, bool cache)
+bool tcp_blocking_client_message_connection::send_message(message & msg, bool cache)
 {
     snapdev::NOT_USED(cache);
 

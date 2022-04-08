@@ -173,7 +173,7 @@ bool dispatcher_support::dispatch_message(message & msg)
  *
  * \param[in] msg  The message to be processed.
  */
-void dispatcher_support::process_message(message const & msg)
+void dispatcher_support::process_message(message & msg)
 {
     // We don't currently have access to the send_message() function from
     // here--the inter_thread_message_connection class causes a problem

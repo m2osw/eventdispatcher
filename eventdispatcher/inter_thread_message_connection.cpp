@@ -422,7 +422,7 @@ void inter_thread_message_connection::process_read()
  * \return true of the message was sent, false if it was cached or failed.
  */
 bool inter_thread_message_connection::send_message(
-      message const & msg
+      message & msg
     , bool cache)
 {
     snapdev::NOT_USED(cache);

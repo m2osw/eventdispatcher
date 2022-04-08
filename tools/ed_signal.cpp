@@ -200,7 +200,7 @@ public:
                                     tcp_signal(
                                           ed_signal * parent
                                         , addr::addr const & address
-                                        , ed::tcp_bio_client::mode_t mode);
+                                        , ed::mode_t mode);
     virtual                         ~tcp_signal() override;
                                     tcp_signal(tcp_signal const &) = delete;
     tcp_signal &                    operator = (tcp_signal const &) = delete;
@@ -239,7 +239,7 @@ private:
 tcp_signal::tcp_signal(
               ed_signal * parent
             , addr::addr const & address
-            , ed::tcp_bio_client::mode_t mode)
+            , ed::mode_t mode)
     : tcp_client_message_connection(address, mode)
     , f_parent(parent)
 {
@@ -356,8 +356,8 @@ int ed_signal::run()
                   this
                 , server
                 , encrypt
-                        ? ed::tcp_bio_client::mode_t::MODE_SECURE
-                        : ed::tcp_bio_client::mode_t::MODE_PLAIN
+                        ? ed::mode_t::MODE_SECURE
+                        : ed::mode_t::MODE_PLAIN
             );
 
         if(f_opts.is_defined("reply"))

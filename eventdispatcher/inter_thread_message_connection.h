@@ -68,11 +68,11 @@ public:
     virtual void                process_read() override;
 
     // connection_with_send_message
-    virtual bool                send_message(message const & msg, bool cache = false) override;
+    virtual bool                send_message(message & msg, bool cache = false) override;
 
     // new callback
-    virtual void                process_message_a(message const & msg) = 0;
-    virtual void                process_message_b(message const & msg) = 0;
+    virtual void                process_message_a(message & msg) = 0;
+    virtual void                process_message_b(message & msg) = 0;
 
 private:
     pid_t                       f_creator_id = -1;
