@@ -119,7 +119,7 @@ Description: C++ library to extend the logger to the network
  offer network capabilities in the snaplogger project.
 
 Package: snaploggerd
-Section: libs
+Section: utils
 Architecture: any
 Depends: eventdispatcher (= ${binary:Version}), ${shlibs:Depends},
  ${misc:Depends}
