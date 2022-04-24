@@ -89,6 +89,27 @@ broadcast_message(C & container, message & msg, bool cache = false)
  * Further, this function removes any entry in the container which
  * is an expired weak pointer.
  *
+ * Here is an example of usage where we use a list of weak pointers
+ * from the connection_with_send_message class:
+ *
+ * \code
+ *     ed::connection_with_send_message::list_weak_t list;
+ *     ...
+ *     // when you have new connections
+ *     ed::communicator::instance()->add_connection(connection);
+ *     list.push_back(connection);
+ *     ...
+ *     // when you lose a connections
+ *     ed::communicator::instance()->remove_connection(connection);
+ *     ...
+ *     // when you want to broadcast a message
+ *     ed::broadcast_message(list, msg);
+ * \endcode
+ *
+ * Whenever you are done with a connection, you simply remove it from
+ * the communicator and it gets removed from that list the next time
+ * you call broadcast_message().
+ *
  * \todo
  * If we need to know which connections fail the send_message(), then
  * we want to look into offering a callback.
