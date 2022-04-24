@@ -28,6 +28,10 @@
 //
 #include    "eventdispatcher/message.h"
 
+// C++
+//
+#include    <list>
+
 
 
 namespace ed
@@ -42,6 +46,7 @@ public:
                                 pointer_t;
     typedef std::weak_ptr<connection_with_send_message>
                                 weak_t;
+    typedef std::list<weak_t>   list_weak_t;
 
                                 connection_with_send_message(std::string const & service_name = std::string());
     virtual                     ~connection_with_send_message();
