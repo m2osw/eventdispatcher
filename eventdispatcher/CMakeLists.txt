@@ -166,6 +166,7 @@ install(
 
 install(
     FILES
+        broadcast_message.h
         communicator.h
         connection.h
         connection_with_send_message.h

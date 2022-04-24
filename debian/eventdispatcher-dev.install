@@ -1,5 +1,6 @@
 # We have the eventdispatcher_qt.h in the same directory so to do it right
 # we must list all of our includes, infortunately
+usr/include/eventdispatcher/broadcast_message.h
 usr/include/eventdispatcher/communicator.h
 usr/include/eventdispatcher/connection.h
 usr/include/eventdispatcher/connection_with_send_message.h

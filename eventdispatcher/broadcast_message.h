@@ -60,9 +60,12 @@ namespace ed
  * \return true if the send_message() succeeded on all connections, false
  * otherwise.
  */
-template<class C>
-typename std::enable_if<std::is_same<T, std::shared_ptr<typename T::element_type>>::value, bool>::type
-bool broadcast_message(C & container, message & msg, bool cache = false)
+template<typename C, typename T = typename C::value_type>
+typename std::enable_if<std::is_same<
+              T
+            , std::shared_ptr<typename T::element_type>>::value
+        , bool>::type
+broadcast_message(C & container, message & msg, bool cache = false)
 {
     bool result(true);
     for(auto c : container)
@@ -100,9 +103,12 @@ bool broadcast_message(C & container, message & msg, bool cache = false)
  * \return true if the send_message() succeeded on all connections, false
  * otherwise.
  */
-template<class C>
-typename std::enable_if<std::is_same<T, std::weak_ptr<typename T::element_type>>::value, bool>::type
-bool broadcast_message(C & container, message & msg, bool cache = false)
+template<typename C, typename T = typename C::value_type>
+typename std::enable_if<std::is_same<
+              T
+            , std::weak_ptr<typename T::element_type>>::value
+        , bool>::type
+broadcast_message(C & container, message & msg, bool cache = false)
 {
     bool result(true);
 
@@ -112,11 +118,11 @@ bool broadcast_message(C & container, message & msg, bool cache = false)
         auto p(c->lock());
         if(p == nullptr)
         {
-            c = container->erase(c);
+            c = container.erase(c);
         }
         else
         {
-            result = c->send_message(msg, cache) && result;
+            result = p->send_message(msg, cache) && result;
             ++c;
         }
     }
