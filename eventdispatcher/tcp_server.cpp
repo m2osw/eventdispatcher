@@ -134,7 +134,7 @@ tcp_server::tcp_server(
             << strerror(e)
             << ")"
             << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error("could not create socket for client");
+        throw runtime_error("could not create socket for client");
     }
 
     if(f_address.bind(f_socket) != 0)
@@ -147,7 +147,7 @@ tcp_server::tcp_server(
         SNAP_LOG_ERROR
             << ss
             << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error(ss.str());
+        throw runtime_error(ss.str());
     }
 
     // start listening, we expect the caller to then call accept() to
@@ -156,7 +156,7 @@ tcp_server::tcp_server(
     if(listen(f_socket, f_max_connections) < 0)
     {
         close(f_socket);
-        throw event_dispatcher_runtime_error(
+        throw runtime_error(
                   "could not listen to the socket bound to \""
                 + f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
                 + "\"");

@@ -444,7 +444,7 @@ void signal_child::add_connection()
  * be unlikely that you would know of all the adds and all the removes in
  * one place.
  *
- * \exception event_dispatcher_count_mismatch
+ * \exception count_mismatch
  * The remove_connection() function must be called exactly once for each
  * call to the add_connection() function. If called more than this many
  * times, then this exception is raised.
@@ -453,7 +453,7 @@ void signal_child::remove_connection()
 {
     if(f_count == 0)
     {
-        throw event_dispatcher_count_mismatch(
+        throw count_mismatch(
             "the signal_child::remove_connection() was called more times"
             " than the add_connection()");
     }
@@ -559,7 +559,7 @@ void signal_child::process_signal()
  * The test in this function works only for the very first connection.
  * After that, the communicator prevents this callback from happening.
  *
- * \exception event_dispatcher_runtime_error
+ * \exception runtime_error
  * The signal_child connection must be added by the add_connection() function.
  * If you directly call the communicator::add_connection(), then this
  * exception is raised.
@@ -568,7 +568,7 @@ void signal_child::connection_added()
 {
     if(!f_adding_to_communicator)
     {
-        throw event_dispatcher_runtime_error(
+        throw runtime_error(
             "it looks like you directly called communicator::add_connection()"
             " with the signal_child connection. This is not allowed. Make sure"
             " to call the signal_child::add_connection() instead.");
@@ -581,7 +581,7 @@ void signal_child::connection_added()
  * The connection was removed, make sure it was by us (through our own
  * remove_connection() function).
  *
- * \exception event_dispatcher_runtime_error
+ * \exception runtime_error
  * The signal_child connection must be added by the add_connection() function.
  * If you directly call the communicator::add_connection(), then this
  * exception is raised.
@@ -590,7 +590,7 @@ void signal_child::connection_removed()
 {
     if(!f_removing_to_communicator)
     {
-        throw event_dispatcher_runtime_error(
+        throw runtime_error(
             "it looks like you directly called communicator::remove_connection()"
             " with the signal_child connection. This is not allowed. Make sure"
             " to call the signal_child::remove_connection() instead.");
@@ -620,7 +620,7 @@ void signal_child::connection_removed()
  * This function automatically calls the add_connection() function any
  * time it succeeeds in adding a new child/callback listener.
  *
- * \exception event_dispatcher_invalid_parameter
+ * \exception invalid_parameter
  * The mask cannot be set to zero, the child identifier must be positive,
  * the callback pointer cannot be nullptr.
  *
@@ -635,18 +635,18 @@ void signal_child::add_listener(
 {
     if(child <= 0)
     {
-        throw event_dispatcher_invalid_parameter(
+        throw invalid_parameter(
               "the child parameter must be a valid pid_t (not "
             + std::to_string(child)
             + ")");
     }
     if(callback == nullptr)
     {
-        throw event_dispatcher_invalid_parameter("callback cannot be nullptr");
+        throw invalid_parameter("callback cannot be nullptr");
     }
     if(mask == 0)
     {
-        throw event_dispatcher_invalid_parameter("mask cannot be set to zero");
+        throw invalid_parameter("mask cannot be set to zero");
     }
 
     cppthread::guard lock(f_mutex);

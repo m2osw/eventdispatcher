@@ -105,7 +105,7 @@ namespace ed
  * the file whenever the child dies. Then it can either restart the child
  * (on a crash) or just quit.
  *
- * \exception event_dispatcher_runtime_error
+ * \exception runtime_error
  * This exception is raised if the socket cannot be created, bound to
  * the specified Unix address, or listen() fails on the socket.
  *
@@ -152,7 +152,7 @@ local_stream_server_connection::local_stream_server_connection(
             << f_address.to_uri()
             << "\"."
             << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error("could not create socket for AF_UNIX server");
+        throw runtime_error("could not create socket for AF_UNIX server");
     }
 
     if(f_address.is_unnamed())
@@ -184,7 +184,7 @@ local_stream_server_connection::local_stream_server_connection(
                     << f_address.to_uri()
                     << "\"."
                     << SNAP_LOG_SEND;
-                throw event_dispatcher_runtime_error("file already exists and it is not a socket, can't create an AF_UNIX server");
+                throw runtime_error("file already exists and it is not a socket, can't create an AF_UNIX server");
             }
 
             bool available(false);
@@ -194,7 +194,7 @@ local_stream_server_connection::local_stream_server_connection(
                 {
                     local_stream_client_connection test_connection(f_address);
                 }
-                catch(event_dispatcher_runtime_error const & e)
+                catch(runtime_error const & e)
                 {
                     // note: in Linux we can distinguish between a full
                     //       backlog (EAGAIN) and a disconnected socket
@@ -217,7 +217,7 @@ local_stream_server_connection::local_stream_server_connection(
                     << f_address.to_uri()
                     << "\"."
                     << SNAP_LOG_SEND;
-                throw event_dispatcher_runtime_error("socket already exists, can't create an AF_UNIX server");
+                throw runtime_error("socket already exists, can't create an AF_UNIX server");
             }
 
             r = f_address.unlink();
@@ -235,7 +235,7 @@ local_stream_server_connection::local_stream_server_connection(
                     << f_address.to_uri()
                     << "\"."
                     << SNAP_LOG_SEND;
-                throw event_dispatcher_runtime_error("could not unlink socket to reuse it as an AF_UNIX server");
+                throw runtime_error("could not unlink socket to reuse it as an AF_UNIX server");
             }
         }
         r = bind(
@@ -259,7 +259,7 @@ local_stream_server_connection::local_stream_server_connection(
 
     if(r < 0)
     {
-        throw event_dispatcher_runtime_error(
+        throw runtime_error(
                   "could not bind the socket to \""
                 + f_address.to_uri()
                 + "\"");
@@ -270,7 +270,7 @@ local_stream_server_connection::local_stream_server_connection(
     //
     if(listen(f_socket.get(), f_max_connections) < 0)
     {
-        throw event_dispatcher_runtime_error(
+        throw runtime_error(
                   "could not listen to the socket bound to \""
                 + f_address.to_uri()
                 + "\"");
@@ -355,7 +355,7 @@ snapdev::raii_fd_t local_stream_server_connection::accept()
             , &len));
     if(r == nullptr)
     {
-        throw event_dispatcher_runtime_error("failed accepting a new AF_UNIX client");
+        throw runtime_error("failed accepting a new AF_UNIX client");
     }
 
     // force a close on execve() to avoid sharing the socket in child

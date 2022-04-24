@@ -319,7 +319,7 @@ signal_handler::pointer_t signal_handler::create_instance(
 
     if(g_signal_handler != nullptr)
     {
-        throw event_dispatcher_invalid_callback("signal_handler::create_instance() must be called once before signal_handler::get_instance() ever gets called.");
+        throw invalid_callback("signal_handler::create_instance() must be called once before signal_handler::get_instance() ever gets called.");
     }
 
     pointer_t handler(get_instance());
@@ -388,14 +388,14 @@ void signal_handler::add_callback(callback_id_t id, int sig, callback_t callback
 {
     if(static_cast<std::size_t>(sig) >= sizeof(f_signal_actions) / sizeof(f_signal_actions[0]))
     {
-        throw event_dispatcher_invalid_signal(
+        throw invalid_signal(
                   "signal_handler::add_callback() called with invalid signal number "
                 + std::to_string(sig));
     }
 
     if(callback == nullptr)
     {
-        throw event_dispatcher_invalid_callback("signal_handler::add_callback() called with nullptr as the callback.");
+        throw invalid_callback("signal_handler::add_callback() called with nullptr as the callback.");
     }
 
     cppthread::guard g(f_mutex);

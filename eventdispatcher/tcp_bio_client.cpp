@@ -334,7 +334,7 @@ tcp_bio_client::tcp_bio_client(
 {
     if(address.is_default())
     {
-        throw event_dispatcher_invalid_parameter("the default address is not valid for a client socket");
+        throw invalid_parameter("the default address is not valid for a client socket");
     }
 
     detail::bio_initialize();
@@ -353,7 +353,7 @@ tcp_bio_client::tcp_bio_client(
             if(ssl_ctx == nullptr)
             {
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed creating an SSL_CTX object");
+                throw initialization_error("failed creating an SSL_CTX object");
             }
 
             // allow up to `depth` certificates in the chain otherwise fail
@@ -391,7 +391,7 @@ tcp_bio_client::tcp_bio_client(
             if(SSL_CTX_load_verify_locations(ssl_ctx.get(), nullptr, "/etc/ssl/certs") != 1)
             {
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed loading verification certificates in an SSL_CTX object");
+                throw initialization_error("failed loading verification certificates in an SSL_CTX object");
             }
             //SSL_CTX_set_msg_callback(ssl_ctx.get(), ssl_trace);
             //SSL_CTX_set_msg_callback_arg(ssl_ctx.get(), this);
@@ -403,7 +403,7 @@ tcp_bio_client::tcp_bio_client(
             if(!bio)
             {
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed initializing a BIO object");
+                throw initialization_error("failed initializing a BIO object");
             }
 
             // verify that the connection worked
@@ -417,7 +417,7 @@ tcp_bio_client::tcp_bio_client(
             {
                 // TBD: does this mean we would have a plain connection?
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed retrieving the SSL contact from BIO object");
+                throw initialization_error("failed retrieving the SSL contact from BIO object");
             }
 
             // allow automatic retries in case the connection somehow needs
@@ -475,7 +475,7 @@ tcp_bio_client::tcp_bio_client(
                         << SNAP_LOG_SEND;
                 }
                 detail::bio_log_errors();
-                throw event_dispatcher_failed_connecting("SSL BIO_do_connect() failed connecting BIO object to server");
+                throw failed_connecting("SSL BIO_do_connect() failed connecting BIO object to server");
             }
 
             // encryption handshake
@@ -492,7 +492,7 @@ tcp_bio_client::tcp_bio_client(
                         << SNAP_LOG_SEND;
                 }
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed establishing a secure BIO connection with server, handshake failed."
+                throw initialization_error("failed establishing a secure BIO connection with server, handshake failed."
                             " Often such failures to process SSL is because the SSL Hello message is missing the SNI (Server Name In)."
                             " See the tcp_bio_options::set_sni().");
             }
@@ -503,7 +503,7 @@ tcp_bio_client::tcp_bio_client(
             if(SSL_get_peer_certificate(ssl) == nullptr)
             {
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("peer failed presenting a certificate for security verification");
+                throw initialization_error("peer failed presenting a certificate for security verification");
             }
 
             // XXX: check that the call below is similar to the example
@@ -515,7 +515,7 @@ tcp_bio_client::tcp_bio_client(
                 if(mode != mode_t::MODE_SECURE)
                 {
                     detail::bio_log_errors();
-                    throw event_dispatcher_initialization_error("peer certificate could not be verified");
+                    throw initialization_error("peer certificate could not be verified");
                 }
                 SNAP_LOG_WARNING
                     << "connecting with SSL but certificate verification failed."
@@ -551,7 +551,7 @@ tcp_bio_client::tcp_bio_client(
             if(!bio)
             {
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed initializing a BIO object");
+                throw initialization_error("failed initializing a BIO object");
             }
 
 #pragma GCC diagnostic push
@@ -565,7 +565,7 @@ tcp_bio_client::tcp_bio_client(
             if(BIO_do_connect(bio.get()) <= 0)
             {
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed connecting BIO object to server");
+                throw initialization_error("failed connecting BIO object to server");
             }
 
             // it worked, save the results

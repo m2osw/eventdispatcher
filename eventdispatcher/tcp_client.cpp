@@ -71,11 +71,11 @@ namespace ed
  * The tcp_client constructor initializes a TCP client object by connecting
  * to the specified server. The server is defined by the \p address object.
  *
- * \exception event_dispatcher_invalid_parameter
+ * \exception invalid_parameter
  * This exception is raised if the \p port parameter is out of range or the
  * IP address is an empty string or otherwise an invalid address.
  *
- * \exception event_dispatcher_runtime_error
+ * \exception runtime_error
  * This exception is raised if the client cannot create the socket or it
  * cannot connect to the server.
  *
@@ -86,11 +86,11 @@ tcp_client::tcp_client(addr::addr const & address)
 {
     if(f_address.is_default())
     {
-        throw event_dispatcher_invalid_parameter("the default address is not valid for a client socket");
+        throw invalid_parameter("the default address is not valid for a client socket");
     }
     if(f_address.get_protocol() != IPPROTO_TCP)
     {
-        throw event_dispatcher_invalid_parameter("the address presents a protocol other than the expected TCP");
+        throw invalid_parameter("the address presents a protocol other than the expected TCP");
     }
 
     f_socket.reset(address.create_socket(0));
@@ -104,7 +104,7 @@ tcp_client::tcp_client(addr::addr const & address)
             << strerror(e)
             << ")"
             << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error("could not create socket for client");
+        throw runtime_error("could not create socket for client");
     }
 
     if(f_address.connect(f_socket.get()) != 0)
@@ -119,7 +119,7 @@ tcp_client::tcp_client(addr::addr const & address)
         SNAP_LOG_FATAL
             << ss
             << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error(ss.str());
+        throw runtime_error(ss.str());
     }
 }
 
@@ -234,7 +234,7 @@ int tcp_client::get_client_port() const
  * This function retrieve the IP address of the client (your computer).
  * This is retrieved from the socket using the getsockname() function.
  *
- * \exception event_dispatcher_runtime_error
+ * \exception runtime_error
  * The function raises this exception if the address we retrieve doesn't
  * match its type properly;
  *
@@ -251,7 +251,7 @@ std::string tcp_client::get_client_addr() const
     int const r(getsockname(f_socket.get(), a, &len));
     if(r != 0)
     {
-        throw event_dispatcher_runtime_error("address not available");
+        throw runtime_error("address not available");
     }
 
     char buf[BUFSIZ];
@@ -260,7 +260,7 @@ std::string tcp_client::get_client_addr() const
     case AF_INET:
         if(len < sizeof(sockaddr_in))
         {
-            throw event_dispatcher_runtime_error("address size incompatible (AF_INET)");
+            throw runtime_error("address size incompatible (AF_INET)");
         }
         inet_ntop(
               AF_INET
@@ -272,13 +272,13 @@ std::string tcp_client::get_client_addr() const
     case AF_INET6:
         if(len < sizeof(sockaddr_in6))
         {
-            throw event_dispatcher_runtime_error("address size incompatible (AF_INET6)");
+            throw runtime_error("address size incompatible (AF_INET6)");
         }
         inet_ntop(AF_INET6, &addr.sin6_addr, buf, sizeof(buf));
         break;
 
     default:
-        throw event_dispatcher_runtime_error("unknown address family");
+        throw runtime_error("unknown address family");
 
     }
 
@@ -290,7 +290,7 @@ std::string tcp_client::get_client_addr() const
  * This function retrieve the IP address of the client (your computer).
  * This is retrieved from the socket using the getsockname() function.
  *
- * \exception event_dispatcher_runtime_error
+ * \exception runtime_error
  * The function raises this exception if the address we retrieve doesn't
  * match its type properly;
  *

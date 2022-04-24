@@ -81,7 +81,7 @@ std::int64_t get_current_date()
             << strerror(err)
             << ")"
             << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error("gettimeofday() failed");
+        throw runtime_error("gettimeofday() failed");
     }
 
     return static_cast<int64_t>(tv.tv_sec) * static_cast<int64_t>(1000000)
@@ -110,7 +110,7 @@ std::int64_t get_current_date_ns()
             << strerror(err)
             << ")"
             << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error("clock_gettime() failed");
+        throw runtime_error("clock_gettime() failed");
     }
 
     return static_cast<int64_t>(ts.tv_sec) * static_cast<int64_t>(1000000000)

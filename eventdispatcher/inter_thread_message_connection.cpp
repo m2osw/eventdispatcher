@@ -103,7 +103,7 @@ namespace ed
  * regular connection with all of its own parameters. Actually the
  * FIFO of messages could then clearly be segregated in each object.
  *
- * \exception event_dispatcher_initialization_error
+ * \exception initialization_error
  * This exception is raised if the pipes (socketpair) cannot be created.
  */
 inter_thread_message_connection::inter_thread_message_connection()
@@ -115,7 +115,7 @@ inter_thread_message_connection::inter_thread_message_connection()
     {
         // eventfd could not be created
         //
-        throw event_dispatcher_initialization_error("could not create eventfd for thread A");
+        throw initialization_error("could not create eventfd for thread A");
     }
 
     f_thread_b.reset(eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK | EFD_SEMAPHORE));
@@ -125,7 +125,7 @@ inter_thread_message_connection::inter_thread_message_connection()
 
         // eventfd could not be created
         //
-        throw event_dispatcher_initialization_error("could not create eventfd for thread B");
+        throw initialization_error("could not create eventfd for thread B");
     }
 }
 
@@ -165,12 +165,12 @@ void inter_thread_message_connection::close()
  *
  * You may specify a timeout as usual.
  *
- * \exception event_dispatcher_runtime_error
+ * \exception runtime_error
  * If an interrupt happens and stops the poll() then this exception is
  * raised. If not enough memory is available to run the poll() function,
  * this errors is raised.
  *
- * \exception event_dispatcher_parameter_error
+ * \exception parameter_error
  * Somehow a buffer was moved out of our client's space (really that one
  * is not likely to happen...). Too many file descriptors in the list of
  * fds (not likely to happen since we just have one!)
@@ -235,11 +235,11 @@ int inter_thread_message_connection::poll(int timeout)
                 //       use the signal with the Unix signals that may
                 //       happen while calling poll().
                 //
-                throw event_dispatcher_runtime_error("EINTR occurred while in poll() -- interrupts are not supported yet though");
+                throw runtime_error("EINTR occurred while in poll() -- interrupts are not supported yet though");
             }
             if(e == EFAULT)
             {
-                throw event_dispatcher_parameter_error("buffer was moved out of our address space?");
+                throw parameter_error("buffer was moved out of our address space?");
             }
             if(e == EINVAL)
             {
@@ -250,7 +250,7 @@ int inter_thread_message_connection::poll(int timeout)
                 //
                 struct rlimit rl;
                 getrlimit(RLIMIT_NOFILE, &rl);
-                throw event_dispatcher_parameter_error(
+                throw parameter_error(
                             "too many file fds for poll, limit is currently "
                             + std::to_string(rl.rlim_cur)
                             + ", your kernel top limit is "
@@ -258,9 +258,9 @@ int inter_thread_message_connection::poll(int timeout)
             }
             if(e == ENOMEM)
             {
-                throw event_dispatcher_runtime_error("poll() failed because of memory");
+                throw runtime_error("poll() failed because of memory");
             }
-            throw event_dispatcher_runtime_error(
+            throw runtime_error(
                         "poll() failed with error: "
                         + std::to_string(e)
                         + " -- "
@@ -375,7 +375,7 @@ void inter_thread_message_connection::process_read()
 //#pragma GCC diagnostic ignored "-Wunused-result"
     if(read(is_thread_a ? f_thread_a.get() : f_thread_b.get(), &value, sizeof(value)) != sizeof(value))
     {
-        throw event_dispatcher_runtime_error("an error occurred while reading from inter-thread eventfd description.");
+        throw runtime_error("an error occurred while reading from inter-thread eventfd description.");
     }
 //#pragma GCC diagnostic pop
 

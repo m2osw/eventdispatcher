@@ -112,7 +112,7 @@ namespace ed
  * stream (stdin, stdout, stderr). You can always create more if necessary
  * in your situation.
  *
- * \exception event_dispatcher_initialization_error
+ * \exception initialization_error
  * This exception is raised if the pipes (socketpair, pipe) cannot be
  * created.
  *
@@ -130,7 +130,7 @@ pipe_connection::pipe_connection(pipe_t type)
         if(socketpair(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK, 0, f_socket) != 0)
         {
             // pipe could not be created
-            throw event_dispatcher_initialization_error("somehow the AF_LOCAL pipes used for a two way pipe connection could not be created.");
+            throw initialization_error("somehow the AF_LOCAL pipes used for a two way pipe connection could not be created.");
         }
         break;
 
@@ -138,7 +138,7 @@ pipe_connection::pipe_connection(pipe_t type)
         if(pipe(f_socket) != 0)
         {
             // pipe could not be created
-            throw event_dispatcher_initialization_error("somehow the FIFO pipes used for a one way pipe (child input) connection could not be created.");
+            throw initialization_error("somehow the FIFO pipes used for a one way pipe (child input) connection could not be created.");
         }
         std::swap(f_socket[0], f_socket[1]);
         break;
@@ -147,7 +147,7 @@ pipe_connection::pipe_connection(pipe_t type)
         if(pipe(f_socket) != 0)
         {
             // pipe could not be created
-            throw event_dispatcher_initialization_error("somehow the FIFO pipes used for a one way pipe (child output) connection could not be created.");
+            throw initialization_error("somehow the FIFO pipes used for a one way pipe (child output) connection could not be created.");
         }
         break;
 

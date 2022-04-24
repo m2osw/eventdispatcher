@@ -80,10 +80,10 @@ namespace ed
  * Add a constructor that supports a libaddr::addr object instead of
  * just a string address.
  *
- * \exception event_dispatcher_invalid_parameter
+ * \exception invalid_parameter
  * The \p addr parameter is empty or the port is out of the supported range.
  *
- * \exception event_dispatcher_runtime_error
+ * \exception runtime_error
  * The server could not be initialized properly. Either the address cannot be
  * resolved, the port is incompatible or not available, or the socket could
  * not be created.
@@ -107,7 +107,7 @@ local_dgram_base::local_dgram_base(
     f_socket.reset(socket(AF_UNIX, type, 0));
     if(f_socket == nullptr)
     {
-        throw event_dispatcher_runtime_error(
+        throw runtime_error(
               "could not create socket for: \""
             + f_address.to_uri()
             + "\".");
@@ -128,7 +128,7 @@ local_dgram_base::local_dgram_base(
             , &optlen));
     if(r != 0)
     {
-        throw event_dispatcher_runtime_error(
+        throw runtime_error(
               "could not retrieve \"MTU\" size for: \""
             + f_address.to_uri()
             + "\".");

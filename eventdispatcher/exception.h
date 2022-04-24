@@ -37,22 +37,24 @@ namespace ed
 
 
 
-DECLARE_LOGIC_ERROR(event_dispatcher_parameter_error);
-DECLARE_LOGIC_ERROR(event_dispatcher_implementation_error);
+DECLARE_LOGIC_ERROR(parameter_error);
+DECLARE_LOGIC_ERROR(implementation_error);
 
 DECLARE_MAIN_EXCEPTION(event_dispatcher_exception);
 
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_count_mismatch);
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_failed_connecting);
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_initialization_error);
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_initialization_missing);
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_invalid_callback);
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_invalid_message);
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_invalid_parameter);
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_invalid_signal);
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_recursive_call);
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_runtime_error);
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_unexpected_data);
+DECLARE_EXCEPTION(event_dispatcher_exception, count_mismatch);
+DECLARE_EXCEPTION(event_dispatcher_exception, failed_connecting);
+DECLARE_EXCEPTION(event_dispatcher_exception, initialization_error);
+DECLARE_EXCEPTION(event_dispatcher_exception, initialization_missing);
+DECLARE_EXCEPTION(event_dispatcher_exception, invalid_callback);
+DECLARE_EXCEPTION(event_dispatcher_exception, invalid_message);
+DECLARE_EXCEPTION(event_dispatcher_exception, invalid_parameter);
+DECLARE_EXCEPTION(event_dispatcher_exception, invalid_signal);
+DECLARE_EXCEPTION(event_dispatcher_exception, name_undefined);
+DECLARE_EXCEPTION(event_dispatcher_exception, no_connection_found);
+DECLARE_EXCEPTION(event_dispatcher_exception, recursive_call);
+DECLARE_EXCEPTION(event_dispatcher_exception, runtime_error);
+DECLARE_EXCEPTION(event_dispatcher_exception, unexpected_data);
 
 
 

@@ -172,13 +172,13 @@ sigset_t                            g_signal_handlers = sigset_t();
  * and call that function to "pre-block" the signals you're interested
  * in.
  *
- * \exception event_dispatcher_initialization_error
+ * \exception initialization_error
  * Create multiple signal() with the same posix_signal parameter
  * is not supported and this exception is raised whenever you attempt
  * to do that. Remember that you can have at most one communicator
  * object (hence the singleton.)
  *
- * \exception event_dispatcher_runtime_error
+ * \exception runtime_error
  * The signalfd() function is expected to create a "socket" (file
  * descriptor) listening for incoming signals. If it fails, this
  * exception is raised (which is very similar to other socket
@@ -197,12 +197,12 @@ signal::signal(int posix_signal)
         {
             // this could be fixed, but probably not worth the trouble...
             //
-            throw event_dispatcher_initialization_error("the same signal cannot be created more than once in your entire process.");
+            throw initialization_error("the same signal cannot be created more than once in your entire process.");
         }
 
         // f_signal is not considered valid by this OS
         //
-        throw event_dispatcher_initialization_error("posix_signal (f_signal) is not a valid/recognized signal number.");
+        throw initialization_error("posix_signal (f_signal) is not a valid/recognized signal number.");
     }
 
     cppthread::process_ids_t const pids(cppthread::get_thread_ids());
@@ -210,7 +210,7 @@ signal::signal(int posix_signal)
     {
         std::string const msg("an ed::signal object must be created before any threads or the signals will kill your process.");
         std::cerr << msg << std::endl;
-        throw event_dispatcher_initialization_error(msg);
+        throw initialization_error(msg);
     }
 
     // create a mask for that signal
@@ -223,7 +223,7 @@ signal::signal(int posix_signal)
     //
     if(sigprocmask(SIG_BLOCK, &set, nullptr) != 0)
     {
-        throw event_dispatcher_runtime_error("sigprocmask() failed to block signal.");
+        throw runtime_error("sigprocmask() failed to block signal.");
     }
 
     // second we create a "socket" for the signal (really it is a file
@@ -243,7 +243,7 @@ signal::signal(int posix_signal)
         err += strerror(e);
         err += ").";
         SNAP_LOG_ERROR << err << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error(err);
+        throw runtime_error(err);
     }
 
     // mark this signal as in use
@@ -306,7 +306,7 @@ int signal::get_socket() const
  * This function returns the process identifier (pid_t) of the child that
  * just sent us a SIGCHLD Unix signal.
  *
- * \exception event_dispatcher_runtime_error
+ * \exception runtime_error
  * This exception is raised if the function gets called before any signal
  * ever occurred.
  *
@@ -316,7 +316,7 @@ pid_t signal::get_child_pid() const
 {
     if(f_signal_info.ssi_signo == 0)
     {
-        throw event_dispatcher_runtime_error("signal::get_child_pid() called before any signal ever occurred.");
+        throw runtime_error("signal::get_child_pid() called before any signal ever occurred.");
     }
 
     return f_signal_info.ssi_pid;
@@ -430,7 +430,7 @@ void signal::close()
             {
                 // we cannot throw in a destructor and in most cases this
                 // happens in the destructor...
-                //throw event_dispatcher_runtime_error("sigprocmask() failed to block signal.");
+                //throw runtime_error("sigprocmask() failed to block signal.");
 
                 int const e(errno);
                 SNAP_LOG_FATAL

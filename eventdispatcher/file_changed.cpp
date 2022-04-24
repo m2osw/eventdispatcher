@@ -83,12 +83,12 @@ file_changed::event_t::event_t(std::string const & watched_path
 {
     if(f_watched_path.empty())
     {
-        throw event_dispatcher_initialization_error("a file_changed watch path cannot be the empty string.");
+        throw initialization_error("a file_changed watch path cannot be the empty string.");
     }
 
     if(f_events == SNAP_FILE_CHANGED_EVENT_NO_EVENTS)
     {
-        throw event_dispatcher_initialization_error("a file_changed events parameter cannot be 0.");
+        throw initialization_error("a file_changed events parameter cannot be 0.");
     }
 }
 
@@ -146,7 +146,7 @@ void file_changed::watch_t::add_watch(int inotify)
 
         // it did not work
         //
-        throw event_dispatcher_initialization_error("inotify_add_watch() failed");
+        throw initialization_error("inotify_add_watch() failed");
     }
 }
 
@@ -178,7 +178,7 @@ void file_changed::watch_t::merge_watch(int inotify, event_mask_t const events)
 
         // it did not work
         //
-        throw event_dispatcher_initialization_error("inotify_add_watch() failed");
+        throw initialization_error("inotify_add_watch() failed");
     }
 }
 
@@ -215,7 +215,7 @@ file_changed::file_changed()
 {
     if(f_inotify == -1)
     {
-        throw event_dispatcher_initialization_error("file_changed: inotify_init1() failed.");
+        throw initialization_error("file_changed: inotify_init1() failed.");
     }
 }
 
@@ -419,7 +419,7 @@ void file_changed::process_read()
                 // unless there is a huge bug in the inotify implementation
                 // this exception should never happen
                 //
-                throw event_dispatcher_unexpected_data("somehow the size of this ievent does not match what we just read.");
+                throw unexpected_data("somehow the size of this ievent does not match what we just read.");
             }
 
             // convert the inotify even in one of our events
@@ -516,7 +516,7 @@ uint32_t file_changed::events_to_mask(event_mask_t const events)
 
     if(mask == 0)
     {
-        throw event_dispatcher_initialization_error("invalid file_changed events parameter, it was not changed to any IN_... flags.");
+        throw initialization_error("invalid file_changed events parameter, it was not changed to any IN_... flags.");
     }
 
     return mask;

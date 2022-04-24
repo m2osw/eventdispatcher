@@ -175,7 +175,7 @@ tcp_bio_server::tcp_bio_server(
             if(certificate.empty()
             || private_key.empty())
             {
-                throw event_dispatcher_initialization_error("with MODE_SECURE you must specify a certificate and a private_key filename");
+                throw initialization_error("with MODE_SECURE you must specify a certificate and a private_key filename");
             }
 
             std::shared_ptr<SSL_CTX> ssl_ctx; // use reset(), see SNAP-507
@@ -183,7 +183,7 @@ tcp_bio_server::tcp_bio_server(
             if(!ssl_ctx)
             {
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed creating an SSL_CTX server object");
+                throw initialization_error("failed creating an SSL_CTX server object");
             }
 
             SSL_CTX_set_cipher_list(ssl_ctx.get(), "ALL");//"HIGH:!aNULL:!kRSA:!PSK:!SRP:!MD5:!RC4");
@@ -196,7 +196,7 @@ tcp_bio_server::tcp_bio_server(
             if(!SSL_CTX_use_certificate_chain_file(ssl_ctx.get(), certificate.c_str()))
             {
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed initializing an SSL_CTX server object certificate");
+                throw initialization_error("failed initializing an SSL_CTX server object certificate");
             }
 
             // Assign the private key to the SSL context
@@ -209,7 +209,7 @@ tcp_bio_server::tcp_bio_server(
                 if(!SSL_CTX_use_RSAPrivateKey_file(ssl_ctx.get(), private_key.c_str(), SSL_FILETYPE_PEM))
                 {
                     detail::bio_log_errors();
-                    throw event_dispatcher_initialization_error("failed initializing an SSL_CTX server object private key");
+                    throw initialization_error("failed initializing an SSL_CTX server object private key");
                 }
             }
 
@@ -218,7 +218,7 @@ tcp_bio_server::tcp_bio_server(
             if(!SSL_CTX_check_private_key(ssl_ctx.get()))
             {
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed initializing an SSL_CTX server object private key");
+                throw initialization_error("failed initializing an SSL_CTX server object private key");
             }
 
             // create a BIO connection with SSL
@@ -227,7 +227,7 @@ tcp_bio_server::tcp_bio_server(
             if(!bio)
             {
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed initializing a BIO server object");
+                throw initialization_error("failed initializing a BIO server object");
             }
 
             // get the SSL pointer, which generally means that the BIO
@@ -242,7 +242,7 @@ tcp_bio_server::tcp_bio_server(
             {
                 // TBD: does this mean we would have a plain connection?
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed connecting BIO object with SSL_CTX object");
+                throw initialization_error("failed connecting BIO object with SSL_CTX object");
             }
 
             // allow automatic retries in case the connection somehow needs
@@ -258,7 +258,7 @@ tcp_bio_server::tcp_bio_server(
             if(!listen)
             {
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed initializing a BIO server object");
+                throw initialization_error("failed initializing a BIO server object");
             }
 
             BIO_set_bind_mode(listen.get(), reuse_addr ? BIO_BIND_REUSEADDR : BIO_BIND_NORMAL);
@@ -289,7 +289,7 @@ tcp_bio_server::tcp_bio_server(
             if(r <= 0)
             {
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed initializing the BIO server socket to listen for client connections");
+                throw initialization_error("failed initializing the BIO server socket to listen for client connections");
             }
 
             // it worked, save the results
@@ -307,7 +307,7 @@ tcp_bio_server::tcp_bio_server(
             if(!listen)
             {
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed initializing a BIO server object");
+                throw initialization_error("failed initializing a BIO server object");
             }
 
             BIO_set_bind_mode(listen.get(), BIO_BIND_REUSEADDR);
@@ -323,7 +323,7 @@ tcp_bio_server::tcp_bio_server(
             if(r <= 0)
             {
                 detail::bio_log_errors();
-                throw event_dispatcher_initialization_error("failed initializing the BIO server socket to listen for client connections");
+                throw initialization_error("failed initializing the BIO server socket to listen for client connections");
             }
 
             // it worked, save the results
@@ -523,7 +523,7 @@ tcp_bio_client::pointer_t tcp_bio_server::accept()
         // TBD: should we instead return an empty shared pointer in this case?
         //
         detail::bio_log_errors();
-        throw event_dispatcher_runtime_error("failed accepting a new BIO client");
+        throw runtime_error("failed accepting a new BIO client");
     }
 
     // retrieve the new connection by "popping it"
@@ -533,7 +533,7 @@ tcp_bio_client::pointer_t tcp_bio_server::accept()
     if(bio == nullptr)
     {
         detail::bio_log_errors();
-        throw event_dispatcher_runtime_error("failed retrieving the accepted BIO");
+        throw runtime_error("failed retrieving the accepted BIO");
     }
 
     // mark the new connection with the SO_KEEPALIVE flag

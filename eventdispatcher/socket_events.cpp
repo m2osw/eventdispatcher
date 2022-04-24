@@ -174,7 +174,7 @@ socket_listener::pointer_t      g_socket_listener = socket_listener::pointer_t()
  * increases the size of that connection buffer to make sure we can handle
  * all our messages in one go.
  *
- * \exception event_dispatcher_runtime_error
+ * \exception runtime_error
  * If the opening of the AF_NETLINK socket fails, then this exception is
  * raised.
  *
@@ -190,7 +190,7 @@ socket_listener::socket_listener(cppthread::mutex & socket_mutex)
 {
     if(f_netlink_socket < 0)
     {
-        throw event_dispatcher_runtime_error("opening SOCK_RAW failed in socket_listener.");
+        throw runtime_error("opening SOCK_RAW failed in socket_listener.");
     }
 
     // increase our changes to avoid memory issues
@@ -237,7 +237,7 @@ socket_listener::socket_listener(cppthread::mutex & socket_mutex)
 
     if(bind(d, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) != 0)
     {
-        throw event_dispatcher_runtime_error("could not bind() the SOCK_RAW of socket_listener.");
+        throw runtime_error("could not bind() the SOCK_RAW of socket_listener.");
     }
 #endif
 }
@@ -289,7 +289,7 @@ void socket_listener::add_socket_events(socket_events * evts)
 {
     if(!evts->get_addr().is_ipv4())
     {
-        throw event_dispatcher_invalid_parameter("at this time, the socket listener is limited to IPv4 addresses.");
+        throw invalid_parameter("at this time, the socket listener is limited to IPv4 addresses.");
     }
 
     cppthread::guard g(f_socket_mutex);
@@ -656,7 +656,7 @@ void socket_listener::process_write()
     }
     if(idx != count)
     {
-        throw event_dispatcher_implementation_error(
+        throw implementation_error(
                   "somehow the number of requests counted ("
                 + std::to_string(count)
                 + ") did not match the number of requests created ("

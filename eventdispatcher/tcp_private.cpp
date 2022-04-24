@@ -120,7 +120,7 @@ void pthreads_locking_callback(int mode, int type, char const * file, int line)
 
     if(g_locks == nullptr)
     {
-        throw event_dispatcher_initialization_missing("g_locks was not initialized");
+        throw initialization_missing("g_locks was not initialized");
     }
 
 /*
@@ -163,7 +163,7 @@ void crypto_thread_setup()
 
     if(g_locks != nullptr)
     {
-        throw event_dispatcher_initialization_error(
+        throw initialization_error(
                 "crypto_thread_setup() called for the second time."
                 " This usually means two threads are initializing"
                 " the BIO environment simultaneously.");

@@ -44,6 +44,8 @@ class tcp_client_permanent_message_connection_impl;
 // namespace detail
 
 
+constexpr std::int64_t const   DEFAULT_PAUSE_BEFORE_RECONNECTING = 60LL * 1'000'000LL;  // 1 minute
+
 
 class tcp_client_permanent_message_connection
     : public timer
@@ -53,13 +55,12 @@ class tcp_client_permanent_message_connection
 public:
     typedef std::shared_ptr<tcp_client_permanent_message_connection>    pointer_t;
 
-    static std::int64_t const   DEFAULT_PAUSE_BEFORE_RECONNECTING = 60LL * 1000000LL;  // 1 minute
-
                                 tcp_client_permanent_message_connection(
                                           addr::addr const & address
                                         , mode_t mode = mode_t::MODE_PLAIN
                                         , std::int64_t const pause = DEFAULT_PAUSE_BEFORE_RECONNECTING
-                                        , bool const use_thread = true);
+                                        , bool const use_thread = true
+                                        , std::string const & service_name = std::string());
     virtual                     ~tcp_client_permanent_message_connection() override;
 
     bool                        is_connected() const;

@@ -200,7 +200,7 @@ void dispatcher_support::process_message(message & msg)
         << " the always_match() was not used in your dispatcher matches."
         << SNAP_LOG_SEND;
 
-    throw event_dispatcher_implementation_error(
+    throw implementation_error(
               "your class is not reimplementing the process_message()"
               " virtual function and your dispatcher did not catch message \""
             + msg.to_message()

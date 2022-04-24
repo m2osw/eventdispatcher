@@ -91,7 +91,7 @@ void tcp_bio_options::set_verification_depth(size_t depth)
     if(depth == 0
     || depth > MAX_VERIFICATION_DEPTH)
     {
-        throw event_dispatcher_invalid_parameter("the depth parameter must be defined between 1 and 100 inclusive");
+        throw invalid_parameter("the depth parameter must be defined between 1 and 100 inclusive");
     }
 
     f_verification_depth = depth;

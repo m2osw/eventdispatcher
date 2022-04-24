@@ -18,16 +18,14 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
+// eventdispatcher
+//
 #include "eventdispatcher/connection.h"
-#include "eventdispatcher/exception.h"
 
 
 
 namespace ed
 {
-
-
-DECLARE_EXCEPTION(event_dispatcher_exception, event_dispatcher_no_connection_found);
 
 
 class qt_connection

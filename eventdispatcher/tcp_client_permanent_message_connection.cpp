@@ -249,14 +249,14 @@ public:
                 f_tcp_connection = std::make_shared<tcp_bio_client>(f_address, f_mode);
                 return;
             }
-            catch(event_dispatcher_initialization_error const & e)
+            catch(initialization_error const & e)
             {
-                error_name = "event_dispatcher_initialization_error";
+                error_name = "initialization_error";
                 f_last_error = e.what();
             }
-            catch(event_dispatcher_runtime_error const & e)
+            catch(runtime_error const & e)
             {
-                error_name = "event_dispatcher_runtime_error";
+                error_name = "runtime_error";
                 f_last_error = e.what();
             }
             catch(std::exception const & e)
@@ -273,16 +273,15 @@ public:
 
             // connection failed... we will have to try again later
             //
-            // WARNING: our logger is not multi-thread safe quiet yet
-            //SNAP_LOG_ERROR
-            //    << "connection to "
-            //    << f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_BRACKETS | addr::addr::string_ip_t::STRING_IP_PORT)
-            //    << " failed with: "
-            //    << f_last_error
-            //    << " ("
-            //    << error_name
-            //    << ")"
-            //    << SNAP_LOG_SEND;
+            SNAP_LOG_ERROR
+                << "connection to "
+                << f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+                << " failed with: "
+                << f_last_error
+                << " ("
+                << error_name
+                << ")"
+                << SNAP_LOG_SEND;
         }
 
 
@@ -808,13 +807,17 @@ private:
  *                   connection after a failure, in microseconds, or 0.
  * \param[in] use_thread  Whether a thread is used to connect to the
  *                        server.
+ * \param[in] service_name  The name of your daemon service. Only use once
+ *                          on your permanent connection to snapcommunicator.
  */
 tcp_client_permanent_message_connection::tcp_client_permanent_message_connection(
             addr::addr const & address
           , mode_t mode
           , std::int64_t const pause
-          , bool const use_thread)
+          , bool const use_thread
+          , std::string const & service_name)
     : timer(pause < 0 ? -pause : 0)
+    , connection_with_send_message(service_name)
     , f_impl(std::make_shared<detail::tcp_client_permanent_message_connection_impl>(this, address, mode))
     , f_pause(llabs(pause))
     , f_use_thread(use_thread)
@@ -920,7 +923,7 @@ void tcp_client_permanent_message_connection::mark_done()
  *
  * If the \p message parameter is set to true, we suggest you also call
  * the disconnect() function. That way the messenger will truly get
- * removed from everyone quickly.
+ * removed from everywhere quickly.
  *
  * \param[in] messenger  If true, also mark the messenger as done.
  */

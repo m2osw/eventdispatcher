@@ -265,7 +265,7 @@ int connection::get_priority() const
  * Note that the priority of a connection can modified at any time.
  * It is not guaranteed to be taken in account immediately, though.
  *
- * \exception event_dispatcher_parameter_error
+ * \exception parameter_error
  * The priority of the event is out of range when this exception is raised.
  * The value must between between 0 and EVENT_MAX_PRIORITY. Any
  * other value raises this exception.
@@ -280,7 +280,7 @@ void connection::set_priority(priority_t priority)
                         " this instance of connection accepts priorities between 0 and ");
         err += std::to_string(EVENT_MAX_PRIORITY);
         err += ".";
-        throw event_dispatcher_parameter_error(err);
+        throw parameter_error(err);
     }
 
     f_priority = priority;
@@ -463,7 +463,7 @@ int64_t connection::get_timeout_delay() const
  * function calls calculate_next_tick() to calculate the time when
  * the next tick will occur which will always be in the function.
  *
- * \exception event_dispatcher_parameter_error
+ * \exception parameter_error
  * This exception is raised if the timeout_us parameter is not considered
  * valid. The minimum value is 10 and microseconds. You may use -1 to turn
  * off the timeout delay feature.
@@ -475,7 +475,7 @@ void connection::set_timeout_delay(std::int64_t timeout_us)
     if(timeout_us != -1
     && timeout_us < 10)
     {
-        throw event_dispatcher_parameter_error(
+        throw parameter_error(
                       "connection::set_timeout_delay():"
                       " timeout_us parameter cannot be less than 10"
                       " unless it is exactly -1, "
@@ -568,7 +568,7 @@ int64_t connection::get_timeout_date() const
  * priority is used to know which other connections are parsed
  * first.)
  *
- * \exception event_dispatcher_parameter_error
+ * \exception parameter_error
  * If the date_us is too small (less than -1) then this exception
  * is raised.
  *
@@ -578,7 +578,7 @@ void connection::set_timeout_date(std::int64_t date_us)
 {
     if(date_us < -1)
     {
-        throw event_dispatcher_parameter_error(
+        throw parameter_error(
                       "connection::set_timeout_date():"
                       " date_us parameter cannot be less than -1, "
                     + std::to_string(date_us)

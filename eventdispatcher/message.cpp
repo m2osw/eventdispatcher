@@ -348,7 +348,7 @@ bool message::from_string(std::string const & original_message)
             {
                 verify_message_name(param_name);
             }
-            catch(event_dispatcher_invalid_message const & e)
+            catch(invalid_message const & e)
             {
                 // name is not empty, but it has invalid characters in it
                 //
@@ -738,7 +738,7 @@ bool message::from_json(std::string const & msg)
  * The sent-from information gets saved in the message only if both,
  * the server name and service name it was sent from are defined.
  *
- * \exception event_dispatcher_invalid_message
+ * \exception invalid_message
  * This function raises an exception if the message command was not
  * defined since a command is always mandatory.
  *
@@ -766,7 +766,7 @@ std::string message::to_message(format_t format) const
 
     }
 
-    throw event_dispatcher_invalid_parameter(
+    throw invalid_parameter(
                       "unsupported message format: "
                     + std::to_string(static_cast<int>(format)));
 }
@@ -789,7 +789,7 @@ std::string message::to_message(format_t format) const
  * The sent-from information gets saved in the message only if both,
  * the server name and service name it was sent from are defined.
  *
- * \exception event_dispatcher_invalid_message
+ * \exception invalid_message
  * This function raises an exception if the message command was not
  * defined since a command is always mandatory.
  *
@@ -806,7 +806,7 @@ std::string message::to_string() const
     {
         if(f_command.empty())
         {
-            throw event_dispatcher_invalid_message("message::to_message(): cannot build a valid message without at least a command.");
+            throw invalid_message("message::to_message(): cannot build a valid message without at least a command.");
         }
 
         // add info about the sender
@@ -916,7 +916,7 @@ std::string message::to_string() const
  * The sent-from information gets saved in the message only if both,
  * the server name and service name it was sent from are defined.
  *
- * \exception event_dispatcher_invalid_message
+ * \exception invalid_message
  * This function raises an exception if the message command was not
  * defined since a command is always mandatory.
  *
@@ -933,7 +933,7 @@ std::string message::to_json() const
     {
         if(f_command.empty())
         {
-            throw event_dispatcher_invalid_message("message::to_json(): cannot build a valid JSON message without at least a command.");
+            throw invalid_message("message::to_json(): cannot build a valid JSON message without at least a command.");
         }
 
         f_cached_json += '{';
@@ -1390,7 +1390,7 @@ message_version_t message::get_message_version() const
  * re-connecting over and over again when it knows it will fail
  * each time.
  *
- * \exception event_dispatcher_invalid_message
+ * \exception invalid_message
  * If you call this function and no version parameter was added to
  * the message, then this exception is raised.
  *
@@ -1614,7 +1614,7 @@ bool message::has_parameter(std::string const & name) const
  * the value of that parameter, what has been returned does not change
  * under your feet.
  *
- * \exception event_dispatcher_invalid_message
+ * \exception invalid_message
  * This exception is raised whenever the parameter is not defined or
  * if the parameter \p name is not considered valid.
  *
@@ -1634,7 +1634,7 @@ std::string message::get_parameter(std::string const & name) const
         return it->second;
     }
 
-    throw event_dispatcher_invalid_message(
+    throw invalid_message(
               "message::get_parameter(): parameter \""
             + name
             + "\" of command \""
@@ -1651,7 +1651,7 @@ std::string message::get_parameter(std::string const & name) const
  *
  * The name must be valid as defined by the verify_message_name() function.
  *
- * \exception event_dispatcher_invalid_message
+ * \exception invalid_message
  * This exception is raised whenever the parameter is not a valid integer,
  * it is not set, or the parameter name is not considered valid.
  *
@@ -1671,7 +1671,7 @@ std::int64_t message::get_integer_parameter(std::string const & name) const
         std::int64_t r;
         if(!advgetopt::validator_integer::convert_string(it->second, r))
         {
-            throw event_dispatcher_invalid_message(
+            throw invalid_message(
                       "message::get_integer_parameter(): command \""
                     + f_command
                     + "\" expected integer for \""
@@ -1683,7 +1683,7 @@ std::int64_t message::get_integer_parameter(std::string const & name) const
         return r;
     }
 
-    throw event_dispatcher_invalid_message(
+    throw invalid_message(
                   "message::get_integer_parameter(): parameter \""
                 + name
                 + "\" of command \""
@@ -1751,7 +1751,7 @@ message::parameters_t const & message::get_all_parameters() const
  * At this point all our services use lowercase, but this is not enforced.
  * Actually, mixed case or uppercase service names are allowed.
  *
- * \exception event_dispatcher_invalid_message
+ * \exception invalid_message
  * This exception is raised if the name includes characters considered
  * invalid.
  *
@@ -1768,7 +1768,7 @@ void verify_message_name(std::string const & name, bool can_be_empty, bool can_b
         SNAP_LOG_FATAL
             << err
             << SNAP_LOG_SEND;
-        throw event_dispatcher_invalid_message(err);
+        throw invalid_message(err);
     }
 
     for(auto const & c : name)
@@ -1786,7 +1786,7 @@ void verify_message_name(std::string const & name, bool can_be_empty, bool can_b
             SNAP_LOG_FATAL
                 << err
                 << SNAP_LOG_SEND;
-            throw event_dispatcher_invalid_message(err);
+            throw invalid_message(err);
         }
     }
 
@@ -1799,7 +1799,7 @@ void verify_message_name(std::string const & name, bool can_be_empty, bool can_b
         SNAP_LOG_FATAL
             << err
             << SNAP_LOG_SEND;
-        throw event_dispatcher_invalid_message(err);
+        throw invalid_message(err);
     }
 }
 

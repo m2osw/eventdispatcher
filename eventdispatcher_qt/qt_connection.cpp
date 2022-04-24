@@ -22,19 +22,24 @@
 #include "eventdispatcher_qt/qt_connection.h"
 
 
-// Qt lib
+// eventdispatcher
+//
+#include "eventdispatcher/exception.h"
+
+
+// Qt
 //
 #include <QX11Info>
 #include <QEventLoop>
 #include <QApplication>
 
 
-// C lib
+// C
 //
 #include <xcb/xcb.h>
 
 
-// X11 lib
+// X11
 //
 #include <X11/Xlib.h>
 
@@ -75,7 +80,7 @@ namespace
  *
  * We use this variable to make sure that you don't create two of
  * the ed::qt_connection since that would wreak havoc your application
- * anyway. It will throw event_dispatcher_implementation_error if
+ * anyway. It will throw implementation_error if
  * it happens.
  */
 bool g_qt_communicator_created = false;
@@ -146,7 +151,7 @@ qt_connection::qt_connection()
 {
     if(g_qt_communicator_created)
     {
-        throw event_dispatcher_implementation_error("you cannot create more than one qt_connection, make sure to delete the previous one before creating a new one (if you used a shared pointer, make sure to reset() first.)");
+        throw implementation_error("you cannot create more than one qt_connection, make sure to delete the previous one before creating a new one (if you used a shared pointer, make sure to reset() first.)");
     }
 
     g_qt_communicator_created = true;
@@ -172,7 +177,7 @@ qt_connection::qt_connection()
 
     if(f_fd == -1)
     {
-        throw event_dispatcher_no_connection_found("qt_connection was not able to find a file descriptor to poll() on");
+        throw no_connection_found("qt_connection was not able to find a file descriptor to poll() on");
     }
 
     // Qt has many internal functionality which doesn't get awaken by

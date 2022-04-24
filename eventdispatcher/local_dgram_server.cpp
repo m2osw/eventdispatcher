@@ -144,7 +144,7 @@ local_dgram_server::local_dgram_server(
                     << f_address.to_uri()
                     << "\"."
                     << SNAP_LOG_SEND;
-                throw event_dispatcher_runtime_error("file already exists and it is not a socket, can't create an AF_UNIX server");
+                throw runtime_error("file already exists and it is not a socket, can't create an AF_UNIX server");
             }
 
             if(!force_reuse_addr)
@@ -160,7 +160,7 @@ local_dgram_server::local_dgram_server(
                     << f_address.to_uri()
                     << "\"."
                     << SNAP_LOG_SEND;
-                throw event_dispatcher_runtime_error("socket already exists, can't create an AF_UNIX server");
+                throw runtime_error("socket already exists, can't create an AF_UNIX server");
             }
 
             r = f_address.unlink();
@@ -178,7 +178,7 @@ local_dgram_server::local_dgram_server(
                     << f_address.to_uri()
                     << "\"."
                     << SNAP_LOG_SEND;
-                throw event_dispatcher_runtime_error("could not unlink socket to reuse it as an AF_UNIX server");
+                throw runtime_error("could not unlink socket to reuse it as an AF_UNIX server");
             }
         }
         r = bind(
@@ -212,7 +212,7 @@ local_dgram_server::local_dgram_server(
                 << f_address.to_uri()
                 << "\"."
                 << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error(
+        throw runtime_error(
                 "could not bind AF_UNIX datagram socket to \""
                 + f_address.to_uri()
                 + "\"");

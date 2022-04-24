@@ -119,7 +119,7 @@ thread_done_signal::thread_done_signal()
     {
         // pipe could not be created
         //
-        throw event_dispatcher_initialization_error("somehow the pipes used to detect the death of a thread could not be created.");
+        throw initialization_error("somehow the pipes used to detect the death of a thread could not be created.");
     }
 }
 

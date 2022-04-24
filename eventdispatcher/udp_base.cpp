@@ -98,7 +98,7 @@ udp_base::udp_base(addr::addr const & address)
         ss << "could not create socket for: \""
            << f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
            << "\".";
-        throw event_dispatcher_runtime_error(ss.str());
+        throw runtime_error(ss.str());
     }
 }
 

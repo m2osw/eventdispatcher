@@ -29,27 +29,28 @@
 //
 #include    "eventdispatcher/connection_with_send_message.h"
 
+#include    "eventdispatcher/connection.h"
 #include    "eventdispatcher/dispatcher_support.h"
 #include    "eventdispatcher/exception.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/logger.h>
 #include    <snaplogger/message.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/not_used.h>
 
 
-// boost lib
+// boost
 //
 #include    <boost/algorithm/string/join.hpp>
 
 
-// C lib
+// C
 //
 #ifdef __SANITIZE_ADDRESS__
 #include    <sanitizer/lsan_interface.h>
@@ -67,11 +68,30 @@ namespace ed
 
 
 
-/** \brief Initialize a connection_with_send_message object.
+/** \brief Initialize the connection.
  *
- * This constructor initializes a connection which supports a send_message()
- * function. This allows that object to send a certain number of default
- * messages such as the UNKNOWN message automatically.
+ * This constructor initialize the connection with a send_message() function.
+ * The function takes an optional \p service_name which is used in various
+ * messages such as the REGISTER and UNREGISTER messages.
+ *
+ * If the \p service_name parameter is an empty string, then the functions
+ * that require that name throw when reached.
+ *
+ * \param[in] service_name  The name of your service.
+ *
+ * \sa register_service()
+ * \sa unregister_service()
+ */
+connection_with_send_message::connection_with_send_message(std::string const & service_name)
+    : f_service_name(service_name)
+{
+}
+
+
+/** \brief Clean up.
+ *
+ * The destructor makes sure to clean up the connection with send_message()
+ * objects.
  */
 connection_with_send_message::~connection_with_send_message()
 {
@@ -185,7 +205,7 @@ void connection_with_send_message::msg_help(message & msg)
     //
     if(commands.empty())
     {
-        throw event_dispatcher_implementation_error(
+        throw implementation_error(
                 "connection_with_send_message::msg_help()"
                 " is not able to determine the commands this messenger supports");
     }
@@ -562,17 +582,136 @@ void connection_with_send_message::stop(bool quitting)
 
 /** \brief Check whether the last send_message() worked.
  *
- * This function returns true if the last send_message() to this connection
- * worked or not.
+ * This function returns a pointer to the connection which last failed
+ * a send_message() call. The pointer is kept as a weak pointer to make
+ * sure that it does not prevent the deletion of the connection when
+ * it becomes erroneous.
  *
- * \warning
- * This flag is used by the broadcast_message() function only.
+ * \note
+ * This parameter is defined by the broadcast_message() function whenever one
+ * of the send_message() failed.
  *
- * \return true if the last send_message() was successful.
+ * \return a pointer to the connection which last failed its send_message().
  */
-bool connection_with_send_message::get_last_send_status() const
+connection_with_send_message::pointer_t connection_with_send_message::get_last_failed_send() const
 {
-    return f_last_send_status;
+    return f_last_failed_send.lock();
+}
+
+
+/** \brief Retrieve the name of this service.
+ *
+ * A messenger used with the snapcommunicator is viewed as a service and
+ * it needs to have a name. That name is specified at the time you create
+ * your service (see constructor).
+ *
+ * This function returns that name.
+ *
+ * \exception name_undefined
+ * When \p required is true, this function make raise a `name_undefined` if
+ * the service name is empty. Fix this issue by adding the name in your
+ * constructor.
+ *
+ * \param[in] required  Set to true if you want to raise an error when the
+ * service name is not defined.
+ *
+ * \return The service name of this connection.
+ */
+std::string connection_with_send_message::get_service_name(bool required) const
+{
+    if(required
+    && f_service_name.empty())
+    {
+        throw name_undefined("service name is required but not available.");
+    }
+
+    return f_service_name;
+}
+
+
+/** \brief Register your snapcommunicator service.
+ *
+ * This function registers your snapcommunicator service by sending
+ * the REGISTER command to it. The service name must have been defined
+ * in your constructor.
+ *
+ * The function is expected to be called in your process_connected()
+ * function.
+ *
+ * \code
+ *     void my_messenger::process_connected()
+ *     {
+ *         // make sure to call default function
+ *         snap_tcp_client_permanent_message_connection::process_connected();
+ *
+ *         // then register
+ *         register_service();
+ *     }
+ * \endcode
+ *
+ * \note
+ * The function generates a fatal error if the send_message() fails.
+ * However, you are responsible for quitting your service if the function
+ * returns false. This very function does not attempt anything more.
+ *
+ * \exception name_undefined
+ * The function makes use of the service name as specified in the
+ * constructor. It cannot be empty.
+ *
+ * \return true if the send_message() succeeded.
+ */
+bool connection_with_send_message::register_service()
+{
+    message register_msg;
+    register_msg.set_command("REGISTER");
+    register_msg.add_parameter("service", get_service_name());
+    register_msg.add_version_parameter();
+    if(!send_message(register_msg, false))
+    {
+        SNAP_LOG_FATAL
+            << "could not REGISTER with snapcommunicator."
+            << SNAP_LOG_SEND;
+        return false;
+    }
+
+    return true;
+}
+
+
+/** \brief Unregister from the snapcommunicator.
+ *
+ * The register_service() function registers your service with the
+ * snapcommunicator. This function is the converse. It sends a message
+ * to UNREGISTER you from the snapcommunicator. This means other services
+ * will not be able to send you messages anymore.
+ *
+ * \exception name_undefined
+ * The function makes use of the service name as specified in the
+ * constructor. It cannot be empty.
+ */
+void connection_with_send_message::unregister_service()
+{
+    // mark ourself as done so once the last message(s) were sent,
+    // we get automatically removed from the communicator
+    //
+    connection * c(dynamic_cast<connection *>(this));
+    if(c == nullptr)
+    {
+        throw implementation_error("ed::connection_with_send_message must derive from ed::connection.");
+    }
+    c->mark_done();
+
+    // unregister ourself from the snapcommunicator daemon
+    //
+    message unregister_msg;
+    unregister_msg.set_command("UNREGISTER");
+    unregister_msg.add_parameter("service", get_service_name(true));
+    if(!send_message(unregister_msg, false))
+    {
+        SNAP_LOG_WARNING
+            << "could not UNREGISTER from snapcommunicator."
+            << SNAP_LOG_SEND;
+    }
 }
 
 

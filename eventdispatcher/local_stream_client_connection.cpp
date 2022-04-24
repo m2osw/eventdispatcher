@@ -75,7 +75,7 @@ namespace ed
  * Unix socket object by connecting to the specified server. The server
  * is defined with the \p u parameters.
  *
- * \exception event_dispatcher_runtime_error
+ * \exception runtime_error
  * This exception is raised if the client cannot create the socket or it
  * cannot connect to the server.
  *
@@ -107,7 +107,7 @@ local_stream_client_connection::local_stream_client_connection(
             << strerror(e)
             << ")"
             << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error("could not create socket for client");
+        throw runtime_error("could not create socket for client");
     }
 
     if(f_address.is_unnamed())
@@ -153,7 +153,7 @@ local_stream_client_connection::local_stream_client_connection(
             << strerror(e)
             << ")"
             << SNAP_LOG_SEND;
-        throw event_dispatcher_runtime_error(
+        throw runtime_error(
                   "could not connect client socket to \""
                 + f_address.to_uri()
                 + "\"");

@@ -138,7 +138,7 @@ bool udp_server_message_connection::send_message(
     {
         // packet too large for our buffers
         //
-        throw event_dispatcher_invalid_message(
+        throw invalid_message(
                   "message too large ("
                 + std::to_string(buf.length())
                 + " bytes) for a UDP server (max: "

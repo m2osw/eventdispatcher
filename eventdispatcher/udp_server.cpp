@@ -93,8 +93,8 @@ namespace ed
  * addresses. We currently do not allow the default address as the
  * multicast address.
  *
- * \exception event_dispatcher_runtime_error
- * The event_dispatcher_runtime_error exception is raised when the socket
+ * \exception runtime_error
+ * The runtime_error exception is raised when the socket
  * cannot be opened.
  *
  * \param[in] address  The address we receive on.
@@ -124,7 +124,7 @@ udp_server::udp_server(
             SNAP_LOG_FATAL
                 << ss
                 << SNAP_LOG_SEND;
-            throw event_dispatcher_runtime_error(ss.str());
+            throw runtime_error(ss.str());
         }
 
         r = multicast_address.bind(get_socket());
@@ -141,7 +141,7 @@ udp_server::udp_server(
             SNAP_LOG_FATAL
                 << ss
                 << SNAP_LOG_SEND;
-            throw event_dispatcher_runtime_error(ss.str());
+            throw runtime_error(ss.str());
         }
     }
     else
@@ -161,7 +161,7 @@ udp_server::udp_server(
             SNAP_LOG_FATAL
                 << ss
                 << SNAP_LOG_SEND;
-            throw event_dispatcher_runtime_error(ss.str());
+            throw runtime_error(ss.str());
         }
     }
 
@@ -188,7 +188,7 @@ udp_server::udp_server(
         if(r < 0)
         {
             int const e(errno);
-            throw event_dispatcher_runtime_error(
+            throw runtime_error(
                       "IP_ADD_MEMBERSHIP failed for: \""
                     + f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
                     + "\" or \""

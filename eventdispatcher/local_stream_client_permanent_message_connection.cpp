@@ -256,14 +256,14 @@ public:
                             , f_close_on_exec);
                 return;
             }
-            catch(event_dispatcher_initialization_error const & e)
+            catch(initialization_error const & e)
             {
-                error_name = "event_dispatcher_initialization_error";
+                error_name = "initialization_error";
                 f_last_error = e.what();
             }
-            catch(event_dispatcher_runtime_error const & e)
+            catch(runtime_error const & e)
             {
-                error_name = "event_dispatcher_runtime_error";
+                error_name = "runtime_error";
                 f_last_error = e.what();
             }
             catch(std::exception const & e)
@@ -280,18 +280,15 @@ public:
 
             // connection failed... we will have to try again later
             //
-            // WARNING: our logger is not multi-thread safe quiet yet
-            //SNAP_LOG_ERROR
-            //    << "connection to "
-            //    << f_address
-            //    << ":"
-            //    << f_port
-            //    << " failed with: "
-            //    << f_last_error
-            //    << " ("
-            //    << error_name
-            //    << ")"
-            //    << SNAP_LOG_SEND;
+            SNAP_LOG_ERROR
+                << "connection to "
+                << f_address.to_string()
+                << " failed with: "
+                << f_last_error
+                << " ("
+                << error_name
+                << ")"
+                << SNAP_LOG_SEND;
         }
 
 

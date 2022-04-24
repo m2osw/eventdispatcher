@@ -239,7 +239,7 @@ void tcp_blocking_client_message_connection::run()
                 SNAP_LOG_FATAL
                     << "blocking connection timed out."
                     << SNAP_LOG_SEND;
-                throw event_dispatcher_runtime_error(
+                throw runtime_error(
                     "tcp_blocking_client_message_connection::run(): blocking"
                     " connection timed out.");
             }
@@ -256,14 +256,14 @@ void tcp_blocking_client_message_connection::run()
                     //       use the signal with the Unix signals that may
                     //       happen while calling poll().
                     //
-                    throw event_dispatcher_runtime_error(
+                    throw runtime_error(
                             "tcp_blocking_client_message_connection::run():"
                             " EINTR occurred while in poll() -- interrupts"
                             " are not supported yet though.");
                 }
                 if(errno == EFAULT)
                 {
-                    throw event_dispatcher_runtime_error(
+                    throw runtime_error(
                             "tcp_blocking_client_message_connection::run():"
                             " buffer was moved out of our address space?");
                 }
@@ -276,7 +276,7 @@ void tcp_blocking_client_message_connection::run()
                     //
                     rlimit rl;
                     getrlimit(RLIMIT_NOFILE, &rl);
-                    throw event_dispatcher_invalid_parameter(
+                    throw invalid_parameter(
                               "tcp_blocking_client_message_connection::run():"
                               " too many file fds for poll, limit is"
                               " currently "
@@ -287,12 +287,12 @@ void tcp_blocking_client_message_connection::run()
                 }
                 if(errno == ENOMEM)
                 {
-                    throw event_dispatcher_runtime_error(
+                    throw runtime_error(
                             "tcp_blocking_client_message_connection::run():"
                             " poll() failed because of memory.");
                 }
                 int const e(errno);
-                throw event_dispatcher_invalid_parameter(
+                throw invalid_parameter(
                           "tcp_blocking_client_message_connection::run():"
                           " poll() failed with error "
                         + std::to_string(e)
@@ -312,7 +312,7 @@ void tcp_blocking_client_message_connection::run()
                     // invalid read
                     //
                     process_error();
-                    throw event_dispatcher_invalid_parameter(
+                    throw invalid_parameter(
                               "tcp_blocking_client_message_connection::run():"
                               " read() failed reading data from socket"
                               " (return value = "
@@ -392,14 +392,14 @@ void tcp_blocking_client_message_connection::peek()
                     //       use the signal with the Unix signals that may
                     //       happen while calling poll().
                     //
-                    throw event_dispatcher_runtime_error(
+                    throw runtime_error(
                             "tcp_blocking_client_message_connection::run():"
                             " EINTR occurred while in poll() -- interrupts"
                             " are not supported yet though");
                 }
                 if(errno == EFAULT)
                 {
-                    throw event_dispatcher_invalid_parameter(
+                    throw invalid_parameter(
                             "tcp_blocking_client_message_connection::run():"
                             " buffer was moved out of our address space?");
                 }
@@ -412,7 +412,7 @@ void tcp_blocking_client_message_connection::peek()
                     //
                     struct rlimit rl;
                     getrlimit(RLIMIT_NOFILE, &rl);
-                    throw event_dispatcher_invalid_parameter(
+                    throw invalid_parameter(
                               "tcp_blocking_client_message_connection::run():"
                               " too many file fds for poll, limit is currently "
                             + std::to_string(rl.rlim_cur)
@@ -421,12 +421,12 @@ void tcp_blocking_client_message_connection::peek()
                 }
                 if(errno == ENOMEM)
                 {
-                    throw event_dispatcher_runtime_error(
+                    throw runtime_error(
                             "tcp_blocking_client_message_connection::run():"
                             " poll() failed because of memory");
                 }
                 int const e(errno);
-                throw event_dispatcher_runtime_error(
+                throw runtime_error(
                           "tcp_blocking_client_message_connection::run():"
                           " poll() failed with error "
                         + std::to_string(e)
@@ -450,7 +450,7 @@ void tcp_blocking_client_message_connection::peek()
                 {
                     // invalid read
                     process_error();
-                    throw event_dispatcher_runtime_error(
+                    throw runtime_error(
                               "tcp_blocking_client_message_connection::run():"
                               " read() failed reading data from socket (return"
                               " value = "

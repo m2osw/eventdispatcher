@@ -198,7 +198,7 @@ bool communicator::add_connection(connection::pointer_t connection)
 
     if(!connection->valid_socket())
     {
-        throw event_dispatcher_invalid_parameter(
+        throw invalid_parameter(
             "communicator::add_connection(): connection without a socket"
             " cannot be added to a communicator object.");
     }
@@ -410,7 +410,7 @@ bool communicator::run()
         SNAP_LOG_FATAL
             << "communicator::run(): recursively called from within a callback."
             << SNAP_LOG_SEND;
-        throw event_dispatcher_recursive_call("communicator::run(): recursively called from within a callback.");
+        throw recursive_call("communicator::run(): recursively called from within a callback.");
     }
 
     snapdev::safe_variable running(f_running, true);
@@ -601,7 +601,7 @@ bool communicator::run()
             //
             if(static_cast<size_t>(r) > connections.size())
             {
-                throw event_dispatcher_runtime_error("communicator::run(): poll() returned a number of events to handle larger than the input allows");
+                throw runtime_error("communicator::run(): poll() returned a number of events to handle larger than the input allows");
             }
 //SNAP_LOG_TRACE
 //    <<"tid="
@@ -753,11 +753,11 @@ bool communicator::run()
                 //       use the signal with the Unix signals that may
                 //       happen while calling poll().
                 //
-                throw event_dispatcher_runtime_error("communicator::run(): EINTR occurred while in poll() -- interrupts are not supported yet though");
+                throw runtime_error("communicator::run(): EINTR occurred while in poll() -- interrupts are not supported yet though");
             }
             if(errno == EFAULT)
             {
-                throw event_dispatcher_invalid_parameter("communicator::run(): buffer was moved out of our address space?");
+                throw invalid_parameter("communicator::run(): buffer was moved out of our address space?");
             }
             if(errno == EINVAL)
             {
@@ -768,7 +768,7 @@ bool communicator::run()
                 //
                 struct rlimit rl;
                 getrlimit(RLIMIT_NOFILE, &rl);
-                throw event_dispatcher_invalid_parameter(
+                throw invalid_parameter(
                             "communicator::run(): too many file fds for poll, limit is currently "
                           + std::to_string(rl.rlim_cur)
                           + ", your kernel top limit is "
@@ -776,10 +776,10 @@ bool communicator::run()
             }
             if(errno == ENOMEM)
             {
-                throw event_dispatcher_runtime_error("communicator::run(): poll() failed because of memory");
+                throw runtime_error("communicator::run(): poll() failed because of memory");
             }
             int const e(errno);
-            throw event_dispatcher_runtime_error(
+            throw runtime_error(
                         "communicator::run(): poll() failed with error "
                       + std::to_string(e)
                       + " -- "
