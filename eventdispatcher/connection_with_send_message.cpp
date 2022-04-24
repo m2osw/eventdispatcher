@@ -580,25 +580,6 @@ void connection_with_send_message::stop(bool quitting)
 }
 
 
-/** \brief Check whether the last send_message() worked.
- *
- * This function returns a pointer to the connection which last failed
- * a send_message() call. The pointer is kept as a weak pointer to make
- * sure that it does not prevent the deletion of the connection when
- * it becomes erroneous.
- *
- * \note
- * This parameter is defined by the broadcast_message() function whenever one
- * of the send_message() failed.
- *
- * \return a pointer to the connection which last failed its send_message().
- */
-connection_with_send_message::pointer_t connection_with_send_message::get_last_failed_send() const
-{
-    return f_last_failed_send.lock();
-}
-
-
 /** \brief Retrieve the name of this service.
  *
  * A messenger used with the snapcommunicator is viewed as a service and
