@@ -127,7 +127,7 @@ int udp_base::get_socket() const
 
 /** \brief Set whether this UDP socket is to be used to broadcast messages.
  *
- * This function sets the BROADCAST flagon the socket. This is important
+ * This function sets the BROADCAST flag on the socket. This is important
  * because by default it is expected that the socket is not used in
  * broadcast mode. This makes sure that was your intention.
  *

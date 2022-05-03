@@ -47,12 +47,17 @@
 #include    "eventdispatcher/udp_client.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// boost lib
+// libaddr
+//
+#include    <libaddr/iface.h>
+
+
+// boost
 //
 #include    <boost/preprocessor/stringize.hpp>
 
@@ -118,6 +123,7 @@ bool udp_server_message_connection::send_message(
     //       limit which we enforce here.
     //
     udp_client client(address);
+
     std::string buf;
     if(!secret_code.empty())
     {
@@ -128,6 +134,18 @@ bool udp_server_message_connection::send_message(
     else
     {
         buf = msg.to_message();
+    }
+
+    // you should use the multi-cast
+    //
+    // TODO: also the is_broadcast_address() re-reads the list of interfaces
+    //       from the kernel, which is _slow_ (i.e. it doesn't get cached)
+    //       See: libaddr/iface.cpp in the libaddr project
+    //
+    if(address.get_network_type() == addr::addr::network_type_t::NETWORK_TYPE_MULTICAST
+    || addr::is_broadcast_address(address))
+    {
+        client.set_broadcast(true);
     }
 
     // TODO: this maximum size needs to be checked dynamically;
@@ -142,13 +160,15 @@ bool udp_server_message_connection::send_message(
                   "message too large ("
                 + std::to_string(buf.length())
                 + " bytes) for a UDP server (max: "
-                  BOOST_PP_STRINGIZE(DATAGRAM_MAX_SIZE));
+                  BOOST_PP_STRINGIZE(DATAGRAM_MAX_SIZE)
+                  ")");
     }
 
     if(client.send(buf.data(), buf.length()) != static_cast<ssize_t>(buf.length())) // we do not send the '\0'
     {
-        // TODO: add errno to message
+        int const e(errno);
         SNAP_LOG_ERROR
+            << SNAP_LOG_FIELD("errno", std::to_string(e))
             << "udp_server_message_connection::send_message(): could not send UDP message."
             << SNAP_LOG_SEND;
         return false;

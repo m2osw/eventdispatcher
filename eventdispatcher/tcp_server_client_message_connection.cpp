@@ -151,7 +151,7 @@ void tcp_server_client_message_connection::process_line(std::string const & line
  *                   (Ignore because a client socket has to be there until
  *                   closed and then it can't be reopened by the server.)
  *
- * \return Always true, although if an error occurs the function throws.
+ * \return Always true. If an error occurs the function throws.
  */
 bool tcp_server_client_message_connection::send_message(
           message & msg
