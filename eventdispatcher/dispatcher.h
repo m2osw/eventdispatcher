@@ -43,6 +43,7 @@ namespace ed
 
 
 
+
 /** \brief A template to create a list of messages to dispatch on receival.
  *
  * Whenever you receive messages, they can automatically get dispatched to
@@ -54,15 +55,15 @@ namespace ed
  * \code
  *      ed::dispatcher<my_connection>::dispatcher_match const my_messages[] =
  *      {
- *          {
- *              "HELP"
- *            , &my_connection::msg_help
- *            //, &dispatcher<my_connection>::dispatcher_match::one_to_one_match -- use default
- *          },
- *          {
- *              "STATUS"
- *            , &my_connection::msg_status
- *            //, &dispatcher<my_connection>::dispatcher_match::one_to_one_match -- use default
+ *          ed::dispatcher<my_connection>::define_match(
+ *              ed::dispatcher<my_connection>::Expression("HELP")
+ *            , ed::dispatcher<my_connection>::Execute(&my_connection::msg_help)
+ *            //, ed::dispatcher<my_connection>::MatchFunc(&ed::dispatcher<my_connection>::dispatcher_match::one_to_one_match) -- use default
+ *          ),
+ *          ed::dispatcher<my_connection>::define_match(
+ *              ed::dispatcher<my_connection>::Expression("STATUS")
+ *            , ed::dispatcher<my_connection>::Execute(&my_connection::msg_status)
+ *            //, ed::dispatcher<my_connection>::MatchFunc(&dispatcher<my_connection>::dispatcher_match::one_to_one_match) -- use default
  *          },
  *          ... // other messages
  *
@@ -70,11 +71,7 @@ namespace ed
  *          // generate the UNKNOWN message with the following (not required)
  *          // if you have that entry, your own process_message() function
  *          // will not get called
- *          {
- *              nullptr
- *            , &dispatcher<my_connection>::dispatcher_match::msg_reply_with_unknown
- *            , &dispatcher<my_connection>::dispatcher_match::always_match
- *          },
+ *          ed::dispatcher<my_connection>::define_catch_all()
  *      };
  * \endcode
  *
@@ -98,7 +95,7 @@ namespace ed
  * constraint on that object. It just needs to understand the dispatcher
  * usage which is to call the dispatch() function whenever a message is
  * received. Also it needs to implement any f_execute() function as
- * defined in its dispatch_match vector.
+ * defined in its dispatcher_match vector.
  *
  * \note
  * This is documented here because it is a template and we cannot do
@@ -232,11 +229,11 @@ public:
                             : match_t::MATCH_FALSE;
         }
 
-        /** \brief Always returns true.
+        /** \brief Always returns MATCH_TRUE.
          *
-         * This function always returns true. This is practical to close
-         * your list of messages and return a specific message. In most
-         * cases this is used to reply with the UNKNOWN message.
+         * This function always returns MATCH_TRUE. This is practical to
+         * close your list of messages and return a specific message. In
+         * most cases this is used to reply with the UNKNOWN message.
          *
          * \param[in] expr  The expression to compare the command against.
          * \param[in] msg  The message to match against this expression.
@@ -249,14 +246,18 @@ public:
             return match_t::MATCH_TRUE;
         }
 
-        /** \brief Always returns true.
+        /** \brief Always returns MATCH_CALLBACK.
          *
-         * This function always returns true. This is practical to close
-         * your list of messages and return a specific message. In most
-         * cases this is used to reply with the UNKNOWN message.
+         * This function always returns MATCH_CALLBACK. It is used
+         * to call the f_execute function as a callback. The processing
+         * continues after calling a callback function (i.e. the
+         * execute() function returns false, meaning that the message
+         * was not yet processed). This is useful if you want to execute
+         * some code against many or all messages before actually
+         * processing the messages individually.
          *
-         * \param[in] expr  The expression to compare the command against.
-         * \param[in] msg  The message to match against this expression.
+         * \param[in] expr  The expression is ignored.
+         * \param[in] msg  The message is ignored.
          *
          * \return Always returns MATCH_CALLBACK.
          */
@@ -286,7 +287,7 @@ public:
          * This is an offset in your connection class. We do not allow
          * std::bind() because we do not want the array of messages to be
          * dynamic (that way it is created at compile time and loaded as
-         * ready/prepared data on load.)
+         * ready/prepared data on load).
          *
          * The functions called have `this` defined so you can access
          * your connection data and other functions. It requires the
@@ -296,7 +297,7 @@ public:
          *      &MyClass::my_message_function
          * \endcode
          *
-         * The execution is started by calling the run() function.
+         * The execution is started by calling the execute() function.
          */
         execute_func_t      f_execute = nullptr;
 
@@ -336,10 +337,13 @@ public:
          * will never be called.
          *
          * \note
-         * Note that we do not offer two functions, one to run the match
-         * function and one to execute the match because you could otherwise
-         * end up calling the execute function (dispatch) on any
-         * `dispatcher_match` entry and we did not want that to happen.
+         * Note that the dispatch_match has two functions: one to match
+         * the message against the dispatch_match and one to execute when
+         * f_match() returns MATCH_TRUE or MATCH_CALLBACK. That way only
+         * the matching functions get called. Note that on MATCH_CALLBACK
+         * the function returns `false` (i.e. continue to loop through
+         * the supported messages). The MATCH_CALLBACK feature is rarely
+         * used.
          *
          * \param[in] connection  The connection attached to that
          *                        `dispatcher_match`.
@@ -399,6 +403,119 @@ public:
             return f_match == &ed::dispatcher<T>::dispatcher_match::callback_match;
         }
     };
+
+    template<typename V>
+    class MatchValue
+    {
+    public:
+        typedef V   value_t;
+
+        MatchValue<V>(V const v)
+            : f_value(v)
+        {
+        }
+
+        value_t get() const
+        {
+            return f_value;
+        }
+
+    private:
+        value_t     f_value;
+    };
+
+    class Expression
+        : public MatchValue<char const *>
+    {
+    public:
+        Expression()
+            : MatchValue<char const *>(nullptr)
+        {
+        }
+
+        Expression(char const * expr)
+            : MatchValue<char const *>(expr == nullptr || *expr == '\0' ? nullptr : expr)
+        {
+        }
+    };
+
+    class Execute
+        : public MatchValue<typename ed::dispatcher<T>::dispatcher_match::execute_func_t>
+    {
+    public:
+        Execute()
+            : MatchValue<typename ed::dispatcher<T>::dispatcher_match::execute_func_t>(nullptr)
+        {
+        }
+
+        Execute(typename ed::dispatcher<T>::dispatcher_match::execute_func_t expr)
+            : MatchValue<typename ed::dispatcher<T>::dispatcher_match::execute_func_t>(expr)
+        {
+        }
+    };
+
+    class MatchFunc
+        : public MatchValue<typename ed::dispatcher<T>::dispatcher_match::match_func_t>
+    {
+    public:
+        MatchFunc()
+            : MatchValue<typename ed::dispatcher<T>::dispatcher_match::match_func_t>(&::ed::dispatcher<T>::dispatcher_match::one_to_one_match)
+        {
+        }
+
+        MatchFunc(typename ed::dispatcher<T>::dispatcher_match::match_func_t match)
+            : MatchValue<typename ed::dispatcher<T>::dispatcher_match::match_func_t>(match == nullptr ? &::ed::dispatcher<T>::dispatcher_match::one_to_one_match : match)
+        {
+        }
+    };
+
+    template<typename V, typename F, class ...ARGS>
+    static
+    typename std::enable_if<std::is_same<V, F>::value, typename V::value_t>::type
+    find_match_value(F first, ARGS ...args)
+    {
+        snapdev::NOT_USED(args...);
+        return first.get();
+    }
+
+    template<typename V, typename F, class ...ARGS>
+    static
+    typename std::enable_if<!std::is_same<V, F>::value, typename V::value_t>::type
+    find_match_value(F first, ARGS ...args)
+    {
+        snapdev::NOT_USED(first);
+        return find_match_value<V>(args...);
+    }
+
+    template<class ...ARGS>
+    static
+    ed::dispatcher<T>::dispatcher_match define_match(ARGS ...args)
+    {
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wpedantic"
+        ed::dispatcher<T>::dispatcher_match match =
+        {
+            .f_expr =    find_match_value<Expression  >(args..., Expression()),
+            .f_execute = find_match_value<Execute     >(args..., Execute()),
+            .f_match =   find_match_value<MatchFunc   >(args..., MatchFunc()),
+        };
+    #pragma GCC diagnostic pop
+
+        if(match.f_execute == nullptr)
+        {
+            throw std::logic_error("an execute function is required, it cannot be set to nullptr.");
+        }
+
+        return match;
+    }
+
+    static
+    ed::dispatcher<T>::dispatcher_match define_catch_all()
+    {
+        return define_match(
+              Execute(&T::msg_reply_with_unknown)
+            , MatchFunc(&ed::dispatcher<T>::dispatcher_match::always_match));
+    }
 
 private:
     /** \brief The connection pointer.
@@ -467,8 +584,10 @@ public:
      *
      * This array currently includes:
      *
+     * \li ALIVE -- msg_alive() -- auto-reply with ABSOLUTELY
      * \li HELP -- msg_help() -- returns the list of all the messages
-     * \li LOG -- msg_log() -- reconfigure() the logger
+     * \li LEAK -- msg_leak() -- log memory usage
+     * \li LOG_ROTATE -- msg_log_rotate() -- reconfigure() the logger
      * \li QUITTING -- msg_quitting() -- calls stop(true);
      * \li READY -- msg_ready() -- calls ready() -- snapcommunicator always
      *              sends that message so it has to be supported
@@ -509,76 +628,19 @@ public:
         //
         f_matches.reserve(f_matches.size() + 10);
 
-        {
-            typename ed::dispatcher<T>::dispatcher_match m;
-            m.f_expr = "ALIVE";
-            m.f_execute = &T::msg_alive;
-            //m.f_match = <default>;
-            f_matches.push_back(m);
-        }
-        {
-            typename ed::dispatcher<T>::dispatcher_match m;
-            m.f_expr = "HELP";
-            m.f_execute = &T::msg_help;
-            //m.f_match = <default>;
-            f_matches.push_back(m);
-        }
-        {
-            typename ed::dispatcher<T>::dispatcher_match m;
-            m.f_expr = "LEAK";
-            m.f_execute = &T::msg_leak;
-            //m.f_match = <default>;
-            f_matches.push_back(m);
-        }
-        {
-            typename ed::dispatcher<T>::dispatcher_match m;
-            m.f_expr = "LOG";
-            m.f_execute = &T::msg_log;
-            //m.f_match = <default>;
-            f_matches.push_back(m);
-        }
-        {
-            typename ed::dispatcher<T>::dispatcher_match m;
-            m.f_expr = "QUITTING";
-            m.f_execute = &T::msg_quitting;
-            //m.f_match = <default>;
-            f_matches.push_back(m);
-        }
-        {
-            typename ed::dispatcher<T>::dispatcher_match m;
-            m.f_expr = "READY";
-            m.f_execute = &T::msg_ready;
-            //m.f_match = <default>;
-            f_matches.push_back(m);
-        }
-        {
-            typename ed::dispatcher<T>::dispatcher_match m;
-            m.f_expr = "RESTART";
-            m.f_execute = &T::msg_restart;
-            //m.f_match = <default>;
-            f_matches.push_back(m);
-        }
-        {
-            typename ed::dispatcher<T>::dispatcher_match m;
-            m.f_expr = "STOP";
-            m.f_execute = &T::msg_stop;
-            //m.f_match = <default>;
-            f_matches.push_back(m);
-        }
-        {
-            typename ed::dispatcher<T>::dispatcher_match m;
-            m.f_expr = "UNKNOWN";
-            m.f_execute = &T::msg_log_unknown;
-            //m.f_match = <default>;
-            f_matches.push_back(m);
-        }
-        {
-            typename ed::dispatcher<T>::dispatcher_match m;
-            m.f_expr = nullptr; // any other message
-            m.f_execute = &T::msg_reply_with_unknown;
-            m.f_match = &ed::dispatcher<T>::dispatcher_match::always_match;
-            f_matches.push_back(m);
-        }
+        f_matches.push_back(define_match(Expression("ALIVE"),      Execute(&T::msg_alive)));
+        f_matches.push_back(define_match(Expression("HELP"),       Execute(&T::msg_help)));
+        f_matches.push_back(define_match(Expression("LEAK"),       Execute(&T::msg_leak)));
+        f_matches.push_back(define_match(Expression("LOG_ROTATE"), Execute(&T::msg_log_rotate)));
+        f_matches.push_back(define_match(Expression("QUITTING"),   Execute(&T::msg_quitting)));
+        f_matches.push_back(define_match(Expression("READY"),      Execute(&T::msg_ready)));
+        f_matches.push_back(define_match(Expression("RESTART"),    Execute(&T::msg_restart)));
+        f_matches.push_back(define_match(Expression("STOP"),       Execute(&T::msg_stop)));
+        f_matches.push_back(define_match(Expression("UNKNOWN"),    Execute(&T::msg_log_unknown)));
+
+        // always last
+        //
+        f_matches.push_back(define_catch_all());
     }
 
     typename ed::dispatcher<T>::dispatcher_match::vector_t const & get_matches() const
@@ -595,7 +657,7 @@ public:
      * When that happen, the process_message() function of the
      * connection should not be called.
      *
-     * You may not include a message in the array of `dispatch_match`
+     * You may not include a message in the array of `dispatcher_match`
      * if it is too complicated to match or too many variables are
      * necessary then you will probably want to use your
      * process_message().

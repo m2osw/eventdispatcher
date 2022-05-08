@@ -44,6 +44,7 @@ public:
     dispatcher_base::pointer_t  get_dispatcher() const;
 
     // new callbacks
+    //
     virtual bool                dispatch_message(message & msg);
     virtual void                process_message(message & msg);
 

@@ -103,11 +103,11 @@ connection_with_send_message::~connection_with_send_message()
  *
  * To check whether a service is alive, send the ALIVE message. This
  * function builds an ABSOLUTELY reply and attaches the "serial" parameter
- * as is if present. It will also include the original "timestamp" parameter
- * when present.
+ * as is if present in the ALIVE message. It also includes the original
+ * "timestamp" parameter.
  *
  * The function also adds one field named "reply_timestamp" with the Unix
- * time when the reply is being sent.
+ * time in seconds when the reply is being sent.
  *
  * \note
  * The "serial" parameter is expected to be used to make sure that no messages
@@ -119,7 +119,7 @@ connection_with_send_message::~connection_with_send_message()
  * This allows you to include anything you want in those parameters although
  * we suggest you use the "timestamp" only for a value representing time.
  *
- * \param[in] msg  The STOP message.
+ * \param[in] msg  The ALIVE message.
  */
 void connection_with_send_message::msg_alive(message & msg)
 {
@@ -150,13 +150,19 @@ void connection_with_send_message::msg_alive(message & msg)
 /** \brief Build the HELP reply and send it.
  *
  * When a daemon registers with the snapcommunicator, it sends a REGISTER
- * command. As a result, the daemon is sent a HELP command which must be
- * answered with a COMMAND and the list of commands that this connection
- * supports.
+ * command. As a result, your daemon is sent a HELP command which must be
+ * answered with a COMMANDS message which includes the list of commands
+ * (a.k.a. messages) that your daemon supports.
  *
- * \note
- * If the environment logger is not currently configured, this message
- * gets ignored.
+ * The list of commands is built using the list of Expression() strings
+ * found in the dispatcher of your daemon. If that list includes null
+ * pointers or custom match functions, then the list is deemed to
+ * include functions that the default loop cannot determine. As a result,
+ * your help() function will be called and it must be overridden, otherwise
+ * it will call the default which throws.
+ *
+ * \exception implementation_error
+ * This exception is thrown if the resulting list of commands is empty.
  *
  * \param[in] msg  The HELP message.
  *
@@ -249,7 +255,7 @@ void connection_with_send_message::msg_help(message & msg)
  *
  * \todo
  * Find a solution which actually works. The LSAN system doesn't offer
- * to (correctly) print the list of leaks at a given time.
+ * to (correctly) print the list of leaks at any given time.
  *
  * \param[in] msg  The LEAK message, which is ignored.
  */
@@ -267,20 +273,20 @@ void connection_with_send_message::msg_leak(ed::message & msg)
 }
 
 
-/** \brief Reconfigure the logger.
+/** \brief Reopen file-based logger appenders.
  *
- * Whenever the logrotate runs or some changes are made to the log
- * definitions, the corresponding daemons need to reconfigure their
- * logger to make use of the new file and settings. This command is
- * used for this purpose.
+ * Whenever logrotate runs or some changes are made to the log
+ * definitions, the corresponding daemons need to reopen snaplogger
+ * to make use of the new file and settings. This command is used
+ * for that purpose.
  *
  * \note
- * If the environment logger is not currently configured, this message
- * is ignored.
+ * If the snaplogger is not currently configured, this message is
+ * ignored.
  *
- * \param[in] msg  The STOP message.
+ * \param[in] msg  The LOG_ROTATE message.
  */
-void connection_with_send_message::msg_log(message & msg)
+void connection_with_send_message::msg_log_rotate(message & msg)
 {
     snapdev::NOT_USED(msg);
 
@@ -313,7 +319,7 @@ void connection_with_send_message::msg_log(message & msg)
  * The value 'true' means that all the daemons are being asked to stop and
  * not just you.
  *
- * \param[in] msg  The STOP message.
+ * \param[in] msg  The QUITTING message.
  *
  * \sa msg_stop()
  * \sa stop()
@@ -331,8 +337,9 @@ void connection_with_send_message::msg_quitting(message & msg)
  * All daemons using the snapcommunicator daemon have to have a ready()
  * function which gets called once the HELP and COMMAND message were
  * handled. This is when your daemon is expected to be ready to start
- * working. Some daemon, though, start working immediately no matter
- * what (i.e. snapwatchdog and snapfirewall do work either way.)
+ * working. Some daemons start working immediately no matter
+ * what (i.e. snapwatchdog and snapfirewall do work either way), but
+ * those are rare.
  *
  * \param[in] msg  The READY message.
  *
@@ -348,14 +355,14 @@ void connection_with_send_message::msg_ready(message & msg)
 
 /** \brief Calls your restart() function with the message.
  *
- * This message has no implementation by default at the moment. What we
- * want to do is find a clean way to restart any service instantly.
+ * This message has no implementation by default. What we want to
+ * do is find a clean way to restart any service instantly.
  *
  * The RESTART message is expected to be used whenever a modification
  * to some file or the system environment somehow affects your service
  * in such a way that it requires a restart. For example, after an
- * upgrade of eventdispatcher library, you should restart all the services
- * that make use of this library. For this reason, we have a RESTART
+ * upgrade of the eventdispatcher library, you should restart all the
+ * services that make use of it. For this reason, we have a RESTART
  * message.
  *
  * The message comes with one parameter named `reason` which describes
@@ -365,11 +372,18 @@ void connection_with_send_message::msg_ready(message & msg)
  * \li `reason=config` -- a configuration file was updated
  *
  * \note
+ * At the time we created this message, a live configuration was not
+ * available. Now that we have the fluid-settings service, that changed
+ * and in most cases, `reason=config` should not be necessary anymore.
+ * (only for fluid-settings itself and for some parameters not found
+ * in the fluid-settings).
+ *
+ * \note
  * There are currently some services that make use of a CONFIG message
  * whenever their configuration changes. Pretty much all services do
  * not support a live configuration change (because it initializes their
  * objects from the configuration data once on startup and in many cases
- * it would be very complicated to allow for changes to occur.)
+ * it would be very complicated to allow for changes to occur on the fly).
  * \note
  * In those existing implementations, we really just do a restart anyway.
  * \note
@@ -446,14 +460,13 @@ void connection_with_send_message::msg_log_unknown(message & msg)
  *
  * \code
  *  {
+ *      ed::dispatcher<my_connection>::define_match(
+ *          ...
+ *      ),
  *      ...
  *
  *      // ALWAYS LAST
- *      {
- *          nullptr
- *        , &my_service_connection::msg_reply_with_unknown
- *        , &ed::dispatcher<my_service_connection>::dispatcher_match::always_match
- *      }
+ *      ed::dispatcher<my_connection>::define_catch_all()
  *  };
  * \endcode
  *

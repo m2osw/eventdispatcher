@@ -21,12 +21,14 @@
 /** \file
  * \brief Event dispatch class.
  *
- * Class used to handle events.
+ * Class used to mark your class as one that can send messages. It
+ * also handles system defined events.
  */
 
 // self
 //
 #include    "eventdispatcher/message.h"
+
 
 // C++
 //
@@ -57,7 +59,7 @@ public:
     virtual void                msg_help(message & msg);
     virtual void                msg_alive(message & msg);
     virtual void                msg_leak(message & msg);
-    virtual void                msg_log(message & msg);
+    virtual void                msg_log_rotate(message & msg);
     virtual void                msg_quitting(message & msg);
     virtual void                msg_ready(message & msg);
     virtual void                msg_restart(message & msg);
