@@ -158,18 +158,11 @@ bool dispatcher_support::dispatch_message(message & msg)
  * with the always_match() function and msg_reply_with_unknown()
  * as the function to run when that entry is hit.
  *
- * \code
- *      {
- *          nullptr
- *        , &dispatcher<my_connection>::dispatcher_match::msg_reply_with_unknown
- *        , &dispatcher<my_connection>::dispatcher_match::always_match
- *      },
- * \endcode
+ * This is automatically added with the following line in your vector:
  *
- * \todo
- * Look into fixing this function so it can send the UNKNOWN message itself.
- * That way we'd avoid the last entry in the match array, which would allow
- * us to have binary search (much faster).
+ * \code
+ *      ed::dispatcher<my_connection>::define_catch_all()
+ * \endcode
  *
  * \param[in] msg  The message to be processed.
  */

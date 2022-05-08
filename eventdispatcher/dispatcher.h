@@ -506,6 +506,15 @@ public:
             throw std::logic_error("an execute function is required, it cannot be set to nullptr.");
         }
 
+        if(match.f_match == &ed::dispatcher<T>::dispatcher_match::one_to_one_match
+        && match.f_expr == nullptr)
+        {
+            // although it works (won't crash) a message command cannot be
+            // the empty string so we forbid that in our tables
+            //
+            throw std::logic_error("an expression is required for the one_to_one_match().");
+        }
+
         return match;
     }
 

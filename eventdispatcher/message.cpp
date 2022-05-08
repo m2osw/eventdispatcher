@@ -65,6 +65,7 @@
 
 // snapdev lib
 //
+#include    <snapdev/hexadecimal_string.h>
 #include    <snapdev/string_replace_many.h>
 #include    <snapdev/trim_string.h>
 
@@ -1778,10 +1779,32 @@ void verify_message_name(std::string const & name, bool can_be_empty, bool can_b
         && (c < '0' || c > '9')
         && c != '_')
         {
-            std::string err("a message name must be composed of ASCII"
-                            " 'a'..'z', 'A'..'Z', '0'..'9', or '_'"
-                            " only (also a command must be uppercase only,) \"");
-            err += name;
+            std::string err("a ");
+            err += can_be_lowercase ? "parameter" : "command";
+            err += " name must be composed of ASCII ";
+            if(can_be_lowercase)
+            {
+                err += "'a'..'z', ";
+            }
+            err += "'A'..'Z', '0'..'9', or '_'"
+                   " only (also a command must be uppercase only), \"";
+            for(auto const & x : name)
+            {
+                if(x < 0x20)
+                {
+                    err += '^';
+                    err += x + '@';
+                }
+                else if(c >= 0x7F)
+                {
+                    err += "\\x";
+                    err += snapdev::int_to_hex(x, true, 2);
+                }
+                else
+                {
+                    err += x;
+                }
+            }
             err += "\" is not valid.";
             SNAP_LOG_FATAL
                 << err
