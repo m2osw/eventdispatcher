@@ -206,11 +206,15 @@ tcp_bio_server::tcp_bio_server(
                 // on failure, try again again with the RSA version, just in case
                 // (probably useless?)
                 //
+#if OPENSSL_VERSION_NUMBER < 0x30000020L
                 if(!SSL_CTX_use_RSAPrivateKey_file(ssl_ctx.get(), private_key.c_str(), SSL_FILETYPE_PEM))
                 {
+#endif
                     detail::bio_log_errors();
                     throw initialization_error("failed initializing an SSL_CTX server object private key");
+#if OPENSSL_VERSION_NUMBER < 0x30000020L
                 }
+#endif
             }
 
             // Verify that the private key and certificate are a match
