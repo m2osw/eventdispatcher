@@ -318,11 +318,11 @@ int bio_log_errors()
         int line(0);
         char const * data(nullptr);
         int flags(0);
+        char const * func_name(nullptr);
 #if OPENSSL_VERSION_NUMBER < 0x30000020L
         unsigned long bio_errno(ERR_get_error_line_data(&filename, &line, &data, &flags));
 #else
-        char const * func(nullptr);
-        unsigned long bio_errno(ERR_get_error_all(&filename, &line, &func, &data, &flags));
+        unsigned long bio_errno(ERR_get_error_all(&filename, &line, &func_name, &data, &flags));
 #endif
         if(bio_errno == 0)
         {
@@ -344,10 +344,14 @@ int bio_log_errors()
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
         int const lib_num(ERR_GET_LIB(bio_errno));
+#if OPENSSL_VERSION_NUMBER < 0x30000020L
         int const func_num(ERR_GET_FUNC(bio_errno));
+#endif
 #pragma GCC diagnostic pop
         char const * lib_name(ERR_lib_error_string(lib_num));
-        char const * func_name(ERR_func_error_string(func_num));
+#if OPENSSL_VERSION_NUMBER < 0x30000020L
+        func_name = ERR_func_error_string(func_num);
+#endif
         int const reason_num(ERR_GET_REASON(bio_errno));
         char const * reason(ERR_reason_error_string(reason_num));
 
@@ -376,8 +380,6 @@ int bio_log_errors()
             << bio_errno // should be shown in hex...
             << "/"
             << lib_num
-            << "|"
-            << func_num
             << "|"
             << reason_num
             << "]:["
