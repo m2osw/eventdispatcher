@@ -321,7 +321,7 @@ int bio_log_errors()
 #if OPENSSL_VERSION_NUMBER < 0x30000020L
         unsigned long bio_errno(ERR_get_error_line_data(&filename, &line, &data, &flags));
 #else
-        char * func(nullptr);
+        char const * func(nullptr);
         unsigned long bio_errno(ERR_get_error_all(&filename, &line, &func, &data, &flags));
 #endif
         if(bio_errno == 0)
