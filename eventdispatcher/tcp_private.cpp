@@ -253,7 +253,11 @@ void bio_initialize()
     //      are about to generate the first error?
     //
     ERR_load_crypto_strings();
+#if OPENSSL_VERSION_NUMBER < 0x30000020L
+    // this function is not necessary in newer versions of OpenSSL
+    //
     ERR_load_SSL_strings();
+#endif
     SSL_load_error_strings();
 
     // TODO: define a way to only define safe algorithms?
@@ -284,7 +288,7 @@ void bio_initialize()
  */
 void bio_cleanup()
 {
-#if __cplusplus < 201700
+#if OPENSSL_VERSION_NUMBER < 0x1010100fL
     // this function is not necessary in newer versions of OpenSSL
     //
     ERR_remove_state(0);
