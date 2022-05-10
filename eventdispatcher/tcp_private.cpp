@@ -203,7 +203,7 @@ void thread_cleanup()
  */
 void per_thread_cleanup()
 {
-#if __cplusplus < 201700
+#if OPENSSL_VERSION_NUMBER < 0x1010100fL
     // this function is not necessary in newer versions of OpenSSL
     //
     ERR_remove_thread_state(nullptr);
@@ -318,7 +318,12 @@ int bio_log_errors()
         int line(0);
         char const * data(nullptr);
         int flags(0);
+#if OPENSSL_VERSION_NUMBER < 0x30000020L
         unsigned long bio_errno(ERR_get_error_line_data(&filename, &line, &data, &flags));
+#else
+        char * func(nullptr);
+        unsigned long bio_errno(ERR_get_error_all(&filename, &line, &func, &data, &flags));
+#endif
         if(bio_errno == 0)
         {
             // no more errors
