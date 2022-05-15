@@ -44,4 +44,33 @@ install(
 )
 
 
+##
+## ed-stop
+##
+project(ed-stop)
+
+add_executable(${PROJECT_NAME}
+    ed_stop.cpp
+)
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        ../cppprocess
+        ${ADVGETOPT_INCLUDE_DIRS}
+)
+
+target_link_libraries(${PROJECT_NAME}
+    cppprocess
+    eventdispatcher
+)
+
+install(
+    TARGETS
+        ${PROJECT_NAME}
+
+    RUNTIME DESTINATION
+        bin
+)
+
+
 # vim: ts=4 sw=4 et

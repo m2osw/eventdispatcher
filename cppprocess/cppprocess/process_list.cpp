@@ -51,11 +51,7 @@
 
 // C lib
 //
-//#include <proc/readproc.h>
-//#include <stdio.h>
-//#include <sys/prctl.h>
-//#include <sys/wait.h>
-//#include <unistd.h>
+#include <signal.h>
 
 
 // last include
@@ -199,6 +195,60 @@ process_info::pointer_t process_list::find(std::string const & basename)
     }
 
     return process_info::pointer_t();
+}
+
+
+/** \brief Check whether a process is running.
+ *
+ * When sending a STOP message to a process, or a SIGINT/SIGTERM signal,
+ * the process may not stop right away. This function allows you to wait
+ * and see that a process ends within a given amount of time.
+ *
+ * When \p timeout is set to 0, the function returns immediately after
+ * checking whether the process is running or not.
+ *
+ * The \p sig parameter allows you to send a specific signal the first
+ * time the kill() function is called. If set to 0, the process is not
+ * sent any signal. The function only uses 0 to determine whether the
+ * process is running or not.
+ *
+ * \param[in] pid  The process identifier to wait on.
+ * \param[in] sig  Send that signal the first time.
+ * \param[in] timeout  The amount of time to wait for the process to quit.
+ *
+ * \return true if the process is still running after \p timeout.
+ */
+bool is_running(pid_t pid, int sig, unsigned int timeout)
+{
+    bool const result(kill(pid, sig) == 0);
+    if(timeout == 0 || !result)
+    {
+        return result;
+    }
+
+    time_t const deadline(time(nullptr) + timeout);
+    do
+    {
+        // the kill() function returns immediately so we have to
+        // sleep otherwise it would loop very quickly...
+        //
+        // (I do not know of a way to poll() on a dying process
+        // unless it is your direct child or we have a lock...)
+        //
+        sleep(1);
+
+        if(kill(pid, 0) != 0)
+        {
+            // the process is dead now
+            //
+            return false;
+        }
+    }
+    while(deadline > time(nullptr));
+
+    // still running
+    //
+    return true;
 }
 
 

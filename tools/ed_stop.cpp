@@ -16,30 +16,41 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
-// self
+// eventdispatcher
 //
-#include "version.h"
+#include    <eventdispatcher/version.h>
 
 
-// snapwebsites lib
+// cppprocess
 //
-#include <snapwebsites/snapwebsites.h>
-#include <snapwebsites/snap_config.h>
+#include    <cppprocess/process_list.h>
 
 
-// snapdev lib
+// advgetopt
 //
-#include <snapdev/not_reached.h>
+#include    <advgetopt/advgetopt.h>
+#include    <advgetopt/options.h>
+#include    <advgetopt/exception.h>
 
 
-// advgetopt lib
+// boost
 //
-#include <advgetopt/exception.h>
+#include    <boost/preprocessor/stringize.hpp>
+
+
+// C++
+//
+#include    <iostream>
+
+
+// C
+//
+#include    <signal.h>
 
 
 // last include
 //
-#include <snapdev/poison.h>
+#include    <snapdev/poison.h>
 
 
 
@@ -48,34 +59,50 @@ namespace
 
 
 
-advgetopt::option const g_snapstop_options[] =
+advgetopt::option const g_options[] =
 {
-    { // `--service` is not required because systemd removes the parameter altogether when $MAINPID is empty (even with the quotes)
-        's',
-        advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_REQUIRED | advgetopt::GETOPT_FLAG_SHOW_USAGE_ON_ERROR,
-        "service",
-        nullptr,
-        "PID (only digits) or name of the service to stop.",
-        nullptr
-    },
-    {
-        '\0',
-        advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_ENVIRONMENT_VARIABLE | advgetopt::GETOPT_FLAG_REQUIRED | advgetopt::GETOPT_FLAG_SHOW_USAGE_ON_ERROR,
-        "timeout",
-        "60",
-        "number of seconds to wait for the process to die, default is 60 seconds.",
-        nullptr
-    },
-    {
-        '\0',
-        advgetopt::GETOPT_FLAG_END,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr
-    }
+    // `--service` is not required because systemd removes the parameter
+    // altogether when $MAINPID is empty (even with the quotes)
+    //
+    advgetopt::define_option(
+          advgetopt::Name("service")
+        , advgetopt::ShortName('s')
+        , advgetopt::Flags(advgetopt::command_flags<
+              advgetopt::GETOPT_FLAG_REQUIRED
+            , advgetopt::GETOPT_FLAG_SHOW_USAGE_ON_ERROR
+            , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
+        , advgetopt::Help("PID (only digits) or name of the service to stop.")
+    ),
+    advgetopt::define_option(
+          advgetopt::Name("timeout")
+        , advgetopt::ShortName('t')
+        , advgetopt::Flags(advgetopt::any_flags<
+              advgetopt::GETOPT_FLAG_REQUIRED
+            , advgetopt::GETOPT_FLAG_COMMAND_LINE
+            , advgetopt::GETOPT_FLAG_ENVIRONMENT_VARIABLE
+            , advgetopt::GETOPT_FLAG_SHOW_USAGE_ON_ERROR
+            , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
+        , advgetopt::DefaultValue("60")
+        , advgetopt::Help("number of seconds to wait for the process to die.")
+    ),
+    advgetopt::end_options()
 };
 
+
+advgetopt::group_description const g_group_descriptions[] =
+{
+    advgetopt::define_group(
+          advgetopt::GroupNumber(advgetopt::GETOPT_FLAG_GROUP_COMMANDS)
+        , advgetopt::GroupName("command")
+        , advgetopt::GroupDescription("Commands:")
+    ),
+    advgetopt::define_group(
+          advgetopt::GroupNumber(advgetopt::GETOPT_FLAG_GROUP_OPTIONS)
+        , advgetopt::GroupName("option")
+        , advgetopt::GroupDescription("Options:")
+    ),
+    advgetopt::end_groups()
+};
 
 
 
@@ -84,11 +111,13 @@ advgetopt::option const g_snapstop_options[] =
 #pragma GCC diagnostic ignored "-Wpedantic"
 advgetopt::options_environment const g_snapstop_options_environment =
 {
-    .f_project_name = "snapwebsites",
-    .f_group_name = nullptr,
-    .f_options = g_snapstop_options,
+    .f_project_name = "ed-stop",
+    .f_group_name = "eventdispatcher",
+    .f_options = g_options,
     .f_options_files_directory = nullptr,
-    .f_environment_variable_name = "SNAPSTOP_OPTIONS",
+    .f_environment_variable_name = "ED_STOP",
+    .f_environment_variable_intro = nullptr,
+    .f_section_variables_name = nullptr,
     .f_configuration_files = nullptr,
     .f_configuration_filename = nullptr,
     .f_configuration_directories = nullptr,
@@ -96,13 +125,14 @@ advgetopt::options_environment const g_snapstop_options_environment =
     .f_help_header = "Usage: %p [-<opt>]\n"
                      "where -<opt> is one or more of:",
     .f_help_footer = "%c",
-    .f_version = SNAPWEBSITES_VERSION_STRING,
-    .f_license = "GNU GPL v2",
+    .f_version = EVENTDISPATCHER_VERSION_STRING,
+    .f_license = "GNU GPL v2 or newer",
     .f_copyright = "Copyright (c) 2011-"
                    BOOST_PP_STRINGIZE(UTC_BUILD_YEAR)
                    " by Made to Order Software Corporation -- All Rights Reserved",
-    //.f_build_date = UTC_BUILD_DATE,
-    //.f_build_time = UTC_BUILD_TIME
+    .f_build_date = UTC_BUILD_DATE,
+    .f_build_time = UTC_BUILD_TIME,
+    .f_groups = g_group_descriptions
 };
 #pragma GCC diagnostic pop
 
@@ -189,7 +219,7 @@ int main(int argc, char *argv[])
             if(sz == 0)
             {
                 std::cerr
-                    << "ed-stop: error: could not read PID of server named \""
+                    << "ed-stop: error: could not read PID of service named \""
                     << service
                     << "\".\n";
                 exit(1);
@@ -197,7 +227,7 @@ int main(int argc, char *argv[])
             if(sz >= sizeof(buf))
             {
                 std::cerr
-                    << "ed-stop: error: the read PID of server named \""
+                    << "ed-stop: error: the read PID of service named \""
                     << service
                     << "\" looks too long.\n";
                 exit(1);
@@ -210,18 +240,31 @@ int main(int argc, char *argv[])
                 if(*s < '0' || *s > '9')
                 {
                     std::cerr
-                        << "ed-stop: error: the PID returned by systemctl \""
+                        << "ed-stop: error: the PID of \""
+                        << service
+                        << "\" returned by systemctl, \""
                         << buf
-                        << "\" is not a valid number.\n";
+                        << "\", is not a valid number.\n";
                     exit(1);
                 }
                 service_pid = service_pid * 10 + *s - '0';
+            }
+
+            if(service_pid == 0)
+            {
+                // the server was not found or it is not running
+                // we're done here
+                //
+                // TODO: find a way to generate an error in case the service
+                //       was not found (i.e. misspelled, not installed, etc.)
+                //
+                exit(0);
             }
         }
 
         // verify that we have a process with that PID
         //
-        if(kill(service_pid, 0) != 0)
+        if(cppprocess::is_running(service_pid) != 0)
         {
             if(errno == EPERM)
             {
@@ -239,54 +282,27 @@ int main(int argc, char *argv[])
         // possible it will be asked to stop as if it received the STOP
         // command in a message
         //
+        // sending the signal worked, wait for the process to die
+        //
+        long timeout(opt.get_long("timeout"));
+        if(timeout < 10)
         {
-            int const r(kill(service_pid, SIGINT));
-            if(r != 0)
-            {
-                perror("ed-stop: kill() failed: ");
-                exit(1);
-            }
-
-            // the signal worked worked, now wait for some time for the process to die
+            // enforce a minimum of 10 seconds
             //
-            long timeout(opt.get_long("timeout"));
-            if(timeout < 10)
-            {
-                // enforce a minimum of 10 seconds
-                //
-                timeout = 10;
-            }
-            else if(timeout > 3600)
-            {
-                // wait at most 1 hour (wow!)
-                //
-                timeout = 3600;
-            }
-            time_t const time_limit(time(nullptr) + timeout);
-
-            // TODO: once we have PID files that are locked by the process
-            //       until it dies, we can actually do an flock(), once we
-            //       obtain the lock we can quit, the process is dead and
-            //       we can use a SIGALRM for the timeout and try SIGTERM.
+            timeout = 10;
+        }
+        else if(timeout > 3600)
+        {
+            // wait at most 1 hour (wow!)
             //
-            do
-            {
-                // the kill() function returns immediately so we have to
-                // sleep otherwise it would loop very quickly...
-                //
-                // (I do not know of a way to poll() on a dying process
-                // unless it is your direct child or we have a lock...)
-                //
-                sleep(1);
+            timeout = 3600;
+        }
 
-                if(kill(service_pid, 0) != 0)
-                {
-                    // the process is dead now
-                    //
-                    exit(0);
-                }
-            }
-            while(time_limit > time(nullptr));
+        if(!cppprocess::is_running(service_pid, SIGINT, timeout))
+        {
+            // the process is dead now
+            //
+            exit(0);
         }
 
         // the SIGINT did not work, try again with SIGTERM
@@ -302,44 +318,25 @@ int main(int argc, char *argv[])
         //       sends a message to the log file, which makes it useful
         //       for us to see how many times the SIGINT failed
         //
+
+        // should we have another timeout option for this one?
+        //
+        // TODO: as with the other one we want to keep trying obtaining
+        //       the flock() and have a SIGALRM for the timeout...
+        //
+        if(!cppprocess::is_running(service_pid, SIGTERM, 10))
         {
-            int const r(kill(service_pid, SIGTERM));
-            if(r != 0)
-            {
-                perror("ed-stop: kill() failed: ");
-                exit(1);
-            }
-
-            // should we have another timeout option for this one?
+            // the process is dead now
             //
-            // TODO: as with the other one we want to keep trying obtaining
-            //       the flock() and have a SIGALRM for the timeout...
-            //
-            time_t const term_time_limit(time(nullptr) + 10);
-
-            do
-            {
-                // the kill() function returns immediately so we have to
-                // sleep otherwise it would loop very quickly...
-                //
-                // (I do not know of a way to poll() on a dying process
-                // unless it is your direct child or we have a lock...)
-                //
-                sleep(1);
-
-                if(kill(service_pid, 0) != 0)
-                {
-                    // the process is dead now
-                    //
-                    exit(0);
-                }
-            }
-            while(term_time_limit > time(nullptr));
+            exit(0);
         }
 
         // it timed out!?
         //
-        std::cerr << "ed-stop: kill() had no effect within the timeout period." << std::endl;
+        std::cerr
+            << "ed-stop: kill() had no effect on \""
+            << service
+            << "\" within the timeout period." << std::endl;
         exit(0);
     }
     catch(advgetopt::getopt_exit const & e)

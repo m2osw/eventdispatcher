@@ -176,8 +176,10 @@ advgetopt::options_environment const g_options_environment =
                      "where -<opt> is one or more of:",
     .f_help_footer = "%c",
     .f_version = EVENTDISPATCHER_VERSION_STRING,
-    .f_license = "GPL v2 or newer",
-    .f_copyright = "Copyright (c) 2012-" BOOST_PP_STRINGIZE(UTC_BUILD_YEAR) "  Made to Order Software Corporation",
+    .f_license = "GNU GPL v2 or newer",
+    .f_copyright = "Copyright (c) 2012-"
+                   BOOST_PP_STRINGIZE(UTC_BUILD_YEAR)
+                   " by Made to Order Software Corporation -- All Rights Reserved",
     .f_build_date = UTC_BUILD_DATE,
     .f_build_time = UTC_BUILD_TIME,
     .f_groups = g_group_descriptions

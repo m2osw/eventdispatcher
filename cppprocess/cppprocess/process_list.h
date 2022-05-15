@@ -48,6 +48,8 @@ public:
 };
 
 
+bool is_running(pid_t pid, int sig = 0, unsigned int timeout = 0);
+
 
 } // namespace cppprocess
 // vim: ts=4 sw=4 et
