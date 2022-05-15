@@ -58,7 +58,7 @@ if(SnapCatch2_FOUND)
 
 else(SnapCatch2_FOUND)
 
-    message("snapcatch2 not found... no test will be built.")
+    message("snapcatch2 not found... no tests will be built.")
 
 endif(SnapCatch2_FOUND)
 
