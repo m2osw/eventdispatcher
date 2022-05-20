@@ -13,7 +13,13 @@ eventdispatcher (1.1.51.0~bionic) bionic; urgency=high
   * Reset alert counters back to zero instead of just `--`.
   * Removed `snaplogger-network` as a library of `snaplog`. It's a plugin.
   * Fixed the get_socket() of the BIO, the input parameter must be initialized.
-  * get_socket() sets errno to EBADF is the BIO is not allocated.
+  * get_socket() sets errno to EBADF if the BIO is not allocated.
+  * Compile and install `ed-stop`.
+  * Added the is_running() function to the cppprocess library.
+  * Updates to support/remove deprecated OpenSSL functions.
+  * Renamed the LOG message as LOG_ROTATE.
+  * Actually turn on BROADCAST on UDP socket when the address varants it.
+  * Cleaned up the cmake files.
 
  -- Alexis Wilke <alexis@m2osw.com>  Mon, 07 Mar 2022 21:37:49 -0800
 
