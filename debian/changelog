@@ -1,3 +1,9 @@
+eventdispatcher (1.1.51.5~bionic) bionic; urgency=high
+
+  * The ncurses console also uses the readline-dev.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Fri, 20 May 2022 18:07:39 -0700
+
 eventdispatcher (1.1.51.4~bionic) bionic; urgency=high
 
   * I also added ncurses as a dependency.
