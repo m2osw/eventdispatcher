@@ -1,3 +1,2 @@
 usr/include/snaplogger                          usr/include
-usr/lib/libsnaplogger-network.so                usr/lib
 usr/share/cmake/SnapLoggerNetwork/*             usr/share/cmake/SnapLoggerNetwork
