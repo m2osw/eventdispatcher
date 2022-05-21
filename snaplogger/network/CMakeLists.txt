@@ -61,14 +61,8 @@ install(
     TARGETS
         ${PROJECT_NAME}
 
-    RUNTIME DESTINATION
-        bin
-
     LIBRARY DESTINATION
-        lib
-
-    ARCHIVE DESTINATION
-        lib
+        lib/snaplogger/plugins
 )
 
 

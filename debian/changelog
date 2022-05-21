@@ -1,3 +1,9 @@
+eventdispatcher (1.1.51.7~bionic) bionic; urgency=high
+
+  * Fixed the installation folder of the plugin.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Fri, 20 May 2022 21:26:31 -0700
+
 eventdispatcher (1.1.51.6~bionic) bionic; urgency=high
 
   * I changed the name of the plugin file, this updates the install name.
