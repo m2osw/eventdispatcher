@@ -1,3 +1,9 @@
+eventdispatcher (1.1.51.2~bionic) bionic; urgency=high
+
+  * Bumped build version to rebuild on Launchpad.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Fri, 20 May 2022 17:27:07 -0700
+
 eventdispatcher (1.1.51.1~bionic) bionic; urgency=high
 
   * Added missing dependency in control file.
