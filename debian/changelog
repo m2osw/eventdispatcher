@@ -1,3 +1,9 @@
+eventdispatcher (1.1.51.3~bionic) bionic; urgency=high
+
+  * Depend on the serverplugins-dev, not just serverplugins.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Fri, 20 May 2022 17:42:13 -0700
+
 eventdispatcher (1.1.51.2~bionic) bionic; urgency=high
 
   * Bumped build version to rebuild on Launchpad.
