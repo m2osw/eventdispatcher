@@ -27,7 +27,7 @@
 
 find_path(
     EVENTDISPATCHER_QT_INCLUDE_DIR
-        eventdispatcher/connection.h
+        eventdispatcher/qt_connection.h
 
     PATHS
         ENV EVENTDISPATCHER_QT_INCLUDE_DIR
