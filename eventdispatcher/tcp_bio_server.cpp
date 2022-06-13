@@ -27,6 +27,8 @@
 // (TODO: move to .cpp once we have the impl!)
 #define OPENSSL_THREAD_DEFINES
 
+#define USE_KLUDGE 1
+
 // self
 //
 #include    "eventdispatcher/tcp_bio_server.h"
@@ -147,19 +149,7 @@ tcp_bio_server::tcp_bio_server(
         , mode_t mode)
     : f_impl(std::make_shared<detail::tcp_bio_server_impl>())
 {
-#if __GNUC__ > 5
     f_impl->f_max_connections = std::clamp(max_connections <= 0 ? MAX_CONNECTIONS : max_connections, 5, 1000);
-#else
-    f_impl->f_max_connections = max_connections <= 0 ? MAX_CONNECTIONS : max_connections;
-    if(f_impl->f_max_connections < 5)
-    {
-        f_impl->f_max_connections = 5;
-    }
-    else if(f_impl->f_max_connections > 1000)
-    {
-        f_impl->f_max_connections = 1000;
-    }
-#endif
 
     detail::bio_initialize();
 
@@ -228,7 +218,7 @@ tcp_bio_server::tcp_bio_server(
             // create a BIO connection with SSL
             //
             std::unique_ptr<BIO, void (*)(BIO *)> bio(BIO_new_ssl(ssl_ctx.get(), 0), detail::bio_deleter);
-            if(!bio)
+            if(bio == nullptr)
             {
                 detail::bio_log_errors();
                 throw initialization_error("failed initializing a BIO server object");
@@ -284,17 +274,59 @@ tcp_bio_server::tcp_bio_server(
 
             // Actually call bind() and listen() on the socket
             //
-            // IMPORTANT NOTE: The BIO_do_accept() is overloaded, it does
-            // two things: (a) it bind() + listen() when called the very
-            // first time (i.e. the call right here); (b) it actually
-            // accepts a client connection
+            // I called BIO_do_accept() before, but this looks cleaner
+            // (although both calls do the same thing)
             //
-            int const r(BIO_do_accept(listen.get()));
+            int const r(BIO_do_connect(listen.get()));
             if(r <= 0)
             {
                 detail::bio_log_errors();
                 throw initialization_error("failed initializing the BIO server socket to listen for client connections");
             }
+
+#if USE_KLUDGE
+            // HUGE KLUDGE!
+            //
+            // the BIO_do_connect() does not correctly report errors in
+            // case the IP address is not valid for the bind() call
+            // (i.e. the address is 1.2.3.4 and none of your interfaces
+            // support that IP address) our KLUDGE checks that the socket
+            // is valid because at least the library closes it on failure
+            //
+            // newer versions of the library have a fix since Thu Apr 9 12:36:37 2020 +0100
+            // (it should be in there for 1.1.2 or so)
+            //
+            int c(-1);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+            BIO_get_fd(listen.get(), &c);
+#pragma GCC diagnostic pop
+            if(c < 0)
+            {
+                std::stringstream ss;
+                ss << "bind() failed to connect to "
+                   << address;
+                throw initialization_error(ss.str());
+            }
+            int error_code(0);
+            socklen_t error_code_size = sizeof(error_code);
+            int const g(getsockopt(c, SOL_SOCKET, SO_ERROR, reinterpret_cast<void *>(&error_code), &error_code_size));
+            if(g != 0)
+            {
+                error_code = errno;
+            }
+            if(error_code != 0)
+            {
+                std::stringstream ss;
+                ss << "bind() failed to connect to "
+                   << address
+                   << " and reported error #"
+                   << error_code
+                   << ", "
+                   << strerror(error_code);
+                throw initialization_error(ss.str());
+            }
+#endif
 
             // it worked, save the results
             f_impl->f_ssl_ctx.swap(ssl_ctx);
@@ -308,7 +340,7 @@ tcp_bio_server::tcp_bio_server(
         {
             std::shared_ptr<BIO> listen; // use reset(), see SNAP-507
             listen.reset(BIO_new_accept(address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT).c_str()), detail::bio_deleter);
-            if(!listen)
+            if(listen == nullptr)
             {
                 detail::bio_log_errors();
                 throw initialization_error("failed initializing a BIO server object");
@@ -316,19 +348,61 @@ tcp_bio_server::tcp_bio_server(
 
             BIO_set_bind_mode(listen.get(), BIO_BIND_REUSEADDR);
 
-            // Actually call bind() and listen() on the socket
+            // Call bind() and listen() on the socket
             //
-            // IMPORTANT NOTE: The BIO_do_accept() is overloaded, it does
-            // two things: (a) it bind() + listen() when called the very
-            // first time (i.e. the call right here); (b) it actually
-            // accepts a client connection
+            // I called BIO_do_accept() before, but this looks cleaner
+            // (although both calls do the same thing)
             //
-            int const r(BIO_do_accept(listen.get()));
+            int const r(BIO_do_connect(listen.get()));
             if(r <= 0)
             {
                 detail::bio_log_errors();
                 throw initialization_error("failed initializing the BIO server socket to listen for client connections");
             }
+
+#if USE_KLUDGE
+            // HUGE KLUDGE!
+            //
+            // the BIO_do_connect() does not correctly report errors in
+            // case the IP address is not valid for the bind() call
+            // (i.e. the address is 1.2.3.4 and none of your interfaces
+            // support that IP address) our KLUDGE checks that the socket
+            // is valid because at least the library closes it on failure
+            //
+            // newer versions of the library have a fix since Thu Apr 9 12:36:37 2020 +0100
+            // (it should be in there for 1.1.2 or so)
+            //
+            int c(-1);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+            BIO_get_fd(listen.get(), &c);
+#pragma GCC diagnostic pop
+            if(c < 0)
+            {
+                std::stringstream ss;
+                ss << "bind() failed to connect to "
+                   << address;
+                throw initialization_error(ss.str());
+            }
+            int error_code(ENOTCONN);
+            socklen_t error_code_size = sizeof(error_code);
+            int const g(getsockopt(c, SOL_SOCKET, SO_ERROR, reinterpret_cast<void *>(&error_code), &error_code_size));
+            if(g != 0)
+            {
+                error_code = errno;
+            }
+            if(error_code != 0)
+            {
+                std::stringstream ss;
+                ss << "bind() failed to connect to "
+                   << address
+                   << " and reported error #"
+                   << error_code
+                   << ", "
+                   << strerror(error_code);
+                throw initialization_error(ss.str());
+            }
+#endif
 
             // it worked, save the results
             //

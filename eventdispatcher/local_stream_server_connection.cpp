@@ -24,12 +24,6 @@
  * AF_UNIX type of socket.
  */
 
-// to get the POLLRDHUP definition
-//#ifndef _GNU_SOURCE
-//#define _GNU_SOURCE
-//#endif
-
-
 // self
 //
 #include    "eventdispatcher/local_stream_server_connection.h"
@@ -41,16 +35,6 @@
 // snaplogger lib
 //
 #include    <snaplogger/message.h>
-
-
-// snapdev lib
-//
-//#include    <snapdev/not_reached.h>
-
-
-// C++ lib
-//
-//#include    <cstring>
 
 
 // C lib
@@ -72,7 +56,7 @@ namespace ed
 
 /** \brief Initialize the local stream server.
  *
- * The server constructor creates a socket, binds it, and then listen to it.
+ * The server constructor creates a socket, binds it, and then listen on it.
  *
  * \todo
  * Fix docs.
@@ -88,9 +72,13 @@ namespace ed
  * in 2016. So the  super high limit of 1,000 is anyway going to be ignored
  * by the OS.
  *
- * The address is made non-reusable (which is the default for TCP sockets.)
- * It is possible to mark the server address as immediately reusable by
- * setting the \p reuse_addr to true.
+ * The Unix socket is made non-reusable by default. It is possible to mark
+ * the server address as reusable by setting the \p force_reuse_addr to true.
+ * If not true, then the fact that the file exists prevents a new server from
+ * being created. When true, the function first checks whether it can connect
+ * to a server. It a connection succeeds, then the creation of the server
+ * fails (i.e. the Unix socket is already in use). If the connection fails,
+ * the function makes sure to delete the file if it exists.
  *
  * By default the server is marked as "keepalive". You can turn it off
  * using the keepalive() function with false.
@@ -190,8 +178,20 @@ local_stream_server_connection::local_stream_server_connection(
             bool available(false);
             if(force_reuse_addr)
             {
+                SNAP_LOG_WARNING
+                    << "attempting a contection to "
+                    << f_address.to_uri()
+                    << " as a client to see that the address is available for this server;"
+                    << " on success this generates an expected fatal error which we catch here."
+                    << SNAP_LOG_SEND;
                 try
                 {
+                    // TODO: this generates a fatal error in the log which can
+                    //       be disturbing... we could look at adding a tag on
+                    //       that error and here mark the messages associated
+                    //       with that tag as hidden so that way we do not get
+                    //       the error output.
+                    //
                     local_stream_client_connection test_connection(f_address);
                 }
                 catch(runtime_error const & e)

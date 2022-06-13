@@ -26,8 +26,8 @@
 
 // self
 //
-#include    "eventdispatcher/connection.h"
-#include    "eventdispatcher/tcp_bio_client.h"
+#include    <eventdispatcher/connection.h>
+#include    <eventdispatcher/tcp_bio_client.h>
 
 
 

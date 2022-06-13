@@ -1,3 +1,15 @@
+eventdispatcher (1.1.52.0~bionic) bionic; urgency=high
+
+  * Added a kludge for the BIO bug.
+  * Changed first BIO_do_accept() with BIO_do_connect().
+  * Added a warning about the Unix stream test prior listening on the socket.
+  * Fixed some more includes ("..." -> <...>).
+  * Deleted some old commented out code.
+  * Removed some support for Ubuntu 16.04.
+  * Fixed a few !<ptr> with <ptr> == nullptr.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 12 Jun 2022 17:04:34 -0700
+
 eventdispatcher (1.1.51.8~bionic) bionic; urgency=high
 
   * Do not add the version to the plugin .so file.

@@ -26,10 +26,10 @@
 
 // self
 //
-#include    "eventdispatcher/connection.h"
+#include    <eventdispatcher/connection.h>
 
 
-// C lib
+// C
 //
 #include    <sys/signalfd.h>
 
