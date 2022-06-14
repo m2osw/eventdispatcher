@@ -194,11 +194,11 @@ public:
     public:
         runner(
                       tcp_client_permanent_message_connection_impl * parent_impl
-                    , addr::addr const & address
+                    , addr::addr::vector_t const & addresses
                     , mode_t mode)
             : cppthread::runner("background tcp_client_permanent_message_connection for asynchronous connections")
             , f_parent_impl(parent_impl)
-            , f_address(address)
+            , f_addresses(addresses)
             , f_mode(mode)
         {
         }
@@ -246,8 +246,13 @@ public:
                 // we cannot directly create the right type of
                 // object otherwise...)
                 //
-                f_tcp_connection = std::make_shared<tcp_bio_client>(f_address, f_mode);
+                f_tcp_connection = std::make_shared<tcp_bio_client>(f_addresses[f_index], f_mode);
                 return;
+            }
+            catch(failed_connecting const & e)
+            {
+                error_name = "failed_connecting";
+                f_last_error = e.what();
             }
             catch(initialization_error const & e)
             {
@@ -266,16 +271,25 @@ public:
             }
             catch(...)
             {
-                error_name = "... (any other exception)";
+                error_name = "a non-standard exception";
                 f_last_error = "Unknown exception";
             }
             f_tcp_connection.reset();
+
+            // on an error, we want to try the next address
+            //
+            ++f_index;
+            if(f_index >= f_addresses.size())
+            {
+                f_index = 0;
+            }
 
             // connection failed... we will have to try again later
             //
             SNAP_LOG_ERROR
                 << "connection to "
-                << f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+                << addr::setaddrmode(addr::addr::string_ip_t::STRING_IP_PORT)
+                << f_addresses
                 << " failed with: "
                 << f_last_error
                 << " ("
@@ -287,7 +301,8 @@ public:
 
         /** \brief Retrieve the address to connect to.
          *
-         * This function returns the address passed in on creation.
+         * This function returns the address we connected to or, if not
+         * connected, the one that we will attempt to connect to next.
          *
          * \note
          * Since the variable is constant, it is likely to never change.
@@ -299,7 +314,25 @@ public:
          */
         addr::addr const & get_address() const
         {
-            return f_address;
+            return f_addresses[f_index];
+        }
+
+
+        /** \brief Retrieve the vector of addresses to connect to.
+         *
+         * This function returns the addresses passed in on creation.
+         *
+         * \note
+         * Since the variable is constant, it is likely to never change.
+         * However, the c_str() function may change the buffer pointer.
+         * Hence, to be 100% safe, you cannot call this function until
+         * you make sure that the thread is fully stopped.
+         *
+         * \return The destination addresses.
+         */
+        addr::addr::vector_t const & get_addresses() const
+        {
+            return f_addresses;
         }
 
 
@@ -373,7 +406,8 @@ public:
 
     private:
         tcp_client_permanent_message_connection_impl *  f_parent_impl = nullptr;
-        addr::addr const                                f_address;
+        std::size_t                                     f_index = 0;
+        addr::addr::vector_t const                      f_addresses;
         mode_t const                                    f_mode;
         tcp_bio_client::pointer_t                       f_tcp_connection = tcp_bio_client::pointer_t();
         std::string                                     f_last_error = std::string();
@@ -391,15 +425,15 @@ public:
      *
      * \param[in] parent  A pointer to the owner of this
      * tcp_client_permanent_message_connection_impl object.
-     * \param[in] address  The address we are to connect to.
+     * \param[in] addresses  The addresses we are to connect to.
      * \param[in] mode  The mode used to connect.
      */
     tcp_client_permanent_message_connection_impl(
                   tcp_client_permanent_message_connection * parent
-                , addr::addr const & address
+                , addr::addr::vector_t const & addresses
                 , mode_t mode)
         : f_parent(parent)
-        , f_thread_runner(this, address, mode)
+        , f_thread_runner(this, addresses, mode)
         , f_thread("background connection handler thread", &f_thread_runner)
     {
     }
@@ -765,14 +799,15 @@ private:
  * This implementation creates what we call a permanent connection.
  * Such a connection may fail once in a while. In such circumstances,
  * the class automatically requests for a reconnection (see various
- * parameters in the regard below.) However, this causes one issue:
+ * parameters below in that regard). However, this causes one issue:
  * by default, the connection just never ends. When you are about
  * ready to close the connection, you must call the mark_done()
  * function first. This will tell the various error functions to
  * drop this connection instead of restarting it after a small pause.
  *
  * This constructor makes sure to initialize the timer and saves
- * the address, port, mode, pause, and use_thread parameters.
+ * the address, port, mode, pause, and use_thread parameters. This
+ * constructor makes use of a single address.
  *
  * The timer is first set to trigger immediately. This means the TCP
  * connection will be attempted as soon as possible (the next time
@@ -800,8 +835,7 @@ private:
  * the thread is probably not required. For connections to a remote
  * computer, though, it certainly is important.
  *
- * \param[in] address  The address and port to listen on.
- *                     It may be set to "0.0.0.0".
+ * \param[in] address  The address and port to connect to.
  * \param[in] mode  The mode to use to open the connection.
  * \param[in] pause  The amount of time to wait before attempting a new
  *                   connection after a failure, in microseconds, or 0.
@@ -818,7 +852,44 @@ tcp_client_permanent_message_connection::tcp_client_permanent_message_connection
           , std::string const & service_name)
     : timer(pause < 0 ? -pause : 0)
     , connection_with_send_message(service_name)
-    , f_impl(std::make_shared<detail::tcp_client_permanent_message_connection_impl>(this, address, mode))
+    , f_impl(std::make_shared<detail::tcp_client_permanent_message_connection_impl>(this, addr::addr::vector_t{address}, mode))
+    , f_pause(llabs(pause))
+    , f_use_thread(use_thread)
+{
+}
+
+
+/** \brief Initializes this TCP client message connection.
+ *
+ * The difference between this constructor and the other one is the
+ * array of addresses instead of using just one address, this constructor
+ * supports multiple. Each address is used to try to connect to the
+ * server on the other side. The use of another address happens
+ * if the connection fails the connection, the SNI, the handshakes, etc.
+ * If the connection comes up and is severed later, then the same address
+ * is used to attempt the first reconnect.
+ *
+ * You may pass a vector with a single address in which case the system
+ * behaves the same way as the other constructor.
+ *
+ * \param[in] addresses  The addresses and ports to connect to.
+ * \param[in] mode  The mode to use to open the connection.
+ * \param[in] pause  The amount of time to wait before attempting a new
+ *                   connection after a failure, in microseconds, or 0.
+ * \param[in] use_thread  Whether a thread is used to connect to the
+ *                        server.
+ * \param[in] service_name  The name of your daemon service. Only use once
+ *                          on your permanent connection to snapcommunicator.
+ */
+tcp_client_permanent_message_connection::tcp_client_permanent_message_connection(
+            addr::addr::vector_t const & addresses
+          , mode_t mode
+          , std::int64_t const pause
+          , bool const use_thread
+          , std::string const & service_name)
+    : timer(pause < 0 ? -pause : 0)
+    , connection_with_send_message(service_name)
+    , f_impl(std::make_shared<detail::tcp_client_permanent_message_connection_impl>(this, addresses, mode))
     , f_pause(llabs(pause))
     , f_use_thread(use_thread)
 {

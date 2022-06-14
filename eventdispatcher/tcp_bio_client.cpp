@@ -565,7 +565,7 @@ tcp_bio_client::tcp_bio_client(
             if(BIO_do_connect(bio.get()) <= 0)
             {
                 detail::bio_log_errors();
-                throw initialization_error("failed connecting BIO object to server");
+                throw failed_connecting("failed connecting BIO object to server");
             }
 
             // it worked, save the results

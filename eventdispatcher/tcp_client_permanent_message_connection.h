@@ -26,10 +26,10 @@
 
 // self
 //
-#include    "eventdispatcher/connection_with_send_message.h"
-#include    "eventdispatcher/dispatcher_support.h"
-#include    "eventdispatcher/tcp_bio_client.h"
-#include    "eventdispatcher/timer.h"
+#include    <eventdispatcher/connection_with_send_message.h>
+#include    <eventdispatcher/dispatcher_support.h>
+#include    <eventdispatcher/tcp_bio_client.h>
+#include    <eventdispatcher/timer.h>
 
 
 
@@ -61,6 +61,12 @@ public:
                                         , std::int64_t const pause = DEFAULT_PAUSE_BEFORE_RECONNECTING
                                         , bool const use_thread = true
                                         , std::string const & service_name = std::string());
+                                tcp_client_permanent_message_connection(
+                                          addr::addr::vector_t const & addresses
+                                        , mode_t mode
+                                        , std::int64_t const pause
+                                        , bool const use_thread
+                                        , std::string const & service_name);
     virtual                     ~tcp_client_permanent_message_connection() override;
 
     bool                        is_connected() const;
