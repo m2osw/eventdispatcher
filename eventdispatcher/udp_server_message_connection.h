@@ -13,19 +13,23 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
 /** \file
- * \brief Event dispatch class.
+ * \brief Listen for UDP messages.
  *
- * Class used to handle events.
+ * This class is used to create an object ready to listen for incoming
+ * messages. It also supports a way to send messages either through the
+ * send() function or setting the client/server flag to true and have
+ * a client and a server within this class.
  */
 
 // self
 //
+#include    "eventdispatcher/udp_client.h"
 #include    "eventdispatcher/udp_server_connection.h"
 #include    "eventdispatcher/dispatcher_support.h"
 
@@ -45,10 +49,21 @@ public:
 
     static size_t const         DATAGRAM_MAX_SIZE = 1024;
 
-                                udp_server_message_connection(addr::addr const & address);
+                                udp_server_message_connection(
+                                          addr::addr const & server_address
+                                        , addr::addr const & client_address = addr::addr());
+
+    bool                        send_message(
+                                          message const & msg
+                                        , std::string const & secret_code = std::string());
 
     static bool                 send_message(
-                                          addr::addr const & address
+                                          addr::addr const & client_address
+                                        , message const & msg
+                                        , std::string const & secret_code = std::string());
+
+    static bool                 send_message(
+                                          udp_client & client
                                         , message const & msg
                                         , std::string const & secret_code = std::string());
 
@@ -56,6 +71,7 @@ public:
     virtual void                process_read() override;
 
 private:
+    udp_client::pointer_t       f_udp_client = udp_client::pointer_t();
 };
 
 

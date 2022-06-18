@@ -18,25 +18,19 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
- * \brief Implementation of the Snap Communicator class.
+ * \brief Implementation of the UDP server class.
  *
- * This class wraps the C poll() interface in a C++ object with many types
- * of objects:
+ * This class is used to listen and optionally send UDP messages.
  *
- * \li Server Connections; for software that want to offer a port to
- *     which clients can connect to; the server will call accept()
- *     once a new client connection is ready; this results in a
- *     Server/Client connection object
- * \li Client Connections; for software that want to connect to
- *     a server; these expect the IP address and port to connect to
- * \li Server/Client Connections; for the server when it accepts a new
- *     connection; in this case the server gets a socket from accept()
- *     and creates one of these objects to handle the connection
+ * By default, the class only creates a server. With UDP, since it is state
+ * less, the only way to communicate is via two servers and two clients.
+ * A client is used to send messages and a server is used to listen and
+ * receive messages.
  *
- * Using the poll() function is the easiest and allows us to listen
- * on pretty much any number of sockets (on my server it is limited
- * at 16,768 and frankly over 1,000 we probably will start to have
- * real slowness issues on small VPN servers.)
+ * Since the port for the server and the client need to be different.
+ * You may assign the server port 0 in which case it is automatically
+ * generated and that port can be sent to the other side so that other
+ * side can then reply to our messages.
  */
 
 // self
@@ -85,14 +79,68 @@ namespace ed
  * when sending. Instead we create a client that we immediately
  * destruct once the message was sent.
  *
- * \param[in] address  The address and port to listen on.
+ * The \p client_address, if not set to ANY (0.0.0.0 or ::) is
+ * used to create a udp_client object. That object is used
+ * by the send_message() function. It also allows you to use
+ * port 0 for the server which means you do not have to have
+ * a reserved port for the server. That port can then be sent
+ * to the client which can use it to send you replies.
+ *
+ * \param[in] server_address  The address and port to listen on.
+ * \param[in] client_address  The address for the client side.
  */
-udp_server_message_connection::udp_server_message_connection(addr::addr const & address)
-    : udp_server_connection(address)
+udp_server_message_connection::udp_server_message_connection(
+          addr::addr const & server_address
+        , addr::addr const & client_address)
+    : udp_server_connection(server_address)
 {
     // allow for looping over all the messages in one go
     //
     non_blocking();
+
+    if(client_address.get_network_type() != addr::addr::network_type_t::NETWORK_TYPE_ANY)
+    {
+        f_udp_client = std::make_shared<ed::udp_client>(client_address);
+    }
+}
+
+
+/** \brief Send a message over to the client.
+ *
+ * This function sends a message to the client at the address specified in
+ * the constructor.
+ *
+ * The advantage of using this function is that the server port is
+ * automatically attached to the message through the reply_port
+ * parameter. This is important if you are running an application
+ * which is not itself the main server (since the UDP mechanism is
+ * opposite to the TCP mechanism, clients have to create servers
+ * which have to listen and on one computer, multiple clients
+ * would require you to assign additional ports to clients, which
+ * is unusual).
+ *
+ * \exception initialization_missing
+ * If no address was specified on the constructor (i.e. the ANY address
+ * was used) then this exception is raised.
+ *
+ * \param[in] msg  The message to send to the client.
+ * \param[in] secret_code  The secret code to attach to the message.
+ *
+ * \return true when the message was sent, false otherwise.
+ */
+bool udp_server_message_connection::send_message(
+      message const & msg
+    , std::string const & secret_code)
+{
+    if(f_udp_client == nullptr)
+    {
+        throw initialization_missing("this UDP server was not initialized with a client (see constructor).");
+    }
+
+    message with_address(msg);
+    with_address.add_parameter("reply_to", get_address());
+
+    return send_message(*f_udp_client, msg, secret_code);
 }
 
 
@@ -106,14 +154,14 @@ udp_server_message_connection::udp_server_message_connection(addr::addr const & 
  * The function returns true when the message was successfully sent.
  * This does not mean it was received.
  *
- * \param[in] address  The destination address and port for the message.
+ * \param[in] client_address  The destination address and port for the message.
  * \param[in] msg  The message to send to the destination.
  * \param[in] secret_code  The secret code to send along the message.
  *
  * \return true when the message was sent, false otherwise.
  */
 bool udp_server_message_connection::send_message(
-          addr::addr const & address
+          addr::addr const & client_address
         , message const & msg
         , std::string const & secret_code)
 {
@@ -122,8 +170,47 @@ bool udp_server_message_connection::send_message(
     //       in one UDP packet. However, it has a maximum size
     //       limit which we enforce here.
     //
-    udp_client client(address);
+    udp_client client(client_address);
 
+    // you should use the multi-cast
+    //
+    // TODO: also the is_broadcast_address() re-reads the list of interfaces
+    //       from the kernel, which is _slow_ (i.e. it doesn't get cached)
+    //       See: libaddr/iface.cpp in the libaddr project
+    //
+    if(client_address.get_network_type() == addr::addr::network_type_t::NETWORK_TYPE_MULTICAST
+    || addr::is_broadcast_address(client_address))
+    {
+        client.set_broadcast(true);
+    }
+
+    return send_message(client, msg, secret_code);
+}
+
+
+/** \brief Send a UDP message to the specified \p client.
+ *
+ * This function sends a UDP message to the specified client. In most
+ * cases, you want to send a message using the other two send_message()
+ * functions. If you have your own instance of a udp_client object,
+ * then you are free to use this function instead.
+ *
+ * \todo
+ * I think it would be possible to have this function as part of the
+ * udp_client class instead. Since it is static, there is no real
+ * need for any specific field from the UDP servero.
+ *
+ * \param[in] client  The client where the message gets sent.
+ * \param[in] msg  The message to send to the destination.
+ * \param[in] secret_code  The secret code to send along the message.
+ *
+ * \return true when the message was sent, false otherwise.
+ */
+bool udp_server_message_connection::send_message(
+      udp_client & client
+    , message const & msg
+    , std::string const & secret_code)
+{
     std::string buf;
     if(!secret_code.empty())
     {
@@ -134,18 +221,6 @@ bool udp_server_message_connection::send_message(
     else
     {
         buf = msg.to_message();
-    }
-
-    // you should use the multi-cast
-    //
-    // TODO: also the is_broadcast_address() re-reads the list of interfaces
-    //       from the kernel, which is _slow_ (i.e. it doesn't get cached)
-    //       See: libaddr/iface.cpp in the libaddr project
-    //
-    if(address.get_network_type() == addr::addr::network_type_t::NETWORK_TYPE_MULTICAST
-    || addr::is_broadcast_address(address))
-    {
-        client.set_broadcast(true);
     }
 
     // TODO: this maximum size needs to be checked dynamically;

@@ -29,6 +29,11 @@
 #include    "eventdispatcher/utils.h"
 
 
+// libaddr
+//
+#include    "libaddr/addr.h"
+
+
 
 namespace ed
 {
@@ -87,6 +92,7 @@ public:
     void                    add_parameter(std::string const & name, unsigned long long value);
     void                    add_parameter(std::string const & name, std::int64_t value);
     void                    add_parameter(std::string const & name, std::uint64_t value);
+    void                    add_parameter(std::string const & name, addr::addr const & value, bool mask = false);
     bool                    has_parameter(std::string const & name) const;
     std::string             get_parameter(std::string const & name) const;
     std::int64_t            get_integer_parameter(std::string const & name) const;

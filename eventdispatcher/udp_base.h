@@ -52,7 +52,6 @@ public:
 
     int                 get_mtu_size() const;
     int                 get_mss_size() const;
-    int                 get_port() const;
     addr::addr          get_address() const;
 
 protected:

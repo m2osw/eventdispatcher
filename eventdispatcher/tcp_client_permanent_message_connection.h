@@ -32,6 +32,11 @@
 #include    <eventdispatcher/timer.h>
 
 
+// libaddr
+//
+#include    <libaddr/addr_range.h>
+
+
 
 namespace ed
 {
@@ -63,10 +68,16 @@ public:
                                         , std::string const & service_name = std::string());
                                 tcp_client_permanent_message_connection(
                                           addr::addr::vector_t const & addresses
-                                        , mode_t mode
-                                        , std::int64_t const pause
-                                        , bool const use_thread
-                                        , std::string const & service_name);
+                                        , mode_t mode = mode_t::MODE_PLAIN
+                                        , std::int64_t const pause = DEFAULT_PAUSE_BEFORE_RECONNECTING
+                                        , bool const use_thread = true
+                                        , std::string const & service_name = std::string());
+                                tcp_client_permanent_message_connection(
+                                          addr::addr_range::vector_t const & address_ranges
+                                        , mode_t mode = mode_t::MODE_PLAIN
+                                        , std::int64_t const pause = DEFAULT_PAUSE_BEFORE_RECONNECTING
+                                        , bool const use_thread = true
+                                        , std::string const & service_name = std::string());
     virtual                     ~tcp_client_permanent_message_connection() override;
 
     bool                        is_connected() const;

@@ -287,6 +287,11 @@ int udp_base::get_mss_size() const
  * The address cannot be modified. If you need to send data on a different
  * address, create a new UDP client.
  *
+ * \note
+ * If you set the port to 0 and then do a bind (i.e. create a server,
+ * listening socket), then the port will automatically be assigned
+ * by the network stack. This is allowed for the UDP server.
+ *
  * \return A string with a copy of the constructor input address.
  */
 addr::addr udp_base::get_address() const

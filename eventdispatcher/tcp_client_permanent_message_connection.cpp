@@ -896,6 +896,42 @@ tcp_client_permanent_message_connection::tcp_client_permanent_message_connection
 }
 
 
+/** \brief Initializes this TCP client message connection.
+ *
+ * The difference between this constructor and the others is the array of
+ * address ranges instead of using just one address or a vector of addresses.
+ *
+ * This constructor simply transforms the address ranges in a vector of
+ * addresses and passes that down to our implementation which handles the
+ * connection attempts.
+ *
+ * \param[in] address_ranges  The address ranges and ports to connect to.
+ * \param[in] mode  The mode to use to open the connection.
+ * \param[in] pause  The amount of time to wait before attempting a new
+ *                   connection after a failure, in microseconds, or 0.
+ * \param[in] use_thread  Whether a thread is used to connect to the
+ *                        server.
+ * \param[in] service_name  The name of your daemon service. Only use once
+ *                          on your permanent connection to snapcommunicator.
+ */
+tcp_client_permanent_message_connection::tcp_client_permanent_message_connection(
+            addr::addr_range::vector_t const & address_ranges
+          , mode_t mode
+          , std::int64_t const pause
+          , bool const use_thread
+          , std::string const & service_name)
+    : timer(pause < 0 ? -pause : 0)
+    , connection_with_send_message(service_name)
+    , f_impl(std::make_shared<detail::tcp_client_permanent_message_connection_impl>(
+                      this
+                    , addr::addr_range::to_addresses(address_ranges)
+                    , mode))
+    , f_pause(llabs(pause))
+    , f_use_thread(use_thread)
+{
+}
+
+
 /** \brief Destroy instance.
  *
  * This function cleans up everything in the permanent message object.

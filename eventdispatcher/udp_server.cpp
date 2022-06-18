@@ -146,6 +146,10 @@ udp_server::udp_server(
     }
     else
     {
+        // note: if f_address has port set to 0 on entry, after this call
+        //       it will be changed to the port automatically assigned by
+        //       the network stack
+        //
         r = f_address.bind(get_socket());
         if(r != 0)
         {

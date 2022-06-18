@@ -1580,6 +1580,36 @@ void message::add_parameter(std::string const & name, std::uint64_t value)
 }
 
 
+/** \brief Add an address parameter to the message.
+ *
+ * Messages can include parameters (variables) such as a URI or a word.
+ *
+ * This function transforms the input address in a string to be sent to
+ * the other end. The address IP and port are included. If the mask is
+ * also required, set the \p mask parameter to true.
+ *
+ * The parameter name is verified by the verify_message_name() function.
+ *
+ * \param[in] name  The name of the parameter.
+ * \param[in] value  The value of this parameter.
+ * \param[in] mask  Set to true to include the mask.
+ *
+ * \sa verify_message_name()
+ */
+void message::add_parameter(
+      std::string const & name
+    , addr::addr const & value
+    , bool mask)
+{
+    verify_message_name(name);
+
+    f_parameters[name] = value.to_ipv4or6_string(mask
+                            ? addr::addr::string_ip_t::STRING_IP_ALL
+                            : addr::addr::string_ip_t::STRING_IP_PORT);
+    f_cached_message.clear();
+}
+
+
 /** \brief Check whether a parameter is defined in this message.
  *
  * This function checks whether a parameter is defined in a message. If
