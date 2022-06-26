@@ -248,7 +248,7 @@ tcp_bio_server::tcp_bio_server(
             // create a listening connection
             //
             std::shared_ptr<BIO> listen;  // use reset(), see SNAP-507
-            listen.reset(BIO_new_accept(address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT).c_str()), detail::bio_deleter);
+            listen.reset(BIO_new_accept(address.to_ipv4or6_string(addr::string_ip_t::STRING_IP_PORT).c_str()), detail::bio_deleter);
             if(!listen)
             {
                 detail::bio_log_errors();
@@ -339,7 +339,7 @@ tcp_bio_server::tcp_bio_server(
     case mode_t::MODE_PLAIN:
         {
             std::shared_ptr<BIO> listen; // use reset(), see SNAP-507
-            listen.reset(BIO_new_accept(address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT).c_str()), detail::bio_deleter);
+            listen.reset(BIO_new_accept(address.to_ipv4or6_string(addr::string_ip_t::STRING_IP_PORT).c_str()), detail::bio_deleter);
             if(listen == nullptr)
             {
                 detail::bio_log_errors();

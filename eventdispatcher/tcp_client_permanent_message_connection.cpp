@@ -288,7 +288,7 @@ public:
             //
             SNAP_LOG_ERROR
                 << "connection to "
-                << addr::setaddrmode(addr::addr::string_ip_t::STRING_IP_PORT)
+                << addr::setaddrmode(addr::string_ip_t::STRING_IP_PORT)
                 << f_addresses
                 << " failed with: "
                 << f_last_error
@@ -633,7 +633,7 @@ public:
         {
             SNAP_LOG_ERROR
                 << "connection to "
-                << f_thread_runner.get_address().to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+                << f_thread_runner.get_address().to_ipv4or6_string(addr::string_ip_t::STRING_IP_PORT)
                 << " failed with: "
                 << f_thread_runner.get_last_error()
                 << SNAP_LOG_SEND;

@@ -117,9 +117,9 @@ udp_server::udp_server(
         {
             std::stringstream ss;
             ss << "the UDP multicast implementation only supports IPv4 at the moment; multicast: \""
-               << multicast_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+               << multicast_address.to_ipv4or6_string(addr::string_ip_t::STRING_IP_PORT)
                << "\", address: \""
-               << f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+               << f_address.to_ipv4or6_string(addr::string_ip_t::STRING_IP_PORT)
                << "\".";
             SNAP_LOG_FATAL
                 << ss
@@ -137,7 +137,7 @@ udp_server::udp_server(
                << " ("
                << strerror(e)
                << "); address "
-               << multicast_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT);
+               << multicast_address.to_ipv4or6_string(addr::string_ip_t::STRING_IP_PORT);
             SNAP_LOG_FATAL
                 << ss
                 << SNAP_LOG_SEND;
@@ -161,7 +161,7 @@ udp_server::udp_server(
                << " ("
                << strerror(e)
                << "); address "
-               << f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT);
+               << f_address.to_ipv4or6_string(addr::string_ip_t::STRING_IP_PORT);
             SNAP_LOG_FATAL
                 << ss
                 << SNAP_LOG_SEND;
@@ -194,9 +194,9 @@ udp_server::udp_server(
             int const e(errno);
             throw runtime_error(
                       "IP_ADD_MEMBERSHIP failed for: \""
-                    + f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+                    + f_address.to_ipv4or6_string(addr::string_ip_t::STRING_IP_PORT)
                     + "\" or \""
-                    + multicast_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+                    + multicast_address.to_ipv4or6_string(addr::string_ip_t::STRING_IP_PORT)
                     + "\", errno: "
                     + std::to_string(e) + ", " + strerror(e));
         }

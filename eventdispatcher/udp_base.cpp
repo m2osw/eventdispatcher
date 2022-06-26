@@ -96,7 +96,7 @@ udp_base::udp_base(addr::addr const & address)
     {
         std::stringstream ss;
         ss << "could not create socket for: \""
-           << f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+           << f_address.to_ipv4or6_string(addr::string_ip_t::STRING_IP_PORT)
            << "\".";
         throw runtime_error(ss.str());
     }

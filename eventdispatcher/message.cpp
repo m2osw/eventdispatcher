@@ -1604,8 +1604,8 @@ void message::add_parameter(
     verify_message_name(name);
 
     f_parameters[name] = value.to_ipv4or6_string(mask
-                            ? addr::addr::string_ip_t::STRING_IP_ALL
-                            : addr::addr::string_ip_t::STRING_IP_PORT);
+                            ? addr::string_ip_t::STRING_IP_ALL
+                            : addr::string_ip_t::STRING_IP_PORT);
     f_cached_message.clear();
 }
 

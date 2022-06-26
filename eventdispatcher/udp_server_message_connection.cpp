@@ -98,7 +98,7 @@ udp_server_message_connection::udp_server_message_connection(
     //
     non_blocking();
 
-    if(client_address.get_network_type() != addr::addr::network_type_t::NETWORK_TYPE_ANY)
+    if(client_address.get_network_type() != addr::network_type_t::NETWORK_TYPE_ANY)
     {
         f_udp_client = std::make_shared<ed::udp_client>(client_address);
     }
@@ -178,7 +178,7 @@ bool udp_server_message_connection::send_message(
     //       from the kernel, which is _slow_ (i.e. it doesn't get cached)
     //       See: libaddr/iface.cpp in the libaddr project
     //
-    if(client_address.get_network_type() == addr::addr::network_type_t::NETWORK_TYPE_MULTICAST
+    if(client_address.get_network_type() == addr::network_type_t::NETWORK_TYPE_MULTICAST
     || addr::is_broadcast_address(client_address))
     {
         client.set_broadcast(true);

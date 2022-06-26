@@ -142,7 +142,7 @@ tcp_server::tcp_server(
         close(f_socket);
         std::stringstream ss;
         ss << "could not bind the socket to \""
-           << f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+           << f_address.to_ipv4or6_string(addr::string_ip_t::STRING_IP_PORT)
            << "\"\n";
         SNAP_LOG_ERROR
             << ss
@@ -158,7 +158,7 @@ tcp_server::tcp_server(
         close(f_socket);
         throw runtime_error(
                   "could not listen to the socket bound to \""
-                + f_address.to_ipv4or6_string(addr::addr::string_ip_t::STRING_IP_PORT)
+                + f_address.to_ipv4or6_string(addr::string_ip_t::STRING_IP_PORT)
                 + "\"");
     }
 }
