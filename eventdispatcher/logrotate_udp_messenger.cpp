@@ -174,6 +174,11 @@ logrotate_extension::logrotate_extension(
 }
 
 
+logrotate_extension::~logrotate_extension()
+{
+}
+
+
 void logrotate_extension::add_logrotate_options()
 {
     // add options

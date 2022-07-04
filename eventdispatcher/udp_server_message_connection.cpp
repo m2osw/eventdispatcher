@@ -105,6 +105,29 @@ udp_server_message_connection::udp_server_message_connection(
 }
 
 
+/** \brief Send a message.
+ *
+ * This function sends \p message to the other side.
+ *
+ * The \p cache parameter is here because it is present in the send_message()
+ * of the connection_with_send_message class. It is not used by the UDP
+ * implementation, however.
+ *
+ * \param[in,out] msg  The message to forward to the other side.
+ * \param[in] cache  This flag is ignored.
+ *
+ * \return true if the message was sent successfully.
+ */
+bool udp_server_message_connection::send_message(
+          message & msg
+        , bool cache)
+{
+    snapdev::NOT_USED(cache);
+
+    return send_message(msg, f_secret_code);
+}
+
+
 /** \brief Send a message over to the client.
  *
  * This function sends a message to the client at the address specified in
@@ -129,8 +152,8 @@ udp_server_message_connection::udp_server_message_connection(
  * \return true when the message was sent, false otherwise.
  */
 bool udp_server_message_connection::send_message(
-      message const & msg
-    , std::string const & secret_code)
+          message const & msg
+        , std::string const & secret_code)
 {
     if(f_udp_client == nullptr)
     {
@@ -327,6 +350,44 @@ void udp_server_message_connection::process_read()
                 << SNAP_LOG_SEND;
         }
     }
+}
+
+
+/** \brief Set the secret code to be used along messages.
+ *
+ * This allows the users to call the send_message() function that does
+ * not include a \p secret_code parameter and still make the function
+ * work as expected.
+ *
+ * This should be set at initialization time.
+ *
+ * \param[in] secret_code  The secret code to use along the UDP messages.
+ */
+void udp_server_message_connection::set_secret_code(std::string const & secret_code)
+{
+    f_secret_code = secret_code;
+}
+
+
+/** \brief Retrieve the secret code.
+ *
+ * This function is the converse of the set_secret_code(). It retrieves the
+ * secret code.
+ *
+ * Note that the functions called with a secret code do not save that secret
+ * code in the object. You have to explicitly call the set_secret_code()
+ * function to do so.
+ *
+ * \note
+ * The send_message() accepting an ed::message and a bool (cache), makes
+ * use of this function to retrieve the secret code and call the
+ * send_message() accepting an ed::message and a string.
+ *
+ * \return The secret code as set with the set_secret_code().
+ */
+std::string udp_server_message_connection::get_secret_code() const
+{
+    return f_secret_code;
 }
 
 

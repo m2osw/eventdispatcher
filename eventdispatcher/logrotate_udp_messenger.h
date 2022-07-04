@@ -161,6 +161,7 @@ public:
                                       advgetopt::getopt & opts
                                     , std::string const & default_address
                                     , int default_port);
+    virtual                 ~logrotate_extension();
 
     void                    add_logrotate_options();
     void                    process_logrotate_options();
