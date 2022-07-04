@@ -55,10 +55,6 @@ public:
                                           addr::addr const & server_address
                                         , addr::addr const & client_address = addr::addr());
 
-    virtual bool                send_message(
-                                          message & msg
-                                        , bool cache = false);
-
     bool                        send_message(
                                           message const & msg
                                         , std::string const & secret_code = std::string());
@@ -76,12 +72,13 @@ public:
     // connection implementation
     virtual void                process_read() override;
 
-    void                        set_secret_code(std::string const & secret_code);
-    std::string                 get_secret_code() const;
+    // connection_with_send_message implementation
+    virtual bool                send_message(
+                                          message & msg
+                                        , bool cache = false) override;
 
 private:
     udp_client::pointer_t       f_udp_client = udp_client::pointer_t();
-    std::string                 f_secret_code = std::string();
 };
 
 

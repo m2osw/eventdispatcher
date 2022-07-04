@@ -14,9 +14,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // self
 //
@@ -96,26 +96,6 @@ logrotate_udp_messenger::logrotate_udp_messenger(
  */
 logrotate_udp_messenger::~logrotate_udp_messenger()
 {
-}
-
-
-/** \brief Implement a send message for it is required.
- *
- * This function does nothing. It has to be defined because one of the
- * dependencies of this class has a pure virtual function named send_message().
- *
- * In a later implementation we may change this implementation.
- *
- * \param[in] msg  The message to be sent (ignored).
- * \param[in] cache  Whether to cache the message if it can't immediately be
- * sent (ignored).
- *
- * \return Always returns true (as if the message was sent successfully).
- */
-bool logrotate_udp_messenger::send_message(ed::message & msg, bool cache)
-{
-    snapdev::NOT_USED(msg, cache);
-    return true;
 }
 
 

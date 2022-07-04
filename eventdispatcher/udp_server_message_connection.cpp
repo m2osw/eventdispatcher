@@ -124,7 +124,7 @@ bool udp_server_message_connection::send_message(
 {
     snapdev::NOT_USED(cache);
 
-    return send_message(msg, f_secret_code);
+    return send_message(msg, get_secret_code());
 }
 
 
@@ -350,44 +350,6 @@ void udp_server_message_connection::process_read()
                 << SNAP_LOG_SEND;
         }
     }
-}
-
-
-/** \brief Set the secret code to be used along messages.
- *
- * This allows the users to call the send_message() function that does
- * not include a \p secret_code parameter and still make the function
- * work as expected.
- *
- * This should be set at initialization time.
- *
- * \param[in] secret_code  The secret code to use along the UDP messages.
- */
-void udp_server_message_connection::set_secret_code(std::string const & secret_code)
-{
-    f_secret_code = secret_code;
-}
-
-
-/** \brief Retrieve the secret code.
- *
- * This function is the converse of the set_secret_code(). It retrieves the
- * secret code.
- *
- * Note that the functions called with a secret code do not save that secret
- * code in the object. You have to explicitly call the set_secret_code()
- * function to do so.
- *
- * \note
- * The send_message() accepting an ed::message and a bool (cache), makes
- * use of this function to retrieve the secret code and call the
- * send_message() accepting an ed::message and a string.
- *
- * \return The secret code as set with the set_secret_code().
- */
-std::string udp_server_message_connection::get_secret_code() const
-{
-    return f_secret_code;
 }
 
 

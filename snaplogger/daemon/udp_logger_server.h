@@ -44,7 +44,6 @@ namespace snaplogger_daemon
 
 class udp_logger_server
     : public ed::udp_server_message_connection
-    , public ed::connection_with_send_message
 {
 public:
     typedef std::shared_ptr<udp_logger_server>
@@ -54,8 +53,6 @@ public:
                                           addr::addr const & listen
                                         , std::string const & secret_code);
     virtual                     ~udp_logger_server() override;
-
-    virtual bool                send_message(ed::message & msg, bool cache = false) override;
 
     void                        msg_logger_message(ed::message & m);
 

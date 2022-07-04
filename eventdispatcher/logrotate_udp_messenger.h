@@ -14,9 +14,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
 /** \file
@@ -135,7 +135,6 @@ namespace ed
  */
 class logrotate_udp_messenger
     : public ed::udp_server_message_connection
-    , public ed::connection_with_send_message
 {
 public:
     typedef std::shared_ptr<logrotate_udp_messenger>              pointer_t;
@@ -145,9 +144,6 @@ public:
                                       addr::addr const & address
                                     , std::string const & secret_code);
     virtual                 ~logrotate_udp_messenger() override;
-
-    // connection_with_send_message implementation
-    virtual bool            send_message(ed::message & msg, bool cache = false) override;
 
 private:
     dispatcher_pointer_t    f_dispatcher = dispatcher_pointer_t();

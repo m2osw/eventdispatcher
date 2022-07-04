@@ -95,14 +95,6 @@ udp_logger_server::~udp_logger_server()
 }
 
 
-bool udp_logger_server::send_message(ed::message & msg, bool cache)
-{
-    snapdev::NOT_USED(msg, cache);
-
-    throw std::logic_error("send_message() called on UDP service: not implemented");
-}
-
-
 void udp_logger_server::msg_logger_message(ed::message & m)
 {
     snaplogger::message::pointer_t msg(ed_message_to_log_message(m));
