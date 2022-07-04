@@ -7,6 +7,9 @@ eventdispatcher (1.1.52.0~bionic) bionic; urgency=high
   * Deleted some old commented out code.
   * Removed some support for Ubuntu 16.04.
   * Fixed a few !<ptr> with <ptr> == nullptr.
+  * Added a UDP "client/server".
+  * Made the logrotate extension a virtual because we need the destructor
+    to be called when derived from a virtual class.
 
  -- Alexis Wilke <alexis@m2osw.com>  Sun, 12 Jun 2022 17:04:34 -0700
 
