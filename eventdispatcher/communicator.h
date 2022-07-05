@@ -61,6 +61,8 @@ public:
     bool                                is_running() const;
     void                                debug_connections(snaplogger::severity_t severity = snaplogger::severity_t::SEVERITY_TRACE);
     void                                log_connections(snaplogger::severity_t severity = snaplogger::severity_t::SEVERITY_DEBUG);
+    bool                                get_show_connections() const;
+    void                                set_show_connections(bool status);
 
     virtual bool                        run();
 
@@ -73,6 +75,7 @@ private:
     connection::vector_t                f_connections = connection::vector_t();
     bool                                f_force_sort = true;
     bool                                f_running = false;
+    bool                                f_show_connections = false;
     snaplogger::severity_t              f_debug_connections = snaplogger::severity_t::SEVERITY_OFF;
 };
 #pragma GCC diagnostic pop

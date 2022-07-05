@@ -267,7 +267,7 @@ bool communicator::remove_connection(connection::pointer_t connection)
 
     if(f_debug_connections != snaplogger::severity_t::SEVERITY_OFF)
     {
-        log_connections();
+        log_connections(f_debug_connections);
     }
 
     return true;
@@ -300,6 +300,54 @@ void communicator::log_connections(snaplogger::severity_t severity)
                     << "\"";
                 snaplogger::send_message(msg);
             });
+}
+
+
+/** \brief Show connections before calling poll().
+ *
+ * The communicator connections can be difficult to debug when attempting to
+ * quit. It's easy to keep on in there.
+ *
+ * By setting the log debug severity to a value other than OFF and setting
+ * the show connections with set_show_connections() to true, now you will
+ * get a list of connections being listened on by the communicator.
+ *
+ * \return the current state of the show connections flag.
+ */
+bool communicator::get_show_connections() const
+{
+    return f_show_connections;
+}
+
+
+/** \brief Set whether the list of connections should be shown before poll().
+ *
+ * The communicator creates a list of `fd`s that it will listen on. These
+ * file descriptors come from active connections. The name of these
+ * connections can be displayed in your logs if you call this function with
+ * true and made sure that the log severity was not set to OFF by calling
+ * the debug_connections() function.
+ *
+ * When calling the debug_connections() function on its own, you get logs
+ * about all the remaining connections at the time you remove a connection.
+ *
+ * By doing both: debug_connections() and set_show_connections(), you get
+ * the remaining connections at the time a connection gets removed and
+ * you get a list of active connections when communicator::run() is about
+ * to call poll(), while it is determining which connections are still
+ * active and it wants to listen on.
+ *
+ * \note
+ * At this time, there is no flag to ask for information on why a connection
+ * is considered inactive. Note that a connection with a timer is never
+ * considered inactive.
+ *
+ * \param[in] status  The new status to know whether to show connections about
+ * to be polled.
+ */
+void communicator::set_show_connections(bool status)
+{
+    f_show_connections = status;
 }
 
 
@@ -534,11 +582,23 @@ bool communicator::run()
             //
             c->f_fds_position = fds.size();
 
-//SNAP_LOG_ERROR
-//    << "*** still waiting on \""
-//    << c->get_name()
-//    << "\"."
-//    << SNAP_LOG_SEND;
+            // here the debug connections allows us to only show connections
+            // we actually are actively waiting against (become a remaining
+            // connection which is not added here is ignored)
+            //
+            // note that we use yet another flag to make sure that it does
+            // not happen unless the programmer really wants to really hard
+            // see set_show_connections() for other details
+            //
+            if(get_show_connections()
+            && f_debug_connections != snaplogger::severity_t::SEVERITY_OFF)
+            {
+                snaplogger::message msg(f_debug_connections, __FILE__, __func__, __LINE__);
+                msg << "communicator listening on connection: \""
+                    << c->get_name()
+                    << "\"";
+                snaplogger::send_message(msg);
+            }
 
             struct pollfd fd;
             fd.fd = c->get_socket();
