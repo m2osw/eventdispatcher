@@ -496,7 +496,7 @@ void signal_handler::add_terminal_signals(signal_mask_t sigs)
 {
     cppthread::guard g(f_mutex);
 
-    for(size_t i = 0; i < sizeof(f_signal_actions) / sizeof(f_signal_actions[0]); ++i)
+    for(size_t i(0); i < std::size(f_signal_actions); ++i)
     {
         if((sigs & (1L << i)) != 0 && f_signal_actions[i] == nullptr)
         {
@@ -527,7 +527,7 @@ void signal_handler::add_ignored_signals(signal_mask_t sigs)
 {
     cppthread::guard g(f_mutex);
 
-    for(size_t i = 0; i < sizeof(f_signal_actions) / sizeof(f_signal_actions[0]); ++i)
+    for(size_t i(0); i < std::size(f_signal_actions); ++i)
     {
         if((sigs & (1L << i)) != 0 && f_signal_actions[i] == nullptr)
         {
@@ -555,7 +555,7 @@ void signal_handler::remove_signals(signal_mask_t sigs)
 {
     cppthread::guard g(f_mutex);
 
-    for(size_t i = 0; i < sizeof(f_signal_actions) / sizeof(f_signal_actions[0]); ++i)
+    for(size_t i(0); i < std::size(f_signal_actions); ++i)
     {
         if((sigs & (1L << i)) != 0 && f_signal_actions[i] != nullptr)
         {
@@ -599,7 +599,7 @@ void signal_handler::remove_all_signals()
  */
 char const * signal_handler::get_signal_name(int sig)
 {
-    if(static_cast<std::size_t>(sig) >= sizeof(g_signal_names) / sizeof(g_signal_names[0]))
+    if(static_cast<std::size_t>(sig) >= std::size(g_signal_names))
     {
         return nullptr;
     }
