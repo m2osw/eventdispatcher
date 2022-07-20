@@ -38,6 +38,8 @@ namespace ed
 class dispatcher_support
 {
 public:
+    typedef std::shared_ptr<dispatcher_support> pointer_t;
+
     virtual                     ~dispatcher_support();
 
     void                        set_dispatcher(dispatcher_base::pointer_t d);

@@ -596,7 +596,7 @@ public:
      * \li ALIVE -- msg_alive() -- auto-reply with ABSOLUTELY
      * \li HELP -- msg_help() -- returns the list of all the messages
      * \li LEAK -- msg_leak() -- log memory usage
-     * \li LOG_ROTATE -- msg_log_rotate() -- reconfigure() the logger
+     * \li LOG_ROTATE -- msg_log_rotate() -- reopen() the logger
      * \li QUITTING -- msg_quitting() -- calls stop(true);
      * \li READY -- msg_ready() -- calls ready() -- snapcommunicator always
      *              sends that message so it has to be supported
@@ -614,42 +614,58 @@ public:
      * use the system connection_with_send_message class then they're
      * already defined there.
      *
-     * The HELP response is automatically built from the f_matches.f_expr
-     * strings. However, if the function used to match the expression is
-     * not one_to_one_match(), then that string doesn't get used.
+     * The `HELP` response is automatically built from the f_matches.f_expr
+     * strings. However, if any one function used to match the message 
+     * command is not one_to_one_match(), then that string doesn't get used.
      *
-     * If any message can't be determine (i.e. the function is not the
-     * one_to_one_match()) then the user help() function gets called and
-     * we expect that function to add any dynamic message the daemon
+     * If the message makes use of a regular expression (i.e. the function is
+     * not the one_to_one_match()) then the user help() function gets called
+     * and we expect that function to add any dynamic message the daemon
      * understands.
      *
-     * The LOG message reconfigures the logger if the is_configure() function
-     * says it is configured. In any other circumstances, nothing happens.
+     * The LOG_ROTATE message reconfigures the logger by reopening it if the
+     * is_configured() function says it was configured. In any other
+     * circumstances, nothing happens.
      *
      * Note that the UNKNOWN message is understood and just logs the message
-     * received. This allows us to see that WE sent a message that the receiver
-     * (not us) does not understand and adjust our code accordingly (i.e. add
-     * support for that message in that receiver or maybe fix the spelling.)
+     * received. This allows us to see that \b we sent a message that the
+     * receiver (not us) does not understand and adjust our code accordingly
+     * (i.e. add support for that message in that receiver or maybe fix the
+     * spelling).
+     *
+     * The \p auto_catch_all flag is true by default, meaning that the
+     * service does not support any other messages and wants to reply with
+     * the `UNKNOWN` message. Setting this to false means that you will
+     * either add even more messages manually or that you want your
+     * process_message() called (which is the last resort when the dispatcher
+     * fails to process a message).
+     *
+     * \param[in] auto_catch_all  If true, automatically catch all other
+     * messages and reply with `UNKNOWN`.
      */
-    void add_communicator_commands()
+    void add_communicator_commands(bool auto_catch_all = true)
     {
         // avoid more than one realloc()
         //
-        f_matches.reserve(f_matches.size() + 10);
+        f_matches.reserve(f_matches.size() + 11);
 
-        f_matches.push_back(define_match(Expression("ALIVE"),      Execute(&T::msg_alive)));
-        f_matches.push_back(define_match(Expression("HELP"),       Execute(&T::msg_help)));
-        f_matches.push_back(define_match(Expression("LEAK"),       Execute(&T::msg_leak)));
-        f_matches.push_back(define_match(Expression("LOG_ROTATE"), Execute(&T::msg_log_rotate)));
-        f_matches.push_back(define_match(Expression("QUITTING"),   Execute(&T::msg_quitting)));
-        f_matches.push_back(define_match(Expression("READY"),      Execute(&T::msg_ready)));
-        f_matches.push_back(define_match(Expression("RESTART"),    Execute(&T::msg_restart)));
-        f_matches.push_back(define_match(Expression("STOP"),       Execute(&T::msg_stop)));
-        f_matches.push_back(define_match(Expression("UNKNOWN"),    Execute(&T::msg_log_unknown)));
+        f_matches.push_back(define_match(Expression("ALIVE"),               Execute(&T::msg_alive)));
+        f_matches.push_back(define_match(Expression("HELP"),                Execute(&T::msg_help)));
+        f_matches.push_back(define_match(Expression("LEAK"),                Execute(&T::msg_leak)));
+        f_matches.push_back(define_match(Expression("LOG_ROTATE"),          Execute(&T::msg_log_rotate)));
+        f_matches.push_back(define_match(Expression("QUITTING"),            Execute(&T::msg_quitting)));
+        f_matches.push_back(define_match(Expression("READY"),               Execute(&T::msg_ready)));
+        f_matches.push_back(define_match(Expression("RESTART"),             Execute(&T::msg_restart)));
+        f_matches.push_back(define_match(Expression("SERVICE_UNAVAILABLE"), Execute(&T::msg_service_unavailable)));
+        f_matches.push_back(define_match(Expression("STOP"),                Execute(&T::msg_stop)));
+        f_matches.push_back(define_match(Expression("UNKNOWN"),             Execute(&T::msg_log_unknown)));
 
         // always last
         //
-        f_matches.push_back(define_catch_all());
+        if(auto_catch_all)
+        {
+            f_matches.push_back(define_catch_all());
+        }
     }
 
     typename ed::dispatcher<T>::dispatcher_match::vector_t const & get_matches() const

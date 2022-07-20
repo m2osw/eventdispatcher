@@ -838,15 +838,19 @@ private:
  *                        server.
  * \param[in] blocking  Whether the socket is going to be blocking or not.
  * \param[in] close_on_exec  Automatically close the connection if the process
- * execute an exec() call.
+ *                           execute an exec() call.
+ * \param[in] service_name  The name of your daemon service. Only use once
+ *                          on your permanent connection to snapcommunicator.
  */
 local_stream_client_permanent_message_connection::local_stream_client_permanent_message_connection(
           addr::unix const & address
         , std::int64_t const pause
         , bool const use_thread
         , bool const blocking
-        , bool const close_on_exec)
+        , bool const close_on_exec
+        , std::string const & service_name)
     : timer(pause < 0 ? -pause : 0)
+    , connection_with_send_message(service_name)
     , f_impl(std::make_shared<detail::local_stream_client_permanent_message_connection_impl>(
               this
             , address

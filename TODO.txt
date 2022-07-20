@@ -1,6 +1,6 @@
 
 * See to have clients and servers for HTTP/HTTPS/HTTP2/HTTP3
-  (we already have such in libsnapwebsites, only it uses `snapuri`...)
+  (we already have such in libsnapwebsites, only it uses `snapuri` -> edhttp)
 
 * Config describing allowed messages with their parameters and values for
   such and a way to track which message was ever sent (i.e. a form of
@@ -12,7 +12,7 @@
   anything in link with it. It should track the changes to the /proc/... file
   and report these through some mechanism similar to the file_change system).
 
-* Finish the snaplogger network appender extension.
+* Finish the snaplogger network appender extension (mainly testing now).
 
 * Consider moving the cppprocess tee_pipe to eventdispatcher.
 
@@ -26,3 +26,108 @@
   separate (clean) and have a callback instead of a virtual function
   (and we have a callback thingy to manage lists of callbacks in snapdev).
 
+* Ideas on how to re-implement the whole thing using templates to avoid
+  duplicating the buffering & message handling in each class (instead pass
+  a "trait" or something of the sort)
+
+  See a compiling version in `connection_t.h/cpp`. This would allow me to
+  have one class create "many" connections and handle all the events as it
+  sees fit instead of having to derive from each one of these "many"
+  connections and reimplement the callbacks in each one of them.
+
+  current design:
+
+      connection
+        ^
+        +-- tcp_client_connection
+              ^
+              +-- tcp_client_buffer_connection
+                    ^
+                    +-- tcp_client_message_connection
+                          ^
+                          +-- tcp_client_permanent_message_connection
+
+  and I repeat that for local_stream, udp, pipe, etc. when the only thing
+  we really need is a connection implementation, then everything else can
+  be done using a trait
+
+  the basic connection remains pretty much the same, these are viewed as
+  connection traits:
+
+      base_connection
+        ^
+        +-- tcp_client_connection
+        |
+        +-- udp_client_connection
+        |
+        +-- ...
+
+  the rest becomes template classes where ConnectionT is one of the basic
+  connections defined above:
+
+      template<
+            typename BaseConnectionT
+          , typename EventHandlerT>
+      class connection
+          : public BaseConnectionT
+      {
+          connection(EventHandlerT * event_handler)
+              : f_event_handler(event_handler)
+          {
+          }
+
+          virtual void process_timer() override
+          {
+              if constexpr (std::is_member_function_pointer_v<decltype(&EventHandlerT::process_timer)>)
+              {
+                  f_event_handler.process_timer();
+              }
+              else
+              {
+                  SNAP_LOG_WARNING
+                      << "connection \""
+                      << get_name()
+                      << "\" received a process_timer() event without a corresponding event handler."
+                      << SNAP_LOG_SEND;
+              }
+          }
+
+          ...repeat for each possible event in BaseConnectionT...
+      };
+
+      template<
+            typename BaseConnectionT
+          , typename EventHandlerT>
+      class buffering
+          : public connection<BaseConnectionT>
+      {
+      };
+
+      template<
+            typename BaseConnectionT
+          , typename EventHandlerT>
+      class messenger
+          : public buffering<BaseConnectionT>
+      {
+      };
+
+  The traits are plain classes and we can test whether they have a given
+  function to know whether we can call it or not.
+
+    using a template we can have "traits" that allow us to have implementations
+    of the connection, read, write, buffering, etc. so for messages we can have
+    one implementation instead of one per connection type
+
+    the result is a way to create connections with a set of traits more or
+    less like so:
+
+      template<
+          class ConnectionT,    // Timer, TCP, UDP, Unix, Pipe, SignalFD, ...
+          class Traits,         // read/write, buffering, message
+          class Allocator = std::allocator<CharT>>
+      class connection
+      {
+      };
+
+
+# vim: ts=4 sw=4 et

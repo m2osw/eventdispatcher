@@ -63,6 +63,7 @@ public:
     virtual void                msg_quitting(message & msg);
     virtual void                msg_ready(message & msg);
     virtual void                msg_restart(message & msg);
+    virtual void                msg_service_unavailable(message & msg);
     virtual void                msg_stop(message & msg);
     virtual void                msg_log_unknown(message & msg);
     virtual void                msg_reply_with_unknown(message & msg);

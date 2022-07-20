@@ -64,7 +64,8 @@ public:
                                         , std::int64_t const pause = DEFAULT_PAUSE_BEFORE_RECONNECTING
                                         , bool const use_thread = true
                                         , bool const blocking = false
-                                        , bool const close_on_exec = true);
+                                        , bool const close_on_exec = true
+                                        , std::string const & service_name = std::string());
     virtual                     ~local_stream_client_permanent_message_connection() override;
 
     bool                        is_connected() const;

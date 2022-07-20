@@ -85,6 +85,10 @@ namespace ed
 connection_with_send_message::connection_with_send_message(std::string const & service_name)
     : f_service_name(service_name)
 {
+    // verify the name right away, after all it will be used in a message
+    // where it will be verified the same way and the test has to pass
+    //
+    verify_message_name(f_service_name, true);
 }
 
 
@@ -334,12 +338,11 @@ void connection_with_send_message::msg_quitting(message & msg)
 
 /** \brief Calls your ready() function with the message.
  *
- * All daemons using the snapcommunicator daemon have to have a ready()
- * function which gets called once the HELP and COMMAND message were
+ * All daemons using the communicator daemon have to have a ready()
+ * function which gets called once the HELP and COMMAND messages were
  * handled. This is when your daemon is expected to be ready to start
- * working. Some daemons start working immediately no matter
- * what (i.e. snapwatchdog and snapfirewall do work either way), but
- * those are rare.
+ * working. Some daemons start working immediately no matter what
+ * (i.e. sitter and iplock do work either way), but those are rare.
  *
  * \param[in] msg  The READY message.
  *
@@ -400,6 +403,27 @@ void connection_with_send_message::msg_restart(message & msg)
     // pass the message so any additional info can be accessed.
     //
     restart(msg);
+}
+
+
+/** \brief Reply when sending a message to an unavailable service.
+ *
+ * When sending a message to a service, you can setup the `"cache=..."`
+ * parameter of the message to send you a reply in case the service is
+ * not available.
+ *
+ * This works in conjunction of the `"no[=true]"` parameter because
+ * that's the only way for a client to know that its message is going
+ * to be lost.
+ *
+ * The default option does nothing.
+ *
+ * \param[in] msg  The SERVICE_UNAVAILABLE message.
+ */
+void connection_with_send_message::msg_service_unavailable(message & msg)
+{
+    // do nothing by default
+    snapdev::NOT_USED(msg);
 }
 
 
@@ -636,7 +660,7 @@ std::string connection_with_send_message::get_service_name(bool required) const
  *     void my_messenger::process_connected()
  *     {
  *         // make sure to call default function
- *         snap_tcp_client_permanent_message_connection::process_connected();
+ *         tcp_client_permanent_message_connection::process_connected();
  *
  *         // then register
  *         register_service();

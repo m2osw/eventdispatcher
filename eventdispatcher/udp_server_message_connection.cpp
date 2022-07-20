@@ -91,8 +91,10 @@ namespace ed
  */
 udp_server_message_connection::udp_server_message_connection(
           addr::addr const & server_address
-        , addr::addr const & client_address)
+        , addr::addr const & client_address
+        , std::string const & service_name)
     : udp_server_connection(server_address)
+    , connection_with_send_message(service_name)
 {
     // allow for looping over all the messages in one go
     //

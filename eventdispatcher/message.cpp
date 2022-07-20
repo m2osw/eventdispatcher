@@ -1795,7 +1795,7 @@ void verify_message_name(std::string const & name, bool can_be_empty, bool can_b
     if(!can_be_empty
     && name.empty())
     {
-        std::string const err("a message name cannot be empty.");
+        std::string const err("a message name (command, server, service, parameter, etc.) cannot be empty.");
         SNAP_LOG_FATAL
             << err
             << SNAP_LOG_SEND;
@@ -1809,9 +1809,7 @@ void verify_message_name(std::string const & name, bool can_be_empty, bool can_b
         && (c < '0' || c > '9')
         && c != '_')
         {
-            std::string err("a ");
-            err += can_be_lowercase ? "parameter" : "command";
-            err += " name must be composed of ASCII ";
+            std::string err("a message name (command, server, service, parameter, etc.) must be composed of ASCII ");
             if(can_be_lowercase)
             {
                 err += "'a'..'z', ";
@@ -1846,7 +1844,7 @@ void verify_message_name(std::string const & name, bool can_be_empty, bool can_b
     if(!name.empty()
     && name[0] >= '0' && name[0] <= '9')
     {
-        std::string err("parameter name cannot start with a digit, \"");
+        std::string err("a message name (command, server, service, parameter, etc.) cannot start with a digit, \"");
         err += name;
         err += "\" is not valid.";
         SNAP_LOG_FATAL

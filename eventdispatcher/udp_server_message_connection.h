@@ -53,7 +53,8 @@ public:
 
                                 udp_server_message_connection(
                                           addr::addr const & server_address
-                                        , addr::addr const & client_address = addr::addr());
+                                        , addr::addr const & client_address = addr::addr()
+                                        , std::string const & service_name = std::string());
 
     bool                        send_message(
                                           message const & msg
