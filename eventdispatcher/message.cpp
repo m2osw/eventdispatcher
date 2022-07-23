@@ -47,23 +47,23 @@
 #include    "eventdispatcher/exception.h"
 
 
-// advgetopt lib
+// advgetopt
 //
 #include    <advgetopt/validator_double.h>
 #include    <advgetopt/validator_integer.h>
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// libutf8 lib
+// libutf8
 //
 #include    <libutf8/json_tokens.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/hexadecimal_string.h>
 #include    <snapdev/string_replace_many.h>
