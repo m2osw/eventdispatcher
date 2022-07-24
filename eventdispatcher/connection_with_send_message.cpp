@@ -174,8 +174,6 @@ void connection_with_send_message::msg_alive(message & msg)
  */
 void connection_with_send_message::msg_help(message & msg)
 {
-    snapdev::NOT_USED(msg);
-
     bool need_user_help(true);
     string_list_t commands;
 
@@ -230,6 +228,7 @@ void connection_with_send_message::msg_help(message & msg)
     //
     message reply;
     reply.user_data(msg.user_data<void>());
+    reply.reply_to(msg);
     reply.set_command("COMMANDS");
     reply.add_parameter("list", boost::algorithm::join(commands, ","));
     if(!send_message(reply, false))
@@ -237,7 +236,7 @@ void connection_with_send_message::msg_help(message & msg)
         SNAP_LOG_WARNING
             << "could not reply to \""
             << msg.get_command()
-            << "\" with a COMMANDS message."
+            << "\" with a \"COMMANDS\" message."
             << SNAP_LOG_SEND;
     }
 }
@@ -462,7 +461,9 @@ void connection_with_send_message::msg_log_unknown(message & msg)
     //
     SNAP_LOG_ERROR
         << "we sent command \""
-        << msg.get_parameter("command")
+        << (msg.has_parameter("command")
+                ? msg.get_parameter("command")
+                : "<undefined>")
         << "\" and the destination replied with \"UNKNOWN\""
            " so we probably did not get the expected result."
         << SNAP_LOG_SEND;
