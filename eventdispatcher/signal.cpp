@@ -31,22 +31,22 @@
 #include    "eventdispatcher/exception.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// cppthread lib
+// cppthread
 //
 #include    <cppthread/thread.h>
 
 
-// C++ lib
+// C++
 //
 #include    <iostream>
 
 
-// C lib
+// C
 //
 #include    <string.h>
 #include    <signal.h>

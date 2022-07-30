@@ -32,12 +32,12 @@
 #include    "eventdispatcher/local_stream_client_connection.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// C lib
+// C
 //
 #include    <fcntl.h>
 #include    <sys/stat.h>

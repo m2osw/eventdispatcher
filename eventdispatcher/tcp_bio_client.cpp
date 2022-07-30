@@ -35,24 +35,24 @@
 #include    "eventdispatcher/tcp_private.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/not_reached.h>
 
 
-// OpenSSL lib
+// OpenSSL
 //
 #include    <openssl/bio.h>
 #include    <openssl/err.h>
 #include    <openssl/ssl.h>
 
 
-// C lib
+// C
 //
 #include    <netdb.h>
 #include    <arpa/inet.h>

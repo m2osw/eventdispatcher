@@ -17,20 +17,30 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+// test standalone header
+//
+#include    <eventdispatcher/local_dgram_server_message_connection.h>
+
+
 // self
 //
 #include    "catch_main.h"
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
-#include    <eventdispatcher/local_dgram_server_message_connection.h>
+#include    <eventdispatcher/communicator.h>
 #include    <eventdispatcher/dispatcher.h>
 
 
-// C lib
+// C
 //
 #include    <unistd.h>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
 
 
 
@@ -64,8 +74,8 @@ public:
     void            msg_reply_with_unknown(ed::message & msg);
 
 private:
-    ed::dispatcher<unix_dgram_client>::pointer_t
-                    f_dispatcher = ed::dispatcher<unix_dgram_client>::pointer_t();
+    ed::dispatcher::pointer_t
+                    f_dispatcher = ed::dispatcher::pointer_t();
     addr::unix      f_server_address = addr::unix();
 };
 
@@ -93,8 +103,8 @@ public:
     //virtual void    process_accept() override;
 
 private:
-    ed::dispatcher<unix_dgram_server>::pointer_t
-                    f_dispatcher = ed::dispatcher<unix_dgram_server>::pointer_t();
+    ed::dispatcher::pointer_t
+                    f_dispatcher = ed::dispatcher::pointer_t();
     addr::unix      f_client_address = addr::unix();
 };
 
@@ -102,39 +112,7 @@ private:
 
 
 
-ed::dispatcher<unix_dgram_client>::dispatcher_match::vector_t const g_unix_dgram_client_messages =
-{
-    {
-        "HI"
-      , &unix_dgram_client::msg_hi
-    },
 
-    // ALWAYS LAST
-    {
-        nullptr
-      , &unix_dgram_client::msg_reply_with_unknown
-      , &ed::dispatcher<unix_dgram_client>::dispatcher_match::always_match
-    }
-};
-
-ed::dispatcher<unix_dgram_server>::dispatcher_match::vector_t const g_unix_dgram_server_messages =
-{
-    {
-        "HELLO"
-      , &unix_dgram_server::msg_hello
-    },
-    {
-        "DOWN"
-      , &unix_dgram_server::msg_down
-    },
-
-    // ALWAYS LAST
-    {
-        nullptr
-      , &unix_dgram_server::msg_reply_with_unknown
-      , &ed::dispatcher<unix_dgram_server>::dispatcher_match::always_match
-    }
-};
 
 
 
@@ -146,15 +124,20 @@ unix_dgram_client::unix_dgram_client(addr::unix const & address)
             , false
             , true
             , true)
-    , f_dispatcher(new ed::dispatcher<unix_dgram_client>(
-              this
-            , g_unix_dgram_client_messages))
+    , f_dispatcher(std::make_shared<ed::dispatcher>(this))
 {
     set_name("unix-dgram-client");
 #ifdef _DEBUG
     f_dispatcher->set_trace();
 #endif
     set_dispatcher(f_dispatcher);
+
+    f_dispatcher->add_matches({
+        DISPATCHER_MATCH("HI",  &unix_dgram_client::msg_hi),
+
+        // ALWAYS LAST
+        DISPATCHER_CATCH_ALL()
+    });
 }
 
 
@@ -213,15 +196,21 @@ unix_dgram_server::unix_dgram_server(addr::unix const & address)
             , false
             , true
             , true)
-    , f_dispatcher(new ed::dispatcher<unix_dgram_server>(
-              this
-            , g_unix_dgram_server_messages))
+    , f_dispatcher(std::make_shared<ed::dispatcher>(this))
 {
     set_name("unix-dgram-server");
 #ifdef _DEBUG
     f_dispatcher->set_trace();
 #endif
     set_dispatcher(f_dispatcher);
+
+    f_dispatcher->add_matches({
+        DISPATCHER_MATCH("HELLO", &unix_dgram_server::msg_hello),
+        DISPATCHER_MATCH("DOWN",  &unix_dgram_server::msg_down),
+
+        // ALWAYS LAST
+        DISPATCHER_CATCH_ALL()
+    });
 }
 
 

@@ -30,6 +30,7 @@
 #include    "eventdispatcher/connection_with_send_message.h"
 
 #include    "eventdispatcher/connection.h"
+#include    "eventdispatcher/dispatcher.h"
 #include    "eventdispatcher/dispatcher_support.h"
 #include    "eventdispatcher/exception.h"
 
@@ -177,7 +178,7 @@ void connection_with_send_message::msg_help(message & msg)
     bool need_user_help(true);
     string_list_t commands;
 
-    dispatcher_base * d;
+    dispatcher * d(nullptr);
     dispatcher_support * ds(dynamic_cast<dispatcher_support *>(this));
     if(ds != nullptr)
     {
@@ -191,7 +192,9 @@ void connection_with_send_message::msg_help(message & msg)
     }
     else
     {
-        d = dynamic_cast<dispatcher_base *>(this);
+        // in some cases, the user directly derive from the dispatcher
+        //
+        d = dynamic_cast<dispatcher *>(this);
     }
     if(d != nullptr)
     {
@@ -485,13 +488,13 @@ void connection_with_send_message::msg_log_unknown(message & msg)
  *
  * \code
  *  {
- *      ed::dispatcher<my_connection>::define_match(
+ *      ed::dispatcher::define_match(
  *          ...
  *      ),
  *      ...
  *
  *      // ALWAYS LAST
- *      ed::dispatcher<my_connection>::define_catch_all()
+ *      ed::dispatcher::define_catch_all()
  *  };
  * \endcode
  *

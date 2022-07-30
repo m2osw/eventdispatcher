@@ -30,12 +30,12 @@
 #include    "eventdispatcher/local_dgram_client.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// boost lib
+// boost
 //
 #include    <boost/preprocessor/stringize.hpp>
 
@@ -63,26 +63,101 @@ namespace ed
  * when sending. Instead we create a client that we immediately
  * destruct once the message was sent.
  *
- * \param[in] address  The address to listen on. It may be set to "0.0.0.0".
+ * \param[in] address  The Unix address to listen on.
  * \param[in] sequential  Whether the packets are kept in order.
  * \param[in] close_on_exec  Whether the socket is closed on execve().
  * \param[in] force_reuse_addr  Whether caller is okay with an unlink() of
  * a file socket if it exists.
+ * \param[in] client_address  A Unix address used to send replies. It cannot
+ * be abstract if you do want a client (i.e. if abstract, no client is
+ * created).
+ * \param[in] service_name  The name of the service if it applies to this
+ * connection (i.e. a connection to connect to the communicator daemon).
  */
 local_dgram_server_message_connection::local_dgram_server_message_connection(
               addr::unix const & address
             , bool sequential
             , bool close_on_exec
-            , bool force_reuse_addr)
+            , bool force_reuse_addr
+            , addr::unix const & client_address
+            , std::string const & service_name)
     : local_dgram_server_connection(
           address
         , sequential
         , close_on_exec
         , force_reuse_addr)
+    , connection_with_send_message(service_name)
 {
     // allow for looping over all the messages in one go
     //
     non_blocking();
+
+    if(!client_address.is_unnamed())
+    {
+        f_dgram_client = std::make_shared<local_dgram_client>(client_address);
+    }
+}
+
+
+/** \brief Send a message.
+ *
+ * This function sends \p message to the other side.
+ *
+ * The \p cache parameter is here because it is present in the send_message()
+ * of the connection_with_send_message class. It is not used by the UDP
+ * implementation, however.
+ *
+ * \param[in,out] msg  The message to forward to the other side.
+ * \param[in] cache  This flag is ignored.
+ *
+ * \return true if the message was sent successfully.
+ */
+bool local_dgram_server_message_connection::send_message(
+          message & msg
+        , bool cache)
+{
+    snapdev::NOT_USED(cache);
+
+    return send_message(msg, get_secret_code());
+}
+
+
+/** \brief Send a message over to the client.
+ *
+ * This function sends a message to the client at the address specified in
+ * the constructor.
+ *
+ * The advantage of using this function is that the server port is
+ * automatically attached to the message through the reply_port
+ * parameter. This is important if you are running an application
+ * which is not itself the main server (since the UDP mechanism is
+ * opposite to the TCP mechanism, clients have to create servers
+ * which have to listen and on one computer, multiple clients
+ * would require you to assign additional ports to clients, which
+ * is unusual).
+ *
+ * \exception initialization_missing
+ * If no address was specified on the constructor (i.e. the ANY address
+ * was used) then this exception is raised.
+ *
+ * \param[in] msg  The message to send to the client.
+ * \param[in] secret_code  The secret code to attach to the message.
+ *
+ * \return true when the message was sent, false otherwise.
+ */
+bool local_dgram_server_message_connection::send_message(
+          message const & msg
+        , std::string const & secret_code)
+{
+    if(f_dgram_client == nullptr)
+    {
+        throw initialization_missing("this UDP server was not initialized with a client (see constructor).");
+    }
+
+    message with_address(msg);
+    with_address.add_parameter("reply_to", get_address());
+
+    return send_message(*f_dgram_client, msg, secret_code);
 }
 
 
@@ -155,6 +230,53 @@ bool local_dgram_server_message_connection::send_message(
             << ")."
             << SNAP_LOG_SEND;
         errno = e;
+        return false;
+    }
+
+    return true;
+}
+
+
+bool local_dgram_server_message_connection::send_message(
+      local_dgram_client & client
+    , message const & msg
+    , std::string const & secret_code)
+{
+    std::string buf;
+    if(!secret_code.empty())
+    {
+        message m(msg);
+        m.add_parameter("secret_code", secret_code);
+        buf = m.to_message();
+    }
+    else
+    {
+        buf = msg.to_message();
+    }
+
+    // TODO: this maximum size needs to be checked dynamically;
+    //       also it's not forbidden to send a multiple packet
+    //       UDP buffer, it's just more likely to fail
+    //
+    if(buf.length() > DATAGRAM_MAX_SIZE)
+    {
+        // packet too large for our buffers
+        //
+        throw invalid_message(
+                  "message too large ("
+                + std::to_string(buf.length())
+                + " bytes) for a UDP server (max: "
+                  BOOST_PP_STRINGIZE(DATAGRAM_MAX_SIZE)
+                  ")");
+    }
+
+    if(client.send(buf.data(), buf.length()) != static_cast<ssize_t>(buf.length())) // we do not send the '\0'
+    {
+        int const e(errno);
+        SNAP_LOG_ERROR
+            << SNAP_LOG_FIELD("errno", std::to_string(e))
+            << "udp_server_message_connection::send_message(): could not send UDP message."
+            << SNAP_LOG_SEND;
         return false;
     }
 

@@ -57,8 +57,7 @@ public:
     void                        msg_logger_message(ed::message & m);
 
 private:
-    ed::dispatcher<udp_logger_server>::pointer_t
-                                f_dispatcher = ed::dispatcher<udp_logger_server>::pointer_t();
+    ed::dispatcher::pointer_t   f_dispatcher = ed::dispatcher::pointer_t();
 };
 
 

@@ -28,15 +28,15 @@
 
 // self
 // 
-#include    "eventdispatcher/connection.h"
+#include    <eventdispatcher/connection.h>
 
 
-// libaddr lib
+// libaddr
 // 
-#include    "libaddr/unix.h"
+#include    <libaddr/unix.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/raii_generic_deleter.h>
 

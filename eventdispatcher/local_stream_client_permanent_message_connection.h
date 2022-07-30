@@ -26,14 +26,14 @@
 
 // self
 //
-#include    "eventdispatcher/connection_with_send_message.h"
-#include    "eventdispatcher/dispatcher_support.h"
-#include    "eventdispatcher/timer.h"
+#include    <eventdispatcher/connection_with_send_message.h>
+#include    <eventdispatcher/dispatcher_support.h>
+#include    <eventdispatcher/timer.h>
 
 
-// libaddr lib
+// libaddr
 //
-#include    "libaddr/unix.h"
+#include    <libaddr/unix.h>
 
 
 

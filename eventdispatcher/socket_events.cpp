@@ -41,34 +41,34 @@
 #include    "eventdispatcher/timer.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/raii_generic_deleter.h>
 
 
-// cppthread lib
+// cppthread
 //
 #include    <cppthread/guard.h>
 #include    <cppthread/mutex.h>
 
 
-// libaddr lib
+// libaddr
 //
 #include    <libaddr/addr_parser.h>
 
 
-// C++ lib
+// C++
 //
 #include    <algorithm>
 #include    <deque>
 
 
-// C lib
+// C
 //
 #include    <linux/inet_diag.h>
 #include    <linux/netlink.h>

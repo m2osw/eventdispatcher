@@ -19,19 +19,20 @@
 #pragma once
 
 /** \file
- * \brief Event dispatch class.
+ * \brief Messages sent between services.
  *
- * Class used to handle events.
+ * Class used to manage messages.
  */
 
 // self
 //
-#include    "eventdispatcher/utils.h"
+#include    <eventdispatcher/utils.h>
 
 
 // libaddr
 //
-#include    "libaddr/addr.h"
+#include    <libaddr/addr.h>
+#include    <libaddr/unix.h>
 
 
 
@@ -93,6 +94,7 @@ public:
     void                    add_parameter(std::string const & name, std::int64_t value);
     void                    add_parameter(std::string const & name, std::uint64_t value);
     void                    add_parameter(std::string const & name, addr::addr const & value, bool mask = false);
+    void                    add_parameter(std::string const & name, addr::unix const & value);
     bool                    has_parameter(std::string const & name) const;
     std::string             get_parameter(std::string const & name) const;
     std::int64_t            get_integer_parameter(std::string const & name) const;

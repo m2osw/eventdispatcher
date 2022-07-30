@@ -36,22 +36,22 @@
 #include    "eventdispatcher/exception.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/not_reached.h>
 
 
-// C++ lib
+// C++
 //
 #include    <cstring>
 
 
-// C lib
+// C
 //
 #include    <poll.h>
 

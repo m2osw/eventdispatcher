@@ -26,9 +26,9 @@
 
 // self
 //
-#include    "eventdispatcher/pipe_buffer_connection.h"
-#include    "eventdispatcher/dispatcher_support.h"
-#include    "eventdispatcher/connection_with_send_message.h"
+#include    <eventdispatcher/pipe_buffer_connection.h>
+#include    <eventdispatcher/dispatcher_support.h>
+#include    <eventdispatcher/connection_with_send_message.h>
 
 
 

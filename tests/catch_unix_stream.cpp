@@ -22,17 +22,24 @@
 #include    "catch_main.h"
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
+#include    <eventdispatcher/communicator.h>
 #include    <eventdispatcher/local_stream_client_permanent_message_connection.h>
 #include    <eventdispatcher/local_stream_server_client_message_connection.h>
 #include    <eventdispatcher/local_stream_server_connection.h>
 #include    <eventdispatcher/dispatcher.h>
 
 
-// C lib
+// C
 //
 #include    <unistd.h>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace
@@ -56,8 +63,8 @@ public:
     void            msg_hi(ed::message & msg);
 
 private:
-    ed::dispatcher<unix_client>::pointer_t
-                    f_dispatcher = ed::dispatcher<unix_client>::pointer_t();
+    ed::dispatcher::pointer_t
+                    f_dispatcher = ed::dispatcher::pointer_t();
 };
 
 
@@ -80,8 +87,8 @@ public:
 
 private:
     unix_server *           f_server = nullptr;
-    ed::dispatcher<unix_server_client>::pointer_t
-                            f_dispatcher = ed::dispatcher<unix_server_client>::pointer_t();
+    ed::dispatcher::pointer_t
+                            f_dispatcher = ed::dispatcher::pointer_t();
 };
 
 
@@ -107,39 +114,7 @@ private:
 
 
 
-ed::dispatcher<unix_client>::dispatcher_match::vector_t const g_unix_client_messages =
-{
-    {
-        "HI"
-      , &unix_client::msg_hi
-    },
 
-    // ALWAYS LAST
-    {
-        nullptr
-      , &unix_client::msg_reply_with_unknown
-      , &ed::dispatcher<unix_client>::dispatcher_match::always_match
-    }
-};
-
-ed::dispatcher<unix_server_client>::dispatcher_match::vector_t const g_unix_server_client_messages =
-{
-    {
-        "HELLO"
-      , &unix_server_client::msg_hello
-    },
-    {
-        "DOWN"
-      , &unix_server_client::msg_down
-    },
-
-    // ALWAYS LAST
-    {
-        nullptr
-      , &unix_client::msg_reply_with_unknown
-      , &ed::dispatcher<unix_server_client>::dispatcher_match::always_match
-    }
-};
 
 
 
@@ -147,15 +122,20 @@ ed::dispatcher<unix_server_client>::dispatcher_match::vector_t const g_unix_serv
 
 unix_client::unix_client(addr::unix const & address)
     : local_stream_client_permanent_message_connection(address)
-    , f_dispatcher(new ed::dispatcher<unix_client>(
-              this
-            , g_unix_client_messages))
+    , f_dispatcher(std::make_shared<ed::dispatcher>(this))
 {
     set_name("unix-client");
 #ifdef _DEBUG
     f_dispatcher->set_trace();
 #endif
     set_dispatcher(f_dispatcher);
+
+    f_dispatcher->add_matches({
+        DISPATCHER_MATCH("HI", &unix_client::msg_hi),
+
+        // ALWAYS LAST
+        DISPATCHER_CATCH_ALL()
+    });
 }
 
 
@@ -189,15 +169,21 @@ void unix_client::msg_hi(ed::message & msg)
 unix_server_client::unix_server_client(snapdev::raii_fd_t s, unix_server * server)
     : local_stream_server_client_message_connection(std::move(s))
     , f_server(server)
-    , f_dispatcher(new ed::dispatcher<unix_server_client>(
-              this
-            , g_unix_server_client_messages))
+    , f_dispatcher(std::make_shared<ed::dispatcher>(this))
 {
     set_name("unix-server-client");
 #ifdef _DEBUG
     f_dispatcher->set_trace();
 #endif
     set_dispatcher(f_dispatcher);
+
+    f_dispatcher->add_matches({
+        DISPATCHER_MATCH("HELLO", &unix_server_client::msg_hello),
+        DISPATCHER_MATCH("DOWN",  &unix_server_client::msg_down),
+
+        // ALWAYS LAST
+        DISPATCHER_CATCH_ALL()
+    });
 }
 
 

@@ -45,7 +45,7 @@
 #include    "eventdispatcher/fd_connection.h"
 
 
-// C lib
+// C
 //
 #include    <unistd.h>
 

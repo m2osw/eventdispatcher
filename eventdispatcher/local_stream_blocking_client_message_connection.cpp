@@ -52,22 +52,22 @@
 #include    "eventdispatcher/exception.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/not_used.h>
 
 
-// C++ lib
+// C++
 //
 #include    <cstring>
 
 
-// C lib
+// C
 //
 #include    <poll.h>
 #include    <sys/resource.h>

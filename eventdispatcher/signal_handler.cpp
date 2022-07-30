@@ -119,29 +119,29 @@
 #include    "eventdispatcher/exception.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// cppthread lib
+// cppthread
 //
 #include    <cppthread/mutex.h>
 #include    <cppthread/guard.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/not_reached.h>
 #include    <snapdev/not_used.h>
 
 
-// C++ lib
+// C++
 //
 #include    <iostream>
 
 
-// C lib
+// C
 //
 #include    <string.h>
 #include    <signal.h>

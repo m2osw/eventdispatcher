@@ -29,11 +29,17 @@
 
 // eventdispatcher
 //
+#include    <eventdispatcher/communicator.h>
 #include    <eventdispatcher/dispatcher.h>
 #include    <eventdispatcher/logrotate_udp_messenger.h>
 #include    <eventdispatcher/tcp_server_client_message_connection.h>
 #include    <eventdispatcher/tcp_server_connection.h>
 #include    <eventdispatcher/version.h>
+
+
+// snaplogger
+//
+#include    <snaplogger/message.h>
 
 
 // boost
@@ -77,8 +83,7 @@ public:
 
 private:
     my_daemon *                 f_my_daemon = nullptr;
-    ed::dispatcher<client>::pointer_t
-                                f_dispatcher = ed::dispatcher<client>::pointer_t();
+    ed::dispatcher::pointer_t   f_dispatcher = ed::dispatcher::pointer_t();
 };
 
 
@@ -225,36 +230,6 @@ advgetopt::options_environment const g_options_environment =
 #pragma GCC diagnostic pop
 
 
-ed::dispatcher<client>::dispatcher_match::vector_t const g_messages =
-{
-    {
-          "DAD"
-        , &client::msg_dad
-    },
-    {
-          "TOP"
-        , &client::msg_top
-    },
-    {
-          "MOM"
-        , &client::msg_mom
-    },
-    {
-          "QUIT"
-        , &client::msg_quit
-    },
-
-    // ALWAYS LAST
-    {
-          nullptr
-        , &client::msg_reply_with_unknown
-        , &ed::dispatcher<client>::dispatcher_match::always_match
-    }
-};
-
-
-
-
 }
 // no name namespace
 
@@ -269,15 +244,23 @@ ed::dispatcher<client>::dispatcher_match::vector_t const g_messages =
 client::client(my_daemon * d, ed::tcp_bio_client::pointer_t c)
     : tcp_server_client_message_connection(c)
     , f_my_daemon(d)
-    , f_dispatcher(new ed::dispatcher<client>(
-              this
-            , g_messages))
+    , f_dispatcher(std::make_shared<ed::dispatcher>(this))
 {
     set_name("client");
 #ifdef _DEBUG
     f_dispatcher->set_trace();
 #endif
     set_dispatcher(f_dispatcher);
+
+    f_dispatcher->add_matches({
+        DISPATCHER_MATCH("DAD",  &client::msg_dad),
+        DISPATCHER_MATCH("TOP",  &client::msg_top),
+        DISPATCHER_MATCH("MOM",  &client::msg_mom),
+        DISPATCHER_MATCH("QUIT", &client::msg_quit),
+
+        // ALWAYS LAST
+        DISPATCHER_CATCH_ALL()
+    });
 
     ed::message msg;
     msg.set_command("HI");

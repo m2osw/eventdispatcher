@@ -26,16 +26,16 @@
 
 // self
 //
-#include    "eventdispatcher/connection.h"
-#include    "eventdispatcher/connection_with_send_message.h"
+#include    <eventdispatcher/connection.h>
+#include    <eventdispatcher/connection_with_send_message.h>
 
 
-// cppthread lib
+// cppthread
 //
 #include    <cppthread/fifo.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/raii_generic_deleter.h>
 

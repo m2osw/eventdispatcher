@@ -20,7 +20,7 @@
 
 // eventdispatcher
 //
-#include "eventdispatcher/connection.h"
+#include    <eventdispatcher/connection.h>
 
 
 

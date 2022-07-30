@@ -37,17 +37,17 @@
 #include    "eventdispatcher/utils.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// C++ lib
+// C++
 //
 #include    <cstring>
 
 
-// C lib
+// C
 //
 #include    <sys/ioctl.h>
 #include    <sys/socket.h>

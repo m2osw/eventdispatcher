@@ -28,10 +28,10 @@
 
 // self
 //
-#include    "eventdispatcher/connection.h"
+#include    <eventdispatcher/connection.h>
 
 
-// libaddr lib
+// libaddr
 //
 #include    <libaddr/addr.h>
 

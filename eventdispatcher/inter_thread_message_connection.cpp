@@ -52,17 +52,17 @@
 #include    "eventdispatcher/exception.h"
 
 
-// cppthread lib
+// cppthread
 //
 #include    <cppthread/thread.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/not_reached.h>
 
 
-// C lib
+// C
 //
 #include    <poll.h>
 #include    <sys/eventfd.h>

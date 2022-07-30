@@ -31,17 +31,22 @@
 #include    "snaplogger/daemon/network_component.h"
 
 
-// advgetopt lib
+// advgetopt
 //
 #include    <advgetopt/exception.h>
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/signal_handler.h>
 
 
-// C++ lib
+// snaplogger
+//
+#include    <snaplogger/message.h>
+
+
+// C++
 //
 #include    <iostream>
 

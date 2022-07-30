@@ -49,44 +49,25 @@ namespace snaplogger_daemon
 {
 
 
-namespace
-{
-
-
-ed::dispatcher<udp_logger_server>::dispatcher_match::vector_t const g_messages =
-{
-    {
-        "LOGGER"
-      , &udp_logger_server::msg_logger_message
-    },
-
-    // ALWAYS LAST
-    {
-        nullptr
-      , &udp_logger_server::msg_reply_with_unknown
-      , &ed::dispatcher<udp_logger_server>::dispatcher_match::always_match
-    }
-};
-
-
-
-}
-// no name namespace
-
 
 udp_logger_server::udp_logger_server(
           addr::addr const & listen
         , std::string const & secret_code)
     : udp_server_message_connection(listen)
-    , f_dispatcher(std::make_shared<ed::dispatcher<udp_logger_server>>(
-              this
-            , g_messages))
+    , f_dispatcher(std::make_shared<ed::dispatcher>(this))
 {
     set_secret_code(secret_code);
 //#ifdef _DEBUG
 //    f_dispatcher->set_trace();
 //#endif
     set_dispatcher(f_dispatcher);
+
+    f_dispatcher->add_matches({
+        DISPATCHER_MATCH("LOGGER", &udp_logger_server::msg_logger_message),
+
+        // ALWAYS LAST
+        DISPATCHER_CATCH_ALL()
+    });
 }
 
 

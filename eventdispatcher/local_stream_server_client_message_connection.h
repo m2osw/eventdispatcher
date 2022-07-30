@@ -27,9 +27,9 @@
 
 // self
 //
-#include    "eventdispatcher/connection_with_send_message.h"
-#include    "eventdispatcher/dispatcher_support.h"
-#include    "eventdispatcher/local_stream_server_client_buffer_connection.h"
+#include    <eventdispatcher/connection_with_send_message.h>
+#include    <eventdispatcher/dispatcher_support.h>
+#include    <eventdispatcher/local_stream_server_client_buffer_connection.h>
 
 
 

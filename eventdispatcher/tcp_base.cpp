@@ -35,24 +35,24 @@
 #include    "eventdispatcher/tcp_private.h"
 
 
-// cppthread lib
+// cppthread
 //
 #include    <cppthread/guard.h>
 #include    <cppthread/mutex.h>
 #include    <cppthread/thread.h>
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/not_used.h>
 
 
-// OpenSSL lib
+// OpenSSL
 //
 #include    <openssl/bio.h>
 #include    <openssl/err.h>

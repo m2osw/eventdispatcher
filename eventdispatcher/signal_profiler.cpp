@@ -33,7 +33,7 @@
 #include    "eventdispatcher/signal_profiler.h"
 
 
-// C lib
+// C
 //
 #include    <ucontext.h>
 

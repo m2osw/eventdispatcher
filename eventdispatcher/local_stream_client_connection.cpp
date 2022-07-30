@@ -29,19 +29,11 @@
 #include    "eventdispatcher/local_stream_client_connection.h"
 
 #include    "eventdispatcher/exception.h"
-//#include    "eventdispatcher/utils.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
-
-
-// C lib
-//
-//#include    <netdb.h>
-//#include    <arpa/inet.h>
-//#include    <string.h>
 
 
 // last include

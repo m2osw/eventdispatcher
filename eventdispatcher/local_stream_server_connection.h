@@ -34,11 +34,11 @@
 
 // self
 //
-#include    "eventdispatcher/connection.h"
-#include    "eventdispatcher/utils.h"
+#include    <eventdispatcher/connection.h>
+#include    <eventdispatcher/utils.h>
 
 
-// libaddr lib
+// libaddr
 //
 #include    <libaddr/unix.h>
 

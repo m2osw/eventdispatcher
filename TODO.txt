@@ -16,6 +16,13 @@
 
 * Consider moving the cppprocess tee_pipe to eventdispatcher.
 
+* Update \file documentation to match the corresponding class. These were
+  copied/pasted in all the files when I did the big break up and most are
+  still not updated.
+
+* Update the dispatcher classes documentation to match the new scheme (the
+  callback instead of a function offset in one class).
+
 * Add support for any number of timers in a connection. I often run in
   problems with this because I need two or three different timers then
   I have to create sub-objects, which are separate connection timers by

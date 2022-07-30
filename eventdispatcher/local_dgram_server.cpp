@@ -36,16 +36,15 @@
 #include    "eventdispatcher/exception.h"
 
 
-// snapwebsites lib
+// snapwebsites
 //
 #include    <snaplogger/message.h>
 
 
-// C lib
+// C
 //
 #include    <sys/stat.h>
 #include    <poll.h>
-//#include    <string.h>
 
 
 // last include

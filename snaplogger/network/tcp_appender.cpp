@@ -76,44 +76,32 @@ public:
     bool                    is_paused() const;
 
 private:
-    ed::dispatcher<appender_connection>::pointer_t
-                            f_dispatcher = ed::dispatcher<appender_connection>::pointer_t();
+    ed::dispatcher::pointer_t
+                            f_dispatcher = ed::dispatcher::pointer_t();
     bool                    f_paused = false;
 };
 
 
-ed::dispatcher<appender_connection>::dispatcher_match::vector_t const g_appender_connection_messages =
-{
-    {
-        "PAUSE"
-      , &appender_connection::msg_pause
-    },
-    {
-        "UNPAUSE"
-      , &appender_connection::msg_unpause
-    },
-
-    // ALWAYS LAST
-    {
-        nullptr
-      , &appender_connection::msg_reply_with_unknown
-      , &ed::dispatcher<appender_connection>::dispatcher_match::always_match
-    }
-};
 
 
 
 appender_connection::appender_connection(addr::addr const & server_address)
     : tcp_client_permanent_message_connection(server_address)
-    , f_dispatcher(new ed::dispatcher<appender_connection>(
-              this
-            , g_appender_connection_messages))
+    , f_dispatcher(std::make_shared<ed::dispatcher>(this))
 {
     set_name("tcp-appender-connection");
 //#ifdef _DEBUG
 //    f_dispatcher->set_trace();
 //#endif
     set_dispatcher(f_dispatcher);
+
+    f_dispatcher->add_matches({
+        DISPATCHER_MATCH("PAUSE",   &appender_connection::msg_pause),
+        DISPATCHER_MATCH("UNPAUSE", &appender_connection::msg_unpause),
+
+        // ALWAYS LAST
+        DISPATCHER_CATCH_ALL()
+    });
 }
 
 

@@ -48,8 +48,7 @@ public:
     void                        msg_logger_message(ed::message & m);
 
 private:
-    ed::dispatcher<tcp_logger_connection>::pointer_t
-                                f_dispatcher = ed::dispatcher<tcp_logger_connection>::pointer_t();
+    ed::dispatcher::pointer_t   f_dispatcher = ed::dispatcher::pointer_t();
 };
 
 

@@ -19,34 +19,34 @@
 
 // self
 //
-#include "eventdispatcher_qt/qt_connection.h"
+#include    "eventdispatcher_qt/qt_connection.h"
 
 
 // eventdispatcher
 //
-#include "eventdispatcher/exception.h"
+#include    "eventdispatcher/exception.h"
 
 
 // Qt
 //
-#include <QX11Info>
-#include <QEventLoop>
-#include <QApplication>
+#include    <QX11Info>
+#include    <QEventLoop>
+#include    <QApplication>
 
 
 // C
 //
-#include <xcb/xcb.h>
+#include    <xcb/xcb.h>
 
 
 // X11
 //
-#include <X11/Xlib.h>
+#include    <X11/Xlib.h>
 
 
 // last include
 //
-#include <snapdev/poison.h>
+#include    <snapdev/poison.h>
 
 
 

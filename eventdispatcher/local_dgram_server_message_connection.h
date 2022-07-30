@@ -26,8 +26,10 @@
 
 // self
 //
-#include    "eventdispatcher/local_dgram_server_connection.h"
-#include    "eventdispatcher/dispatcher_support.h"
+#include    <eventdispatcher/connection_with_send_message.h>
+#include    <eventdispatcher/local_dgram_server_connection.h>
+#include    <eventdispatcher/local_dgram_client.h>
+#include    <eventdispatcher/dispatcher_support.h>
 
 
 
@@ -39,6 +41,7 @@ namespace ed
 class local_dgram_server_message_connection
     : public local_dgram_server_connection
     , public dispatcher_support
+    , public connection_with_send_message
 {
 public:
     typedef std::shared_ptr<local_dgram_server_message_connection>    pointer_t;
@@ -49,18 +52,36 @@ public:
                                           addr::unix const & address
                                         , bool sequential
                                         , bool close_on_exec
-                                        , bool force_reuse_addr);
+                                        , bool force_reuse_addr
+                                        , addr::unix const & client_address = addr::unix()
+                                        , std::string const & service_name = std::string());
+
+    bool                        send_message(
+                                          message const & msg
+                                        , std::string const & secret_code = std::string());
 
     static bool                 send_message(
                                           addr::unix const & address
                                         , message & msg
                                         , std::string const & secret_code = std::string());
 
+    static bool                 send_message(
+                                          local_dgram_client & client
+                                        , message const & msg
+                                        , std::string const & secret_code = std::string());
+
     // connection implementation
     //
     virtual void                process_read() override;
 
+    // connection_with_send_message implementation
+    virtual bool                send_message(
+                                          message & msg
+                                        , bool cache = false) override;
+
 private:
+    local_dgram_client::pointer_t
+                                f_dgram_client = local_dgram_client::pointer_t();
 };
 
 

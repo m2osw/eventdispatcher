@@ -31,19 +31,6 @@
 #include    "eventdispatcher/exception.h"
 
 
-// libaddr lib
-//
-//#include    <libaddr/iface.h>
-
-
-// C lib
-//
-//#include    <net/if.h>
-//#include    <netinet/ip.h>
-//#include    <netinet/udp.h>
-//#include    <sys/ioctl.h>
-
-
 // last include
 //
 #include    <snapdev/poison.h>

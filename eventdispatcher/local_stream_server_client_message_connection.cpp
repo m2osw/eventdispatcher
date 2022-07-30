@@ -43,23 +43,10 @@
 //
 #include    "eventdispatcher/local_stream_server_client_message_connection.h"
 
-//#include    "eventdispatcher/exception.h"
 
-
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
-
-
-// C++ lib
-//
-//#include    <cstring>
-
-
-// C lib
-//
-//#include    <arpa/inet.h>
-//#include    <sys/socket.h>
 
 
 // last include

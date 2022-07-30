@@ -45,12 +45,12 @@
 #include    "eventdispatcher/tcp_client_message_connection.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/not_used.h>
 

@@ -34,7 +34,7 @@
 #include    "eventdispatcher/exception.h"
 
 
-// OpenSSL lib
+// OpenSSL
 //
 #include    <openssl/bio.h>
 #include    <openssl/err.h>

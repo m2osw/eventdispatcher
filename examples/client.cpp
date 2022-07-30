@@ -28,9 +28,15 @@
 
 // eventdispatcher
 //
+#include    <eventdispatcher/communicator.h>
 #include    <eventdispatcher/logrotate_udp_messenger.h>
 #include    <eventdispatcher/tcp_client_permanent_message_connection.h>
 #include    <eventdispatcher/version.h>
+
+
+// snaplogger
+//
+#include    <snaplogger/message.h>
 
 
 // boost
@@ -72,8 +78,7 @@ public:
 
 private:
     my_client *                 f_my_client = nullptr;
-    ed::dispatcher<client>::pointer_t
-                                f_dispatcher = ed::dispatcher<client>::pointer_t();
+    ed::dispatcher::pointer_t   f_dispatcher = ed::dispatcher::pointer_t();
 };
 
 
@@ -176,32 +181,6 @@ advgetopt::options_environment const g_options_environment =
 #pragma GCC diagnostic pop
 
 
-ed::dispatcher<client>::dispatcher_match::vector_t const g_messages =
-{
-    {
-          "HI"
-        , &client::msg_hi
-    },
-    {
-          "CLIMB"
-        , &client::msg_climb
-    },
-    {
-          "WHO"
-        , &client::msg_who
-    },
-    {
-          "BYE"
-        , &client::msg_bye
-    },
-
-    // ALWAYS LAST
-    {
-          nullptr
-        , &client::msg_reply_with_unknown
-        , &ed::dispatcher<client>::dispatcher_match::always_match
-    }
-};
 
 
 
@@ -222,15 +201,23 @@ client::client(
         , addr::addr const & a)
     : tcp_client_permanent_message_connection(a)
     , f_my_client(c)
-    , f_dispatcher(new ed::dispatcher<client>(
-              this
-            , g_messages))
+    , f_dispatcher(std::make_shared<ed::dispatcher>(this))
 {
     set_name("client");
 #ifdef _DEBUG
     f_dispatcher->set_trace();
 #endif
     set_dispatcher(f_dispatcher);
+
+    f_dispatcher->add_matches({
+        DISPATCHER_MATCH("HI",    &client::msg_hi),
+        DISPATCHER_MATCH("CLIMB", &client::msg_climb),
+        DISPATCHER_MATCH("WHO",   &client::msg_who),
+        DISPATCHER_MATCH("BYE",   &client::msg_bye),
+
+        // ALWAYS LAST
+        DISPATCHER_CATCH_ALL()
+    });
 }
 
 

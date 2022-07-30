@@ -26,8 +26,8 @@
 
 // self
 //
-#include    "eventdispatcher/connection.h"
-#include    "eventdispatcher/local_dgram_server.h"
+#include    <eventdispatcher/connection.h>
+#include    <eventdispatcher/local_dgram_server.h>
 
 
 

@@ -1580,7 +1580,7 @@ void message::add_parameter(std::string const & name, std::uint64_t value)
 }
 
 
-/** \brief Add an address parameter to the message.
+/** \brief Add an IPv4 or IPv6 address parameter to the message.
  *
  * Messages can include parameters (variables) such as a URI or a word.
  *
@@ -1606,6 +1606,31 @@ void message::add_parameter(
     f_parameters[name] = value.to_ipv4or6_string(mask
                             ? addr::string_ip_t::STRING_IP_ALL
                             : addr::string_ip_t::STRING_IP_PORT);
+    f_cached_message.clear();
+}
+
+
+/** \brief Add a Unix address parameter to the message.
+ *
+ * Messages can include parameters (variables) such as a URI or a word.
+ *
+ * This function transforms the input Unix address in a string to be sent to
+ * the other end.
+ *
+ * The parameter name is verified by the verify_message_name() function.
+ *
+ * \param[in] name  The name of the parameter.
+ * \param[in] value  The value of this parameter.
+ *
+ * \sa verify_message_name()
+ */
+void message::add_parameter(
+      std::string const & name
+    , addr::unix const & value)
+{
+    verify_message_name(name);
+
+    f_parameters[name] = value.to_string();
     f_cached_message.clear();
 }
 

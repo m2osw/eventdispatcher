@@ -101,17 +101,17 @@
 
 // self
 //
-#include    "eventdispatcher/connection_with_send_message.h"
-#include    "eventdispatcher/dispatcher.h"
-#include    "eventdispatcher/udp_server_message_connection.h"
+#include    <eventdispatcher/connection_with_send_message.h>
+#include    <eventdispatcher/dispatcher.h>
+#include    <eventdispatcher/udp_server_message_connection.h>
 
 
-// addr lib
+// addr
 //
 #include    <libaddr/addr.h>
 
 
-// advgetopt lib
+// advgetopt
 //
 #include    <advgetopt/advgetopt.h>
 
@@ -137,8 +137,8 @@ class logrotate_udp_messenger
     : public ed::udp_server_message_connection
 {
 public:
-    typedef std::shared_ptr<logrotate_udp_messenger>              pointer_t;
-    typedef ed::dispatcher<logrotate_udp_messenger>::pointer_t    dispatcher_pointer_t;
+    typedef std::shared_ptr<logrotate_udp_messenger>    pointer_t;
+    typedef ed::dispatcher::pointer_t                   dispatcher_pointer_t;
 
                             logrotate_udp_messenger(
                                       addr::addr const & address

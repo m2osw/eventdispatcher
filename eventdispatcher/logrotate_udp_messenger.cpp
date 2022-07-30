@@ -22,10 +22,17 @@
 //
 #include    "eventdispatcher/logrotate_udp_messenger.h"
 
+#include    "eventdispatcher/communicator.h"
 
-// addr lib
+
+// libaddr
 //
 #include    <libaddr/addr_parser.h>
+
+
+// snaplogger
+//
+#include    <snaplogger/message.h>
 
 
 // last include
@@ -74,9 +81,7 @@ logrotate_udp_messenger::logrotate_udp_messenger(
           addr::addr const & address
         , std::string const & secret_code)
     : ed::udp_server_message_connection(address)
-    , f_dispatcher(std::make_shared<ed::dispatcher<logrotate_udp_messenger>>(
-                          this
-                        , ed::dispatcher<logrotate_udp_messenger>::dispatcher_match::vector_t()))
+    , f_dispatcher(std::make_shared<ed::dispatcher>(this))
 {
     set_name("logrotate_udp_messenger");
     set_secret_code(secret_code);

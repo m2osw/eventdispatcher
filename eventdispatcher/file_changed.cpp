@@ -47,18 +47,18 @@
 #include    "eventdispatcher/exception.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// C++ lib
+// C++
 //
 #include    <algorithm>
 #include    <cstring>
 
 
-// C lib
+// C
 //
 #include    <sys/inotify.h>
 

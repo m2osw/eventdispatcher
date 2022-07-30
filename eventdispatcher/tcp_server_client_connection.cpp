@@ -46,17 +46,17 @@
 #include    "eventdispatcher/exception.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// C++ lib
+// C++
 //
 #include    <cstring>
 
 
-// C lib
+// C
 //
 #include    <arpa/inet.h>
 #include    <netdb.h>

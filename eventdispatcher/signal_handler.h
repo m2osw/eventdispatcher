@@ -25,19 +25,19 @@
  * handled.
  */
 
-// cppthread lib
+// cppthread
 //
 #include    <cppthread/mutex.h>
 
 
-// C++ lib
+// C++
 //
 #include    <functional>
 #include    <list>
 #include    <memory>
 
 
-// C lib
+// C
 //
 #include    <signal.h>
 

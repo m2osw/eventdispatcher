@@ -33,7 +33,12 @@
 
 
 
-// C++ lib
+// snaplogger
+//
+#include    <snaplogger/message.h>
+
+
+// C++
 //
 #include    <iostream>
 

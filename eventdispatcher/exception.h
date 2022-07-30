@@ -28,7 +28,7 @@
 
 // libexcept
 //
-#include    "libexcept/exception.h"
+#include    <libexcept/exception.h>
 
 
 

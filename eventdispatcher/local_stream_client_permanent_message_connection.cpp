@@ -34,37 +34,21 @@
 
 #include    "eventdispatcher/communicator.h"
 #include    "eventdispatcher/exception.h"
-//#include    "eventdispatcher/local_stream_server_client_message_connection.h"
 #include    "eventdispatcher/local_stream_client_message_connection.h"
 #include    "eventdispatcher/thread_done_signal.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// snapdev lib
-//
-//#include    <snapdev/not_used.h>
-
-
-// cppthread lib
+// cppthread
 //
 #include    <cppthread/exception.h>
 #include    <cppthread/guard.h>
 #include    <cppthread/runner.h>
 #include    <cppthread/thread.h>
-
-
-// C++ lib
-//
-//#include    <cstring>
-
-
-// C lib
-//
-//#include    <sys/socket.h>
 
 
 // last include

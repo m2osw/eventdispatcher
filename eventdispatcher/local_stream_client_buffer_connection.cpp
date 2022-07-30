@@ -32,12 +32,12 @@
 #include    "eventdispatcher/utils.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// C++ lib
+// C++
 //
 #include    <algorithm>
 #include    <cstring>

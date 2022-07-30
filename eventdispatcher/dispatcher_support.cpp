@@ -30,10 +30,11 @@
 //
 #include    "eventdispatcher/dispatcher_support.h"
 
+#include    "eventdispatcher/dispatcher.h"
 #include    "eventdispatcher/exception.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
@@ -71,7 +72,7 @@ dispatcher_support::~dispatcher_support()
  *
  * \param[in] d  The pointer to your dispatcher object.
  */
-void dispatcher_support::set_dispatcher(dispatcher_base::pointer_t d)
+void dispatcher_support::set_dispatcher(dispatcher::pointer_t d)
 {
     f_dispatcher = d;
 }
@@ -88,7 +89,7 @@ void dispatcher_support::set_dispatcher(dispatcher_base::pointer_t d)
  *
  * \return The pointer to the dispatcher used to execute messages or nullptr.
  */
-dispatcher_base::pointer_t dispatcher_support::get_dispatcher() const
+dispatcher::pointer_t dispatcher_support::get_dispatcher() const
 {
     return f_dispatcher.lock();
 }

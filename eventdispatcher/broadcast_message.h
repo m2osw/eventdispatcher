@@ -31,7 +31,7 @@
 
 // self
 //
-#include    "eventdispatcher/message.h"
+#include    <eventdispatcher/message.h>
 
 
 

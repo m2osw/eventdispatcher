@@ -54,31 +54,31 @@
 #include    "eventdispatcher/utils.h"
 
 
-// cppthread lib
+// cppthread
 //
 #include    <cppthread/guard.h>
 #include    <cppthread/mutex.h>
 #include    <cppthread/thread.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/safe_variable.h>
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// C++ lib
+// C++
 //
 #include    <algorithm>
 #include    <cstring>
 #include    <limits>
 
 
-// C lib
+// C
 //
 #include    <poll.h>
 #include    <sys/resource.h>

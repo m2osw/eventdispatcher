@@ -35,21 +35,21 @@
 
 // self
 //
-#include    "eventdispatcher/signal.h"
+#include    <eventdispatcher/signal.h>
 
 
-// cppthread lib
+// cppthread
 //
 #include    <cppthread/mutex.h>
 
 
-// C++ lib
+// C++
 //
 #include    <functional>
 #include    <list>
 
 
-// C lib
+// C
 //
 #include    <sys/resource.h>
 #include    <sys/signalfd.h>

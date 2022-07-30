@@ -19,20 +19,26 @@
 #pragma once
 
 /** \file
- * \brief Event dispatch class.
+ * \brief Event dispatch support class.
  *
- * Class used to handle events.
+ * This class is used on connections that support the dispatcher. This means
+ * those classes support messaging as defined by the eventdispatcher library.
  */
+
 
 // self
 //
-#include    "eventdispatcher/dispatcher_base.h"
+#include    <eventdispatcher/message.h>
 
 
 
 namespace ed
 {
 
+
+class dispatcher;
+typedef std::shared_ptr<dispatcher>     dispatcher_pointer_t;
+typedef std::weak_ptr<dispatcher>       dispatcher_weak_t;
 
 
 class dispatcher_support
@@ -42,8 +48,8 @@ public:
 
     virtual                     ~dispatcher_support();
 
-    void                        set_dispatcher(dispatcher_base::pointer_t d);
-    dispatcher_base::pointer_t  get_dispatcher() const;
+    void                        set_dispatcher(dispatcher_pointer_t d);
+    dispatcher_pointer_t        get_dispatcher() const;
 
     // new callbacks
     //
@@ -51,7 +57,7 @@ public:
     virtual void                process_message(message & msg);
 
 private:
-    dispatcher_base::weak_t     f_dispatcher = dispatcher_base::weak_t();
+    dispatcher_weak_t           f_dispatcher = dispatcher_weak_t();
 };
 
 

@@ -27,10 +27,10 @@
 
 // self
 //
-#include    "eventdispatcher/signal.h"
+#include    <eventdispatcher/signal.h>
 
 
-// C lib
+// C
 //
 #include    <signal.h>
 

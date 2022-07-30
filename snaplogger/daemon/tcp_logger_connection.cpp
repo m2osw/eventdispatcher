@@ -31,8 +31,12 @@
 #include    "snaplogger/daemon/utils.h"
 
 
+// snaplogger
+//
+#include    <snaplogger/message.h>
 
-// C++ lib
+
+// C++
 //
 #include    <iostream>
 
@@ -47,42 +51,23 @@ namespace snaplogger_daemon
 {
 
 
-namespace
-{
-
-
-ed::dispatcher<tcp_logger_connection>::dispatcher_match::vector_t const g_messages =
-{
-    {
-        "LOGGER"
-      , &tcp_logger_connection::msg_logger_message
-    },
-
-    // ALWAYS LAST
-    {
-        nullptr
-      , &tcp_logger_connection::msg_reply_with_unknown
-      , &ed::dispatcher<tcp_logger_connection>::dispatcher_match::always_match
-    }
-};
-
-
-
-}
-// no name namespace
-
 
 
 tcp_logger_connection::tcp_logger_connection(ed::tcp_bio_client::pointer_t client)
     : tcp_server_client_message_connection(client)
-    , f_dispatcher(std::make_shared<ed::dispatcher<tcp_logger_connection>>(
-              this
-            , g_messages))
+    , f_dispatcher(std::make_shared<ed::dispatcher>(this))
 {
 //#ifdef _DEBUG
 //    f_dispatcher->set_trace();
 //#endif
     set_dispatcher(f_dispatcher);
+
+    f_dispatcher->add_matches({
+        DISPATCHER_MATCH("LOGGER", &tcp_logger_connection::msg_logger_message),
+
+        // ALWAYS LAST
+        DISPATCHER_CATCH_ALL()
+    });
 }
 
 

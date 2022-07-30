@@ -33,7 +33,8 @@ add_library(${PROJECT_NAME} SHARED
     communicator.cpp
 
         # message handling
-        dispatcher_base.cpp
+        dispatcher.cpp
+        dispatcher_match.cpp
         dispatcher_support.cpp
         message.cpp
 
@@ -175,8 +176,8 @@ install(
         connection.h
         connection_with_send_message.h
         cui_connection.h
-        dispatcher_base.h
         dispatcher.h
+        dispatcher_match.h
         dispatcher_support.h
         exception.h
         fd_buffer_connection.h
