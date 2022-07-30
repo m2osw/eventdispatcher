@@ -5,8 +5,8 @@ usr/include/eventdispatcher/communicator.h
 usr/include/eventdispatcher/connection.h
 usr/include/eventdispatcher/connection_with_send_message.h
 usr/include/eventdispatcher/cui_connection.h
-usr/include/eventdispatcher/dispatcher_base.h
 usr/include/eventdispatcher/dispatcher.h
+usr/include/eventdispatcher/dispatcher_match.h
 usr/include/eventdispatcher/dispatcher_support.h
 usr/include/eventdispatcher/exception.h
 usr/include/eventdispatcher/fd_buffer_connection.h
