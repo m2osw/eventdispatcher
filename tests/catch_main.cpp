@@ -45,6 +45,11 @@
 #include    <sstream>
 
 
+// last include
+//
+#include    <snapdev/poison.h>
+
+
 
 namespace SNAP_CATCH2_NAMESPACE
 {
