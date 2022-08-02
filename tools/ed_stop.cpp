@@ -46,6 +46,7 @@
 // C
 //
 #include    <signal.h>
+#include    <string.h>
 
 
 // last include
@@ -264,15 +265,20 @@ int main(int argc, char *argv[])
 
         // verify that we have a process with that PID
         //
-        if(cppprocess::is_running(service_pid) != 0)
+        if(!cppprocess::is_running(service_pid))
         {
             if(errno == EPERM)
             {
                 std::cerr << "ed-stop: error: not permitted to send signal to --service " << service_pid << ". Do nothing." << std::endl;
             }
-            else
+            else if(errno == ENOENT)
             {
                 std::cerr << "ed-stop: error: --service " << service_pid << " is not running. Do nothing." << std::endl;
+            }
+            else
+            {
+                int const e(errno);
+                std::cerr << "ed-stop: error: " << strerror(e) << ". Do nothing.\n";
             }
             exit(1);
         }
