@@ -268,55 +268,78 @@ support a given message, sending it to you would result in an UNKNOWN
 reply which is useless).
 
 
+# Tools
+
+## `ed-stop`
+
+The `ed-stop` sends a SIGINT and then a SIGTERM (if required) to the specified
+service or PID.
+
+    ed-stop --server <name>|<pid>
+
+In most cases, it is preferable to use the `ed-signal` to do a _soft_
+termination of a service. The `ed-signal` can send a `STOP` or a `QUIT`
+message instead.
+
+## `ed-signal`
+
+The `ed-signal` sends a message to the specified _server_ (`--server`). The
+default is to send a UDP message (a.k.a. a signal) to the service without
+having to wait for an answer.
+
+    ed-signal --server 127.0.0.1
+
 
 # Missing Features
 
 * Full IPv6 Support
 
-    We need to make sure that all our classes support IPv6 as expected.
+  We need to make sure that all our classes support IPv6 as expected.
+  It should already be in place, it's a matter of testing to make sure
+  it works 100% as expected.
 
 * Use of libaddr everywhere
 
-    The snapcommunicator version used a string for the address and an
-    integer for the port. At this time the library still accepts those
-    parameters.
+  The snapcommunicator version used a string for the address and an
+  integer for the port. At this time the library still accepts those
+  parameters.
 
-    The new version should accept an `addr::addr` instead leaving the
-    parsing work to the caller (so it can be specialized as per the
-    caller's need).
+  The new version should accept an `addr::addr` instead leaving the
+  parsing work to the caller (so it can be specialized as per the
+  caller's need).
 
-    This will also help with the IPv6 support since the `addr::addr`
-    objects make all addresses an IPv6 address.
+  This will also help with the IPv6 support since the `addr::addr`
+  objects make all addresses an IPv6 address.
 
 * Attempt connecting with additional addresses
 
-    The `connect()` for a TCP or a UDP connection may have multiple
-    addresses (i.e. many web services offer a list of 5, 7, 10...
-    addresses). If the `connect()` fails with the first address, then
-    it should be re-attempted with the next one. This is not very
-    useful with our services at the moment.
+  The `connect()` for a TCP or a UDP connection may have multiple
+  addresses (i.e. many web services offer a list of 5, 7, 10...
+  addresses). If the `connect()` fails with the first address, then
+  it should be re-attempted with the next one. This is not very
+  useful with our services at the moment.
 
-    **Note:** these addresses may also change with time. So if you requests
-    a domain to give you an IP address at some point, it may be necessary
-    to request for new IPs when you attempt to reconnect much later. This
-    is also not currently supported as input domain names are transformed to
-    IP addresses and they stay that way _forever_ (until you restart or
-    as a programmer, until you create a new object with that domain name).
+  **Note:** these addresses may also change with time. So if you requests
+  a domain to give you an IP address at some point, it may be necessary
+  to request for new IPs when you attempt to reconnect much later. This
+  is also not currently supported as input domain names are transformed to
+  IP addresses and they stay that way _forever_ (until you restart or
+  as a programmer, until you create a new object with that domain name).
 
 * Full multithread support
 
-    The library depends on our `cppthread` library so it has full access
-    to all the multithread features we have available. However, at the
-    moment, most of the functions are not multithread safe. We need to
-    add such support (i.e. mutex + guards).
+  The library depends on our `cppthread` library so it has full access
+  to all the multithread features we have available. However, at the
+  moment, most of the functions are not multithread safe. We need to
+  add such support (i.e. mutex + guards).
 
-    Until this is complete you either have to protect your threads really
-    well or use your own layer to handle messages in one specific thread
-    through the `ed::communicator` and your other thread to do work. Our
-    current implementation, though, works really well with services that
-    use threads only to do _instant_ work or do not really need to use
-    threads at all. We've successfully use the library in all three types
-    of processes.
+  Until this is complete you either have to protect your threads really
+  well or use your own layer to handle messages in one specific thread
+  through the `ed::communicator` and your other thread to do work. Our
+  current implementation, though, works really well with services that
+  use threads only to do _instant_ work or do not really need to use
+  threads at all. We've successfully use the library in all three types
+  of processes.
 
 
 
