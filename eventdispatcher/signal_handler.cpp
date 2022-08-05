@@ -496,7 +496,7 @@ void signal_handler::add_terminal_signals(signal_mask_t sigs)
 {
     cppthread::guard g(f_mutex);
 
-    for(size_t i(0); i < std::size(f_signal_actions); ++i)
+    for(size_t i(1); i < std::size(f_signal_actions); ++i)
     {
         if((sigs & (1L << i)) != 0 && f_signal_actions[i] == nullptr)
         {
@@ -527,13 +527,12 @@ void signal_handler::add_ignored_signals(signal_mask_t sigs)
 {
     cppthread::guard g(f_mutex);
 
-    for(size_t i(0); i < std::size(f_signal_actions); ++i)
+    for(size_t i(1); i < std::size(f_signal_actions); ++i)
     {
         if((sigs & (1L << i)) != 0 && f_signal_actions[i] == nullptr)
         {
             sigaction_t action = sigaction_t();
             action.sa_handler = SIG_IGN;
-            action.sa_sigaction = signal_handler_func;
 
             f_signal_actions[i] = std::make_shared<sigaction_t>();
             sigaction(i, &action, f_signal_actions[i].get());
@@ -555,7 +554,7 @@ void signal_handler::remove_signals(signal_mask_t sigs)
 {
     cppthread::guard g(f_mutex);
 
-    for(size_t i(0); i < std::size(f_signal_actions); ++i)
+    for(size_t i(1); i < std::size(f_signal_actions); ++i)
     {
         if((sigs & (1L << i)) != 0 && f_signal_actions[i] != nullptr)
         {
