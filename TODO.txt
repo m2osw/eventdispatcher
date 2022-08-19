@@ -23,6 +23,48 @@
 * Update the dispatcher classes documentation to match the new scheme (the
   callback instead of a function offset in one class).
 
+* Rate limit transfers by sending X bytes every N milliseconds on that given
+  connection (i.e. as long as there is something to write and it can be written
+  to that file descriptor, sleep N milliseconds and then send another X bytes).
+
+  As our poll() loop stands, this is not quite feasible. But we can look at
+  testing whether the connection has data to be written, then also check on
+  the "rate limited" feature, if turned on (N is not 0?), then check whether
+  we should wait on the fd to become available (i.e. time to send more data)
+  or view the connection as a timer (i.e. we still need to wait some more).
+  The current use of the timer right now is a form of Inclusive OR, this other
+  method would make it a form of Exclusive OR. But we probably want to use a
+  different timestamp tracker which get reassigned a "now + N" whenever a
+  write happened. But for the limit to work properly, we need to know the
+  amount of data sent and whether we should send more and how much more...
+
+* Short `connect()` timeout is possible by making the socket non-blocking
+  before calling the function; then we can `poll()` on the socket and get
+  a POLLOUT event once the socket is connected; this can be useful in some
+  situations, many times it's probably not that necessary, except that has
+  been a bottleneck in the permanent TCP connection implementation and is
+  why I create a thread for the connect to happen in parallel... that would
+  not be required anymore (but it adds a new state "in-limbo while
+  connecting").
+
+  From the `connect()` man page:
+
+       EINPROGRESS
+              The socket is nonblocking and the connection cannot be
+              completed immediately. It is possible to select(2) or
+              poll(2) for completion by selecting the socket for writing.
+              After select(2) indicates writability, use getsockopt(2) to
+              read the SO_ERROR option at level SOL_SOCKET to determine
+              whether connect() completed successfully (SO_ERROR is zero)
+              or unsuccessfully (SO_ERROR is one of the usual error codes
+              listed here, explaining the reason for the failure).
+
+  **IMPORTANT:** when `connect()` returns, it may already have connected and
+                 return 0. You need to enter the intermediate state only if
+                 `connect()` returns `EINPROGRESS`.
+
+  See: https://stackoverflow.com/questions/2597608/c-socket-connection-timeout
+
 * Add support for any number of timers in a connection. I often run in
   problems with this because I need two or three different timers then
   I have to create sub-objects, which are separate connection timers by
