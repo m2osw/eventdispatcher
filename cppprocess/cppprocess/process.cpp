@@ -398,7 +398,7 @@ void tee_pipe::connection_removed()
  * a<\<b [label="run()"];
  * \endmsc
  *
- * Using the add_next_process function, it is possible to pipe the output
+ * Using the add_next_process() function, it is possible to pipe the output
  * of one process as the input of the next process. In other words, this
  * class allows you to pipe any number of processes between each other.
  *
@@ -407,8 +407,8 @@ void tee_pipe::connection_removed()
  *     cppprocess:process b;
  *     cppprocess:process c;
  *
- *     a.set_next_process(b);
- *     b.set_next_process(c);
+ *     a.add_next_process(b);
+ *     b.add_next_process(c);
  *
  *     a.start();       // runs `a | b | c`
  * \endcode
@@ -434,11 +434,11 @@ void tee_pipe::connection_removed()
  *     cppprocess:process a;
  *     cppprocess:process b;
  *     cppprocess:process c;
- *     cppprocess:process c;
+ *     cppprocess:process d;
  *
- *     a.set_next_process(b);
- *     a.set_next_process(c);
- *     a.set_next_process(d);
+ *     a.add_next_process(b);
+ *     a.add_next_process(c);
+ *     a.add_next_process(d);
  *
  *     a.start();
  *
@@ -450,6 +450,12 @@ void tee_pipe::connection_removed()
  *     // only we avoid the temporary file and b, c, d are run in parallel
  *     // note that b, c, d could be the same process with different args
  * \endcode
+ *
+ * Examples of usage of the cppprocess can now be found in:
+ *
+ * \li sitter/plugins/sitter_scripts/scripts.cpp (probably wrongly calling the
+ *     p.wait() function at the moment)
+ * \li iplock/tools/ipwall/block_info.cpp.
  */
 
 
@@ -1065,7 +1071,7 @@ pid_t process::process_pid() const
  * any number of callbacks.
  *
  * \todo
- * Verify all the data before we start any processes. If we are to raise
+ * Verify all the data before we start any process. If we are to raise
  * an error, then we should do so before any fork() + execvpe().
  *
  * \return 0 on success or -1 if an error occurs.

@@ -131,24 +131,39 @@ in stdout and stderr.
     // you want to setup a listener in the signal_child singleton; if you
     // are not using the ed::communicator, use the wait() instead
     //
-    p.start();
+    r = p.start();
     // if no ed::communicator, use: p.wait()
+    if(r != 0)
+    {
+        ...handle error...
+        return;
+    }
 
     // with ed::communicator, you get a call to your listener (callback)
     // that you add to the signal_child object as below. Once you received
     // that signal, the child process died. If you pipe multiple processes,
     // you will receive one signal per process.
     //
-    // NOTE: that the p.wait() function uses these callback functions if
+    // note that the signal may be called when the process receives a signal
+    // and does not actually die; specifically for the SIGSTOP, SIGCONT, and
+    // SIGTRAP.
+    //
+    // NOTE: the p.wait() function uses these callback functions if
     //       you would like to see how it is done
     //
-    // WARNING: this has to be done after the start() (i.e. you need the
-    //          pid_t of the child) and before you return back to the
-    //          ed::communitor::run() loop
+    // WARNING: the add_listener() has to be called after the start()
+    //          because you need the pid_t of the child and for proper
+    //          synchronization it must happen before you return back
+    //          to the ed::communitor::run() loop; the signal_child is
+    //          also expected to be added to the communicator and the
+    //          add_listener() function does that automatically for us;
+    //          it also gets removed automatically when the SIGCHILD is
+    //          received (the resource is ref-counted)
     //
     ed::signal_child::pointer_t child_signal(ed::signal_child::get_instance());
-    child_signal->add_listener(p.process_pid(), std::bind(&my_class::process_done, this, std::placeholders::_1));
-    ed::communicator::instance()->add_connection(child_signal);
+    child_signal->add_listener(
+              p.process_pid()
+            , std::bind(&my_class::process_done, this, std::placeholders::_1));
 
     // to prematurely stop the process, send a signal with the kill()
     // function
@@ -160,8 +175,8 @@ the time the `process::start()` function gets called. The other side must
 be closed as soon as you are done with it (especially the input since this
 is how the child process gets an EOF on that stream). In other words,
 a pipe can be used once. Each instance of a process, new or not, must
-be given a new pipe. It is strongly advised that you use a new `cppprocess`
-object each time you run a new command.
+be given a new pipe. It is strongly advised that you use new `cppprocess`
+objects each time you run a new command pipeline.
 
 ## Simulate a system() call
 

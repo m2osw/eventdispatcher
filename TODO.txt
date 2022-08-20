@@ -7,6 +7,15 @@
   message coverage) so we can verify that all messages were checked
   (i.e. for debug purposes).
 
+* When adding a dispatcher match, detect whether it was already added; when
+  we add a message such as STATUS once, then trying to add it again will have
+  no effect (the 2nd and further instances are ignored because we stop after
+  executing the first); the add_match() function should be capable of
+  deteting such (atl east in DEBUG mode) so we know we did that mistake;
+  the execution method could also no return and see if it can match more than
+  one entry (which is acceptable if using a regex... so we need to be careful
+  here--in this case, it may just be a warning)
+
 * A service to track changes to the list of opened/closed network connections
   (I already have code to do that, but I never spent any time on implementing
   anything in link with it. It should track the changes to the /proc/... file

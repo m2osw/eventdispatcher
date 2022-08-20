@@ -29,7 +29,12 @@
  * listener.
  */
 
-// C++ lib
+// snapdev
+//
+#include    <snapdev/timespec_ex.h>
+
+
+// C++
 //
 #include    <memory>
 #include    <string>
@@ -95,9 +100,11 @@ public:
 
     std::int64_t                get_timeout_delay() const;
     void                        set_timeout_delay(std::int64_t timeout_us);
+    void                        set_timeout_delay(snapdev::timespec_ex const & date);
     void                        calculate_next_tick();
     std::int64_t                get_timeout_date() const;
     void                        set_timeout_date(std::int64_t date_us);
+    void                        set_timeout_date(snapdev::timespec_ex const & date);
     std::int64_t                get_timeout_timestamp() const;
 
     void                        non_blocking() const;

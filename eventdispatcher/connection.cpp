@@ -491,6 +491,12 @@ void connection::set_timeout_delay(std::int64_t timeout_us)
 }
 
 
+void connection::set_timeout_delay(snapdev::timespec_ex const & timeout_ns)
+{
+    set_timeout_delay(timeout_ns.to_usec());
+}
+
+
 /** \brief Calculate when the next tick shall occur.
  *
  * This function calculates the date and time when the next tick
@@ -586,6 +592,12 @@ void connection::set_timeout_date(std::int64_t date_us)
     }
 
     f_timeout_date = date_us;
+}
+
+
+void connection::set_timeout_date(snapdev::timespec_ex const & date)
+{
+    set_timeout_date(date.to_usec());
 }
 
 
