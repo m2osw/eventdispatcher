@@ -457,7 +457,7 @@ tcp_bio_client::tcp_bio_client(
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
-            BIO_set_conn_hostname(bio.get(), const_cast<char *>(address.to_ipv4or6_string(addr::string_ip_t::STRING_IP_ONLY).c_str()));
+            BIO_set_conn_hostname(bio.get(), const_cast<char *>(address.to_ipv4or6_string(addr::STRING_IP_ADDRESS).c_str()));
             BIO_set_conn_port(bio.get(), const_cast<char *>(std::to_string(address.get_port()).c_str()));
 #pragma GCC diagnostic pop
 
@@ -556,7 +556,7 @@ tcp_bio_client::tcp_bio_client(
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
-            BIO_set_conn_hostname(bio.get(), const_cast<char *>(address.to_ipv4or6_string(addr::string_ip_t::STRING_IP_ONLY).c_str()));
+            BIO_set_conn_hostname(bio.get(), const_cast<char *>(address.to_ipv4or6_string(addr::STRING_IP_ADDRESS).c_str()));
             BIO_set_conn_port(bio.get(), const_cast<char *>(std::to_string(address.get_port()).c_str()));
 #pragma GCC diagnostic pop
 

@@ -174,7 +174,7 @@ int tcp_client::get_port() const
  */
 std::string tcp_client::get_addr() const
 {
-    return f_address.to_ipv4or6_string(addr::string_ip_t::STRING_IP_ONLY);
+    return f_address.to_ipv4or6_string(addr::STRING_IP_ADDRESS);
 }
 
 /** \brief Get the TCP server address.
