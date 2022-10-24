@@ -203,7 +203,7 @@ void thread_cleanup()
  */
 void per_thread_cleanup()
 {
-#if OPENSSL_VERSION_NUMBER < 0x1010100fL
+#if OPENSSL_VERSION_NUMBER < 0x1010000fL
     // this function is not necessary in newer versions of OpenSSL
     //
     ERR_remove_thread_state(nullptr);
@@ -288,7 +288,7 @@ void bio_initialize()
  */
 void bio_cleanup()
 {
-#if OPENSSL_VERSION_NUMBER < 0x1010100fL
+#if OPENSSL_VERSION_NUMBER < 0x1000000fL
     // this function is not necessary in newer versions of OpenSSL
     //
     ERR_remove_state(0);
