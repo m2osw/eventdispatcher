@@ -32,7 +32,7 @@
 
 // libaddr lib
 //
-#include    <libaddr/unix.h>
+#include    <libaddr/addr_unix.h>
 
 
 
@@ -52,11 +52,11 @@ public:
 
     int                 get_mtu_size() const;
     int                 get_mss_size() const;
-    addr::unix          get_address() const;
+    addr::addr_unix     get_address() const;
 
 protected:
                         local_dgram_base(
-                                  addr::unix const & address
+                                  addr::addr_unix const & address
                                 , bool sequential
                                 , bool close_on_exec);
 
@@ -64,7 +64,7 @@ protected:
     //       (we use the f_addrinfo as is in the sendto() and bind() calls
     //       and use libaddr for the conversions already)
     //
-    addr::unix          f_address = addr::unix();
+    addr::addr_unix     f_address = addr::addr_unix();
     snapdev::raii_fd_t  f_socket = snapdev::raii_fd_t();
     int                 f_mtu_size = -1;
 };

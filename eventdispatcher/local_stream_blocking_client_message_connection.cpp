@@ -100,7 +100,7 @@ namespace ed
  *          : public ed::local_stream_blocking_client_message_connection
  *      {
  *      public:
- *          my_blocking_connection(addr::unix const & address, mode_t mode)
+ *          my_blocking_connection(addr::addr_unix const & address, mode_t mode)
  *              : local_stream_blocking_client_message_connection(a, mode)
  *          {
  *              // need to register with communicator
@@ -174,7 +174,7 @@ namespace ed
  * exec() call.
  */
 local_stream_blocking_client_message_connection::local_stream_blocking_client_message_connection(
-              addr::unix const & address
+              addr::addr_unix const & address
             , bool const blocking
             , bool const close_on_exec)
     : local_stream_client_message_connection(

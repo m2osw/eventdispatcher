@@ -75,11 +75,11 @@ namespace ed
  * connection (i.e. a connection to connect to the communicator daemon).
  */
 local_dgram_server_message_connection::local_dgram_server_message_connection(
-              addr::unix const & address
+              addr::addr_unix const & address
             , bool sequential
             , bool close_on_exec
             , bool force_reuse_addr
-            , addr::unix const & client_address
+            , addr::addr_unix const & client_address
             , std::string const & service_name)
     : local_dgram_server_connection(
           address
@@ -178,7 +178,7 @@ bool local_dgram_server_message_connection::send_message(
  * \return true when the message was sent, false otherwise.
  */
 bool local_dgram_server_message_connection::send_message(
-                  addr::unix const & address
+                  addr::addr_unix const & address
                 , message & msg
                 , std::string const & secret_code)
 {

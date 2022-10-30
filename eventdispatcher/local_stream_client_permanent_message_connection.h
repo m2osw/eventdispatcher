@@ -33,7 +33,7 @@
 
 // libaddr
 //
-#include    <libaddr/unix.h>
+#include    <libaddr/addr_unix.h>
 
 
 
@@ -60,7 +60,7 @@ public:
     static std::int64_t const   DEFAULT_PAUSE_BEFORE_RECONNECTING = 60LL * 1000000LL;  // 1 minute
 
                                 local_stream_client_permanent_message_connection(
-                                          addr::unix const & address
+                                          addr::addr_unix const & address
                                         , std::int64_t const pause = DEFAULT_PAUSE_BEFORE_RECONNECTING
                                         , bool const use_thread = true
                                         , bool const blocking = false
@@ -72,7 +72,7 @@ public:
     void                        disconnect();
     void                        mark_done();
     void                        mark_done(bool messenger);
-    addr::unix                  get_address() const;
+    addr::addr_unix             get_address() const;
 
     // connection_with_send_message implementation
     virtual bool                send_message(message & msg, bool cache = false) override;

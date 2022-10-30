@@ -32,9 +32,6 @@ find_package(ServerPlugins    REQUIRED)
 find_package(SnapCMakeModules REQUIRED)
 find_package(SnapDev          REQUIRED)
 find_package(SnapLogger       REQUIRED)
-find_package(Qt5Core                  )
-find_package(Qt5Widgets               )
-find_package(Qt5X11Extras             )
 
 SnapGetVersion(EVENTDISPATCHER ${CMAKE_CURRENT_SOURCE_DIR})
 

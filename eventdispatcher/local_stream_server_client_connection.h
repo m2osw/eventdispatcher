@@ -31,7 +31,7 @@
 
 // libaddr
 //
-#include    <libaddr/unix.h>
+#include    <libaddr/addr_unix.h>
 
 
 // snapdev
@@ -60,7 +60,7 @@ public:
                                 local_stream_server_client_connection(snapdev::raii_fd_t client);
 
     void                        close();
-    addr::unix                  get_client_address() const;
+    addr::addr_unix             get_client_address() const;
 
     // connection implementation
     virtual bool                is_reader() const override;
@@ -74,7 +74,7 @@ private:
     void                        define_address();
 
     snapdev::raii_fd_t          f_client = snapdev::raii_fd_t();
-    addr::unix                  f_address = addr::unix();
+    addr::addr_unix             f_address = addr::addr_unix();
     bool                        f_address_defined = false;
 };
 

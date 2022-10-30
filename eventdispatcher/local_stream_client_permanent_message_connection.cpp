@@ -90,7 +90,7 @@ public:
 
         messenger(
                   local_stream_client_permanent_message_connection * parent
-                , addr::unix const & address
+                , addr::addr_unix const & address
                 , bool const blocking
                 , bool const close_on_exec)
             : local_stream_client_message_connection(
@@ -185,7 +185,7 @@ public:
     public:
         runner(
                       local_stream_client_permanent_message_connection_impl * parent_impl
-                    , addr::unix const & address
+                    , addr::addr_unix const & address
                     , bool const blocking = false
                     , bool const close_on_exec = true)
             : cppthread::runner("background local_stream_client_permanent_message_connection for asynchronous connections")
@@ -288,7 +288,7 @@ public:
          *
          * \return The destination address.
          */
-        addr::unix get_address() const
+        addr::addr_unix get_address() const
         {
             return f_address;
         }
@@ -365,7 +365,7 @@ public:
     private:
         local_stream_client_permanent_message_connection_impl *
                                 f_parent_impl = nullptr;
-        addr::unix const        f_address;
+        addr::addr_unix const   f_address;
         bool const              f_blocking;
         bool const              f_close_on_exec;
         messenger::pointer_t    f_messenger = messenger::pointer_t();
@@ -391,7 +391,7 @@ public:
      */
     local_stream_client_permanent_message_connection_impl(
                   local_stream_client_permanent_message_connection * parent
-                , addr::unix const & address
+                , addr::addr_unix const & address
                 , bool const blocking
                 , bool const close_on_exec)
         : f_parent(parent)
@@ -706,13 +706,13 @@ public:
      *
      * \return The Unix address used to connect.
      */
-    addr::unix get_address() const
+    addr::addr_unix get_address() const
     {
         if(f_messenger != nullptr)
         {
             return f_messenger->get_address();
         }
-        return addr::unix();
+        return addr::addr_unix();
     }
 
 
@@ -827,7 +827,7 @@ private:
  *                          on your permanent connection to snapcommunicator.
  */
 local_stream_client_permanent_message_connection::local_stream_client_permanent_message_connection(
-          addr::unix const & address
+          addr::addr_unix const & address
         , std::int64_t const pause
         , bool const use_thread
         , bool const blocking
@@ -963,7 +963,7 @@ void local_stream_client_permanent_message_connection::mark_done(bool messenger)
  *
  * \return Return a copy of the Unix address.
  */
-addr::unix local_stream_client_permanent_message_connection::get_address() const
+addr::addr_unix local_stream_client_permanent_message_connection::get_address() const
 {
     return f_impl->get_address();
 }

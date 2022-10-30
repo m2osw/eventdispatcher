@@ -78,7 +78,7 @@ namespace ed
  * \param[in] close_on_exec  Whether to close the socket on execve().
  */
 local_stream_client_message_connection::local_stream_client_message_connection(
-              addr::unix const & address
+              addr::addr_unix const & address
             , bool const blocking
             , bool const close_on_exec)
     : local_stream_client_buffer_connection(

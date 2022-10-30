@@ -33,7 +33,7 @@
 
 // libaddr
 // 
-#include    <libaddr/unix.h>
+#include    <libaddr/addr_unix.h>
 
 
 // snapdev
@@ -56,13 +56,13 @@ public:
     typedef std::shared_ptr<local_stream_client_connection>     pointer_t;
 
                         local_stream_client_connection(
-                                  addr::unix const & address
+                                  addr::addr_unix const & address
                                 , bool blocking = false
                                 , bool close_on_exec = true);
     virtual             ~local_stream_client_connection() override;
 
     void                close();
-    addr::unix          get_address() const;
+    addr::addr_unix     get_address() const;
 
     // connection implementation
     //
@@ -75,7 +75,7 @@ public:
     virtual ssize_t     write(void const * buf, size_t size);
 
 private:
-    addr::unix          f_address = addr::unix();
+    addr::addr_unix     f_address = addr::addr_unix();
     snapdev::raii_fd_t  f_socket = snapdev::raii_fd_t();
 };
 

@@ -57,7 +57,7 @@ class unix_client
 public:
     typedef std::shared_ptr<unix_client>        pointer_t;
 
-                    unix_client(addr::unix const & address);
+                    unix_client(addr::addr_unix const & address);
 
     void            send_hello();
     void            msg_hi(ed::message & msg);
@@ -98,7 +98,7 @@ class unix_server
 public:
     typedef std::shared_ptr<unix_server>        pointer_t;
 
-                    unix_server(addr::unix const & address);
+                    unix_server(addr::addr_unix const & address);
                     ~unix_server();
 
     void            done();
@@ -120,7 +120,7 @@ private:
 
 
 
-unix_client::unix_client(addr::unix const & address)
+unix_client::unix_client(addr::addr_unix const & address)
     : local_stream_client_permanent_message_connection(address)
     , f_dispatcher(std::make_shared<ed::dispatcher>(this))
 {
@@ -219,7 +219,7 @@ void unix_server_client::process_hup()
 
 
 
-unix_server::unix_server(addr::unix const & address)
+unix_server::unix_server(addr::addr_unix const & address)
     : local_stream_server_connection(address)
 {
 }
@@ -264,11 +264,11 @@ CATCH_TEST_CASE("local_stream_messaging", "[local-stream]")
 
         std::string name("test-unix-stream");
         unlink(name.c_str());
-        addr::unix server_address(name);
+        addr::addr_unix server_address(name);
         unix_server::pointer_t server(std::make_shared<unix_server>(server_address));
         communicator->add_connection(server);
 
-        addr::unix client_address(name);
+        addr::addr_unix client_address(name);
         unix_client::pointer_t client(std::make_shared<unix_client>(client_address));
         communicator->add_connection(client);
 

@@ -40,7 +40,7 @@
 
 // libaddr
 //
-#include    <libaddr/unix.h>
+#include    <libaddr/addr_unix.h>
 
 
 
@@ -56,13 +56,13 @@ public:
     typedef std::shared_ptr<local_stream_server_connection>     pointer_t;
 
                         local_stream_server_connection(
-                                  addr::unix const & address
+                                  addr::addr_unix const & address
                                 , int max_connections = MAX_CONNECTIONS
                                 , bool force_reuse_addr = false
                                 , bool close_on_exec = true);
     virtual             ~local_stream_server_connection();
 
-    addr::unix          get_addr() const;
+    addr::addr_unix     get_addr() const;
     int                 get_max_connections() const;
     snapdev::raii_fd_t  accept();
     bool                get_close_on_exec() const;
@@ -74,7 +74,7 @@ public:
     virtual int         get_socket() const override;
 
 private:
-    addr::unix          f_address = addr::unix();
+    addr::addr_unix          f_address = addr::addr_unix();
     int                 f_max_connections = MAX_CONNECTIONS;
     snapdev::raii_fd_t  f_socket = snapdev::raii_fd_t();
     int                 f_accepted_socket = -1;

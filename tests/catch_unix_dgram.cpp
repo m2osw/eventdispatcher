@@ -64,10 +64,9 @@ class unix_dgram_client
 public:
     typedef std::shared_ptr<unix_dgram_client>        pointer_t;
 
-                    unix_dgram_client(
-                              addr::unix const & address);
+                    unix_dgram_client(addr::addr_unix const & address);
 
-    void            set_server_address(addr::unix const & server_address);
+    void            set_server_address(addr::addr_unix const & server_address);
 
     void            send_hello();
     void            msg_hi(ed::message & msg);
@@ -76,7 +75,7 @@ public:
 private:
     ed::dispatcher::pointer_t
                     f_dispatcher = ed::dispatcher::pointer_t();
-    addr::unix      f_server_address = addr::unix();
+    addr::addr_unix f_server_address = addr::addr_unix();
 };
 
 
@@ -88,10 +87,10 @@ class unix_dgram_server
 public:
     typedef std::shared_ptr<unix_dgram_server>        pointer_t;
 
-                    unix_dgram_server(addr::unix const & address);
+                    unix_dgram_server(addr::addr_unix const & address);
                     ~unix_dgram_server();
 
-    void            set_client_address(addr::unix const & server_address);
+    void            set_client_address(addr::addr_unix const & server_address);
     void            done();
 
     void            msg_hello(ed::message & msg);
@@ -105,7 +104,7 @@ public:
 private:
     ed::dispatcher::pointer_t
                     f_dispatcher = ed::dispatcher::pointer_t();
-    addr::unix      f_client_address = addr::unix();
+    addr::addr_unix f_client_address = addr::addr_unix();
 };
 
 
@@ -118,7 +117,7 @@ private:
 
 
 
-unix_dgram_client::unix_dgram_client(addr::unix const & address)
+unix_dgram_client::unix_dgram_client(addr::addr_unix const & address)
     : local_dgram_server_message_connection(
               address
             , false
@@ -141,7 +140,7 @@ unix_dgram_client::unix_dgram_client(addr::unix const & address)
 }
 
 
-void unix_dgram_client::set_server_address(addr::unix const & server_address)
+void unix_dgram_client::set_server_address(addr::addr_unix const & server_address)
 {
     f_server_address = server_address;
 }
@@ -190,7 +189,7 @@ void unix_dgram_client::msg_reply_with_unknown(ed::message & msg)
 
 
 
-unix_dgram_server::unix_dgram_server(addr::unix const & address)
+unix_dgram_server::unix_dgram_server(addr::addr_unix const & address)
     : local_dgram_server_message_connection(
               address
             , false
@@ -219,7 +218,7 @@ unix_dgram_server::~unix_dgram_server()
 }
 
 
-void unix_dgram_server::set_client_address(addr::unix const & server_address)
+void unix_dgram_server::set_client_address(addr::addr_unix const & server_address)
 {
     f_client_address = server_address;
 }
@@ -272,11 +271,11 @@ CATCH_TEST_CASE("local_dgram_messaging", "[local-dgram]")
 
         std::string server_name("test-unix-dgram-server");
         unlink(server_name.c_str());
-        addr::unix server_address(server_name);
+        addr::addr_unix server_address(server_name);
 
         std::string client_name("test-unix-dgram-client");
         unlink(client_name.c_str());
-        addr::unix client_address(client_name);
+        addr::addr_unix client_address(client_name);
 
         unix_dgram_server::pointer_t server(std::make_shared<unix_dgram_server>(server_address));
         server->set_client_address(client_address);

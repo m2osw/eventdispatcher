@@ -80,7 +80,7 @@ namespace ed
  * \param[in] close_on_exec  Whether the socket has to be closed on execve().
  */
 local_dgram_base::local_dgram_base(
-              addr::unix const & address
+              addr::addr_unix const & address
             , bool sequential
             , bool close_on_exec)
     : f_address(address)
@@ -216,7 +216,7 @@ int local_dgram_base::get_mss_size() const
  *
  * \return A string with a copy of the constructor input address.
  */
-addr::unix local_dgram_base::get_address() const
+addr::addr_unix local_dgram_base::get_address() const
 {
     return f_address;
 }

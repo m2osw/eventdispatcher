@@ -49,11 +49,11 @@ public:
     static size_t const         DATAGRAM_MAX_SIZE = 64 * 1024;
 
                                 local_dgram_server_message_connection(
-                                          addr::unix const & address
+                                          addr::addr_unix const & address
                                         , bool sequential
                                         , bool close_on_exec
                                         , bool force_reuse_addr
-                                        , addr::unix const & client_address = addr::unix()
+                                        , addr::addr_unix const & client_address = addr::addr_unix()
                                         , std::string const & service_name = std::string());
 
     bool                        send_message(
@@ -61,7 +61,7 @@ public:
                                         , std::string const & secret_code = std::string());
 
     static bool                 send_message(
-                                          addr::unix const & address
+                                          addr::addr_unix const & address
                                         , message & msg
                                         , std::string const & secret_code = std::string());
 

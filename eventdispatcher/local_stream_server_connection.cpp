@@ -105,7 +105,7 @@ namespace ed
  * on an execve().
  */
 local_stream_server_connection::local_stream_server_connection(
-              addr::unix const & address
+              addr::addr_unix const & address
             , int max_connections
             , bool force_reuse_addr
             , bool close_on_exec)
@@ -421,7 +421,7 @@ void local_stream_server_connection::set_close_on_exec(bool yes)
  *
  * \return The server IP address.
  */
-addr::unix local_stream_server_connection::get_addr() const
+addr::addr_unix local_stream_server_connection::get_addr() const
 {
     return f_address;
 }

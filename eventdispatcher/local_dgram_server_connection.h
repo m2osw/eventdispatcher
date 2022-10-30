@@ -44,7 +44,7 @@ public:
     typedef std::shared_ptr<local_dgram_server_connection>    pointer_t;
 
                                 local_dgram_server_connection(
-                                          addr::unix const & address
+                                          addr::addr_unix const & address
                                         , bool sequential
                                         , bool close_on_exec
                                         , bool force_reuse_addr);

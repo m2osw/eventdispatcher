@@ -27,12 +27,22 @@
 ##
 project(eventdispatcher_qt)
 
-set(HEADERS
-    qt_connection.h
-)
+
+# Super ugly hack!
+#
+# For some reason when we find_package() of Qt5X11Extras, it insists on
+# using the CXX11 standard compile options. Here I force it to empty so
+# it has no side effects with all our own set of flags
+#
+set(CMAKE_CXX11_STANDARD_COMPILE_OPTION "")
+
+
+find_package(Qt5Core      REQUIRED)
+find_package(Qt5Widgets   REQUIRED)
+find_package(Qt5X11Extras REQUIRED)
+
 
 add_library(${PROJECT_NAME} SHARED
-    ${HEADERS}
     qt_connection.cpp                    # qt connection extension
 )
 
@@ -44,14 +54,13 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
+    eventdispatcher
     ${LIBEXCEPT_LIBRARIES}
     ${LIBUTF8_LIBRARIES}
-    ${QT_LIBRARIES}
-    Qt5::X11Extras
-    eventdispatcher
+    ${Qt5X11Extras_LIBRARIES}
 )
 
-set_target_properties( ${PROJECT_NAME} PROPERTIES
+set_target_properties(${PROJECT_NAME} PROPERTIES
     VERSION
         ${EVENTDISPATCHER_VERSION_MAJOR}.${EVENTDISPATCHER_VERSION_MINOR}
 

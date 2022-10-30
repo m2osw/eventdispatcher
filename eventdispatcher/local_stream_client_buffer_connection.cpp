@@ -65,7 +65,7 @@ namespace ed
  * closed on an execve().
  */
 local_stream_client_buffer_connection::local_stream_client_buffer_connection(
-              addr::unix const & address
+              addr::addr_unix const & address
             , bool const blocking
             , bool const close_on_exec)
     : local_stream_client_connection(address, blocking, close_on_exec)

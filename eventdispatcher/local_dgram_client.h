@@ -42,7 +42,7 @@ public:
     typedef std::shared_ptr<local_dgram_client>     pointer_t;
 
                         local_dgram_client(
-                                  addr::unix const & address
+                                  addr::addr_unix const & address
                                 , bool sequential = false
                                 , bool close_on_exec = true);
 

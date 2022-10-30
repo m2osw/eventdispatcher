@@ -1626,7 +1626,7 @@ void message::add_parameter(
  */
 void message::add_parameter(
       std::string const & name
-    , addr::unix const & value)
+    , addr::addr_unix const & value)
 {
     verify_message_name(name);
 

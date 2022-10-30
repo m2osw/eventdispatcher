@@ -64,7 +64,7 @@ namespace ed
  * \param[in] close_on_exec  Whether the socket has to be closed on exec.
  */
 local_dgram_client::local_dgram_client(
-              addr::unix const & address
+              addr::addr_unix const & address
             , bool sequential
             , bool close_on_exec)
     : local_dgram_base(address, sequential, close_on_exec)

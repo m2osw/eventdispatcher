@@ -76,7 +76,7 @@ namespace ed
  * \param[in] close_on_exec  Whether to close this socket on an execve() call.
  */
 local_stream_client_connection::local_stream_client_connection(
-              addr::unix const & address
+              addr::addr_unix const & address
             , bool const blocking
             , bool const close_on_exec)
     : f_address(address)
@@ -193,7 +193,7 @@ void local_stream_client_connection::close()
  *
  * \return The Unix address.
  */
-addr::unix local_stream_client_connection::get_address() const
+addr::addr_unix local_stream_client_connection::get_address() const
 {
     return f_address;
 }

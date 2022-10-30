@@ -55,7 +55,7 @@ namespace ed
  * a file socket if it exists.
  */
 local_dgram_server_connection::local_dgram_server_connection(
-              addr::unix const & address
+              addr::addr_unix const & address
             , bool sequential
             , bool close_on_exec
             , bool force_reuse_addr)

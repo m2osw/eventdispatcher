@@ -101,7 +101,7 @@ namespace ed
  * \param[in] close_on_exec  Whether the socket has to be closed on execve().
  */
 local_dgram_server::local_dgram_server(
-              addr::unix const & address
+              addr::addr_unix const & address
             , bool sequential
             , bool close_on_exec
             , bool force_reuse_addr)

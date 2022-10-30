@@ -32,7 +32,7 @@
 // libaddr
 //
 #include    <libaddr/addr.h>
-#include    <libaddr/unix.h>
+#include    <libaddr/addr_unix.h>
 
 
 
@@ -94,7 +94,7 @@ public:
     void                    add_parameter(std::string const & name, std::int64_t value);
     void                    add_parameter(std::string const & name, std::uint64_t value);
     void                    add_parameter(std::string const & name, addr::addr const & value, bool mask = false);
-    void                    add_parameter(std::string const & name, addr::unix const & value);
+    void                    add_parameter(std::string const & name, addr::addr_unix const & value);
     bool                    has_parameter(std::string const & name) const;
     std::string             get_parameter(std::string const & name) const;
     std::int64_t            get_integer_parameter(std::string const & name) const;

@@ -40,7 +40,7 @@ class local_stream_blocking_client_message_connection
 {
 public:
                                 local_stream_blocking_client_message_connection(
-                                          addr::unix const & address
+                                          addr::addr_unix const & address
                                         , bool const blocking = false
                                         , bool const close_on_exec = true);
 

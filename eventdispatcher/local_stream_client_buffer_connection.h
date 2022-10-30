@@ -43,7 +43,7 @@ public:
     typedef std::shared_ptr<local_stream_client_buffer_connection>    pointer_t;
 
                                 local_stream_client_buffer_connection(
-                                          addr::unix const & address
+                                          addr::addr_unix const & address
                                         , bool const blocking = false
                                         , bool const close_on_exec = true);
 

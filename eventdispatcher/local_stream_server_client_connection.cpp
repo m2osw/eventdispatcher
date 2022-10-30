@@ -186,7 +186,7 @@ void local_stream_server_client_connection::close()
  *
  * \return The Unix address this client is connected to.
  */
-addr::unix local_stream_server_client_connection::get_client_address() const
+addr::addr_unix local_stream_server_client_connection::get_client_address() const
 {
     // make sure the address is defined and the socket open
     //
