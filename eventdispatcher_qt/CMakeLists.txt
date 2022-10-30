@@ -28,14 +28,6 @@
 project(eventdispatcher_qt)
 
 
-# Super ugly hack!
-#
-# For some reason when we find_package() of Qt5X11Extras, it insists on
-# using the CXX11 standard compile options. Here I force it to empty so
-# it has no side effects with all our own set of flags
-#
-set(CMAKE_CXX11_STANDARD_COMPILE_OPTION "")
-
 
 find_package(Qt5Core      REQUIRED)
 find_package(Qt5Widgets   REQUIRED)
