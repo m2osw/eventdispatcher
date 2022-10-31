@@ -1,3 +1,18 @@
+eventdispatcher (1.1.53.0~bionic) bionic; urgency=high
+
+  * Renamed the addr::unix to addr::addr_unix.
+  * Allow for proper saving the service name to local and UDP connections.
+  * Prevent msg_log_unknown() from crashing if "command" is undefined.
+  * Added a missing reply_to() call.
+  * Redesigned the dispatcher as a plain class instead of a dispatcher.
+  * Added more debug support.
+  * Applied a fix to is_running() fixing the ed-stop tool.
+  * Prevent index 0 for a signal. Signal 0 is not valid.
+  * Added support for timespec_ex for the timeout feature.
+  * Various clean ups.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Mon, 31 Oct 2022 12:18:49 -0700
+
 eventdispatcher (1.1.52.0~bionic) bionic; urgency=high
 
   * Added a kludge for the BIO bug.

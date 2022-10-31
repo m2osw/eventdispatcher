@@ -187,7 +187,7 @@ dispatcher::dispatcher(ed::connection_with_send_message * c)
  * already defined there.
  *
  * The `HELP` response is automatically built from the f_matches.f_expr
- * strings. However, if any one function used to match the message 
+ * strings. However, if any one function used to match the message
  * command is not one_to_one_match(), then that string doesn't get used.
  *
  * If the message makes use of a regular expression (i.e. the function is
