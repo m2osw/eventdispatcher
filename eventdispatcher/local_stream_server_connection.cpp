@@ -238,10 +238,53 @@ local_stream_server_connection::local_stream_server_connection(
                 throw runtime_error("could not unlink socket to reuse it as an AF_UNIX server");
             }
         }
+
+#ifdef __linux__
+        // before the bind() restrict the permissions as much as possible
+        // for security reasons (only available under Linux apparently)
+        //
+        if(fchmod(f_socket.get(), S_IRUSR | S_IWUSR) != 0)
+        {
+            int const e(errno);
+            SNAP_LOG_ERROR
+                << "fchmod() failed changing permissions before bind() (errno: "
+                << e
+                << " -- "
+                << strerror(e)
+                << ") on socket with address \""
+                << f_address.to_uri()
+                << "\"."
+                << SNAP_LOG_SEND;
+            throw runtime_error("could not change socket permissions.");
+        }
+#endif
+
         r = bind(
                   f_socket.get()
                 , reinterpret_cast<sockaddr const *>(&un)
                 , sizeof(struct sockaddr_un));
+
+        // after the bind() we can then set the full permissions the way the
+        // user wants them to be (also bind() applies the umask() so doing
+        // that with the fchmod() above is likely to fail in many cases).
+        //
+        // note: we know that the path in un.snn_path is null terminated.
+        //
+        if(r == 0
+        && chmod(un.sun_path, f_address.get_mode()) != 0)
+        {
+            int const e(errno);
+            SNAP_LOG_ERROR
+                << "chmod() failed changing permissions after bind() (errno: "
+                << e
+                << " -- "
+                << strerror(e)
+                << ") on socket with address \""
+                << f_address.to_uri()
+                << "\"."
+                << SNAP_LOG_SEND;
+            throw runtime_error("could not change socket permissions.");
+        }
     }
     else
     {

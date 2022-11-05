@@ -16,6 +16,14 @@
   one entry (which is acceptable if using a regex... so we need to be careful
   here--in this case, it may just be a warning)
 
+* Local sockets represented by files can use permissions to control the
+  security (under Linux). Right now, I use 0666 in the communicatord in
+  order to let people connect to the service. I would like to instead
+  make use of a specific group (i.e. something like "communicator-user")
+  and make sure that users of the communicatord are part of that group.
+  Here we would need to support changing the group of the socket and
+  then set the permissions accordingly (i.e. 0660 instead of 0666).
+
 * A service to track changes to the list of opened/closed network connections
   (I already have code to do that, but I never spent any time on implementing
   anything in link with it. It should track the changes to the /proc/... file

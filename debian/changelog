@@ -1,8 +1,9 @@
 eventdispatcher (1.1.54.0~bionic) bionic; urgency=high
 
-  * Fixed a sentence.
+  * Fixed permissions on local file-based sockets.
+  * Added a TODO about adding local socket permissions based on a group.
 
- -- Alexis Wilke <alexis@m2osw.com>  Fri, 04 Nov 2022 20:49:04 -0700
+ -- Alexis Wilke <alexis@m2osw.com>  Sat, 05 Nov 2022 09:05:17 -0700
 
 eventdispatcher (1.1.53.0~bionic) bionic; urgency=high
 

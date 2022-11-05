@@ -31,6 +31,11 @@
 #include    "eventdispatcher/exception.h"
 
 
+// C
+//
+#include    <sys/stat.h>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -99,6 +104,10 @@ local_dgram_base::local_dgram_base(
             + f_address.to_uri()
             + "\".");
     }
+
+    // on Linux we can restrict the permissions immediately
+    //
+    fchmod(f_socket.get(), S_IRUSR | S_IWUSR);
 
     // get the "MTU" maximum size right away for
     //   (1) it is really fast; and

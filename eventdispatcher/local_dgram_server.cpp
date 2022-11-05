@@ -143,7 +143,7 @@ local_dgram_server::local_dgram_server(
                     << f_address.to_uri()
                     << "\"."
                     << SNAP_LOG_SEND;
-                throw runtime_error("file already exists and it is not a socket, can't create an AF_UNIX server");
+                throw runtime_error("file already exists and it is not a socket, can't create an AF_UNIX server.");
             }
 
             if(!force_reuse_addr)
@@ -159,7 +159,7 @@ local_dgram_server::local_dgram_server(
                     << f_address.to_uri()
                     << "\"."
                     << SNAP_LOG_SEND;
-                throw runtime_error("socket already exists, can't create an AF_UNIX server");
+                throw runtime_error("socket already exists, can't create an AF_UNIX server.");
             }
 
             r = f_address.unlink();
@@ -177,13 +177,35 @@ local_dgram_server::local_dgram_server(
                     << f_address.to_uri()
                     << "\"."
                     << SNAP_LOG_SEND;
-                throw runtime_error("could not unlink socket to reuse it as an AF_UNIX server");
+                throw runtime_error("could not unlink socket to reuse it as an AF_UNIX server.");
             }
         }
         r = bind(
                   f_socket.get()
                 , reinterpret_cast<sockaddr const *>(&un)
                 , sizeof(struct sockaddr_un));
+
+        // after the bind() we can then set the full permissions the way the
+        // user wants them to be (also bind() applies the umask() so doing
+        // that with the fchmod() above is likely to fail in many cases).
+        //
+        // note: we know that the path in un.snn_path is null terminated.
+        //
+        if(r == 0
+        && chmod(un.sun_path, f_address.get_mode()) != 0)
+        {
+            int const e(errno);
+            SNAP_LOG_ERROR
+                << "chmod() failed changing permissions after bind() (errno: "
+                << e
+                << " -- "
+                << strerror(e)
+                << ") on socket with address \""
+                << f_address.to_uri()
+                << "\"."
+                << SNAP_LOG_SEND;
+            throw runtime_error("could not change socket permissions.");
+        }
     }
     else
     {
