@@ -8,7 +8,7 @@ in the eventdispatcher project.
 
 # Snap! Logger
 
-The Snap! Logger project is a tool used to manage logs. The base
+The Snap! Logger project is a project used to manage logs. The base
 implementation sends the logs to files, your console, and the syslog
 facility.
 
@@ -19,23 +19,18 @@ can be used to send the data to a log server on another computer.
 _**Note:** if you use syslog already, you can also setup syslog to share
 the logs between multiple computers. This will not include all the
 capabilities offered by our server, but you'll get logs from all
-your services (not just Snap! based service)._
+your services (not just Snap! based services)._
 
 # Daemon Appender
 
 The project comes with two sides:
 
 * A new appender which receives the logs and sends them to the snaploggerd
-  server via either TCP or UDP messages.
+  server via either TCP or UDP messages. This is a plugin which the base
+  snaplogger library automatically loads.
 * A daemon which you can use to receive those TCP and UDP messages.
 
 The following is about the appenders which you link in your projects.
-
-_**Note:** The appender library has to be linked to your project to be
-available to your users. At some point, we will port the libsnapwebsites
-dynamic loader will be used for appenders so these can be added to a
-directory and the base library can automatically pick them up from that
-directory._
 
 ## Options
 

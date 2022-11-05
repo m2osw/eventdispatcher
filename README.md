@@ -15,8 +15,8 @@ timers, etc.)
 
 It was first part of our libsnapwebsites as:
 
-* `snap_communictor.cpp/.h`
-* `snap_communictor_dispatcher.cpp/.h`
+* `snap_communicator.cpp/.h`
+* `snap_communicator_dispatcher.cpp/.h`
 * `tcp_client_server.cpp/.h`
 * `udp_client_server.cpp/.h`
 

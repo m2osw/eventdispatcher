@@ -36,7 +36,12 @@
 #include    "eventdispatcher/exception.h"
 
 
-// snapwebsites
+// snapdev
+//
+#include    <snapdev/chownnm.h>
+
+
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
@@ -184,6 +189,27 @@ local_dgram_server::local_dgram_server(
                   f_socket.get()
                 , reinterpret_cast<sockaddr const *>(&un)
                 , sizeof(struct sockaddr_un));
+
+        std::string const group(f_address.get_group());
+        if(!group.empty())
+        {
+            if(snapdev::chownnm(un.sun_path, std::string(), group) != 0)
+            {
+                int const e(errno);
+                SNAP_LOG_ERROR
+                    << "not able to change group ownership of socket file \""
+                    << un.sun_path
+                    << "\" (errno: "
+                    << e
+                    << " -- "
+                    << strerror(e)
+                    << "); cannot listen on address \""
+                    << f_address.to_uri()
+                    << "\"."
+                    << SNAP_LOG_SEND;
+                throw runtime_error("could not change group ownership on socket file.");
+            }
+        }
 
         // after the bind() we can then set the full permissions the way the
         // user wants them to be (also bind() applies the umask() so doing
