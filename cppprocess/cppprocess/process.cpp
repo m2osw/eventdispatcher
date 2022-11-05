@@ -1656,7 +1656,7 @@ void process::prepare_output()
     case 0:
         // no piping to another process:
         //   1. use the user output if defined (f_output)
-        //   2. otherwise fallback on the use stdout
+        //   2. otherwise fallback to using stdout
         //
         if(f_output != nullptr)
         {
