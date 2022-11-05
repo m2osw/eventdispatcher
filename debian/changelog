@@ -1,3 +1,9 @@
+eventdispatcher (1.1.54.1~bionic) bionic; urgency=high
+
+  * Bump version to try again with the new libaddr library.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sat, 05 Nov 2022 10:34:59 -0700
+
 eventdispatcher (1.1.54.0~bionic) bionic; urgency=high
 
   * Fixed permissions on local file-based sockets.
