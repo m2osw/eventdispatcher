@@ -25,16 +25,16 @@
 #include    "cppprocess/exception.h"
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/glob_to_list.h>
 #include    <snapdev/join_strings.h>
@@ -42,7 +42,7 @@
 #include    <snapdev/not_reached.h>
 
 
-// C lib
+// C
 //
 #include    <fcntl.h>
 #include    <string.h>
@@ -547,7 +547,7 @@ bool process::get_forced_environment() const
  * the current directory, you must assign a working directory before
  * calling the start() command.
  *
- * The directory must exist or the command will fail to start.
+ * The directory must exist or the command fails to start.
  *
  * \param[in] directory  The directory in this command will run.
  *
