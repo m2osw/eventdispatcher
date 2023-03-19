@@ -25,9 +25,20 @@
   then set the permissions accordingly (i.e. 0660 instead of 0666).
 
 * A service to track changes to the list of opened/closed network connections
-  (I already have code to do that, but I never spent any time on implementing
-  anything in link with it. It should track the changes to the /proc/... file
-  and report these through some mechanism similar to the file_change system).
+
+  My existing code does not work properly, we can determine what is opened
+  and closed, but we do not get events when the state changes... I got a
+  message about it on Stackoverflow and a link to here:
+
+      https://github.com/sivasankariit/iproute2/blob/master/misc/ss.c
+      https://stackoverflow.com/questions/68425240/can-the-netlink-sock-diag-interface-be-used-to-listen-for-listen-and-close?noredirect=1#comment132999023_68425240
+
+  which may be useful to further out the existing code and make it work.
+
+  One way may be to list for file changes under /proc/... as it may have the
+  effect we want (i.e. whenever a new file is created there, such as a UDP
+  connection, then we would receive a message and can tranform that in a
+  signal about new/removed TCP/UDP/... connections (see file_change).
 
 * Finish the snaplogger network appender extension (mainly testing now).
 
@@ -60,7 +71,7 @@
   a POLLOUT event once the socket is connected; this can be useful in some
   situations, many times it's probably not that necessary, except that has
   been a bottleneck in the permanent TCP connection implementation and is
-  why I create a thread for the connect to happen in parallel... that would
+  why we use a thread for the connect to happen in parallel... that would
   not be required anymore (but it adds a new state "in-limbo while
   connecting").
 
@@ -165,7 +176,7 @@
             typename BaseConnectionT
           , typename EventHandlerT>
       class buffering
-          : public connection<BaseConnectionT>
+          : public connection<BaseConnectionT, EventHandlerT>
       {
       };
 
@@ -173,7 +184,7 @@
             typename BaseConnectionT
           , typename EventHandlerT>
       class messenger
-          : public buffering<BaseConnectionT>
+          : public buffering<BaseConnectionT, EventHandlerT>
       {
       };
 
