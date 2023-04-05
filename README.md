@@ -289,6 +289,15 @@ having to wait for an answer.
 
     ed-signal --server 127.0.0.1
 
+You may specify the message with the `--message <command>` option.
+
+The server can be specified as a filename and a variable name in which case
+the tool reads that file as a configuration file and looks for the named
+variable. It takes as as a IP address and an optional port to be used to
+send the message to that specific service. For example:
+
+    ... --server /etc/fluid-settings/fluid-settings.conf@listen ...
+
 
 # Missing Features
 

@@ -48,6 +48,7 @@
 
 // advgetopt
 //
+#include    <advgetopt/conf_file.h>
 #include    <advgetopt/exception.h>
 
 
@@ -327,12 +328,37 @@ int ed_signal::run()
         }
         else if(type != "udp")
         {
-            throw std::runtime_error("unrecognized connection type: \"" + type + "\", we support \"tcp\" and \"udp\"");
+            throw std::runtime_error(
+                  "unrecognized connection type: \""
+                + type
+                + "\", we support \"tcp\" and \"udp\"");
         }
     }
 
+    std::string s(f_opts.get_string("server"));
+    std::string::size_type const pos(s.find('@'));
+    if(pos != std::string::npos)
+    {
+        // the user specified a filename & variable instead of direct IP:port
+        //
+        std::string const filename(s.substr(0, pos));
+        std::string const variable_name(s.substr(pos + 1));
+        advgetopt::conf_file_setup file_setup(filename);
+        advgetopt::conf_file::pointer_t settings(advgetopt::conf_file::get_conf_file(file_setup));
+        if(!settings->has_parameter(variable_name))
+        {
+            throw std::runtime_error(
+                  "variable \""
+                + variable_name
+                + "\" not found in \""
+                + filename
+                + "\".");
+        }
+        s = settings->get_parameter(variable_name);
+    }
+
     addr::addr const server(addr::string_to_addr(
-          f_opts.get_string("server")
+          s
         , "127.0.0.1"
         , DEFAULT_PORT
         , use_tcp ? "tcp" : "udp"));
