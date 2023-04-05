@@ -46,7 +46,7 @@
 #include    <libaddr/addr_parser.h>
 
 
-// getopt
+// advgetopt
 //
 #include    <advgetopt/exception.h>
 
@@ -54,11 +54,7 @@
 // snapdev
 //
 #include    <snapdev/not_reached.h>
-
-
-// boost
-//
-#include    <boost/preprocessor/stringize.hpp>
+#include    <snapdev/stringize.h>
 
 
 // last include
@@ -178,7 +174,7 @@ advgetopt::options_environment const g_options_environment =
     .f_version = EVENTDISPATCHER_VERSION_STRING,
     .f_license = "GNU GPL v2 or newer",
     .f_copyright = "Copyright (c) 2012-"
-                   BOOST_PP_STRINGIZE(UTC_BUILD_YEAR)
+                   SNAPDEV_STRINGIZE(UTC_BUILD_YEAR)
                    " by Made to Order Software Corporation -- All Rights Reserved",
     .f_build_date = UTC_BUILD_DATE,
     .f_build_time = UTC_BUILD_TIME,

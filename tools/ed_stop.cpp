@@ -33,9 +33,9 @@
 #include    <advgetopt/exception.h>
 
 
-// boost
+// snapdev
 //
-#include    <boost/preprocessor/stringize.hpp>
+#include    <snapdev/stringize.h>
 
 
 // C++
@@ -129,7 +129,7 @@ advgetopt::options_environment const g_snapstop_options_environment =
     .f_version = EVENTDISPATCHER_VERSION_STRING,
     .f_license = "GNU GPL v2 or newer",
     .f_copyright = "Copyright (c) 2011-"
-                   BOOST_PP_STRINGIZE(UTC_BUILD_YEAR)
+                   SNAPDEV_STRINGIZE(UTC_BUILD_YEAR)
                    " by Made to Order Software Corporation -- All Rights Reserved",
     .f_build_date = UTC_BUILD_DATE,
     .f_build_time = UTC_BUILD_TIME,

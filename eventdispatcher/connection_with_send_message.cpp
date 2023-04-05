@@ -44,11 +44,7 @@
 // snapdev
 //
 #include    <snapdev/not_used.h>
-
-
-// boost
-//
-#include    <boost/algorithm/string/join.hpp>
+#include    <snapdev/join_strings.h>
 
 
 // C
@@ -233,7 +229,7 @@ void connection_with_send_message::msg_help(message & msg)
     reply.user_data(msg.user_data<void>());
     reply.reply_to(msg);
     reply.set_command("COMMANDS");
-    reply.add_parameter("list", boost::algorithm::join(commands, ","));
+    reply.add_parameter("list", snapdev::join_strings(commands, ","));
     if(!send_message(reply, false))
     {
         SNAP_LOG_WARNING

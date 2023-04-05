@@ -35,9 +35,9 @@
 #include    <snaplogger/message.h>
 
 
-// boost
+// snapdev
 //
-#include    <boost/preprocessor/stringize.hpp>
+#include    <snapdev/stringize.h>
 
 
 // last include
@@ -209,7 +209,8 @@ bool local_dgram_server_message_connection::send_message(
                   "message too large ("
                 + std::to_string(buf.length())
                 + " bytes) for a Unix socket (max: "
-                  BOOST_PP_STRINGIZE(DATAGRAM_MAX_SIZE));
+                  SNAPDEV_STRINGIZE(DATAGRAM_MAX_SIZE)
+                  ")");
     }
 
     local_dgram_client client(address);
@@ -266,7 +267,7 @@ bool local_dgram_server_message_connection::send_message(
                   "message too large ("
                 + std::to_string(buf.length())
                 + " bytes) for a UDP server (max: "
-                  BOOST_PP_STRINGIZE(DATAGRAM_MAX_SIZE)
+                  SNAPDEV_STRINGIZE(DATAGRAM_MAX_SIZE)
                   ")");
     }
 

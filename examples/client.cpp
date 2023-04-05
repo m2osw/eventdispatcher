@@ -39,9 +39,9 @@
 #include    <snaplogger/message.h>
 
 
-// boost
+// snapdev
 //
-#include    <boost/preprocessor/stringize.hpp>
+#include    <snapdev/stringize.h>
 
 
 // last include
@@ -173,7 +173,7 @@ advgetopt::options_environment const g_options_environment =
     .f_help_footer = "%c",
     .f_version = EVENTDISPATCHER_VERSION_STRING,
     .f_license = nullptr,
-    .f_copyright = "Copyright (c) 2021-" BOOST_PP_STRINGIZE(UTC_BUILD_YEAR) "  Virtual Entertainment",
+    .f_copyright = "Copyright (c) 2021-" SNAPDEV_STRINGIZE(UTC_BUILD_YEAR) "  Virtual Entertainment",
     .f_build_date = UTC_BUILD_DATE,
     .f_build_time = UTC_BUILD_TIME,
     .f_groups = g_group_descriptions
