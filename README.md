@@ -298,6 +298,9 @@ send the message to that specific service. For example:
 
     ... --server /etc/fluid-settings/fluid-settings.conf@listen ...
 
+Note: It would be cool to gather the information from the service name,
+      which the communicatord knows about (under `/usr/share/communicatord`).
+      Only the communicatord depends on the eventdispatcher.
 
 # Missing Features
 
