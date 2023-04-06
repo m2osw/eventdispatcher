@@ -168,17 +168,20 @@ void file_changed::watch_t::merge_watch(int inotify, event_mask_t const events)
     if(f_watch == -1)
     {
         int const e(errno);
-        SNAP_LOG_WARNING
-            << "inotify_raddwatch() returned an error (errno: "
-            << e
-            << " -- "
-            << strerror(e)
-            << ")."
+        std::stringstream ss;
+        ss << "inotify_add_watch() returned an error (errno: "
+           << e
+           << " -- "
+           << strerror(e)
+           << ").";
+        initialization_error err(ss.str());
+        SNAP_LOG_FATAL
+            << err
             << SNAP_LOG_SEND;
 
         // it did not work
         //
-        throw initialization_error("inotify_add_watch() failed");
+        throw err;
     }
 }
 
@@ -422,7 +425,7 @@ void file_changed::process_read()
                 throw unexpected_data("somehow the size of this ievent does not match what we just read.");
             }
 
-            // convert the inotify even in one of our events
+            // convert the inotify event in one of our events
             //
             auto const & wevent(f_watches.find(ievent.wd));
             if(wevent != f_watches.end())
