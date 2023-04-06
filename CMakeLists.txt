@@ -22,7 +22,6 @@ cmake_minimum_required(VERSION 3.10.2)
 project(eventdispatcher_project)
 
 find_package(AdvGetOpt        REQUIRED)
-find_package(Boost            REQUIRED)
 find_package(CppThread        REQUIRED)
 find_package(LibAddr          REQUIRED)
 find_package(LibExcept        REQUIRED)
