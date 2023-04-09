@@ -1,11 +1,11 @@
-// Copyright (c) 2012-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2012-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/eventdispatcher
 // contact@m2osw.com
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /** \file
  * \brief Implementation of the Snap Communicator class.
@@ -74,9 +73,20 @@ namespace ed
 {
 
 
-file_changed::event_t::event_t(std::string const & watched_path
-                                  , event_mask_t events
-                                  , std::string const & filename)
+namespace
+{
+
+
+constexpr char const * const    g_no_path = "/";
+
+
+} // no name namepsace
+
+
+file_event::file_event(
+          std::string const & watched_path
+        , file_event_mask_t events
+        , std::string const & filename)
     : f_watched_path(watched_path)
     , f_events(events)
     , f_filename(filename)
@@ -93,28 +103,34 @@ file_changed::event_t::event_t(std::string const & watched_path
 }
 
 
-std::string const & file_changed::event_t::get_watched_path() const
+std::string const & file_event::get_watched_path() const
 {
     return f_watched_path;
 }
 
 
-file_changed::event_mask_t file_changed::event_t::get_events() const
+file_event_mask_t file_event::get_events() const
 {
     return f_events;
 }
 
 
-std::string const & file_changed::event_t::get_filename() const
+std::string const & file_event::get_filename() const
 {
     return f_filename;
 }
 
 
-bool file_changed::event_t::operator < (event_t const & rhs) const
+bool file_event::operator < (file_event const & rhs) const
 {
     return f_watched_path < rhs.f_watched_path;
 }
+
+
+
+
+
+
 
 
 file_changed::watch_t::watch_t()
@@ -122,7 +138,10 @@ file_changed::watch_t::watch_t()
 }
 
 
-file_changed::watch_t::watch_t(std::string const & watched_path, event_mask_t events, uint32_t add_flags)
+file_changed::watch_t::watch_t(
+          std::string const & watched_path
+        , file_event_mask_t events
+        , uint32_t add_flags)
     : f_watched_path(watched_path)
     , f_events(events)
     , f_mask(events_to_mask(events) | add_flags | IN_EXCL_UNLINK)
@@ -136,7 +155,7 @@ void file_changed::watch_t::add_watch(int inotify)
     if(f_watch == -1)
     {
         int const e(errno);
-        SNAP_LOG_WARNING
+        SNAP_LOG_FATAL
             << "inotify_add_watch() returned an error (errno: "
             << e
             << " -- "
@@ -151,13 +170,18 @@ void file_changed::watch_t::add_watch(int inotify)
 }
 
 
-void file_changed::watch_t::merge_watch(int inotify, event_mask_t const events)
+void file_changed::watch_t::merge_watch(int inotify, file_event_mask_t const events)
 {
     f_mask |= events_to_mask(events);
 
     // The documentation is not 100% clear about an update so for now
     // I remove the existing watch and create a new one... it should
     // not happen very often anyway
+    //
+    // TODO: actually the docs clearly say that if it already exists, further
+    //       calls to the inotify_add_watch() update the watch -- also
+    //       deleting & recreating is not going to be atomic; anything that
+    //       happens in between will be lost
     //
     if(f_watch != -1)
     {
@@ -213,6 +237,10 @@ void file_changed::watch_t::remove_watch(int inotify)
 }
 
 
+
+
+
+
 file_changed::file_changed()
     : f_inotify(inotify_init1(IN_NONBLOCK | IN_CLOEXEC))
 {
@@ -242,12 +270,22 @@ file_changed::~file_changed()
 /** \brief Try to merge a new watch.
  *
  * If you attempt to watch the same path again, instead of adding a new watch,
- * we instead want to merge it. This is important because the system
- * does not generate a new watch when you do that.
+ * the new events get added to the existing instance. This is important
+ * because the operating system does not generate a new watch when you do that.
  *
  * In this case, the \p events parameter is viewed as parameters being
- * added to the watched. If you want to replace the previous watch instead,
- * make sure to first remove it, then re-add it with new flags as required.
+ * added to the existing watched. If you instead want to replace the
+ * previous watch, make sure to first remove it, then re-add it with
+ * new flags as required.
+ *
+ * \warning
+ * The current implementation is not atomic. If you change an existing
+ * watch in whichever way, there is a small period of time when the
+ * watch gets turned off. This means you may lose events.
+ *
+ * \warning
+ * The project is not thread safe. You have to make sure that watches
+ * get added by one thread at a time.
  *
  * \param[in] watched_path  The path the user wants to watch.
  * \param[in] events  The events being added to the watch.
@@ -255,8 +293,8 @@ file_changed::~file_changed()
  * \return true if the merge happened.
  */
 bool file_changed::merge_watch(
-          std::string const & watched_path
-        , event_mask_t const events)
+      std::string const & watched_path
+    , file_event_mask_t const events)
 {
     auto const & wevent(std::find_if(
               f_watches.begin()
@@ -278,7 +316,7 @@ bool file_changed::merge_watch(
 }
 
 
-void file_changed::watch_file(std::string const & watched_path, event_mask_t const events)
+void file_changed::watch_file(std::string const & watched_path, file_event_mask_t const events)
 {
     if(!merge_watch(watched_path, events))
     {
@@ -289,7 +327,7 @@ void file_changed::watch_file(std::string const & watched_path, event_mask_t con
 }
 
 
-void file_changed::watch_symlink(std::string const & watched_path, event_mask_t const events)
+void file_changed::watch_symlink(std::string const & watched_path, file_event_mask_t const events)
 {
     if(!merge_watch(watched_path, events))
     {
@@ -300,7 +338,7 @@ void file_changed::watch_symlink(std::string const & watched_path, event_mask_t 
 }
 
 
-void file_changed::watch_directory(std::string const & watched_path, event_mask_t const events)
+void file_changed::watch_directory(std::string const & watched_path, file_event_mask_t const events)
 {
     if(!merge_watch(watched_path, events))
     {
@@ -368,6 +406,10 @@ void file_changed::process_read()
 {
     // were notifications closed in between?
     //
+    // Note: at the moment the only close happens in the destructor so this
+    //       just can't happen; but I think that at some point it will on
+    //       some errors and then we have to test the fd like this
+    //
     if(f_inotify == -1)
     {
         return;
@@ -425,29 +467,72 @@ void file_changed::process_read()
                 throw unexpected_data("somehow the size of this ievent does not match what we just read.");
             }
 
-            // convert the inotify event in one of our events
+            // WARNING: the ievent.len is the total length including
+            //          the '\0' characters; so we cannot use it
+            //          to create the string in C++; however, if len
+            //          is 0, then we must pass an empty string which
+            //          the following implements
             //
-            auto const & wevent(f_watches.find(ievent.wd));
-            if(wevent != f_watches.end())
+            std::string filename;
+            if(ievent.len > 0)
             {
-                // XXX: we need to know whether this flag can appear with
-                //      others (i.e. could we at the same time have a message
-                //      saying there was a read and a queue overflow?); if
-                //      so, then we need to run the else part even on
-                //      overflows
+                filename = ievent.name;
+            }
+
+            if(ievent.wd == -1)
+            {
+                // an error occured, we need special handling
                 //
                 if((ievent.mask & IN_Q_OVERFLOW) != 0)
                 {
-                    SNAP_LOG_ERROR
+                    // the number of events in the queue is defined in:
+                    //
+                    //     /proc/sys/fs/inotify/max_queued_events
+                    //
+                    // (however, it may be the maximum size of the queue in
+                    // bytes rather than the number of events...)
+                    //
+                    SNAP_LOG_RECOVERABLE_ERROR
                         << "Received an event queue overflow error."
                         << SNAP_LOG_SEND;
+
+                    // on an overflow we need to verify all the files
+                    // "manually" for changes (like one would do on
+                    // startup) so the user needs to receive an event
+                    // about that
+                    //
+                    file_event const watch_event(
+                              g_no_path
+                            , SNAP_FILE_CHANGED_EVENT_LOST_SYNC
+                            , filename);
+                    process_event(watch_event);
                 }
                 else
                 {
-                    event_t const watch_event(wevent->second.f_watched_path
-                                            , mask_to_events(ievent.mask)
-                                            , std::string(ievent.name, ievent.len));
+                    SNAP_LOG_ERROR
+                        << "Received an unknown error on the queue."
+                        << SNAP_LOG_SEND;
 
+                    // we do not know about this error, emit a generic error
+                    // event to the user
+                    //
+                    file_event const watch_event(
+                              g_no_path
+                            , SNAP_FILE_CHANGED_EVENT_ERROR
+                            , filename);
+                    process_event(watch_event);
+                }
+            }
+            else
+            {
+                // convert the inotify event in one of our events
+                //
+                auto const & wevent(f_watches.find(ievent.wd));
+                if(wevent != f_watches.end())
+                {
+                    file_event const watch_event(wevent->second.f_watched_path
+                                            , mask_to_events(ievent.mask)
+                                            , filename);
                     process_event(watch_event);
 
                     // if the event received included IN_IGNORED then we need
@@ -463,18 +548,17 @@ void file_changed::process_read()
                         f_watches.erase(wevent);
                     }
                 }
+                else
+                {
+                    // we do not know about this notifier, close it
+                    // (this should never happen... unless we read the queue
+                    // for a watch that had more events and we had not read it
+                    // yet, in that case the watch was certainly already
+                    // removed by the user... it should not hurt to re-remove it.)
+                    //
+                    inotify_rm_watch(f_inotify, ievent.wd);
+                }
             }
-            else
-            {
-                // we do not know about this notifier, close it
-                // (this should never happen... unless we read the queue
-                // for a watch that had more events and we had not read it
-                // yet, in that case the watch was certainly already
-                // removed... it should not hurt to re-remove it.)
-                //
-                inotify_rm_watch(f_inotify, ievent.wd);
-            }
-
             // move the pointer to the next structure until we reach 'end'
             //
             start += sizeof(struct inotify_event) + ievent.len;
@@ -483,7 +567,7 @@ void file_changed::process_read()
 }
 
 
-uint32_t file_changed::events_to_mask(event_mask_t const events)
+uint32_t file_changed::events_to_mask(file_event_mask_t const events)
 {
     uint32_t mask(0);
 
@@ -517,6 +601,11 @@ uint32_t file_changed::events_to_mask(event_mask_t const events)
         mask |= IN_OPEN | IN_CLOSE_WRITE | IN_CLOSE_NOWRITE;
     }
 
+    if((events & SNAP_FILE_CHANGED_EVENT_UPDATED) != 0)
+    {
+        mask |= IN_CLOSE_WRITE;
+    }
+
     if(mask == 0)
     {
         throw initialization_error("invalid file_changed events parameter, it was not changed to any IN_... flags.");
@@ -526,9 +615,9 @@ uint32_t file_changed::events_to_mask(event_mask_t const events)
 }
 
 
-file_changed::event_mask_t file_changed::mask_to_events(uint32_t const mask)
+file_event_mask_t file_changed::mask_to_events(uint32_t const mask)
 {
-    event_mask_t events(0);
+    file_event_mask_t events(0);
 
     if((mask & IN_ATTRIB) != 0)
     {
@@ -558,6 +647,11 @@ file_changed::event_mask_t file_changed::mask_to_events(uint32_t const mask)
     if((mask & (IN_OPEN | IN_CLOSE_WRITE | IN_CLOSE_NOWRITE)) != 0)
     {
         events |= SNAP_FILE_CHANGED_EVENT_ACCESS;
+    }
+
+    if((mask & IN_CLOSE_WRITE) != 0)
+    {
+        events |= SNAP_FILE_CHANGED_EVENT_UPDATED;
     }
 
     // return flags only
