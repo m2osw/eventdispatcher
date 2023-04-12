@@ -29,6 +29,11 @@
 #include    <eventdispatcher/utils.h>
 
 
+// snaplogger
+//
+#include    <snaplogger/message.h>
+
+
 // libaddr
 //
 #include    <libaddr/addr.h>
@@ -122,6 +127,20 @@ void        verify_message_name(
                   std::string const & name
                 , bool can_be_empty = false
                 , bool can_be_lowercase = true);
+
+
+template<typename CharT, typename Traits>
+inline std::basic_ostream<CharT, Traits> &
+operator << (std::basic_ostream<CharT, Traits> & os, message const & msg)
+{
+    std::string const str(msg.to_string());
+    snaplogger::message * m(dynamic_cast<snaplogger::message *>(&os));
+    if(m != nullptr)
+    {
+        m->add_field("eventdispatcher_message", str);
+    }
+    return os << str;
+}
 
 
 

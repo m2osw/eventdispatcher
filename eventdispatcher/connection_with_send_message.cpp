@@ -47,6 +47,11 @@
 #include    <snapdev/join_strings.h>
 
 
+// libaddr
+//
+#include    <libaddr/addr_parser.h>
+
+
 // C
 //
 #ifdef __SANITIZE_ADDRESS__
@@ -342,15 +347,24 @@ void connection_with_send_message::msg_quitting(message & msg)
  * working. Some daemons start working immediately no matter what
  * (i.e. sitter and iplock do work either way), but those are rare.
  *
+ * The READY message has one parameter: "my_address", which is the IP
+ * address of the computer.
+ *
  * \param[in] msg  The READY message.
  *
  * \sa ready()
  */
 void connection_with_send_message::msg_ready(message & msg)
 {
-    // pass the message so any additional info can be accessed.
+    // get this computer address
+    //
+    f_my_address = addr::string_to_addr(msg.get_parameter("my_address"));
+
+    // pass the message so any additional info can be accessed by callee.
     //
     ready(msg);
+
+    f_ready = true;
 }
 
 
@@ -644,6 +658,53 @@ std::string connection_with_send_message::get_service_name(bool required) const
     }
 
     return f_service_name;
+}
+
+
+/** \brief Check whether the READY message was received.
+ *
+ * This function returns true if the msg_ready() function was called, which
+ * means we received the READY message from the communicatord. In most cases,
+ * the user defined ready() callback will perform the final initialization
+ * so after that point the connection is considered fully initialized and
+ * thus ready.
+ *
+ * \note
+ * For message based services which do not conenct to the communicator
+ * deamon and do not receive the READY message, the function always
+ * returns false.
+ *
+ * \return true if the READY message was received.
+ */
+bool connection_with_send_message::is_ready() const
+{
+    return f_ready;
+}
+
+
+/** \brief Retrieve the IP address of this computer.
+ *
+ * This function returns the IP address of this computer. The address is
+ * actually sent to us by the communicatord through the READY message.
+ * This means it won't be defined until you get that message.
+ *
+ * To know whether the address is defined, you can use the is_default()
+ * function:
+ *
+ * \code
+ *     addr::addr a(get_my_address());
+ *     if(!a.is_default())
+ *     {
+ *         ...a is defined with this computer's IP address...
+ *     }
+ * \endcode
+ *
+ * \return The IP address of this computer or the default IP address if not
+ * yet defined (i.e. READY was not yet received).
+ */
+addr::addr connection_with_send_message::get_my_address() const
+{
+    return f_my_address;
 }
 
 

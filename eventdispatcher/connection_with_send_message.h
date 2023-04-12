@@ -30,6 +30,11 @@
 #include    <eventdispatcher/message.h>
 
 
+// libaddr
+//
+#include    <libaddr/addr.h>
+
+
 // C++
 //
 #include    <list>
@@ -74,11 +79,15 @@ public:
     virtual void                stop(bool quitting);
 
     std::string                 get_service_name(bool required = false) const;
+    bool                        is_ready() const;
+    addr::addr                  get_my_address() const;
     bool                        register_service();
     void                        unregister_service();
 
 private:
     std::string                 f_service_name = std::string();
+    bool                        f_ready = false;
+    addr::addr                  f_my_address = addr::addr();
 };
 
 
