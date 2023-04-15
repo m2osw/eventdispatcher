@@ -1,0 +1,60 @@
+#!/bin/sh -e
+#
+
+# Create a public and private key pair for TLS encryption.
+#
+# This is used to communicate with the various Snap! tools with an unsigned
+# key.
+#
+# Note: the environment name is often the same as the package name.
+#
+# param[in] $1  environment name
+# param[in] $2  package name
+# param[in] $3  user name
+# param[in] $4  group name
+#
+create_tls_keys() {
+    ENVIRONMENT_NAME=$1
+    PACKAGE_NAME=$2
+    USER_NAME=$3
+    GROUP_NAME=$4
+
+    SSL_DIR=/etc/${ENVIRONMENT_NAME}/ssl
+    mkdir -p ${SSL_DIR}
+    chown ${USER_NAME}:${GROUP_NAME} ${SSL_DIR}
+    chmod 710 ${SSL_DIR}
+    if test ! -f ${SSL_DIR}/${PACKAGE_NAME}.key \
+         -o ! -f ${SSL_DIR}/${PACKAGE_NAME}.crt
+    then
+        openssl req -newkey rsa:2048 \
+           -nodes -keyout ${SSL_DIR}/${PACKAGE_NAME}.key \
+           -x509 -days 3650 -out ${SSL_DIR}/${PACKAGE_NAME}.crt \
+           -subj "/C=US/ST=California/L=Sacramento/O=Snap/OU=Website/CN=snap.website"
+    fi
+}
+
+# Delete the public and private keys created by the create_tls_keys() function
+#
+# This function deletes the keys that the package would have created using
+# the create_tls_keys() function. The directory is also removed if empty
+# once the certificate and key were deleted.
+#
+# param[in] $1  environment name
+# param[in] $2  package name
+#
+delete_tls_keys() {
+    ENVIRONMENT_NAME=$1
+    PACKAGE_NAME=$2
+
+    SSL_DIR=/etc/${ENVIRONMENT_NAME}/ssl
+    rm -f ${SSL_DIR}/${PACKAGE_NAME}.key
+    rm -f ${SSL_DIR}/${PACKAGE_NAME}.crt
+
+    if test -d ${SSL_DIR}
+    then
+        rmdir --ignore-fail-on-non-empty ${SSL_DIR}
+    fi
+}
+
+
+# vim: ts=4 sw=4 et
