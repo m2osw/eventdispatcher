@@ -63,7 +63,7 @@ public:
 private:
     std::string                 f_line = std::string();
     std::vector<char>           f_output = std::vector<char>();
-    size_t                      f_position = 0;
+    std::size_t                 f_position = 0;
 };
 
 
