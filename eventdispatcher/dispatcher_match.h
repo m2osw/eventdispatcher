@@ -77,7 +77,7 @@ class MatchValue
 public:
     typedef V   value_t;
 
-    MatchValue<V>(V const v)
+    MatchValue(V const v)
         : f_value(v)
     {
     }
