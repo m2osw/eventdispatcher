@@ -140,6 +140,8 @@ private:
 file_listener::file_listener()
 {
     set_name("file-listener");
+
+    g_event_processed = false;
 }
 
 
