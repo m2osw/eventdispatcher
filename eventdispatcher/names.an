@@ -1,0 +1,18 @@
+# Global names for the Event Dispatcher Environment
+
+introducer=name
+project=ed
+
+[public]
+cmd_alive=ALIVE
+cmd_help=HELP
+cmd_leak=LEAK
+cmd_log_rotate=LOG_ROTATE
+cmd_quitting=QUITTING
+cmd_ready=READY
+cmd_restart=RESTART
+cmd_service_unavailable=SERVICE_UNAVAILABLE
+cmd_stop=STOP
+cmd_unknown=UNKNOWN
+
+# vim: syntax=dosini

@@ -17,6 +17,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+AtomicNames(names.an)
+
 ##
 ## eventdispatcher library
 ##
@@ -115,6 +117,7 @@ add_library(${PROJECT_NAME} SHARED
     udp_server.cpp
 
     # various
+    ${CMAKE_CURRENT_BINARY_DIR}/names.cpp
     utils.cpp
     version.cpp
 )
@@ -200,6 +203,7 @@ install(
         local_stream_server_connection.h
         logrotate_udp_messenger.h
         message.h
+        ${CMAKE_CURRENT_BINARY_DIR}/names.h
         pipe_buffer_connection.h
         pipe_connection.h
         pipe_message_connection.h

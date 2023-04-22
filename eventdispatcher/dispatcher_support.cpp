@@ -115,7 +115,7 @@ dispatcher::pointer_t dispatcher_support::get_dispatcher() const
  * If you called the add_communicator_commands() function on your
  * dispatcher, it won't be necessary to implement the process_message()
  * since it adds a last entry which is a "catch all" entry. This entry
- * uses the function that replies to the user with the UNKNOWN message.
+ * uses the function that replies to the user with the "UNKNOWN" message.
  * Assuming you do not do anything extraordinary, you just need to
  * implement the ready() and stop() functions. If you have dynamic
  * commands that the default msg_help() wont' understand, then you
@@ -176,12 +176,14 @@ void dispatcher_support::process_message(message & msg)
     //
     //message unknown;
     //unknown.reply_to(message);
-    //unknown.set_command("UNKNOWN");
+    //unknown.set_command(g_name_ed_cmd_unknown);
     //unknown.add_parameter("command", message.get_command());
     //if(!send_message(unknown, false))
     //{
     //    SNAP_LOG_WARNING
-    //        << "could not reply with UNKNOWN message to \""
+    //        << "could not reply with \""
+    //        << g_name_ed_cmd_unknown
+    //        << "\" message to \""
     //        << message.get_command()
     //        << "\""
     //        << SNAP_LOG_SEND;

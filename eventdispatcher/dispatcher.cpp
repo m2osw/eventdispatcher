@@ -28,6 +28,8 @@
 //
 #include    "eventdispatcher/dispatcher.h"
 
+#include    "eventdispatcher/names.h"
+
 
 // snaplogger
 //
@@ -55,15 +57,17 @@ namespace ed
  * your connection object.
  *
  * \code
+ *      #include    <eventdispatcher/names.h>
+ *      ...
  *      ed::dispatcher<my_connection>::dispatcher_match const my_messages[] =
  *      {
  *          ed::dispatcher<my_connection>::define_match(
- *              ed::dispatcher<my_connection>::Expression("HELP")
+ *              ed::dispatcher<my_connection>::Expression(g_name_ed_cmd_help)
  *            , ed::dispatcher<my_connection>::Execute(&my_connection::msg_help)
  *            //, ed::dispatcher<my_connection>::MatchFunc(&ed::dispatcher<my_connection>::dispatcher_match::one_to_one_match) -- use default
  *          ),
  *          ed::dispatcher<my_connection>::define_match(
- *              ed::dispatcher<my_connection>::Expression("STATUS")
+ *              ed::dispatcher<my_connection>::Expression(g_name_ed_cmd_status)
  *            , ed::dispatcher<my_connection>::Execute(&my_connection::msg_status)
  *            //, ed::dispatcher<my_connection>::MatchFunc(&dispatcher<my_connection>::dispatcher_match::one_to_one_match) -- use default
  *          ),
@@ -231,43 +235,43 @@ void dispatcher::add_communicator_commands(bool auto_catch_all)
 
     add_matches({
         ::ed::define_match(
-              ::ed::Expression("ALIVE")
+              ::ed::Expression(g_name_ed_cmd_alive)
             , ::ed::Callback(std::bind(&connection_with_send_message::msg_alive, f_connection, std::placeholders::_1))
         ),
         ::ed::define_match(
-              ::ed::Expression("HELP")
+              ::ed::Expression(g_name_ed_cmd_help)
             , ::ed::Callback(std::bind(&connection_with_send_message::msg_help, f_connection, std::placeholders::_1))
         ),
         ::ed::define_match(
-              ::ed::Expression("LEAK")
+              ::ed::Expression(g_name_ed_cmd_leak)
             , ::ed::Callback(std::bind(&connection_with_send_message::msg_leak, f_connection, std::placeholders::_1))
         ),
         ::ed::define_match(
-              ::ed::Expression("LOG_ROTATE")
+              ::ed::Expression(g_name_ed_cmd_log_rotate)
             , ::ed::Callback(std::bind(&connection_with_send_message::msg_log_rotate, f_connection, std::placeholders::_1))
         ),
         ::ed::define_match(
-              ::ed::Expression("QUITTING")
+              ::ed::Expression(g_name_ed_cmd_quitting)
             , ::ed::Callback(std::bind(&connection_with_send_message::msg_quitting, f_connection, std::placeholders::_1))
         ),
         ::ed::define_match(
-              ::ed::Expression("READY")
+              ::ed::Expression(g_name_ed_cmd_ready)
             , ::ed::Callback(std::bind(&connection_with_send_message::msg_ready, f_connection, std::placeholders::_1))
         ),
         ::ed::define_match(
-              ::ed::Expression("RESTART")
+              ::ed::Expression(g_name_ed_cmd_restart)
             , ::ed::Callback(std::bind(&connection_with_send_message::msg_restart, f_connection, std::placeholders::_1))
         ),
         ::ed::define_match(
-              ::ed::Expression("SERVICE_UNAVAILABLE")
+              ::ed::Expression(g_name_ed_cmd_service_unavailable)
             , ::ed::Callback(std::bind(&connection_with_send_message::msg_service_unavailable, f_connection, std::placeholders::_1))
         ),
         ::ed::define_match(
-              ::ed::Expression("STOP")
+              ::ed::Expression(g_name_ed_cmd_stop)
             , ::ed::Callback(std::bind(&connection_with_send_message::msg_stop, f_connection, std::placeholders::_1))
         ),
         ::ed::define_match(
-              ::ed::Expression("UNKNOWN")
+              ::ed::Expression(g_name_ed_cmd_unknown)
             , ::ed::Callback(std::bind(&connection_with_send_message::msg_log_unknown, f_connection, std::placeholders::_1))
         ),
     });

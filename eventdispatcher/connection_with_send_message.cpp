@@ -33,6 +33,7 @@
 #include    "eventdispatcher/dispatcher.h"
 #include    "eventdispatcher/dispatcher_support.h"
 #include    "eventdispatcher/exception.h"
+#include    "eventdispatcher/names.h"
 
 
 // snaplogger
@@ -515,14 +516,16 @@ void connection_with_send_message::msg_reply_with_unknown(message & msg)
     message unknown;
     unknown.user_data(msg.user_data<void>());
     unknown.reply_to(msg);
-    unknown.set_command("UNKNOWN");
+    unknown.set_command(g_name_ed_cmd_unknown);
     unknown.add_parameter("command", msg.get_command());
     if(!send_message(unknown, false))
     {
         SNAP_LOG_WARNING
             << "could not reply to \""
             << msg.get_command()
-            << "\" with UNKNOWN message."
+            << "\" with "
+            << g_name_ed_cmd_unknown
+            << " message."
             << SNAP_LOG_SEND;
     }
     else

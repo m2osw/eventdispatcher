@@ -115,6 +115,11 @@ namespace ed
  *          ~my_blocking_connection()
  *          {
  *              // done, send UNLOCK and then make sure to unregister
+ *              //
+ *              // TODO: show correct implementation -- this won't work
+ *              //       since the connection goes away at the time it
+ *              //       gets destroyed
+ *              //
  *              message unlock_message;
  *              unlock_message.set_command("UNLOCK");
  *              ...
@@ -139,7 +144,7 @@ namespace ed
  *                  // the lock worked, release hand back to the user
  *                  done();
  *              }
- *              else if(command == "READY")
+ *              else if(command == ed::g_name_ed_cmd_ready)
  *              {
  *                  // the REGISTER worked
  *                  // send the LOCK now
@@ -148,7 +153,7 @@ namespace ed
  *                  ...
  *                  blocking_connection.send_message(lock_message);
  *              }
- *              else if(command == "HELP")
+ *              else if(command == ed::g_name_ed_cmd_help)
  *              {
  *                  // snapcommunicator wants us to tell it what commands
  *                  // we accept

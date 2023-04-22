@@ -1108,9 +1108,9 @@ void message::set_sent_from_server(std::string const & sent_from_server)
 /** \brief Who sent this message.
  *
  * Some services send messages expecting an answer sent right back to
- * them. For example, the snaplock tool sends the message LOCKENTERING
- * and expects the LOCKENTERED as a reply. The reply has to be sent
- * to the exact same instance t hat sent the LOCKENTERING message.
+ * them. For example, the snaplock tool sends the message LOCK_ENTERING
+ * and expects the LOCK_ENTERED as a reply. The reply has to be sent
+ * to the exact same instance t hat sent the LOCK_ENTERING message.
  *
  * In order to do so, the system makes use of the server and service
  * name the data was sent from. Since the name of each service
@@ -1315,7 +1315,7 @@ void message::reply_to(message const & original_message)
  * services.
  *
  * The command is a string of text, generally one or more words
- * concatenated (no space allowed) such as STOP and LOCKENTERING.
+ * concatenated (no space allowed) such as STOP and LOCK_ENTERING.
  *
  * \note
  * The command string may still be empty if it was not yet assigned.
@@ -1800,9 +1800,16 @@ message::parameters_t const & message::get_all_parameters() const
  *
  * A few valid names:
  *
- * \li commands: PING, STOP, LOCK, LOCKED, QUITTING, UNKNOWN, LOCKEXITING
+ * \li commands: PING, STOP, LOCK, LOCKED, QUITTING, UNKNOWN, LOCK_EXITING
  * \li services: snapcommunicator, snapserver, snaplock, MyOwnService
  * \li parameters: URI, name, IP, TimeOut
+ *
+ * \note
+ * The name of commands should be defined in your names.an file. That way,
+ * wherever you use that name, you can use the variable name and avoid
+ * misspelling mistakes. For example, our "HELP" message uses:
+ * `g_name_ed_cmd_help`. Similarly, you can use names.an for service names,
+ * parameter names, and static parameter values.
  *
  * At this point all our services use lowercase, but this is not enforced.
  * Actually, mixed case or uppercase service names are allowed.
