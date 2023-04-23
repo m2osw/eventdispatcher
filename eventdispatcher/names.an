@@ -8,6 +8,7 @@ cmd_alive=ALIVE
 cmd_help=HELP
 cmd_leak=LEAK
 cmd_log_rotate=LOG_ROTATE
+cmd_quit=QUIT
 cmd_quitting=QUITTING
 cmd_ready=READY
 cmd_restart=RESTART
