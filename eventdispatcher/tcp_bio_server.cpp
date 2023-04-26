@@ -304,7 +304,7 @@ tcp_bio_server::tcp_bio_server(
             if(c < 0)
             {
                 std::stringstream ss;
-                ss << "bind() failed to connect to "
+                ss << "secure: bind() failed to connect to "
                    << address;
                 throw initialization_error(ss.str());
             }
@@ -318,7 +318,7 @@ tcp_bio_server::tcp_bio_server(
             if(error_code != 0)
             {
                 std::stringstream ss;
-                ss << "bind() failed to connect to "
+                ss << "secure: bind() failed to connect to "
                    << address
                    << " and reported error #"
                    << error_code
@@ -380,7 +380,7 @@ tcp_bio_server::tcp_bio_server(
             if(c < 0)
             {
                 std::stringstream ss;
-                ss << "bind() failed to connect to "
+                ss << "plain: bind() failed to connect to "
                    << address;
                 throw initialization_error(ss.str());
             }
@@ -394,7 +394,7 @@ tcp_bio_server::tcp_bio_server(
             if(error_code != 0)
             {
                 std::stringstream ss;
-                ss << "bind() failed to connect to "
+                ss << "plain: bind() failed to connect to "
                    << address
                    << " and reported error #"
                    << error_code
