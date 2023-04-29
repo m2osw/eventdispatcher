@@ -29,6 +29,7 @@ usr/include/eventdispatcher/local_stream_server_client_message_connection.h
 usr/include/eventdispatcher/local_stream_server_connection.h
 usr/include/eventdispatcher/logrotate_udp_messenger.h
 usr/include/eventdispatcher/message.h
+usr/include/eventdispatcher/names.h
 usr/include/eventdispatcher/pipe_buffer_connection.h
 usr/include/eventdispatcher/pipe_connection.h
 usr/include/eventdispatcher/pipe_message_connection.h
