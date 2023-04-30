@@ -49,6 +49,7 @@ add_library(${PROJECT_NAME} SHARED
                 cui_connection.cpp
 
         file_changed.cpp
+        process_changed.cpp
 
         inter_thread_message_connection.cpp
         thread_done_signal.cpp
@@ -207,6 +208,7 @@ install(
         pipe_buffer_connection.h
         pipe_connection.h
         pipe_message_connection.h
+        process_changed.h
         signal.h
         signal_child.h
         signal_handler.h

@@ -62,4 +62,18 @@ else(SnapCatch2_FOUND)
 
 endif(SnapCatch2_FOUND)
 
+
+##
+## Process Listener
+##
+project(process-listener)
+
+add_executable(${PROJECT_NAME}
+    process_listener.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}
+    eventdispatcher
+)
+
 # vim: ts=4 sw=4 et

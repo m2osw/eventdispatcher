@@ -33,6 +33,7 @@ usr/include/eventdispatcher/names.h
 usr/include/eventdispatcher/pipe_buffer_connection.h
 usr/include/eventdispatcher/pipe_connection.h
 usr/include/eventdispatcher/pipe_message_connection.h
+usr/include/eventdispatcher/process_changed.h
 usr/include/eventdispatcher/signal.h
 usr/include/eventdispatcher/signal_child.h
 usr/include/eventdispatcher/signal_handler.h
