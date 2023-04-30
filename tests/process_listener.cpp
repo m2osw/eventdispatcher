@@ -100,7 +100,9 @@ void process_listener::process_event(ed::process_changed_event const & event)
         << event.get_cpu()
         << " timestamp: "
         << event.get_timestamp()
-        << " pid: "
+        << " ("
+        << event.get_realtime().to_string("%D %T.%N", true)
+        << ") pid: "
         << event.get_pid() << "/" << event.get_tgid()
         << " ppid: "
         << event.get_parent_pid() << "/" << event.get_parent_tgid()

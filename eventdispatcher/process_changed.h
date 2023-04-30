@@ -44,9 +44,8 @@ namespace ed
 
 enum class process_event_t
 {
-    PROCESS_EVENT_NONE,     // ?!
     PROCESS_EVENT_UNKNOWN,  // kernel sent us an event we do not know about
-
+    PROCESS_EVENT_NONE,     // used to acknowledge our send() calls
     PROCESS_EVENT_FORK,     // new task created
     PROCESS_EVENT_EXEC,     // new task started execution
     PROCESS_EVENT_UID,      // ruid/euid changed
@@ -77,6 +76,7 @@ public:
     std::uint32_t           get_cpu() const;
     void                    set_cpu(std::uint32_t timestamp);
     std::uint64_t           get_timestamp() const;
+    snapdev::timespec_ex    get_realtime() const;
     void                    set_timestamp(std::uint64_t timestamp);
 
     pid_t                   get_pid() const;
@@ -108,7 +108,7 @@ public:
     void                    set_exit_signal(std::int32_t signal);
 
 private:
-    process_event_t         f_event = process_event_t::PROCESS_EVENT_NONE;
+    process_event_t         f_event = process_event_t::PROCESS_EVENT_UNKNOWN;
 
     std::uint32_t           f_cpu = 0;
     std::uint64_t           f_timestamp = 0;
