@@ -127,10 +127,12 @@ ssize_t tcp_server_client_connection::read(void * buf, size_t count)
  * This write function may not always write all the data you are
  * trying to send to the remote connection. If you want to make
  * sure that all your data is written to the other connection,
- * you want to instead use the tcp_server_client_buffer_connection
+ * you want to instead use the tcp_server_client_buffer_connection,
  * which overloads the write() function and saves the data to be
- * written to the socket in a buffer. The communicator run
- * loop is then responsible for sending all the data.
+ * written to the socket in a buffer. The communicator run-loop is
+ * then responsible for sending all the data. However, that buffering
+ * has no limit, so if you are sending large files, it is also not
+ * a very good idea.
  *
  * \param[in] buf  The buffer of data to be written to the socket.
  * \param[in] count  The number of bytes the caller wants to write to the
@@ -140,7 +142,7 @@ ssize_t tcp_server_client_connection::read(void * buf, size_t count)
  */
 ssize_t tcp_server_client_connection::write(void const * buf, size_t count)
 {
-    if(!f_client)
+    if(f_client == nullptr)
     {
         errno = EBADF;
         return -1;

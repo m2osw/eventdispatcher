@@ -857,11 +857,14 @@ int tcp_bio_client::read_line(std::string & line)
  *
  * If your socket is not blocking, less than \p size bytes may be written
  * to the socket. In that case you are responsible for calling the function
- * again to write the remainder of the buffer until the function returns
- * a number of bytes written equal to \p size.
+ * again to write the remaining data from your buffer until the function
+ * returns a number of bytes written equal to \p size (on further calls,
+ * you must update the \p buf pointer and \p size amount by the number
+ * of bytes already written).
  *
  * The function returns -1 if an error occurs. The error is available in
- * errno as expected in the POSIX interface.
+ * errno as expected in the POSIX interface. At that point the socket
+ * should be considered invalid (maybe closed from the other side).
  *
  * \note
  * If the connection was closed, return -1.
@@ -875,7 +878,8 @@ int tcp_bio_client::read_line(std::string & line)
  * \param[in] size  The number of bytes in buffer to send over the socket.
  *
  * \return The number of bytes that were actually accepted by the socket
- * or -1 if an error occurs.
+ * or -1 if an error occurs. 0 and EAGAN is returned if the write() would
+ * block.
  *
  * \sa read()
  */
