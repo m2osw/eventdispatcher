@@ -66,6 +66,8 @@ namespace
 
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 constexpr char const * const g_process_event_to_string[] =
 {
     [static_cast<int>(process_event_t::PROCESS_EVENT_UNKNOWN )] = "UNKNOWN",
@@ -80,6 +82,7 @@ constexpr char const * const g_process_event_to_string[] =
     [static_cast<int>(process_event_t::PROCESS_EVENT_COREDUMP)] = "COREDUMP",
     [static_cast<int>(process_event_t::PROCESS_EVENT_EXIT    )] = "EXIT",
 };
+#pragma GCC diagnostic pop
 
 
 
