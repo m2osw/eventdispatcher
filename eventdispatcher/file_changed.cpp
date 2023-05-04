@@ -17,25 +17,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /** \file
- * \brief Implementation of the Snap Communicator class.
+ * \brief Implementation of the file_changed class.
  *
- * This class wraps the C poll() interface in a C++ object with many types
- * of objects:
- *
- * \li Server Connections; for software that want to offer a port to
- *     which clients can connect to; the server will call accept()
- *     once a new client connection is ready; this results in a
- *     Server/Client connection object
- * \li Client Connections; for software that want to connect to
- *     a server; these expect the IP address and port to connect to
- * \li Server/Client Connections; for the server when it accepts a new
- *     connection; in this case the server gets a socket from accept()
- *     and creates one of these objects to handle the connection
- *
- * Using the poll() function is the easiest and allows us to listen
- * on pretty much any number of sockets (on my server it is limited
- * at 16,768 and frankly over 1,000 we probably will start to have
- * real slowness issues on small VPN servers.)
+ * This class is a wrapper around the inotify library. It allows you to
+ * listen to various changes to files.
  */
 
 
