@@ -423,6 +423,34 @@ tcp_bio_server::~tcp_bio_server()
 }
 
 
+/** \brief Get the IP address bound to this TCP server.
+ *
+ * This function retrieves the IP address used to bound this TCP server.
+ *
+ * The server listens on an IP address that was bound to it in the
+ * constructor. If the socket is still open, then this function returns
+ * that IP address. If the socket was called, then the functions returns
+ * the default IP address (:: or 0.0.0.0).
+ *
+ * If you allow the default IP address (:: or 0.0.0.0) to be used on this
+ * socket and this function returns that address, you want to also check
+ * that get_socket() does not return -1 to make sure that the returned
+ * address represents a valid address.
+ *
+ * \return The IP address bound to this server.
+ */
+addr::addr tcp_bio_server::get_address() const
+{
+    addr::addr a;
+    int const s(get_socket());
+    if(s >= 0)
+    {
+        a.set_from_socket(s, false);
+    }
+    return a;
+}
+
+
 /** \brief Return the current status of the keepalive flag.
  *
  * This function returns the current status of the keepalive flag. This

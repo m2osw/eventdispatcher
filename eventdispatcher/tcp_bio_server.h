@@ -69,6 +69,7 @@ public:
                                     , mode_t mode);
     virtual                     ~tcp_bio_server();
 
+    addr::addr                  get_address() const;
     bool                        get_keepalive() const;
     void                        set_keepalive(bool yes = true);
     bool                        get_close_on_exec() const;
