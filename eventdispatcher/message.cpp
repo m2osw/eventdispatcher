@@ -1224,7 +1224,8 @@ void message::set_server(std::string const & server)
         // this name can be empty and it supports lowercase
         //
         if(server != "."
-        && server != "*")
+        && server != "*"
+        && server != "?")
         {
             verify_message_name(server, true);
         }
