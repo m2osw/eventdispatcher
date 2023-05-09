@@ -40,6 +40,7 @@
 // C++ lib
 //
 #include    <map>
+#include    <set>
 
 
 
@@ -113,11 +114,11 @@ public:
                                 file_changed();
     virtual                     ~file_changed() override;
 
-    void                        watch_file(std::string const & watched_path, file_event_mask_t const events);
-    void                        watch_symlink(std::string const & watched_path, file_event_mask_t const events);
-    void                        watch_directory(std::string const & watched_path, file_event_mask_t const events);
+    void                        watch_files(std::string const & watch_path, file_event_mask_t const events);
+    void                        watch_symlinks(std::string const & watch_path, file_event_mask_t const events);
+    void                        watch_directories(std::string const & watch_path, file_event_mask_t const events);
 
-    void                        stop_watch(std::string const & watched_path);
+    void                        stop_watch(std::string watched_path);
 
     // connection implementation
     virtual bool                is_reader() const override;
@@ -136,21 +137,34 @@ private:
         typedef std::map<int, watch_t>          map_t;
 
                                 watch_t();
-                                watch_t(std::string const & watched_path, file_event_mask_t events, uint32_t add_flags);
+                                watch_t(
+                                      std::string const & watched_path
+                                    , std::string const & pattern
+                                    , file_event_mask_t events
+                                    , uint32_t add_flags);
 
         void                    add_watch(int inotify);
-        void                    merge_watch(int inotify, file_event_mask_t const events);
+        void                    merge_watch(
+                                      int inotify
+                                    , std::string const & pattern
+                                    , file_event_mask_t const events);
         void                    remove_watch(int inotify);
+        bool                    match_patterns(std::string const & filename);
 
         std::string             f_watched_path = std::string();
+        std::set<std::string>   f_patterns     = std::set<std::string>();
         file_event_mask_t       f_events       = SNAP_FILE_CHANGED_EVENT_NO_EVENTS;
         uint32_t                f_mask         = 0;
         int                     f_watch        = -1;
     };
 
-    bool                        merge_watch(std::string const & watched_path, file_event_mask_t const events);
+    void                        merge_watch(
+                                      std::string watched_path
+                                    , file_event_mask_t const events
+                                    , int flags);
     static uint32_t             events_to_mask(file_event_mask_t const events);
     static file_event_mask_t    mask_to_events(uint32_t const mask);
+    bool                        path_and_pattern(std::string & path, std::string & pattern);
 
     int                         f_inotify = -1;
     watch_t::map_t              f_watches = watch_t::map_t();

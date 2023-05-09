@@ -234,7 +234,7 @@ CATCH_TEST_CASE("file_changed_events", "[file_changed]")
 
         {
             file_listener::pointer_t listener(std::make_shared<file_listener>());
-            listener->watch_file(dir, ed::SNAP_FILE_CHANGED_EVENT_ATTRIBUTES);
+            listener->watch_files(dir, ed::SNAP_FILE_CHANGED_EVENT_ATTRIBUTES);
 
             listener->add_expected(
                   dir
@@ -268,7 +268,7 @@ CATCH_TEST_CASE("file_changed_events", "[file_changed]")
 
         {
             file_listener::pointer_t listener(std::make_shared<file_listener>());
-            listener->watch_file(dir, ed::SNAP_FILE_CHANGED_EVENT_ALL);
+            listener->watch_files(dir, ed::SNAP_FILE_CHANGED_EVENT_ALL);
 
             // create/write/close events
             //

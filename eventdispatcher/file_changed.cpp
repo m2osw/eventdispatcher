@@ -36,6 +36,11 @@
 #include    <snaplogger/message.h>
 
 
+// snapdev
+//
+#include    <snapdev/pathinfo.h>
+
+
 // C++
 //
 #include    <algorithm>
@@ -44,6 +49,7 @@
 
 // C
 //
+#include    <fnmatch.h>
 #include    <sys/inotify.h>
 
 
@@ -125,12 +131,17 @@ file_changed::watch_t::watch_t()
 
 file_changed::watch_t::watch_t(
           std::string const & watched_path
+        , std::string const & pattern
         , file_event_mask_t events
         , uint32_t add_flags)
     : f_watched_path(watched_path)
     , f_events(events)
     , f_mask(events_to_mask(events) | add_flags | IN_EXCL_UNLINK)
 {
+    if(!pattern.empty() && pattern != "*")
+    {
+        f_patterns.insert(pattern);
+    }
 }
 
 
@@ -155,9 +166,27 @@ void file_changed::watch_t::add_watch(int inotify)
 }
 
 
-void file_changed::watch_t::merge_watch(int inotify, file_event_mask_t const events)
+void file_changed::watch_t::merge_watch(
+      int inotify
+    , std::string const & pattern
+    , file_event_mask_t const events)
 {
     f_mask |= events_to_mask(events);
+
+    // if any one of the patterns is "*" then clear the list, everything
+    // is a match
+    //
+    if(!f_patterns.empty())
+    {
+        if(pattern == "*")
+        {
+            f_patterns.clear();
+        }
+        else
+        {
+            f_patterns.insert(pattern);
+        }
+    }
 
     // The documentation is not 100% clear about an update so for now
     // I remove the existing watch and create a new one... it should
@@ -222,6 +251,28 @@ void file_changed::watch_t::remove_watch(int inotify)
 }
 
 
+bool file_changed::watch_t::match_patterns(std::string const & filename)
+{
+    // if one of the patterns is "*", represented by an empty set of
+    // patterns, just return true immediately
+    //
+    if(f_patterns.empty())
+    {
+        return true;
+    }
+
+    for(auto const & p : f_patterns)
+    {
+        if(fnmatch(p.c_str(), filename.c_str(), FNM_PATHNAME | FNM_EXTMATCH) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 
 
 
@@ -254,12 +305,23 @@ file_changed::~file_changed()
 
 /** \brief Try to merge a new watch.
  *
- * If you attempt to watch the same path again, instead of adding a new watch,
- * the new events get added to the existing instance. This is important
- * because the operating system does not generate a new watch when you do that.
+ * This function is internal.
+ *
+ * When someone attempts to watch the same path again, instead of adding a
+ * new watch, the new events get added to the existing instance.
+ *
+ * The function also adds the new pattern(s). Note that the patterns are
+ * additive, only if you already have the "*" pattern added, then nothing
+ * more gets added. It would always match anyway (except for negative
+ * patterns, but we do not have a way to verify that so you should not
+ * have "*" as a pattern if you want your negative patterns to work).
+ *
+ * \note
+ * This is important in our implementation because the inotify system
+ * does not add a new watch when a merge happens.
  *
  * In this case, the \p events parameter is viewed as parameters being
- * added to the existing watched. If you instead want to replace the
+ * added to the existing watch. If you instead want to replace the
  * previous watch, make sure to first remove it, then re-add it with
  * new flags as required.
  *
@@ -274,13 +336,19 @@ file_changed::~file_changed()
  *
  * \param[in] watched_path  The path the user wants to watch.
  * \param[in] events  The events being added to the watch.
- *
- * \return true if the merge happened.
+ * \param[in] flags  In case the event doesn't exist yet, create it with these
+ * flags.
  */
-bool file_changed::merge_watch(
-      std::string const & watched_path
-    , file_event_mask_t const events)
+void file_changed::merge_watch(
+      std::string watched_path
+    , file_event_mask_t const events
+    , int flags)
 {
+    // split the pattern away if present
+    //
+    std::string pattern;
+    path_and_pattern(watched_path, pattern);
+
     auto const & wevent(std::find_if(
               f_watches.begin()
             , f_watches.end()
@@ -292,50 +360,87 @@ bool file_changed::merge_watch(
     {
         // not found
         //
-        return false;
-    }
-
-    wevent->second.merge_watch(f_inotify, events);
-
-    return true;
-}
-
-
-void file_changed::watch_file(std::string const & watched_path, file_event_mask_t const events)
-{
-    if(!merge_watch(watched_path, events))
-    {
-        watch_t watch(watched_path, events, 0);
+        watch_t watch(watched_path, pattern, events, flags);
         watch.add_watch(f_inotify);
         f_watches[watch.f_watch] = watch;
     }
-}
-
-
-void file_changed::watch_symlink(std::string const & watched_path, file_event_mask_t const events)
-{
-    if(!merge_watch(watched_path, events))
+    else
     {
-        watch_t watch(watched_path, events, IN_DONT_FOLLOW);
-        watch.add_watch(f_inotify);
-        f_watches[watch.f_watch] = watch;
+        wevent->second.merge_watch(f_inotify, pattern, events);
     }
 }
 
 
-void file_changed::watch_directory(std::string const & watched_path, file_event_mask_t const events)
+/** \brief Listen for changes to files in a directory or a specific file.
+ *
+ * This function can be used to add a watch on a directory. This means
+ * any changes to the directory, and therefore any of the files within
+ * that directory, get reported with events.
+ *
+ * The result of adding a watch is to get events about changes through
+ * the process_event() function. Your process_event() function is called
+ * once per event. The order of the events is kept the same, only there
+ * is a possibility that some events do not make it if you do not process
+ * them fast enough. In that case, you should receive a
+ * SNAP_FILE_CHANGED_EVENT_LOST_SYNC. When that error occurs, the watch is
+ * still in place. It just lets you know that you may be missing some
+ * events.
+ *
+ * \param[in] watch_path  The path to watch either directly to a file or
+ * to a directory.
+ * \param[in] events  The events to listen to over that path.
+ */
+void file_changed::watch_files(std::string const & watch_path, file_event_mask_t const events)
 {
-    if(!merge_watch(watched_path, events))
-    {
-        watch_t watch(watched_path, events, IN_ONLYDIR);
-        watch.add_watch(f_inotify);
-        f_watches[watch.f_watch] = watch;
-    }
+    merge_watch(watch_path, events, 0);
 }
 
 
-void file_changed::stop_watch(std::string const & watched_path)
+/** \brief Listen for changes to files and symbolic links.
+ *
+ * This version of the watch is used to listen for changes to symlinks, but
+ * not to the files that those symlinks point to. It is otherwise similar
+ * to the watch_file() function.
+ *
+ * \sa watch_files()
+ */
+void file_changed::watch_symlinks(std::string const & watch_path, file_event_mask_t const events)
 {
+    merge_watch(watch_path, events, IN_DONT_FOLLOW);
+}
+
+
+/** \brief Listen for changes to directories.
+ *
+ * This function watches the specified path (\p watched_path) for changes
+ * to directories within that path. The path should point to a directory.
+ *
+ * Note that this is not to listen for file changes within the specified
+ * directory. It is to listen for directory changes within the specified
+ * path. To listen for changes to any regular file within that directory,
+ * use the watch_files() instead.
+ *
+ * So in most likelihood, you want to use the watch_files().
+ *
+ * \param[in] watch_path  The directory where to watch for sub-directory
+ * changes.
+ * \param[in] events  A set of flags defining the events you are interested in.
+ *
+ * \sa watch_files()
+ */
+void file_changed::watch_directories(std::string const & watch_path, file_event_mask_t const events)
+{
+    merge_watch(watch_path, events, IN_ONLYDIR);
+}
+
+
+void file_changed::stop_watch(std::string watch_path)
+{
+    // split the pattern away if present
+    //
+    std::string pattern;
+    path_and_pattern(watch_path, pattern);
+
     // because of the merge, even though the watched_path is not the
     // index of our map, it will be unique so we really only need to
     // find one such entry
@@ -345,7 +450,7 @@ void file_changed::stop_watch(std::string const & watched_path)
                    , f_watches.end()
                    , [&](auto & w)
                    {
-                       return w.second.f_watched_path == watched_path;
+                       return w.second.f_watched_path == watch_path;
                    }));
 
     if(wevent != f_watches.end())
@@ -375,6 +480,23 @@ int file_changed::get_socket() const
 }
 
 
+/** \brief Enable or disable a file_changed connection.
+ *
+ * \warning
+ * At the moment, the inotify interface does not have a way to just
+ * disable the watches short of removing them all. If your process
+ * wants to disable watches for long periods of time, then I strongly
+ * suggest that you instead consider deleting the connection and
+ * recreating it later.
+ * \warning
+ * Further, while disabled, the watches are still effective so anything
+ * that changed while this connection was marked as disabled will still
+ * be sent to you in a set of file_event. However, the network pipe
+ * could get filled up and thus some of those events will be lost.
+ *
+ * \param[in] enabled  Whether to enable (true) or disable (false) this
+ * connection.
+ */
 void file_changed::set_enable(bool enabled)
 {
     connection::set_enable(enabled);
@@ -515,10 +637,14 @@ void file_changed::process_read()
                 auto const & wevent(f_watches.find(ievent.wd));
                 if(wevent != f_watches.end())
                 {
-                    file_event const watch_event(wevent->second.f_watched_path
-                                            , mask_to_events(ievent.mask)
-                                            , filename);
-                    process_event(watch_event);
+                    if(wevent->second.match_patterns(filename))
+                    {
+                        file_event const watch_event(
+                                  wevent->second.f_watched_path
+                                , mask_to_events(ievent.mask)
+                                , filename);
+                        process_event(watch_event);
+                    }
 
                     // if the event received included IN_IGNORED then we need
                     // to remove that watch
@@ -657,6 +783,31 @@ file_event_mask_t file_changed::mask_to_events(uint32_t const mask)
     }
 
     return events;
+}
+
+
+bool file_changed::path_and_pattern(std::string & path, std::string & pattern)
+{
+    pattern = snapdev::pathinfo::basename(path);
+    if(snapdev::pathinfo::has_pattern(pattern))
+    {
+        path = snapdev::pathinfo::dirname(path);
+    }
+    else
+    {
+        pattern = "*";
+    }
+
+    bool const result(snapdev::pathinfo::has_pattern(path));
+    if(result)
+    {
+        SNAP_LOG_ERROR
+            << "your path \""
+            << path
+            << "\" includes a pattern which is not part of the last segment. This is not supported."
+            << SNAP_LOG_SEND;
+    }
+    return result;
 }
 
 
