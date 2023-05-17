@@ -38,6 +38,7 @@
 
 // snapdev
 //
+#include    <snapdev/glob_to_list.h>
 #include    <snapdev/pathinfo.h>
 
 
@@ -386,6 +387,19 @@ void file_changed::merge_watch(
             //       because of that the glob() has to be called with "*"
             //       and then we filter by fnmatch() here
             //
+            snapdev::glob_to_list<std::list<std::string>> files;
+            if(files.read_path<
+                     snapdev::glob_to_list_flag_t::GLOB_FLAG_IGNORE_ERRORS>(watch->f_watched_path + "/*"))
+            {
+                for(auto const & filename : files)
+                {
+                    file_event const watch_event(
+                              watch->f_watched_path
+                            , SNAP_FILE_CHANGED_EVENT_EXISTS
+                            , filename);
+                    process_event(watch_event);
+                }
+            }
         }
         else
         {
