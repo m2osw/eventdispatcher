@@ -133,7 +133,7 @@ file_changed::watch_t::watch_t(
           std::string const & watched_path
         , std::string const & pattern
         , file_event_mask_t events
-        , uint32_t add_flags)
+        , std::uint32_t add_flags)
     : f_watched_path(watched_path)
     , f_events(events)
     , f_mask(events_to_mask(events) | add_flags | IN_EXCL_UNLINK)
@@ -169,9 +169,10 @@ void file_changed::watch_t::add_watch(int inotify)
 void file_changed::watch_t::merge_watch(
       int inotify
     , std::string const & pattern
-    , file_event_mask_t const events)
+    , file_event_mask_t const events
+    , std::uint32_t add_flags)
 {
-    f_mask |= events_to_mask(events);
+    f_mask |= events_to_mask(events) | add_flags | IN_EXCL_UNLINK;
 
     // if any one of the patterns is "*" then clear the list, everything
     // is a match
@@ -296,7 +297,7 @@ file_changed::~file_changed()
     //
     for(auto & w : f_watches)
     {
-        w.second.remove_watch(f_inotify);
+        w.second->remove_watch(f_inotify);
     }
 
     close(f_inotify);
@@ -349,24 +350,57 @@ void file_changed::merge_watch(
     std::string pattern;
     path_and_pattern(watched_path, pattern);
 
+    watch_t::pointer_t watch;
+
     auto const & wevent(std::find_if(
               f_watches.begin()
             , f_watches.end()
             , [&watched_path](auto const & w)
             {
-                return w.second.f_watched_path == watched_path;
+                return w.second->f_watched_path == watched_path;
             }));
     if(wevent == f_watches.end())
     {
         // not found
         //
-        watch_t watch(watched_path, pattern, events, flags);
-        watch.add_watch(f_inotify);
-        f_watches[watch.f_watch] = watch;
+        watch = std::make_shared<watch_t>(watched_path, pattern, events, flags);
+        watch->add_watch(f_inotify);
+        f_watches[watch->f_watch] = watch;
     }
     else
     {
-        wevent->second.merge_watch(f_inotify, pattern, events);
+        watch = wevent->second;
+        watch->merge_watch(f_inotify, pattern, events, flags);
+    }
+
+    if((watch->f_events & SNAP_FILE_CHANGED_EVENT_EXISTS) != 0)
+    {
+        struct stat s = {};
+        if(stat(watch->f_watched_path.c_str(), &s) == 0
+        && S_ISDIR(s.st_mode))
+        {
+            // the watcher wants events for all existing files on the first
+            // connection so send those now
+            //
+            // Note: the patterns we support here are for fnmatch() and
+            //       because of that the glob() has to be called with "*"
+            //       and then we filter by fnmatch() here
+            //
+        }
+        else
+        {
+            // this is a file, so just send an event for that file
+            //
+            // TBD: should the path be broken up in a path & filename?
+            //      I need to test and see what happens if I watch a
+            //      file directly... what event do we sent the user
+            //
+            file_event const watch_event(
+                      watch->f_watched_path
+                    , SNAP_FILE_CHANGED_EVENT_EXISTS
+                    , std::string());
+            process_event(watch_event);
+        }
     }
 }
 
@@ -450,12 +484,12 @@ void file_changed::stop_watch(std::string watch_path)
                    , f_watches.end()
                    , [&](auto & w)
                    {
-                       return w.second.f_watched_path == watch_path;
+                       return w.second->f_watched_path == watch_path;
                    }));
 
     if(wevent != f_watches.end())
     {
-        wevent->second.remove_watch(f_inotify);
+        wevent->second->remove_watch(f_inotify);
         f_watches.erase(wevent);
     }
 }
@@ -637,10 +671,10 @@ void file_changed::process_read()
                 auto const & wevent(f_watches.find(ievent.wd));
                 if(wevent != f_watches.end())
                 {
-                    if(wevent->second.match_patterns(filename))
+                    if(wevent->second->match_patterns(filename))
                     {
                         file_event const watch_event(
-                                  wevent->second.f_watched_path
+                                  wevent->second->f_watched_path
                                 , mask_to_events(ievent.mask)
                                 , filename);
                         process_event(watch_event);
@@ -654,7 +688,7 @@ void file_changed::process_read()
                         // before losing the wevent, make sure we disconnect
                         // from the OS version
                         //
-                        const_cast<watch_t &>(wevent->second).remove_watch(f_inotify);
+                        wevent->second->remove_watch(f_inotify);
                         f_watches.erase(ievent.wd);
                         f_watches.erase(wevent);
                     }
@@ -697,12 +731,14 @@ uint32_t file_changed::events_to_mask(file_event_mask_t const events)
         mask |= IN_MODIFY;
     }
 
-    if((events & SNAP_FILE_CHANGED_EVENT_CREATED) != 0)
+    if((events & SNAP_FILE_CHANGED_EVENT_CREATED) != 0
+    || (events & SNAP_FILE_CHANGED_EVENT_RECURSIVE) != 0)
     {
         mask |= IN_CREATE | IN_MOVED_FROM | IN_MOVE_SELF;
     }
 
-    if((events & SNAP_FILE_CHANGED_EVENT_DELETED) != 0)
+    if((events & SNAP_FILE_CHANGED_EVENT_DELETED) != 0
+    || (events & SNAP_FILE_CHANGED_EVENT_RECURSIVE) != 0)
     {
         mask |= IN_DELETE | IN_DELETE_SELF | IN_MOVED_TO | IN_MOVE_SELF;
     }

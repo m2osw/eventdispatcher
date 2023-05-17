@@ -61,6 +61,8 @@ static constexpr file_event_mask_t const   SNAP_FILE_CHANGED_EVENT_CREATED    = 
 static constexpr file_event_mask_t const   SNAP_FILE_CHANGED_EVENT_DELETED    = 0x0010;   // unlink, rename
 static constexpr file_event_mask_t const   SNAP_FILE_CHANGED_EVENT_ACCESS     = 0x0020;   // open, close
 static constexpr file_event_mask_t const   SNAP_FILE_CHANGED_EVENT_UPDATED    = 0x0040;   // open + write/truncate + close (i.e. IN_CLOSE_WRITE)
+static constexpr file_event_mask_t const   SNAP_FILE_CHANGED_EVENT_EXISTS     = 0x0080;   // file exists (when adding a watch)
+static constexpr file_event_mask_t const   SNAP_FILE_CHANGED_EVENT_RECURSIVE  = 0x0100;   // auto-listen to sub-directories
 
 // errors can always occur, whether you add them to your watch mask or not
 //
@@ -134,27 +136,29 @@ private:
     //       (i.e. we make copies at the moment.)
     struct watch_t
     {
-        typedef std::map<int, watch_t>          map_t;
+        typedef std::shared_ptr<watch_t>        pointer_t;
+        typedef std::map<int, pointer_t>        map_t;
 
                                 watch_t();
                                 watch_t(
                                       std::string const & watched_path
                                     , std::string const & pattern
                                     , file_event_mask_t events
-                                    , uint32_t add_flags);
+                                    , std::uint32_t add_flags);
 
         void                    add_watch(int inotify);
         void                    merge_watch(
                                       int inotify
                                     , std::string const & pattern
-                                    , file_event_mask_t const events);
+                                    , file_event_mask_t const events
+                                    , std::uint32_t add_flags);
         void                    remove_watch(int inotify);
         bool                    match_patterns(std::string const & filename);
 
         std::string             f_watched_path = std::string();
         std::set<std::string>   f_patterns     = std::set<std::string>();
         file_event_mask_t       f_events       = SNAP_FILE_CHANGED_EVENT_NO_EVENTS;
-        uint32_t                f_mask         = 0;
+        std::uint32_t           f_mask         = 0;
         int                     f_watch        = -1;
     };
 

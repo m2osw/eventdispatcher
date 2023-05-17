@@ -16,6 +16,14 @@
   one entry (which is acceptable if using a regex... so we need to be careful
   here--in this case, it may just be a warning)
 
+* The inotify listens to either a specific file or a directory. It does not
+  listen for events in sub-directories. We want to add a RECURSIVE flag to
+  support that feature. This means whenever we add a new watch, we also need
+  to emit events for files found in those sub-directories at the time we add
+  the new watch (in which case we may want another feature which is to send
+  an event for all existing files after starting a new watch, with a type such
+  as EXISTS).
+
 * Local sockets represented by files can use permissions to control the
   security (under Linux). Right now, I use 0666 in the communicatord in
   order to let people connect to the service. I would like to instead
@@ -38,7 +46,8 @@
   One way may be to list for file changes under /proc/... as it may have the
   effect we want (i.e. whenever a new file is created there, such as a UDP
   connection, then we would receive a message and can tranform that in a
-  signal about new/removed TCP/UDP/... connections (see file_change).
+  signal about new/removed TCP/UDP/... connections (however file_change--a.k.a.
+  inotify does not work there).
 
 * Finish the snaplogger network appender extension (mainly testing now).
 
