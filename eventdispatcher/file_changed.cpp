@@ -393,11 +393,15 @@ void file_changed::merge_watch(
             {
                 for(auto const & filename : files)
                 {
-                    file_event const watch_event(
-                              watch->f_watched_path
-                            , SNAP_FILE_CHANGED_EVENT_EXISTS
-                            , filename);
-                    process_event(watch_event);
+                    std::string const basename(snapdev::pathinfo::basename(filename));
+                    if(watch->match_patterns(basename))
+                    {
+                        file_event const watch_event(
+                                  watch->f_watched_path
+                                , SNAP_FILE_CHANGED_EVENT_EXISTS
+                                , basename);
+                        process_event(watch_event);
+                    }
                 }
             }
         }
