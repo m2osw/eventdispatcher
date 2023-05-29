@@ -101,7 +101,7 @@ void process_listener::process_event(ed::process_changed_event const & event)
         << " timestamp: "
         << event.get_timestamp()
         << " ("
-        << event.get_realtime().to_string("%D %T.%N", true)
+        << event.get_realtime().to_string("%D %T.%N") // note: this is always in local time
         << ") pid: "
         << event.get_pid() << "/" << event.get_tgid()
         << " ppid: "
