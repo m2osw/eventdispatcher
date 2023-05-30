@@ -866,118 +866,125 @@ void process_changed::process_read()
 {
     static bool g_received_unknown_event = false;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-    struct __attribute__((aligned(NLMSG_ALIGNTO))) event_message {
-        nlmsghdr f_nl_hdr;
-        struct __attribute__((__packed__)) {
-            cn_msg f_cn_msg;
-            proc_event f_proc_ev;
-        } f_nl_msg;
-    };
-#pragma GCC diagnostic pop
+    // with newer versions of g++ the following fails with an error telling
+    // us that a struct can end with data[0], but nothing can follow that
+    // field -- so instead we have to "manually create the struct" we
+    // we do below
+    //
+    //struct __attribute__((aligned(NLMSG_ALIGNTO))) event_message {
+    //    nlmsghdr f_nl_hdr;
+    //    struct __attribute__((__packed__)) {
+    //        cn_msg f_cn_msg;
+    //        proc_event f_proc_ev;
+    //    } f_nl_msg;
+    //};
+    constexpr std::size_t EVENT_MESSAGE_SIZE = sizeof(nlmsghdr) + sizeof(cn_msg) + sizeof(proc_event);
 
     std::int64_t const date_limit(get_current_date() + get_processing_time_limit());
     int count(0);
+    std::vector<std::uint8_t> msg(EVENT_MESSAGE_SIZE);
     do
     {
-        event_message msg;
-        int const r(recv(f_socket.get(), &msg, sizeof(msg), 0));
+        int const r(recv(f_socket.get(), msg.data(), msg.size(), 0));
         if(r > 0)
         {
+            nlmsghdr const * nl_hdr(reinterpret_cast<nlmsghdr const *>(msg.data()));
+            cn_msg const * cnmsg(reinterpret_cast<cn_msg const *>(nl_hdr + 1));
+            proc_event const * proc_ev(reinterpret_cast<proc_event const *>(cnmsg + 1));
+
             process_changed_event event;
-            event.set_cpu(msg.f_nl_msg.f_proc_ev.cpu);
-            event.set_timestamp(msg.f_nl_msg.f_proc_ev.timestamp_ns);
-            switch(msg.f_nl_msg.f_proc_ev.what)
+            event.set_cpu(proc_ev->cpu);
+            event.set_timestamp(proc_ev->timestamp_ns);
+            switch(proc_ev->what)
             {
             case proc_event::PROC_EVENT_NONE:
                 // report the error as an exit code (same size, it fits)
                 event.set_event(process_event_t::PROCESS_EVENT_NONE);
-                event.set_exit_code(msg.f_nl_msg.f_proc_ev.event_data.ack.err);
+                event.set_exit_code(proc_ev->event_data.ack.err);
                 break;
 
             case proc_event::PROC_EVENT_FORK:
                 event.set_event(process_event_t::PROCESS_EVENT_FORK);
-                event.set_pid(msg.f_nl_msg.f_proc_ev.event_data.fork.child_pid);
-                event.set_tgid(msg.f_nl_msg.f_proc_ev.event_data.fork.child_tgid);
-                event.set_parent_pid(msg.f_nl_msg.f_proc_ev.event_data.fork.parent_pid);
-                event.set_parent_tgid(msg.f_nl_msg.f_proc_ev.event_data.fork.parent_tgid);
+                event.set_pid(proc_ev->event_data.fork.child_pid);
+                event.set_tgid(proc_ev->event_data.fork.child_tgid);
+                event.set_parent_pid(proc_ev->event_data.fork.parent_pid);
+                event.set_parent_tgid(proc_ev->event_data.fork.parent_tgid);
                 break;
 
             case proc_event::PROC_EVENT_EXEC:
                 event.set_event(process_event_t::PROCESS_EVENT_EXEC);
-                event.set_pid(msg.f_nl_msg.f_proc_ev.event_data.id.process_pid);
-                event.set_tgid(msg.f_nl_msg.f_proc_ev.event_data.id.process_tgid);
+                event.set_pid(proc_ev->event_data.id.process_pid);
+                event.set_tgid(proc_ev->event_data.id.process_tgid);
                 break;
 
             case proc_event::PROC_EVENT_UID:
                 event.set_event(process_event_t::PROCESS_EVENT_UID);
-                event.set_pid(msg.f_nl_msg.f_proc_ev.event_data.id.process_pid);
-                event.set_tgid(msg.f_nl_msg.f_proc_ev.event_data.id.process_tgid);
-                event.set_ruid(msg.f_nl_msg.f_proc_ev.event_data.id.r.ruid);
-                event.set_euid(msg.f_nl_msg.f_proc_ev.event_data.id.e.euid);
+                event.set_pid(proc_ev->event_data.id.process_pid);
+                event.set_tgid(proc_ev->event_data.id.process_tgid);
+                event.set_ruid(proc_ev->event_data.id.r.ruid);
+                event.set_euid(proc_ev->event_data.id.e.euid);
                 break;
 
             case proc_event::PROC_EVENT_GID:
                 event.set_event(process_event_t::PROCESS_EVENT_GID);
-                event.set_pid(msg.f_nl_msg.f_proc_ev.event_data.id.process_pid);
-                event.set_tgid(msg.f_nl_msg.f_proc_ev.event_data.id.process_tgid);
-                event.set_rgid(msg.f_nl_msg.f_proc_ev.event_data.id.r.rgid);
-                event.set_egid(msg.f_nl_msg.f_proc_ev.event_data.id.e.egid);
+                event.set_pid(proc_ev->event_data.id.process_pid);
+                event.set_tgid(proc_ev->event_data.id.process_tgid);
+                event.set_rgid(proc_ev->event_data.id.r.rgid);
+                event.set_egid(proc_ev->event_data.id.e.egid);
                 break;
 
             case proc_event::PROC_EVENT_SID:
                 event.set_event(process_event_t::PROCESS_EVENT_SESSION);
-                event.set_pid(msg.f_nl_msg.f_proc_ev.event_data.sid.process_pid);
-                event.set_tgid(msg.f_nl_msg.f_proc_ev.event_data.sid.process_tgid);
+                event.set_pid(proc_ev->event_data.sid.process_pid);
+                event.set_tgid(proc_ev->event_data.sid.process_tgid);
                 break;
 
             case proc_event::PROC_EVENT_PTRACE:
                 event.set_event(process_event_t::PROCESS_EVENT_PTRACE);
-                event.set_pid(msg.f_nl_msg.f_proc_ev.event_data.ptrace.process_pid);
-                event.set_tgid(msg.f_nl_msg.f_proc_ev.event_data.ptrace.process_tgid);
-                event.set_parent_pid(msg.f_nl_msg.f_proc_ev.event_data.ptrace.tracer_pid);
-                event.set_parent_tgid(msg.f_nl_msg.f_proc_ev.event_data.ptrace.tracer_tgid);
+                event.set_pid(proc_ev->event_data.ptrace.process_pid);
+                event.set_tgid(proc_ev->event_data.ptrace.process_tgid);
+                event.set_parent_pid(proc_ev->event_data.ptrace.tracer_pid);
+                event.set_parent_tgid(proc_ev->event_data.ptrace.tracer_tgid);
                 break;
 
             case proc_event::PROC_EVENT_COMM:
                 event.set_event(process_event_t::PROCESS_EVENT_COMMAND);
-                event.set_pid(msg.f_nl_msg.f_proc_ev.event_data.comm.process_pid);
-                event.set_tgid(msg.f_nl_msg.f_proc_ev.event_data.comm.process_tgid);
+                event.set_pid(proc_ev->event_data.comm.process_pid);
+                event.set_tgid(proc_ev->event_data.comm.process_tgid);
 
                 // as far as I know the "comm" field can be a max. of 15
                 // characters, but just in case, the following assumes
                 // it is not null terminated
                 //
                 event.set_command(std::string(
-                          msg.f_nl_msg.f_proc_ev.event_data.comm.comm
-                        , strnlen(msg.f_nl_msg.f_proc_ev.event_data.comm.comm
-                                , sizeof(msg.f_nl_msg.f_proc_ev.event_data.comm.comm))));
+                          proc_ev->event_data.comm.comm
+                        , strnlen(proc_ev->event_data.comm.comm
+                                , sizeof(proc_ev->event_data.comm.comm))));
                 break;
 
             case proc_event::PROC_EVENT_COREDUMP:
                 event.set_event(process_event_t::PROCESS_EVENT_COREDUMP);
-                event.set_pid(msg.f_nl_msg.f_proc_ev.event_data.coredump.process_pid);
-                event.set_tgid(msg.f_nl_msg.f_proc_ev.event_data.coredump.process_tgid);
+                event.set_pid(proc_ev->event_data.coredump.process_pid);
+                event.set_tgid(proc_ev->event_data.coredump.process_tgid);
                 break;
 
             case proc_event::PROC_EVENT_EXIT:
                 event.set_event(process_event_t::PROCESS_EVENT_EXIT);
-                event.set_pid(msg.f_nl_msg.f_proc_ev.event_data.exit.process_pid);
-                event.set_tgid(msg.f_nl_msg.f_proc_ev.event_data.exit.process_tgid);
-                event.set_exit_code(msg.f_nl_msg.f_proc_ev.event_data.exit.exit_code);
-                event.set_exit_signal(msg.f_nl_msg.f_proc_ev.event_data.exit.exit_signal);
+                event.set_pid(proc_ev->event_data.exit.process_pid);
+                event.set_tgid(proc_ev->event_data.exit.process_tgid);
+                event.set_exit_code(proc_ev->event_data.exit.exit_code);
+                event.set_exit_signal(proc_ev->event_data.exit.exit_signal);
                 break;
 
             default:
                 event.set_event(process_event_t::PROCESS_EVENT_UNKNOWN);
-                event.set_exit_code(msg.f_nl_msg.f_proc_ev.what);
+                event.set_exit_code(proc_ev->what);
                 if(!g_received_unknown_event)
                 {
                     g_received_unknown_event = true;
                     SNAP_LOG_WARNING
                         << "process_changed::process_read() received unknown proc_event: "
-                        << static_cast<int>(msg.f_nl_msg.f_proc_ev.what)
+                        << static_cast<int>(proc_ev->what)
                         << SNAP_LOG_SEND;
                 }
                 break;
