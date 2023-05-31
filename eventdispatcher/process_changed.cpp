@@ -805,10 +805,15 @@ void process_changed::set_enable(bool enabled)
  * Older kernels (up until 2023) ignore that flag and continue sending
  * data through the socket. You should not just disable this connection
  * on such kernels. Instead, you want to delete the connection and
- * re-establish it later if you need it.
+ * re-establish it later when you need it again.
  */
 void process_changed::listen_for_events()
 {
+    // with newer versions of g++ the following fails with an error telling
+    // us that a struct can end with data[0], but nothing can follow that
+    // field -- so instead we have to "manually create the struct" we
+    // we do below
+    //
     //struct __attribute__((aligned(NLMSG_ALIGNTO))) multicast_message {
     //    nlmsghdr f_nl_hdr;
     //    struct __attribute__((__packed__)) {
