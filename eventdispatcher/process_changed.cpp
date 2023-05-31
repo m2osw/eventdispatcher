@@ -809,31 +809,47 @@ void process_changed::set_enable(bool enabled)
  */
 void process_changed::listen_for_events()
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-    struct __attribute__((aligned(NLMSG_ALIGNTO))) multicast_message {
-        nlmsghdr f_nl_hdr;
-        struct __attribute__((__packed__)) {
-            cn_msg f_cn_msg;
-            enum proc_cn_mcast_op f_cn_mcast;
-        } f_nl_msg;
-    };
-#pragma GCC diagnostic pop
+    //struct __attribute__((aligned(NLMSG_ALIGNTO))) multicast_message {
+    //    nlmsghdr f_nl_hdr;
+    //    struct __attribute__((__packed__)) {
+    //        cn_msg f_cn_msg;
+    //        enum proc_cn_mcast_op f_cn_mcast;
+    //    } f_nl_msg;
+    //};
+    constexpr std::size_t EVENT_MESSAGE_SIZE = sizeof(nlmsghdr) + sizeof(cn_msg) + sizeof(enum proc_cn_mcast_op);
 
-    multicast_message msg = {};
-    msg.f_nl_hdr.nlmsg_len = sizeof(multicast_message);
-    msg.f_nl_hdr.nlmsg_pid = getpid();
-    msg.f_nl_hdr.nlmsg_type = NLMSG_DONE;
+    //multicast_message msg = {};
+    //msg.f_nl_hdr.nlmsg_len = sizeof(multicast_message);
+    //msg.f_nl_hdr.nlmsg_pid = getpid();
+    //msg.f_nl_hdr.nlmsg_type = NLMSG_DONE;
 
-    msg.f_nl_msg.f_cn_msg.id.idx = CN_IDX_PROC;
-    msg.f_nl_msg.f_cn_msg.id.val = CN_VAL_PROC;
-    msg.f_nl_msg.f_cn_msg.len = sizeof(enum proc_cn_mcast_op);
+    //msg.f_nl_msg.f_cn_msg.id.idx = CN_IDX_PROC;
+    //msg.f_nl_msg.f_cn_msg.id.val = CN_VAL_PROC;
+    //msg.f_nl_msg.f_cn_msg.len = sizeof(enum proc_cn_mcast_op);
 
-    msg.f_nl_msg.f_cn_mcast = is_enabled()
-                                ? PROC_CN_MCAST_LISTEN
-                                : PROC_CN_MCAST_IGNORE;
+    //msg.f_nl_msg.f_cn_mcast = is_enabled()
+    //                            ? PROC_CN_MCAST_LISTEN
+    //                            : PROC_CN_MCAST_IGNORE;
 
-    int const r(send(f_socket.get(), &msg, sizeof(msg), 0));
+    std::vector<std::uint8_t> msg(EVENT_MESSAGE_SIZE);
+
+    nlmsghdr * nl_hdr(reinterpret_cast<nlmsghdr *>(msg.data()));
+    cn_msg * cnmsg(reinterpret_cast<cn_msg *>(nl_hdr + 1));
+    enum proc_cn_mcast_op * proc_op(reinterpret_cast<enum proc_cn_mcast_op *>(cnmsg + 1));
+
+    nl_hdr->nlmsg_len = EVENT_MESSAGE_SIZE;
+    nl_hdr->nlmsg_pid = getpid();
+    nl_hdr->nlmsg_type = NLMSG_DONE;
+
+    cnmsg->id.idx = CN_IDX_PROC;
+    cnmsg->id.val = CN_VAL_PROC;
+    cnmsg->len = sizeof(enum proc_cn_mcast_op);
+
+    *proc_op = is_enabled()
+                ? PROC_CN_MCAST_LISTEN
+                : PROC_CN_MCAST_IGNORE;
+
+    int const r(send(f_socket.get(), msg.data(), msg.size(), 0));
     if(r < 0)
     {
         f_socket.reset();
