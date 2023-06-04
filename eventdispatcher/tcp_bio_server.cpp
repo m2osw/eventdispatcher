@@ -704,6 +704,15 @@ tcp_bio_client::pointer_t tcp_bio_server::accept()
 
     client->f_impl->f_bio = bio;
 
+    // define this computer's address (otherwise it remains at "default")
+    {
+        int const socket(client->get_socket());
+        if(socket >= 0)
+        {
+            client->f_address.set_from_socket(socket, false);
+        }
+    }
+
     // TODO: somehow this does not seem to give us any information
     //       about the cipher and other details...
     //

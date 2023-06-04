@@ -704,7 +704,11 @@ addr::addr tcp_bio_client::get_address() const
  * even after the connection is closed (assuming it was retrieved at least
  * once while the connection was up).
  *
- * \return A reference to the remote computer address.
+ * \warning
+ * The function is likely to return an ephemeral port with this address.
+ * The port you connected to can be found in get_address() if defined.
+ *
+ * \return The remote computer address.
  */
 addr::addr tcp_bio_client::get_client_address()
 {
@@ -713,7 +717,7 @@ addr::addr tcp_bio_client::get_client_address()
         int const s(get_socket());
         if(s > 0)
         {
-            f_client_address.set_from_socket(s, false);
+            f_client_address.set_from_socket(s, true);
         }
     }
 
