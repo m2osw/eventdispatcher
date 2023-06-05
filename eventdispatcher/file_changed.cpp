@@ -799,12 +799,12 @@ file_event_mask_t file_changed::mask_to_events(uint32_t const mask)
         events |= SNAP_FILE_CHANGED_EVENT_WRITE;
     }
 
-    if((mask & (IN_CREATE | IN_MOVED_FROM)) != 0)
+    if((mask & (IN_CREATE | IN_MOVED_TO)) != 0)
     {
         events |= SNAP_FILE_CHANGED_EVENT_CREATED;
     }
 
-    if((mask & (IN_DELETE | IN_DELETE_SELF | IN_MOVED_TO)) != 0)
+    if((mask & (IN_DELETE | IN_DELETE_SELF | IN_MOVED_FROM)) != 0)
     {
         events |= SNAP_FILE_CHANGED_EVENT_DELETED;
     }
