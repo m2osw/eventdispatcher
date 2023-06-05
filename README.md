@@ -89,6 +89,65 @@ Connections can be disabled and assigned a priority. The priority is useful
 if you want some of your `process_<name>()` called in a specific order.
 
 
+## Debugging Connections
+
+Each connection you create should be given a unique name. Note that the
+same type of connection may be created multiple times. If possible, use
+a counter or some similar function to define a unique name.
+
+    my_connection::my_connection()
+        : ...
+    {
+        set_name("my_connection");
+    }
+
+This helps you when you turn on the debug as the communicator and other
+parts of the code will be able to print the name of the connection being
+tweaked (added, removed, receiving a message, still being in the
+communicator when it shouldn't, etc.)
+
+Here are a few functions you can use for this purpose:
+
+* `communicator::set_show_connections()`
+
+  This function tells the communicator that you want it to show you which
+  connections it is listening to. This is particularly useful when trying
+  to end your application cleanly by removing all your connections. If one
+  remains behind, it is at times difficult to know which one.
+
+  This flag needs the debug connection log level to be appropriate to work.
+
+* `communicator::debug_connections()`
+
+  Defines the log level of the debugger used along the connection.
+
+  The log level needs to be really log to be useful. So at least
+  `SEVERITY_DEBUG`. It is likely to be even better if you use
+  `SEVERITY_ALL`.
+
+* `communicator::log_connections()`
+
+  A lighter weight than the `debug_connections()` above, this functions
+  prints out the complete list of connections remaining after a
+  `remove_connection()` happened. In many cases, this is sufficient.
+
+  Which function to use will generally depend on the number of logs you get
+  and how often the remove versus the `poll()` happens.
+
+* `dispatcher::set_trace()`
+
+  When sending and receiving a lot of messages, it can be difficult to make
+  sure that they travel where required. This function allows for the
+  dispatcher to display messages as they are received.
+
+  **IMPORTANT NOTE:** This does not print anything on the sender side, only
+  the receiver. In most cases, we have not found it useful to have it on
+  the sender side. There logs can help you to make sure the correct
+  functions get called as required.
+
+  In most cases, this is done at the time you initialize the dispatcher in
+  your messenger class.
+
 ## Timers
 
 The base `connection` class is viewed as a timer, so that means all your
