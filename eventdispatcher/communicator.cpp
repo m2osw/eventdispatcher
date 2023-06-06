@@ -214,7 +214,7 @@ bool communicator::add_connection(connection::pointer_t connection)
         SNAP_LOG_TRACE
             << "connection, \""
             << connection->get_name()
-            << "\" not readded (already present in f_connections)."
+            << "\" not re-added (already present in f_connections)."
             << SNAP_LOG_SEND;
 
         return false;

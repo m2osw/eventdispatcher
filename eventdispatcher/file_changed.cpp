@@ -752,13 +752,13 @@ uint32_t file_changed::events_to_mask(file_event_mask_t const events)
     if((events & SNAP_FILE_CHANGED_EVENT_CREATED) != 0
     || (events & SNAP_FILE_CHANGED_EVENT_RECURSIVE) != 0)
     {
-        mask |= IN_CREATE | IN_MOVED_FROM | IN_MOVE_SELF;
+        mask |= IN_CREATE | IN_MOVED_TO | IN_MOVE_SELF;
     }
 
     if((events & SNAP_FILE_CHANGED_EVENT_DELETED) != 0
     || (events & SNAP_FILE_CHANGED_EVENT_RECURSIVE) != 0)
     {
-        mask |= IN_DELETE | IN_DELETE_SELF | IN_MOVED_TO | IN_MOVE_SELF;
+        mask |= IN_DELETE | IN_DELETE_SELF | IN_MOVED_FROM | IN_MOVE_SELF;
     }
 
     if((events & SNAP_FILE_CHANGED_EVENT_ACCESS) != 0)
