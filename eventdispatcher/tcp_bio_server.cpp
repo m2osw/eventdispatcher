@@ -609,7 +609,7 @@ int tcp_bio_server::get_socket() const
 
 /** \brief Retrieve one new connection.
  *
- * This function will wait until a new connection arrives and returns a
+ * This function waits until a new connection arrives and returns a
  * new bio_client object for each new connection.
  *
  * If the socket is made non-blocking then the function may return without

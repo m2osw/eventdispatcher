@@ -705,7 +705,17 @@ void connection::non_blocking() const
     && get_socket() >= 0)
     {
         int optval(1);
-        ioctl(get_socket(), FIONBIO, &optval);
+        if(ioctl(get_socket(), FIONBIO, &optval) == -1)
+        {
+            int const e(errno);
+            SNAP_LOG_WARNING
+                << "connection::non_blocking(): error "
+                << e
+                << " ("
+                << strerror(e)
+                << ") occurred trying to mark socket as non-blocking."
+                << SNAP_LOG_SEND;
+        }
     }
 }
 
