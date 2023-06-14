@@ -1,6 +1,5 @@
 usr/lib/libeventdispatcher.so.*
 usr/lib/eventdispatcher/inst/manage-tls-keys
 usr/bin/ed-signal
-usr/bin/ed-stop
 conf/ed-signal.conf                             etc/eventdispatcher/
 conf/README.md                                  etc/eventdispatcher/eventdispatcher.d/

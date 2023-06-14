@@ -1,1 +1,2 @@
 usr/lib/libcppprocess.so.*
+usr/bin/ed-stop               # uses the cppprocess library so it has to be here
