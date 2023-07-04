@@ -2,24 +2,24 @@ Source: eventdispatcher
 Priority: extra
 Maintainer: Alexis Wilke <alexis@m2osw.com>
 Build-Depends: cmake,
-    cppthread-dev (>= 1.0.0.0~bionic),
+    cppthread-dev (>= 1.0.0.0~jammy),
     debhelper,
     doxygen,
     graphviz,
-    libaddr-dev (>= 1.0.17.0~bionic),
-    libadvgetopt-dev (>= 2.0.1.0~bionic),
-    libexcept-dev (>= 1.1.4.0~bionic),
+    libaddr-dev (>= 1.0.17.0~jammy),
+    libadvgetopt-dev (>= 2.0.1.0~jammy),
+    libexcept-dev (>= 1.1.4.0~jammy),
     libncurses-dev,
     libqt5x11extras5-dev,
     libreadline-dev,
     libssl-dev (>= 1.0.1),
-    libutf8-dev (>= 1.0.6.0~bionic),
+    libutf8-dev (>= 1.0.6.0~jammy),
     qtbase5-dev,
-    serverplugins-dev (>= 2.0.1.1~bionic),
-    snapcatch2 (>= 2.9.1.0~bionic),
-    snapcmakemodules (>= 1.0.49.0~bionic),
-    snapdev (>= 1.1.3.0~bionic),
-    snaplogger-dev (>= 1.0.0.0~bionic)
+    serverplugins-dev (>= 2.0.1.1~jammy),
+    snapcatch2 (>= 2.9.1.0~jammy),
+    snapcmakemodules (>= 1.0.49.0~jammy),
+    snapdev (>= 1.1.3.0~jammy),
+    snaplogger-dev (>= 1.0.0.0~jammy)
 Standards-Version: 3.9.4
 Section: libs
 Homepage: https://snapwebsites.org/

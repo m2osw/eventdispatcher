@@ -1,4 +1,4 @@
-eventdispatcher (1.1.56.0~bionic) bionic; urgency=high
+eventdispatcher (1.1.56.0~jammy) jammy; urgency=high
 
   * Added the new process_changed class.
 
