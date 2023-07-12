@@ -29,6 +29,9 @@ namespace snaplogger_network
 
 
 
+SERVERPLUGINS_VERSION(snaplogger_network, 1, 0)
+
+
 /** \brief The Snap! Logger Network plugin class.
  *
  * All plugins must have a plugin instance which gets created on load.
@@ -46,5 +49,5 @@ private:
 
 
 
-} // snaplogger_network namespace
+} // namespace snaplogger_network
 // vim: ts=4 sw=4 et

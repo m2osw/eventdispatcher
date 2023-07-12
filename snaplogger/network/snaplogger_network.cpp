@@ -37,7 +37,7 @@ namespace snaplogger_network
 {
 
 
-SERVERPLUGINS_START(snaplogger_network, 5, 3)
+SERVERPLUGINS_START(snaplogger_network)
     , ::serverplugins::description("snaplogger network plugin extension to allow sending log messages to other servers via TCP or UDP.")
     , ::serverplugins::help_uri("https://snapwebsites.org/project/eventdispatcher")
     , ::serverplugins::categorization_tag("snaplogger")
