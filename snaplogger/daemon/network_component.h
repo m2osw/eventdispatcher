@@ -35,7 +35,7 @@
  * are the parameters found on the remote computer. (TODO)
  */
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/component.h>
 

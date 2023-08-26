@@ -29,17 +29,17 @@
 #include    "snaplogger/network/udp_appender.h"
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/guard.h>
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/udp_server_message_connection.h>
 
 
-// C++ lib
+// C++
 //
 #include    <iostream>
 

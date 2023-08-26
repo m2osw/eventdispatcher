@@ -24,12 +24,12 @@
  * This file declares the base appender class.
  */
 
-// eventdispatcher lib
+// libaddr
 //
 #include    <libaddr/addr.h>
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/communicator.h>
 #include    <eventdispatcher/connection_with_send_message.h>

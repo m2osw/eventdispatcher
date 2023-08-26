@@ -33,23 +33,23 @@
 #include    <cppprocess/process_list.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/glob_to_list.h>
 #include    <snapdev/map_keyset.h>
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// C++ lib
+// C++
 //
 #include    <list>
 
 
-// C lib
+// C
 //
 #include <signal.h>
 

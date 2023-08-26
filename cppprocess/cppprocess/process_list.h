@@ -23,7 +23,7 @@
 #include    <cppprocess/process_info.h>
 
 
-// C++ lib
+// C++
 //
 #include    <map>
 

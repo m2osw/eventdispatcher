@@ -28,12 +28,12 @@
 // (TODO: move to .cpp once we have the impl!)
 #define OPENSSL_THREAD_DEFINES
 
-// C++ lib
+// C++
 //
 #include    <memory>
 
 
-// OpenSSL lib
+// OpenSSL
 //
 #include    <openssl/ssl.h>
 

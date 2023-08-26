@@ -37,7 +37,7 @@
 #include    <eventdispatcher/connection.h>
 
 
-// C++ lib
+// C++
 //
 #include    <map>
 #include    <set>

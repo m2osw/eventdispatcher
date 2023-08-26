@@ -31,7 +31,7 @@
 
 
 
-// advgetopt lib
+// advgetopt
 //
 #include    <advgetopt/utils.h>
 

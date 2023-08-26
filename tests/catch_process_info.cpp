@@ -22,12 +22,12 @@
 #include    "catch_main.h"
 
 
-// cppprocess lib
+// cppprocess
 //
 #include    <cppprocess/process_info.h>
 
 
-// C lib
+// C
 //
 #include    <sys/resource.h>
 #include    <sys/times.h>

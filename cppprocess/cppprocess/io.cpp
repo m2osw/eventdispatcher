@@ -24,7 +24,7 @@
 #include    <snapdev/has_member_function.h>
 
 
-// snapdev include
+// snapdev
 //
 #include    <snapdev/not_used.h>
 

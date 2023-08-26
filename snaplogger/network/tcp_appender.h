@@ -31,7 +31,7 @@
 
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/communicator.h>
 #include    <eventdispatcher/connection.h>

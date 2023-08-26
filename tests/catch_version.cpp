@@ -22,12 +22,12 @@
 #include    "catch_main.h"
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/version.h>
 
 
-// cppprocess lib
+// cppprocess
 //
 #include    <cppprocess/version.h>
 

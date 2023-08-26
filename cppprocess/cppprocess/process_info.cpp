@@ -40,30 +40,21 @@
 #include    <cppprocess/process_info.h>
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/file_contents.h>
 #include    <snapdev/tokenize_string.h>
 #include    <snapdev/pathinfo.h>
 
 
-// C++ lib
+// C++
 //
 #include <iostream>
-
-
-// C lib
-//
-//#include <proc/readproc.h>
-//#include <stdio.h>
-//#include <sys/prctl.h>
-//#include <sys/wait.h>
-//#include <unistd.h>
 
 
 // last include

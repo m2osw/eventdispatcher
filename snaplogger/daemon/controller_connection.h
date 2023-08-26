@@ -24,12 +24,7 @@
  * This file declares the base appender class.
  */
 
-// self
-//
-//#include    "snaplogger/appender.h"
-
-
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/dispatcher.h>
 #include    <eventdispatcher/tcp_server_client_message_connection.h>

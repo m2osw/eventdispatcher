@@ -23,19 +23,19 @@
 #include    <cppprocess/io.h>
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/communicator.h>
 #include    <eventdispatcher/pipe_connection.h>
 #include    <eventdispatcher/signal_child.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/glob_to_list.h>
 
 
-// C++ lib
+// C++
 //
 #include    <list>
 #include    <map>

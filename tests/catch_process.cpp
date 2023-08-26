@@ -22,7 +22,7 @@
 #include    "catch_main.h"
 
 
-// cppprocess lib
+// cppprocess
 //
 #include    <cppprocess/io_capture_pipe.h>
 #include    <cppprocess/io_data_pipe.h>
@@ -31,12 +31,12 @@
 #include    <cppprocess/process.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/file_contents.h>
 
 
-// C++ lib
+// C++
 //
 #include    <fstream>
 

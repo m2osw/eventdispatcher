@@ -22,12 +22,12 @@
 #include    "catch_main.h"
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/message.h>
 
 
-// C lib
+// C
 //
 #include    <unistd.h>
 

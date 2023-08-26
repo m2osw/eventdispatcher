@@ -23,19 +23,15 @@
  * At times it is useful to send logs to the Snap! Logger system from the
  * command line or a script. This tool is here for that exact purpose.
  * It sends the logs using the parameters you provide on the command line.
- * It first loads defaults that you can overwrite with command line
- * parameters.
+ * It first loads defaults from configuration files that you can overwrite
+ * with command line parameters.
  */
 
 
 // eventdispatcher
 //
+#include    <eventdispatcher/communicator.h>
 #include    <eventdispatcher/version.h>
-
-
-// snaplogger network
-//
-#include    <snaplogger/network/tcp_appender.h>
 
 
 // snaplogger
@@ -111,7 +107,7 @@ const advgetopt::option g_options[] =
         , advgetopt::Flags(advgetopt::all_flags<
               advgetopt::GETOPT_FLAG_REQUIRED
             , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
-        , advgetopt::Help("the line of which the error/issue occurred.")
+        , advgetopt::Help("the line where the error/issue occurred.")
     ),
     advgetopt::define_option(
           advgetopt::Name("message")

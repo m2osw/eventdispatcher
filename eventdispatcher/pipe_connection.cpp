@@ -46,12 +46,12 @@
 #include    "eventdispatcher/exception.h"
 
 
-// C++ lib
+// C++
 //
 #include    <iostream>
 
 
-// C lib
+// C
 //
 #include    <unistd.h>
 #include    <sys/socket.h>

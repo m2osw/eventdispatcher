@@ -25,12 +25,12 @@
  */
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/raii_generic_deleter.h>
 
 
-// libaddr lib
+// libaddr
 //
 #include    <libaddr/addr_unix.h>
 

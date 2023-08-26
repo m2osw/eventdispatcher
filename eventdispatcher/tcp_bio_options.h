@@ -35,12 +35,12 @@
 #define OPENSSL_THREAD_DEFINES
 
 
-// C++ lib
+// C++
 //
 #include    <string>
 
 
-// OpenSSL lib
+// OpenSSL
 //
 // TODO: create our own set of flags to avoid  this header in the .h
 #include    <openssl/ssl.h>

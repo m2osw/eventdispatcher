@@ -34,7 +34,7 @@
 #include    "snaplogger/daemon/utils.h"
 
 
-// C++ lib
+// C++
 //
 #include    <iostream>
 

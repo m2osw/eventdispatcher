@@ -24,12 +24,12 @@
  * A few complementary functions and structures.
  */
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/message.h>
 
 
-// eventdispatcher lib
+// eventdispatcher
 //
 #include    <eventdispatcher/message.h>
 

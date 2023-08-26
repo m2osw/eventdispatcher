@@ -23,12 +23,12 @@
 #include    <cppprocess/io.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/raii_generic_deleter.h>
 
 
-// C lib
+// C
 //
 #include    <fcntl.h>
 

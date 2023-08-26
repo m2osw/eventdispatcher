@@ -30,22 +30,22 @@
 
 
 
-// snaplogger lib
+// snaplogger
 //
 #include    <snaplogger/guard.h>
 
 
-// libaddr lib
+// libaddr
 //
 #include    <libaddr/addr_parser.h>
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/string_replace_many.h>
 
 
-// C++ lib
+// C++
 //
 #include    <iostream>
 

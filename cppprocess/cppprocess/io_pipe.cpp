@@ -24,17 +24,17 @@
 #include    <cppprocess/exception.h>
 
 
-// eventdispatcher include
+// eventdispatcher
 //
 #include    <eventdispatcher/communicator.h>
 
 
-// snapdev include
+// snapdev
 //
 #include    <snapdev/not_reached.h>
 
 
-// C lib
+// C
 //
 #include    <unistd.h>
 

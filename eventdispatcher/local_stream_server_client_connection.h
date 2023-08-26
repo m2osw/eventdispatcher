@@ -39,7 +39,7 @@
 #include    <snapdev/raii_generic_deleter.h>
 
 
-// C lib
+// C
 //
 #include    <sys/socket.h>
 

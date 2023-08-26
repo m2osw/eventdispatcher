@@ -29,7 +29,7 @@
 #include    <eventdispatcher/connection.h>
 
 
-// C lib
+// C
 //
 #include    <sys/types.h>
 

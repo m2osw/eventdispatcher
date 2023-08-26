@@ -19,12 +19,12 @@
 #pragma once
 
 
-// snapdev lib
+// snapdev
 //
 #include    <snapdev/callback_manager.h>
 
 
-// C++ lib
+// C++
 //
 #include    <functional>
 #include    <list>
