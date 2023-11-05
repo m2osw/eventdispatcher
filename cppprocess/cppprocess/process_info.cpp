@@ -54,7 +54,8 @@
 
 // C++
 //
-#include <iostream>
+#include    <cstdint>
+#include    <iostream>
 
 
 // last include
