@@ -1,6 +1,22 @@
 eventdispatcher (1.1.56.0~jammy) jammy; urgency=high
 
   * Added the new process_changed class.
+  * Added a few #include <cstdint>.
+  * Added snaplog to a package.
+  * Moved snaplogger network plugin version to its header.
+  * Moved ed-stop to the cppprocess package.
+  * Fixed file events: EXISTS, MOVE, MOVE_TO, and MOVE_FROM.
+  * The file events now supports patterns.
+  * Make sure ioctl() worked.
+  * Fixed the addressed used by the GOSSIP.
+  * Fixed the get_client_address(), it would retrieve the wrong address.
+  * Properly set the f_address in the bio clients returned by porcess_accept().
+  * Added the process_changed connection to detect FORKs, EXIT, etc.
+  * Created a helper script to generate TLS keys in any other project.
+  * Fixed retrival of unix socket filename without the '\0'.
+  * Removed boost as a dependency.
+  * ed-signal can be used to send a signal to a specific service.
+  * Various clean ups & enhancements.
 
  -- Alexis Wilke <alexis@m2osw.com>  Sun, 30 Apr 2023 10:29:31 -0700
 
