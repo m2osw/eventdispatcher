@@ -24,6 +24,13 @@ of processes all receive a copy of the output of the previous process
 
 ## Example
 
+Note: We actually have a full implementation to run dot to generate an SVG
+      in memory and then display it in a QSvgWidget in snapbuilder. The
+      code is found in the snapbuilder and project classes. It uses memory
+      streaming of the `.dot` file to the dot tool, then capture the output,
+      again just streaming, to a memory buffer of the resulting XML. Finally
+      it passes that to the QSvgWidget for display.
+
 To use the `process` class you can use your own pipes, in which case you
 are responsible for reading and writing data from/to the process. If you
 are not otherwise using the `ed::communicator`, you may also want to use
