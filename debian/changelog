@@ -1,3 +1,9 @@
+eventdispatcher (1.1.56.1~jammy) jammy; urgency=high
+
+  * Updated documentation.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 12 Nov 2023 11:45:27 -0800
+
 eventdispatcher (1.1.56.0~jammy) jammy; urgency=high
 
   * Added the new process_changed class.
