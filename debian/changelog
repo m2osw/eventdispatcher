@@ -1,3 +1,9 @@
+eventdispatcher (1.1.57.0~jammy) jammy; urgency=high
+
+  * Added byte counters for the TCP bio implementation.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Thu, 21 Dec 2023 20:23:42 -0800
+
 eventdispatcher (1.1.56.1~jammy) jammy; urgency=high
 
   * Updated documentation.

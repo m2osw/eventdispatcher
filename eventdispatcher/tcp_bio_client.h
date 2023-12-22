@@ -78,6 +78,8 @@ public:
     int                 get_socket() const;
     addr::addr          get_address() const;
     addr::addr          get_client_address();
+    std::size_t         get_sent_bytes() const;
+    std::size_t         get_received_bytes() const;
 
     int                 read(char * buf, size_t size);
     int                 read_line(std::string & line);
@@ -92,6 +94,8 @@ private:
     addr::addr          f_client_address = addr::addr();
     std::shared_ptr<detail::tcp_bio_client_impl>
                         f_impl = std::shared_ptr<detail::tcp_bio_client_impl>();
+    std::size_t         f_sent_bytes = 0;
+    std::size_t         f_received_bytes = 0;
 };
 
 

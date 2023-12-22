@@ -725,6 +725,52 @@ addr::addr tcp_bio_client::get_client_address()
 }
 
 
+/** \brief Get the number of bytes received so far.
+ *
+ * This function returns the number of bytes that were sent using the
+ * write() function.
+ *
+ * \note
+ * The number may be incorrect if errors occurred while writing to
+ * the socket.
+ *
+ * \warning
+ * This function returns the number of bytes after decryption. If your
+ * connection is encrypted, then this number is not the number of bytes
+ * sent over your network. The TLS system also may send and receive
+ * bytes when you call write().
+ *
+ * \return Number of bytes sent by write().
+ */
+std::size_t tcp_bio_client::get_sent_bytes() const
+{
+    return f_sent_bytes;
+}
+
+
+/** \brief Get the number of bytes received so far.
+ *
+ * This function returns the number of bytes that were received using
+ * the read() and read_line() functions.
+ *
+ * \note
+ * The number may be incorrect if errors occurred while reading from
+ * the socket.
+ *
+ * \warning
+ * This function returns the number of bytes after decryption. If your
+ * connection is encrypted, then this number is not the number of bytes
+ * sent over your network. The TLS system also may send and receive
+ * bytes when you call read() and read_line().
+ *
+ * \return Number of bytes received by read() and read_line().
+ */
+std::size_t tcp_bio_client::get_received_bytes() const
+{
+    return f_received_bytes;
+}
+
+
 /** \brief Read data from the socket.
  *
  * A TCP socket is a stream type of socket and one can read data from it
@@ -746,11 +792,6 @@ addr::addr tcp_bio_client::get_client_address()
  * the connection. It may also be that the buffer was empty and that
  * the BIO decided to return early. Since we use a blocking mechanism
  * by default, that should not happen.
- *
- * \todo
- * At this point, I do not know for sure whether errno is properly set
- * or not. It is not unlikely that the BIO library does not keep a clean
- * errno error since they have their own error management.
  *
  * \param[in,out] buf  The buffer where the data is read.
  * \param[in] size  The size of the buffer.
@@ -784,6 +825,7 @@ int tcp_bio_client::read(char * buf, size_t size)
             errno = EAGAIN;
             return 0;
         }
+
         // did we reach the "end of the file"? i.e. did the server
         // close our connection? (this better replicates what a
         // normal socket does when reading from a closed socket)
@@ -795,10 +837,15 @@ int tcp_bio_client::read(char * buf, size_t size)
         if(r != 0)
         {
             // the BIO generated an error
+            //
             detail::bio_log_errors();
             errno = EIO;
             return -1;
         }
+    }
+    else
+    {
+        f_received_bytes += r;
     }
     return r;
 }
@@ -822,7 +869,7 @@ int tcp_bio_client::read(char * buf, size_t size)
  * not. If so, you may not be able to make use of this function.
  *
  * \param[out] line  The resulting line read from the server. The function
- *                   first clears the contents.
+ *                   first clears this string.
  *
  * \return The number of bytes read from the socket, or -1 on errors.
  *         If the function returns 0 or more, then the \p line parameter
@@ -840,10 +887,12 @@ int tcp_bio_client::read_line(std::string & line)
         int r(read(&c, sizeof(c)));
         if(r <= 0)
         {
+            f_received_bytes += len;
             return len == 0 && r < 0 ? -1 : len;
         }
         if(c == '\n')
         {
+            f_received_bytes += len;
             return len;
         }
         ++len;
@@ -873,11 +922,6 @@ int tcp_bio_client::read_line(std::string & line)
  * \note
  * If the connection was closed, return -1.
  *
- * \todo
- * At this point, I do not know for sure whether errno is properly set
- * or not. It is not unlikely that the BIO library does not keep a clean
- * errno error since they have their own error management.
- *
  * \param[in] buf  The buffer with the data to send over the socket.
  * \param[in] size  The number of bytes in buffer to send over the socket.
  *
@@ -890,7 +934,7 @@ int tcp_bio_client::read_line(std::string & line)
 int tcp_bio_client::write(char const * buf, size_t size)
 {
 #ifdef _DEBUG
-    // This write is useful when developing APIs against 3rd party
+    // This log is useful when developing APIs against 3rd party
     // servers, otherwise, it's just too much debug
     //SNAP_LOG_TRACE
     //    << "tcp_bio_client::write(): buf="
@@ -909,6 +953,7 @@ int tcp_bio_client::write(char const * buf, size_t size)
     if(r <= -2)
     {
         // the BIO is not implemented
+        //
         detail::bio_log_errors();
         errno = EIO;
         return -1;
@@ -920,11 +965,14 @@ int tcp_bio_client::write(char const * buf, size_t size)
             errno = EAGAIN;
             return 0;
         }
+
         // the BIO generated an error (TBD should we check BIO_eof() too?)
+        //
         detail::bio_log_errors();
         errno = EIO;
         return -1;
     }
+    f_sent_bytes += r;
     BIO_flush(f_impl->f_bio.get());
     return r;
 }
