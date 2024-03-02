@@ -3,9 +3,9 @@ Upstream-Name: eventdispatcher
 Source: https://github.com/m2osw/eventdispatcher
 
 Files: *
-Copyright: 2012-2021 Made to Order Software Corp. <contact@m2osw.com>
-           2012-2021 Alexis Wilke <alexis@m2osw.com>
-           2012-2021 R. Douglas Barbieri <doug@m2osw.com>
+Copyright: 2012-2024  Made to Order Software Corp. <contact@m2osw.com>
+           2012-2024  Alexis Wilke <alexis@m2osw.com>
+           2012-2024  R. Douglas Barbieri <doug@m2osw.com>
 License: GPL-2+
  This package is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
