@@ -170,15 +170,12 @@ template<class ...ARGS>
 static
 dispatcher_match define_match(ARGS ...args)
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
     dispatcher_match match =
     {
         .f_expr =     find_match_value<Expression  >(args..., Expression()),
         .f_callback = find_match_value<Callback    >(args...),
         .f_match =    find_match_value<MatchFunc   >(args..., MatchFunc()),
     };
-#pragma GCC diagnostic pop
 
     if(match.f_callback == nullptr)
     {
