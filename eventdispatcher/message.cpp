@@ -1459,10 +1459,7 @@ void message::add_parameter(std::string const & name, std::string const & value)
  */
 void message::add_parameter(std::string const & name, std::int32_t value)
 {
-    verify_message_name(name);
-
-    f_parameters[name] = std::to_string(value);
-    f_cached_message.clear();
+    add_parameter(name, std::to_string(value));
 }
 
 
@@ -1482,10 +1479,7 @@ void message::add_parameter(std::string const & name, std::int32_t value)
  */
 void message::add_parameter(std::string const & name, std::uint32_t value)
 {
-    verify_message_name(name);
-
-    f_parameters[name] = std::to_string(value);
-    f_cached_message.clear();
+    add_parameter(name, std::to_string(value));
 }
 
 
@@ -1505,10 +1499,7 @@ void message::add_parameter(std::string const & name, std::uint32_t value)
  */
 void message::add_parameter(std::string const & name, long long value)
 {
-    verify_message_name(name);
-
-    f_parameters[name] = std::to_string(value);
-    f_cached_message.clear();
+    add_parameter(name, std::to_string(value));
 }
 
 
@@ -1528,10 +1519,7 @@ void message::add_parameter(std::string const & name, long long value)
  */
 void message::add_parameter(std::string const & name, unsigned long long value)
 {
-    verify_message_name(name);
-
-    f_parameters[name] = std::to_string(value);
-    f_cached_message.clear();
+    add_parameter(name, std::to_string(value));
 }
 
 
@@ -1551,10 +1539,7 @@ void message::add_parameter(std::string const & name, unsigned long long value)
  */
 void message::add_parameter(std::string const & name, std::int64_t value)
 {
-    verify_message_name(name);
-
-    f_parameters[name] = std::to_string(value);
-    f_cached_message.clear();
+    add_parameter(name, std::to_string(value));
 }
 
 
@@ -1574,10 +1559,7 @@ void message::add_parameter(std::string const & name, std::int64_t value)
  */
 void message::add_parameter(std::string const & name, std::uint64_t value)
 {
-    verify_message_name(name);
-
-    f_parameters[name] = std::to_string(value);
-    f_cached_message.clear();
+    add_parameter(name, std::to_string(value));
 }
 
 
@@ -1602,12 +1584,9 @@ void message::add_parameter(
     , addr::addr const & value
     , bool mask)
 {
-    verify_message_name(name);
-
-    f_parameters[name] = value.to_ipv4or6_string(mask
+    add_parameter(name, value.to_ipv4or6_string(mask
                             ? addr::STRING_IP_ALL
-                            : addr::STRING_IP_BRACKET_ADDRESS | addr::STRING_IP_PORT);
-    f_cached_message.clear();
+                            : addr::STRING_IP_BRACKET_ADDRESS | addr::STRING_IP_PORT));
 }
 
 
@@ -1629,10 +1608,31 @@ void message::add_parameter(
       std::string const & name
     , addr::addr_unix const & value)
 {
-    verify_message_name(name);
+    add_parameter(name, value.to_string());
+}
 
-    f_parameters[name] = value.to_string();
-    f_cached_message.clear();
+
+/** \brief Add a timespec duration or date parameter to the message.
+ *
+ * Messages can include parameters (variables) such as a URI or a word.
+ *
+ * This function transforms the input timespec in a string to be sent to
+ * the other end. The string looks like "\<seconds>.\<nanoseconds>".
+ *
+ * The parameter name is verified by the verify_message_name() function.
+ *
+ * \param[in] name  The name of the parameter.
+ * \param[in] value  The value of this parameter.
+ *
+ * \sa verify_message_name()
+ */
+void message::add_parameter(
+      std::string const & name
+    , snapdev::timespec_ex const & value)
+{
+    std::stringstream ss;
+    ss << value;
+    add_parameter(name, ss.str());
 }
 
 
@@ -1747,6 +1747,49 @@ std::int64_t message::get_integer_parameter(std::string const & name) const
                 + f_command
                 + "\" not defined, try has_parameter() before calling"
                   " the get_integer_parameter() function.");
+}
+
+
+/** \brief Retrieve a parameter as a timespec from this message.
+ *
+ * This function retrieves the named parameter from this message as a string,
+ * which is the default.
+ *
+ * The name must be valid as defined by the verify_message_name() function.
+ *
+ * \exception invalid_message
+ * This exception is raised whenever the parameter it is not set.
+ *
+ * \exception snapdev::syntax_error
+ * This exception is raised whenever the parameter does not represent a
+ * valid timespec value (\<second>.\<nanosecond>).
+ *
+ * \exception snapdev::overflow
+ * This exception is raised if the number of seconds is too large.
+ *
+ * \param[in] name  The name of the parameter.
+ *
+ * \return The parameter converted to an integer.
+ *
+ * \sa verify_message_name()
+ */
+snapdev::timespec_ex message::get_timespec_parameter(std::string const & name) const
+{
+    verify_message_name(name);
+
+    auto const it(f_parameters.find(name));
+    if(it != f_parameters.end())
+    {
+        return snapdev::timespec_ex(it->second);
+    }
+
+    throw invalid_message(
+                  "message::get_timespec_parameter(): parameter \""
+                + name
+                + "\" of command \""
+                + f_command
+                + "\" not defined, try has_parameter() before calling"
+                  " the get_timespec_parameter() function.");
 }
 
 

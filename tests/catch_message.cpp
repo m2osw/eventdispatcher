@@ -149,6 +149,17 @@ CATCH_TEST_CASE("message", "[message]")
             }
         }
 
+        // PARAMETER (timespec)
+        //
+        snapdev::timespec_ex const now(snapdev::now());
+        CATCH_REQUIRE_FALSE(msg.has_parameter("date"));
+        msg.add_parameter("date", now);
+        CATCH_REQUIRE(msg.has_parameter("date"));
+        std::stringstream ss;
+        ss << now;
+        CATCH_REQUIRE(msg.get_parameter("date") == ss.str());
+        CATCH_REQUIRE(msg.get_timespec_parameter("date") == now);
+
         // REPLY TO
         //
         ed::message msg2;
