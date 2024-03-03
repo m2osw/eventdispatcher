@@ -53,6 +53,7 @@ public:
                         get_matches() const;
     void                add_match(dispatcher_match const & m);
     void                add_matches(dispatcher_match::vector_t const & matches);
+    void                remove_matches(dispatcher_match::tag_t tag);
     bool                dispatch(message & msg);
     void                set_trace(bool trace = true);
     void                set_show_matches(bool show_matches = true);
@@ -62,7 +63,7 @@ public:
 private:
     connection_with_send_message *  f_connection = nullptr;
     dispatcher_match::vector_t      f_matches = {};
-    bool                            f_ended = false;
+    dispatcher_match                f_end = {};
     bool                            f_trace = false;
     bool                            f_show_matches = false;
 };

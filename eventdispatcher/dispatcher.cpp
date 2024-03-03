@@ -289,6 +289,12 @@ void dispatcher::add_communicator_commands(bool auto_catch_all)
  *
  * This function returns a reference to the list of matches.
  *
+ * \warning
+ * If the dispatcher is given an "always match" case, then it is
+ * handled separately from the f_matches vector. It is done that way to
+ * allow for much more dynamic lists of matches. So this function
+ * returns all the matches except that "always match" (if defined).
+ *
  * \return A const reference to the internal vector of matches.
  */
 dispatcher_match::vector_t const & dispatcher::get_matches() const
@@ -306,14 +312,6 @@ dispatcher_match::vector_t const & dispatcher::get_matches() const
  */
 void dispatcher::add_match(dispatcher_match const & m)
 {
-    if(f_ended)
-    {
-        throw implementation_error(
-              std::string("add_match() called with command expression \"")
-            + (m.f_expr == nullptr ? "<undefined>" : m.f_expr)
-            + "\" after adding the \"always_match()\" rule.");
-    }
-
     if(f_show_matches)
     {
         SNAP_LOG_CONFIG
@@ -323,11 +321,22 @@ void dispatcher::add_match(dispatcher_match const & m)
             << SNAP_LOG_SEND;
     }
 
-    f_matches.push_back(m);
-
+    // special handling of the "always match" case
+    //
     if(m.match_is_always_match())
     {
-        f_ended = true;
+        if(f_end.f_callback != nullptr)
+        {
+            throw implementation_error(
+                  std::string("add_match() called with a second \"always_match()\" rule (expression \"")
+                + (m.f_expr == nullptr ? "<undefined>" : m.f_expr)
+                + "\").");
+        }
+        f_end = m;
+    }
+    else
+    {
+        f_matches.push_back(m);
     }
 }
 
@@ -346,6 +355,37 @@ void dispatcher::add_matches(dispatcher_match::vector_t const & matches)
     for(auto const & m : matches)
     {
         add_match(m);
+    }
+}
+
+
+/** \brief Remove all the matches with specified tag.
+ *
+ * Whenever you dynamically add matches to a dispatcher, you may need to
+ * remove them at the time you destroy your connection. This function
+ * allows you to do so by removing all the matches with the specified
+ * \p tag.
+ *
+ * \note
+ * The dispatcher_match::DISPATCHER_MATCH_NO_TAG tag is the default (0)
+ * and considered to not be a valid value for this function. If called
+ * with this value, then the function does nothing.
+ *
+ * \param[in] tag  The matches with that tag have to be removed.
+ */
+void dispatcher::remove_matches(dispatcher_match::tag_t tag)
+{
+    if(tag == dispatcher_match::DISPATCHER_MATCH_NO_TAG)
+    {
+        return;
+    }
+
+    for(auto it(f_matches.begin()); it != f_matches.end(); ++it)
+    {
+        if(it->f_tag == tag)
+        {
+            it = f_matches.erase(it);
+        }
     }
 }
 
@@ -394,6 +434,16 @@ bool dispatcher::dispatch(message & msg)
     for(auto const & m : f_matches)
     {
         if(m.execute(msg))
+        {
+            return true;
+        }
+    }
+
+    // the always match is not in the main vector, test it separately
+    //
+    if(f_end.f_callback != nullptr)
+    {
+        if(f_end.execute(msg))
         {
             return true;
         }
@@ -455,12 +505,12 @@ void dispatcher::set_show_matches(bool show_matches)
  */
 bool dispatcher::get_commands(string_list_t & commands)
 {
-    bool need_user_help(false);
+    bool need_user_help(f_end.f_callback != nullptr);
     for(auto const & m : f_matches)
     {
         if(m.f_expr == nullptr)
         {
-            if(!m.match_is_always_match()
+            if(!m.match_is_always_match() // this one should not happend here (such ends up in f_end instead)
             && !m.match_is_callback_match())
             {
                 // this is a "special case" where the user has

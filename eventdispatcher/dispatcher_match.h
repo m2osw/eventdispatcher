@@ -58,6 +58,9 @@ struct dispatcher_match
 {
     typedef std::vector<dispatcher_match>       vector_t;
     typedef std::function<void(message & msg)>  execute_callback_t;
+    typedef int                                 tag_t;
+
+    constexpr static tag_t const                DISPATCHER_MATCH_NO_TAG = 0;
 
     bool                execute(message & msg) const;
     bool                match_is_one_to_one_match() const;
@@ -67,6 +70,7 @@ struct dispatcher_match
     char const *        f_expr = nullptr;
     execute_callback_t  f_callback = execute_callback_t();
     match_func_t        f_match = &one_to_one_match;
+    tag_t               f_tag = DISPATCHER_MATCH_NO_TAG;
 };
 
 
@@ -144,6 +148,23 @@ public:
 
 
 
+class Tag
+    : public MatchValue<dispatcher_match::tag_t>
+{
+public:
+    Tag()
+        : MatchValue<dispatcher_match::tag_t>(0)
+    {
+    }
+
+    Tag(dispatcher_match::tag_t tag)
+        : MatchValue<dispatcher_match::tag_t>(tag)
+    {
+    }
+};
+
+
+
 template<typename V, typename F, class ...ARGS>
 static
 typename std::enable_if<std::is_same<V, F>::value, typename V::value_t>::type
@@ -175,6 +196,7 @@ dispatcher_match define_match(ARGS ...args)
         .f_expr =     find_match_value<Expression  >(args..., Expression()),
         .f_callback = find_match_value<Callback    >(args...),
         .f_match =    find_match_value<MatchFunc   >(args..., MatchFunc()),
+        .f_tag =      find_match_value<Tag         >(args..., Tag()),
     };
 
     if(match.f_callback == nullptr)
