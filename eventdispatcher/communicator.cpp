@@ -791,7 +791,9 @@ bool communicator::run()
                         // the timeout date needs to be reset if the tick
                         // happened for that date
                         //
-                        if(now >= c->get_timeout_date())
+                        std::int64_t const timeout_date(c->get_timeout_date());
+                        if(timeout_date >= 0
+                        && now >= timeout_date)
                         {
                             c->set_timeout_date(-1);
                         }
