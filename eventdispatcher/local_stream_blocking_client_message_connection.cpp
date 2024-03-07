@@ -93,7 +93,8 @@ namespace ed
  *
  * The connection is expected to be used as shown in the following
  * example which is how it is used to implement the LOCK through
- * our snaplock daemons.
+ * our snaplock daemons. (The new project, called cluck, does
+ * work asynchronously instead.)
  *
  * \code
  *      class my_blocking_connection
@@ -105,7 +106,7 @@ namespace ed
  *          {
  *              // need to register with communicator
  *              message register_message;
- *              register_message.set_command("REGISTER");
+ *              register_message.set_command(ed::g_name_ed_cmd_register);
  *              ...
  *              blocking_connection.send_message(register_message);
  *
@@ -121,7 +122,7 @@ namespace ed
  *              blocking_connection.send_message(unlock_message);
  *
  *              message unregister_message;
- *              unregister_message.set_command("UNREGISTER");
+ *              unregister_message.set_command(ed::g_name_ed_cmd_unregister);
  *              ...
  *              blocking_connection.send_message(unregister_message);
  *          }

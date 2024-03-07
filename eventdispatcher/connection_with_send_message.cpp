@@ -711,19 +711,21 @@ addr::addr connection_with_send_message::get_my_address() const
 }
 
 
-/** \brief Register your snapcommunicator service.
+/** \brief Register your messenger service with communicatord.
  *
- * This function registers your snapcommunicator service by sending
- * the REGISTER command to it. The service name must have been defined
- * in your constructor.
+ * This function registers your messenger (a communicatord or
+ * fluid_settings_connection) service by sending the REGISTER command to
+ * it. The service name must have been defined in your constructor.
+ * If you are using communicatord (or fluid_settings_connection) then
+ * this function gets called automatically.
  *
- * The function is expected to be called in your process_connected()
- * function.
+ * The function is expected to be called in your ready() function.
  *
  * \code
  *     void my_messenger::process_connected()
  *     {
  *         // make sure to call default function
+ *         // (it may not be a TCP client, adjust as required)
  *         tcp_client_permanent_message_connection::process_connected();
  *
  *         // then register
@@ -745,13 +747,15 @@ addr::addr connection_with_send_message::get_my_address() const
 bool connection_with_send_message::register_service()
 {
     message register_msg;
-    register_msg.set_command("REGISTER");
+    register_msg.set_command(g_name_ed_cmd_register);
     register_msg.add_parameter("service", get_service_name());
     register_msg.add_version_parameter();
     if(!send_message(register_msg, false))
     {
         SNAP_LOG_FATAL
-            << "could not REGISTER with snapcommunicator."
+            << "could not \""
+            << g_name_ed_cmd_register
+            << "\" with communicatord."
             << SNAP_LOG_SEND;
         return false;
     }
@@ -786,12 +790,14 @@ void connection_with_send_message::unregister_service()
     // unregister ourself from the snapcommunicator daemon
     //
     message unregister_msg;
-    unregister_msg.set_command("UNREGISTER");
+    unregister_msg.set_command(g_name_ed_cmd_unregister);
     unregister_msg.add_parameter("service", get_service_name(true));
     if(!send_message(unregister_msg, false))
     {
         SNAP_LOG_WARNING
-            << "could not UNREGISTER from snapcommunicator."
+            << "could not \""
+            << g_name_ed_cmd_unregister
+            << "\" from communicatord."
             << SNAP_LOG_SEND;
     }
 }
