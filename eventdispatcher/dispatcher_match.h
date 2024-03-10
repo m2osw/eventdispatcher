@@ -50,17 +50,24 @@ enum class match_t
 
 typedef match_t (*match_func_t)(std::string const & expr, message & msg);
 
-match_t      one_to_one_match(std::string const & expr, message & msg);
-match_t      always_match(std::string const & expr, message & msg);
-match_t      callback_match(std::string const & expr, message & msg);
+match_t     one_to_one_match(std::string const & expr, message & msg);
+match_t     one_to_one_callback_match(std::string const & expr, message & msg);
+match_t     always_match(std::string const & expr, message & msg);
+match_t     callback_match(std::string const & expr, message & msg);
 
 struct dispatcher_match
 {
     typedef std::vector<dispatcher_match>       vector_t;
     typedef std::function<void(message & msg)>  execute_callback_t;
-    typedef int                                 tag_t;
+    typedef std::uint16_t                       tag_t;
+    typedef std::uint16_t                       priority_t;
 
     constexpr static tag_t const                DISPATCHER_MATCH_NO_TAG = 0;
+
+    constexpr static priority_t const           DISPATCHER_MATCH_MIN_PRIORITY = 0;
+    constexpr static priority_t const           DISPATCHER_MATCH_CALLBACK_PRIORITY = 0;
+    constexpr static priority_t const           DISPATCHER_MATCH_DEFAULT_PRIORITY = 7;
+    constexpr static priority_t const           DISPATCHER_MATCH_MAX_PRIORITY = 15;
 
     bool                execute(message & msg) const;
     bool                match_is_one_to_one_match() const;
@@ -71,6 +78,7 @@ struct dispatcher_match
     execute_callback_t  f_callback = execute_callback_t();
     match_func_t        f_match = &one_to_one_match;
     tag_t               f_tag = DISPATCHER_MATCH_NO_TAG;
+    priority_t          f_priority = DISPATCHER_MATCH_DEFAULT_PRIORITY;
 };
 
 
@@ -153,12 +161,28 @@ class Tag
 {
 public:
     Tag()
-        : MatchValue<dispatcher_match::tag_t>(0)
+        : MatchValue<dispatcher_match::tag_t>(dispatcher_match::DISPATCHER_MATCH_NO_TAG)
     {
     }
 
     Tag(dispatcher_match::tag_t tag)
         : MatchValue<dispatcher_match::tag_t>(tag)
+    {
+    }
+};
+
+
+class Priority
+    : public MatchValue<dispatcher_match::priority_t>
+{
+public:
+    Priority()
+        : MatchValue<dispatcher_match::priority_t>(dispatcher_match::DISPATCHER_MATCH_DEFAULT_PRIORITY)
+    {
+    }
+
+    Priority(dispatcher_match::priority_t priority)
+        : MatchValue<dispatcher_match::priority_t>(priority)
     {
     }
 };
@@ -188,7 +212,7 @@ find_match_value(F first, ARGS ...args)
 
 
 template<class ...ARGS>
-static
+constexpr static
 dispatcher_match define_match(ARGS ...args)
 {
     dispatcher_match match =
@@ -197,6 +221,7 @@ dispatcher_match define_match(ARGS ...args)
         .f_callback = find_match_value<Callback    >(args...),
         .f_match =    find_match_value<MatchFunc   >(args..., MatchFunc()),
         .f_tag =      find_match_value<Tag         >(args..., Tag()),
+        .f_priority = find_match_value<Priority    >(args..., Priority()),
     };
 
     if(match.f_callback == nullptr)
@@ -211,6 +236,11 @@ dispatcher_match define_match(ARGS ...args)
         // the empty string so we forbid that in our tables
         //
         throw parameter_error("an expression is required for the one_to_one_match().");
+    }
+
+    if(match.f_priority > dispatcher_match::DISPATCHER_MATCH_MAX_PRIORITY)
+    {
+        throw parameter_error("priority too large for dispatcher match.");
     }
 
     return match;

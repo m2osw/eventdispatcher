@@ -133,7 +133,7 @@ void connection_with_send_message::msg_alive(message & msg)
     message absolutely;
     absolutely.user_data(msg.user_data<void>());
     absolutely.reply_to(msg);
-    absolutely.set_command("ABSOLUTELY");
+    absolutely.set_command(g_name_ed_cmd_absolutely);
     if(msg.has_parameter("serial"))
     {
         absolutely.add_parameter("serial", msg.get_parameter("serial"));
@@ -148,7 +148,9 @@ void connection_with_send_message::msg_alive(message & msg)
         SNAP_LOG_WARNING
             << "could not reply to \""
             << msg.get_command()
-            << "\" with an ABSOLUTELY message."
+            << "\" with an "
+            << g_name_ed_cmd_absolutely
+            << " message."
             << SNAP_LOG_SEND;
     }
 }

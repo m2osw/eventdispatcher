@@ -4,6 +4,7 @@ introducer=name
 project=ed
 
 [public]
+cmd_absolutely=ABSOLUTELY
 cmd_alive=ALIVE
 cmd_help=HELP
 cmd_leak=LEAK

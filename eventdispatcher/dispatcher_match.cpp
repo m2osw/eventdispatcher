@@ -131,7 +131,7 @@ namespace ed
  * name:
  *
  * \code
- *          return expr == msg.get_command();
+ *     expr == msg.get_command()
  * \endcode
  *
  * We will add other matching functions with time
@@ -150,6 +150,28 @@ match_t one_to_one_match(std::string const & expr, message & msg)
 {
     return expr == msg.get_command()
                     ? match_t::MATCH_TRUE
+                    : match_t::MATCH_FALSE;
+}
+
+
+/** \brief Match one to one, but return MATCH_CALLBACK instead of MATCH_TRUE.
+ *
+ * This function performs the same test as the one_to_one_match() function
+ * but return MATCH_CALLBACK meaning that the processing won't stop at this
+ * entry.
+ *
+ * This is really useful if you want to capture the arrival of a message
+ * but not prevent further captures.
+ *
+ * \param[in] expr  The expression to compare the command against.
+ * \param[in] msg  The message to match against this expression.
+ *
+ * \return MATCH_CALLBACK if it is a match, MATCH_FALSE otherwise.
+ */
+match_t one_to_one_callback_match(std::string const & expr, message & msg)
+{
+    return expr == msg.get_command()
+                    ? match_t::MATCH_CALLBACK
                     : match_t::MATCH_FALSE;
 }
 
@@ -177,8 +199,8 @@ match_t always_match(std::string const & expr, message & msg)
  * This function always returns MATCH_CALLBACK. It is used
  * to call the f_execute function as a callback. The processing
  * continues after calling a callback function (i.e. the
- * execute() function returns false, meaning that the message
- * was not yet processed). This is useful if you want to execute
+ * execute() function returns false, meaning that the message is
+ * not considered processed). This is useful if you want to execute
  * some code against many or all messages before actually
  * processing the messages individually.
  *

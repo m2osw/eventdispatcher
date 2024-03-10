@@ -336,7 +336,16 @@ void dispatcher::add_match(dispatcher_match const & m)
     }
     else
     {
-        f_matches.push_back(m);
+        // insert taking the priority in account
+        // (very important for callbacks)
+        //
+        auto it(std::find_if(
+              f_matches.begin()
+            , f_matches.end()
+            , [&m](auto const & item){
+                return m.f_priority < item.f_priority;
+            }));
+        f_matches.insert(it, m);
     }
 }
 
