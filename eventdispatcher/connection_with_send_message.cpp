@@ -351,7 +351,9 @@ void connection_with_send_message::msg_quitting(message & msg)
  * (i.e. sitter and iplock do work either way), but those are rare.
  *
  * The READY message has one parameter: "my_address", which is the IP
- * address of the computer.
+ * address of the computer. Use the get_my_address() function to retrieve
+ * it. Just make sure to do that only after you received the READY
+ * message.
  *
  * \param[in] msg  The READY message.
  *
