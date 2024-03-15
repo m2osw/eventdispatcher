@@ -243,4 +243,10 @@ install(
 )
 
 
+##
+## Generate the reporter library
+##
+add_subdirectory(reporter)
+
+
 # vim: ts=4 sw=4 et
