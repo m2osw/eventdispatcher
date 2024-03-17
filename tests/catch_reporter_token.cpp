@@ -132,11 +132,21 @@ CATCH_TEST_CASE("reporter_token", "[token][reporter]")
         {
             SNAP_CATCH2_NAMESPACE::reporter::token t;
             CATCH_REQUIRE(t.get_floating_point() == 0.0);
-            std::int64_t value(0);
-            SNAP_CATCH2_NAMESPACE::random(value);
-            double const f(*reinterpret_cast<double *>(&value));
-            t.set_floating_point(f);
-            CATCH_REQUIRE(t.get_floating_point() == f);
+            std::int64_t n(0);
+            SNAP_CATCH2_NAMESPACE::random(n);
+            n >>= 9;
+            std::int64_t d(0);
+            SNAP_CATCH2_NAMESPACE::random(d);
+            d >>= 9;
+            double const nominator(n);
+            double denominator(d);
+            if(denominator == 0.0)
+            {
+                denominator = 1.0;
+            }
+            double const value(nominator / denominator);
+            t.set_floating_point(value);
+            CATCH_REQUIRE(t.get_floating_point() == value);
         }
     }
     CATCH_END_SECTION()

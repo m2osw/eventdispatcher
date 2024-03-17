@@ -575,6 +575,18 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
+    CATCH_START_SECTION("unterminated string in backslash case")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer l("unterminated-backslash.rprtr",
+            "\"string with \\");
+
+        SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ERROR);
+        t = l.next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
+    }
+    CATCH_END_SECTION()
+
     CATCH_START_SECTION("empty unquoted variable")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("empty-variable.rprtr", "empty $ variable name");
@@ -629,6 +641,28 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
         CATCH_REQUIRE(t.get_string() == "name");
         t = l.next_token();
         CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_CLOSE_CURLY_BRACE);
+        t = l.next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("empty date (double quote)")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer l("unterminated-date.rprtr", "@\"\"");
+
+        SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ERROR);
+        t = l.next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("empty date (single quote)")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer l("unterminated-date.rprtr", "@''");
+
+        SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ERROR);
         t = l.next_token();
         CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
     }
@@ -749,6 +783,24 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
         SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
         CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ERROR);
         for(int i(0); i < 22; ++i)
+        {
+            t = l.next_token();
+            CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ERROR);
+        }
+        t = l.next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("variable name cannot start with digit")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer l("unexpected-digit.rprtr",
+            "$5var\n"
+            "${0digits_allowed}\n");
+
+        SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ERROR);
+        for(int i(0); i < 1; ++i)
         {
             t = l.next_token();
             CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ERROR);

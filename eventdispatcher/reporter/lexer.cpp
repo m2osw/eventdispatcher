@@ -314,7 +314,7 @@ token lexer::next_token()
                         c = getc();
                         if(c == libutf8::EOS)
                         {
-                            error(t, "unterminated string.");
+                            error(t, "unterminated backslash sequence in string.");
                             return t;
                         }
                         switch(c)

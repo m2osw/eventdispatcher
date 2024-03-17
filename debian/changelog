@@ -1,3 +1,9 @@
+eventdispatcher (1.1.58.0~jammy) jammy; urgency=high
+
+  * Adding library to run tests against network clients.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 17 Mar 2024 12:41:06 -0700
+
 eventdispatcher (1.1.57.0~jammy) jammy; urgency=high
 
   * Added byte counters for the TCP bio implementation.
