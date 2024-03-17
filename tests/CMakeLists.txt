@@ -36,6 +36,7 @@ if(SnapCatch2_FOUND)
         catch_unix_stream.cpp
         catch_version.cpp
 
+        catch_reporter_lexer.cpp
         catch_reporter_token.cpp
     )
 

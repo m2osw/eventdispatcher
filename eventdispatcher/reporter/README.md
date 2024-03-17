@@ -10,7 +10,7 @@ a service test. Instead, we want to have a simulator of all the other services
 and only test the current service being developed and maintained. To do so we
 use the **reporter** test class.
 
-# Basics of Reporter Language
+# Basics of Reporter Language (.rprtr files)
 
 The reporter class creates a thread and runs code in parallel. This allows
 our service to really connect to a TCP or UDP port through the network or
@@ -52,6 +52,11 @@ Message support certain global parameters such as the `version=...` parameter.
 These are defined by the reporter object. If you extend the reporter, you
 can add your own global parameters (i.e. the communicatord adds the `cache=...`
 parameter).
+
+# Comments
+
+The language supports C++ like comments introduced by "//" and ending with
+the next newline.
 
 # Instructions
 

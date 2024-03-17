@@ -92,10 +92,30 @@ token lexer::next_token()
         case U'+':
         case U'-':
         case U'*':
-        case U'/':
         case U'%':
             t.set_token(static_cast<token_t>(c));
             return t;
+
+        case U'/':
+            c = getc();
+            if(c == U'/')
+            {
+                for(;;)
+                {
+                    c = getc();
+                    if(c == U'\n' || c == libutf8::EOS)
+                    {
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                ungetc(c);
+                t.set_token(token_t::TOKEN_DIVIDE);
+                return t;
+            }
+            break;
 
         case U'$':
             {
@@ -177,7 +197,7 @@ token lexer::next_token()
                         s += libutf8::to_u8string(c);
                     }
                     snapdev::timespec_ex timestamp;
-                    timestamp.from_string(s, "%D %T"); // fixed US date, not tv_nsec support
+                    timestamp.from_string(s, "%m/%d/%Y %T"); // fixed US date, not tv_nsec support
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
                     t.set_integer((static_cast<__int128>(timestamp.tv_sec) << 64) | timestamp.tv_nsec);
@@ -188,6 +208,7 @@ token lexer::next_token()
                     // timestamp is a double (where the period and decimal
                     // parts are optional)
                     //
+                    s += libutf8::to_u8string(c);
                     for(;;)
                     {
                         c = getc();
@@ -207,7 +228,7 @@ token lexer::next_token()
                 }
                 if(s.empty())
                 {
-                    error(t, "unexpected '$' without a variable name.");
+                    error(t, "unexpected '@' without a timestamp.");
                     return t;
                 }
 
@@ -234,9 +255,34 @@ token lexer::next_token()
                     }
                     s += libutf8::to_u8string(c);
                 }
-                addr::addr const a(addr::string_to_addr(s));
+                if(s.empty())
+                {
+                    error(t, "an empty IP address is not a valid address.");
+                    return t;
+                }
+                addr::addr_parser p;
+                p.set_protocol("tcp");
+                p.set_allow(addr::allow_t::ALLOW_MASK, true);
+                addr::addr_range::vector_t addresses(p.parse(s));
+                if(p.has_errors())
+                {
+                    error(t, "error parsing IP address " + s + ".");
+                    return t;
+                }
+                if(addresses[0].is_range()
+                || !addresses[0].has_from())
+                {
+                    // the parsing is expected to fail against ranges
+                    // so we should not get here
+                    //
+                    throw std::logic_error("parsing of address did not fail with a range."); // LCOV_EXCL_LINE
+                }
+
                 t.set_token(token_t::TOKEN_ADDRESS);
-                t.set_string(a.to_ipv4or6_string()); // save it as a string
+                t.set_string(addresses[0].get_from().to_ipv4or6_string(
+                          addr::STRING_IP_BRACKET_ADDRESS
+                        | addr::STRING_IP_PORT
+                        | addr::STRING_IP_MASK_IF_NEEDED));
                 return t;
             }
             snapdev::NOT_REACHED();
@@ -336,14 +382,26 @@ token lexer::next_token()
                    || c == 'e'
                    || c == 'E')
                 {
-                    if(c == '.')
+                    if(c == '.'
+                    || c == 'e'
+                    || c == 'E')
                     {
                         is_floating_point = true;
                     }
                     s += libutf8::to_u8string(c);
+                    c = getc();
                 }
+                ungetc(c);
                 if(is_floating_point)
                 {
+                    // our language accepts ".3" as "0.3" but the advgetopt
+                    // validator does not, so make sure to add the "0" if
+                    // missing
+                    //
+                    if(s[0] == '.')
+                    {
+                        s = '0' + s;
+                    }
                     double value(0.0);
                     if(!advgetopt::validator_double::convert_string(s, value))
                     {
@@ -362,7 +420,7 @@ token lexer::next_token()
                         return t;
                     }
                     t.set_token(token_t::TOKEN_INTEGER);
-                    t.set_floating_point(value);
+                    t.set_integer(value);
                 }
                 return t;
             }
@@ -429,7 +487,7 @@ char32_t lexer::getc()
 
     char32_t c(*f_iterator++);
 
-    if(c == 'r')
+    if(c == '\r')
     {
         c = *f_iterator;
         if(c == '\n')
@@ -467,7 +525,7 @@ void lexer::ungetc(char32_t c)
 
     if(f_unget_pos >= sizeof(f_unget))
     {
-        throw std::logic_error("too many ungetc() calls.");
+        throw std::logic_error("too many ungetc() calls."); // LCOV_EXCL_LINE
     }
 
     f_unget[f_unget_pos] = c;

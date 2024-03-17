@@ -47,9 +47,10 @@ token_t token::get_token() const
 
 void token::set_token(token_t t)
 {
-    if(f_token != token_t::TOKEN_EOF)
+    if(f_token != token_t::TOKEN_EOF
+    && t != token_t::TOKEN_ERROR)
     {
-        throw std::logic_error("trying to modify token type, not allowed anymore.");
+        throw std::logic_error("trying to modify token type to something other than an error.");
     }
 
     f_token = t;

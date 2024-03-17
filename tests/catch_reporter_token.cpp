@@ -153,9 +153,6 @@ CATCH_TEST_CASE("reporter_token", "[token][reporter]")
         }
     }
     CATCH_END_SECTION()
-
-    //std::string const &     get_string() const;
-    //void                    set_string(std::string const & value);
 }
 
 
@@ -170,11 +167,13 @@ CATCH_TEST_CASE("reporter_token_error", "[token][reporter][error]")
             t.set_token(tok);
             CATCH_REQUIRE(t.get_token() == tok);
 
-            if(tok == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF)
+            if(tok == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF
+            || tok == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ERROR)
             {
                 // allowed since it's still EOF
                 //
                 t.set_token(tok);
+                CATCH_REQUIRE(t.get_token() == tok);
             }
             else
             {
@@ -184,8 +183,13 @@ CATCH_TEST_CASE("reporter_token_error", "[token][reporter][error]")
                           t.set_token(tok)
                         , std::logic_error
                         , Catch::Matchers::ExceptionMessage(
-                                  "trying to modify token type, not allowed anymore."));
+                                  "trying to modify token type to something other than an error."));
             }
+
+            // switching to an error is always allowed
+            //
+            t.set_token(SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ERROR);
+            CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ERROR);
         }
     }
     CATCH_END_SECTION()
