@@ -17,9 +17,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
-// self
+// catch2
 //
-//#include    <eventdispatcher/reporter/value.h>
+#include    <catch2/snapcatch2.hpp>
 
 
 // C++

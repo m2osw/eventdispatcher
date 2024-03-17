@@ -57,6 +57,11 @@ instruction_factory::instruction_factory(instruction::pointer_t i)
 }
 
 
+instruction_factory::~instruction_factory()
+{
+}
+
+
 std::string const & instruction_factory::get_name() const
 {
     return f_instruction->get_name();

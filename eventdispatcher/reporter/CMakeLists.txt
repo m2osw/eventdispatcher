@@ -24,10 +24,14 @@
 project(reporter)
 
 add_library(${PROJECT_NAME} SHARED
+    expression.cpp
     instruction.cpp
     instruction_factory.cpp
+    lexer.cpp
+    parser.cpp
     state.cpp
     statement.cpp
+    token.cpp
     variable.cpp
 )
 

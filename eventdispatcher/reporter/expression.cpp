@@ -15,14 +15,10 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#pragma once
 
 // self
 //
 #include    "expression.h"
-#include    "instruction.h"
-#include    "variable.h"
-
 
 
 namespace SNAP_CATCH2_NAMESPACE
@@ -32,26 +28,62 @@ namespace reporter
 
 
 
-class statement
+operator_t expression::get_operator() const
 {
-public:
-    typedef std::shared_ptr<statement>  pointer_t;
-    typedef std::vector<pointer_t>      vector_t;
+    return f_operator;
+}
 
-                        statement(instruction::pointer_t inst);
 
-    instruction::pointer_t
-                        get_instruction() const;
+void expression::set_operator(operator_t op)
+{
+    f_operator = op;
+}
 
-    void                add_parameter(std::string const & name, expression::pointer_t expr);
-    expression::pointer_t
-                        get_parameter(std::string const & name) const;
 
-private:
-    instruction::pointer_t
-                        f_instruction = nullptr;
-    expression::map_t   f_parameters = expression::map_t();
-};
+std::size_t expression::get_expression_size() const
+{
+    return f_expressions.size();
+}
+
+
+expression::pointer_t expression::get_expression(int idx) const
+{
+    if(static_cast<std::size_t>(idx) >= f_expressions.size())
+    {
+        throw std::overflow_error("index too large to get sub-expression.");
+    }
+    return f_expressions[idx];
+}
+
+
+void expression::add_expression(pointer_t expr)
+{
+    f_expressions.push_back(expr);
+}
+
+
+token const & expression::get_token() const
+{
+    return f_token;
+}
+
+
+void expression::set_token(token const & t)
+{
+    f_token = t;
+}
+
+
+//variable::pointer_t expression::get_variable() const
+//{
+//    return f_variable;
+//}
+//
+//
+//void expression::set_variable(variable::pointer_t var)
+//{
+//    f_variable = var;
+//}
 
 
 

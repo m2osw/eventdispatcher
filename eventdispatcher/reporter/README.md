@@ -139,9 +139,9 @@ checks that last message parameters against the `verify_message()` parameters.
         server: <name>,
         service: <name>,
         command: <name>,
-        required_parameters: <name>=<value> ...,
-        optional_parameters: <name>=<value> ...,
-        forbidden_parameters: <name> ...)
+        required_parameters: { <name>: <value>, ... },
+        optional_parameters: { <name>: <value>, ... },
+        forbidden_parameters: { <name>, ... } )
 
 If the verification fails, then an error occurs and the test failed.
 
@@ -169,7 +169,7 @@ instruction is used for that purpose.
         server: <name>,
         service: <name>,
         command: <name>,
-        parameters: <name>=<value> ...)
+        parameters: { <name>: <value>, ... } )
 
 Note that as far as the reporter language is concerned, the `parameters`
 variable has one single value. The `send_message()` further parses that

@@ -21,6 +21,12 @@
 #include    "instruction.h"
 
 
+// last include
+//
+#include    <snapdev/poison.h>
+
+
+
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter
@@ -30,6 +36,11 @@ namespace reporter
 
 instruction::instruction(std::string const & name)
     : f_name(name)
+{
+}
+
+
+instruction::~instruction()
 {
 }
 

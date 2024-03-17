@@ -35,6 +35,8 @@ if(SnapCatch2_FOUND)
         catch_unix_dgram.cpp
         catch_unix_stream.cpp
         catch_version.cpp
+
+        catch_reporter_token.cpp
     )
 
     target_include_directories(${PROJECT_NAME}
@@ -50,6 +52,7 @@ if(SnapCatch2_FOUND)
 
     target_link_libraries(${PROJECT_NAME}
         eventdispatcher
+        reporter
         cppprocess
         ${SNAPCATCH2_LIBRARIES}
     )

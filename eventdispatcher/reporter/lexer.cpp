@@ -1,0 +1,481 @@
+// Copyright (c) 2012-2024  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/eventdispatcher
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// self
+//
+#include    "lexer.h"
+
+
+// snapdev
+//
+#include    <snapdev/not_reached.h>
+#include    <snapdev/timespec_ex.h>
+
+
+// advgetopt
+//
+#include    <advgetopt/validator_double.h>
+#include    <advgetopt/validator_integer.h>
+
+
+// libaddr
+//
+#include    <libaddr/addr_parser.h>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
+
+
+namespace SNAP_CATCH2_NAMESPACE
+{
+namespace reporter
+{
+
+
+
+lexer::lexer(
+          std::string const & filename
+        , std::string const & program)
+    : f_filename(filename)
+    , f_program(program)
+    , f_iterator(f_program)
+{
+}
+
+
+token lexer::next_token()
+{
+    for(;;)
+    {
+        token t;
+        t.set_line(f_line);
+        t.set_column(f_column);
+        char32_t c(getc());
+        switch(c)
+        {
+        case libutf8::EOS:
+            t.set_token(token_t::TOKEN_EOF);
+            return t;
+
+        case U'\n':
+        case U' ':
+        case U'\t':
+        case U'\f':
+            // TODO: add all Unicode white spaces
+            break;
+
+        case U'(':
+        case U')':
+        case U'{':
+        case U'}':
+        case U',':
+        case U':':
+        case U'=':
+        case U'+':
+        case U'-':
+        case U'*':
+        case U'/':
+        case U'%':
+            t.set_token(static_cast<token_t>(c));
+            return t;
+
+        case U'$':
+            {
+                std::string s;
+                c = getc();
+                if(c == '{')
+                {
+                    for(;;)
+                    {
+                        c = getc();
+                        if(c == '}')
+                        {
+                            break;
+                        }
+                        if((c < 'A' || c > 'Z')
+                        && (c < 'a' || c > 'z')
+                        && (c < '0' || c > '9')
+                        && c != '_')
+                        {
+                            error(t, "unexpected character to close variable; expected '}'.");
+                            return t;
+                        }
+                        s += libutf8::to_u8string(c);
+                    }
+                }
+                else
+                {
+                    while((c >= 'A' && c <= 'Z')
+                       || (c >= 'a' && c <= 'z')
+                       || (c >= '0' && c <= '9')
+                       || c == '_')
+                    {
+                        s += libutf8::to_u8string(c);
+                        c = getc();
+                    }
+                }
+                if(s.empty())
+                {
+                    error(t, "unexpected '$' without a variable name.");
+                    return t;
+                }
+
+                // unless we accept special characters, the smallest is '0'
+                // anyway...
+                //
+                if(/*s[0] >= '0' &&*/ s[0] <= '9')
+                {
+                    error(t, "variable name cannot start with a digit.");
+                    return t;
+                }
+
+                t.set_token(token_t::TOKEN_VARIABLE);
+                t.set_string(s); // variable name
+                return t;
+            }
+            snapdev::NOT_REACHED();
+
+        case U'@':
+            {
+                std::string s;
+                c = getc();
+                if(c == U'\'' || c == U'"')
+                {
+                    // timestamp is a date and time including spaces
+                    //
+                    char32_t const quote(c);
+                    for(;;)
+                    {
+                        c = getc();
+                        if(c == libutf8::EOS)
+                        {
+                            error(t, "unterminated date.");
+                            return t;
+                        }
+                        if(c == quote)
+                        {
+                            break;
+                        }
+                        s += libutf8::to_u8string(c);
+                    }
+                    snapdev::timespec_ex timestamp;
+                    timestamp.from_string(s, "%D %T"); // fixed US date, not tv_nsec support
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+                    t.set_integer((static_cast<__int128>(timestamp.tv_sec) << 64) | timestamp.tv_nsec);
+#pragma GCC diagnostic pop
+                }
+                else
+                {
+                    // timestamp is a double (where the period and decimal
+                    // parts are optional)
+                    //
+                    for(;;)
+                    {
+                        c = getc();
+                        if((c < '0' || c > '9')
+                        && c != '.'
+                        && c != 's')
+                        {
+                            break;
+                        }
+                        s += libutf8::to_u8string(c);
+                    }
+                    snapdev::timespec_ex timestamp(s);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+                    t.set_integer((static_cast<__int128>(timestamp.tv_sec) << 64) | timestamp.tv_nsec);
+#pragma GCC diagnostic pop
+                }
+                if(s.empty())
+                {
+                    error(t, "unexpected '$' without a variable name.");
+                    return t;
+                }
+
+                t.set_token(token_t::TOKEN_TIMESPEC);
+                t.set_string(s); // variable name
+                return t;
+            }
+            snapdev::NOT_REACHED();
+
+        case U'<':
+            {
+                std::string s;
+                for(;;)
+                {
+                    c = getc();
+                    if(c == libutf8::EOS)
+                    {
+                        error(t, "unterminated IP address.");
+                        return t;
+                    }
+                    if(c == U'>')
+                    {
+                        break;
+                    }
+                    s += libutf8::to_u8string(c);
+                }
+                addr::addr const a(addr::string_to_addr(s));
+                t.set_token(token_t::TOKEN_ADDRESS);
+                t.set_string(a.to_ipv4or6_string()); // save it as a string
+                return t;
+            }
+            snapdev::NOT_REACHED();
+
+        case U'"':
+        case U'\'':
+            {
+                std::string s;
+                char32_t const quote(c);
+                for(;;)
+                {
+                    c = getc();
+                    if(c == libutf8::EOS)
+                    {
+                        error(t, "unterminated string.");
+                        return t;
+                    }
+                    if(c == '\n')
+                    {
+                        error(t, "strings cannot be written on multiple lines.");
+                        return t;
+                    }
+                    if(c == quote)
+                    {
+                        break;
+                    }
+                    if(c == '\\')
+                    {
+                        c = getc();
+                        if(c == libutf8::EOS)
+                        {
+                            error(t, "unterminated string.");
+                            return t;
+                        }
+                        switch(c)
+                        {
+                        case U'a':
+                            c = U'\a';
+                            break;
+
+                        case U'b':
+                            c = U'\b';
+                            break;
+
+                        case U'f':
+                            c = U'\f';
+                            break;
+
+                        case U'n':
+                            c = U'\n';
+                            break;
+
+                        case U'r':
+                            c = U'\r';
+                            break;
+
+                        case U't':
+                            c = U'\t';
+                            break;
+
+                        case U'v':
+                            c = U'\v';
+                            break;
+
+                        // TODO: add support for \x, \u, \U, \[0-9]{1,3}
+
+                        // other characters are copied as is for now
+                        // no error on "invalid" character escape at the moment
+                        }
+                    }
+                    s += libutf8::to_u8string(c);
+                }
+                t.set_token(static_cast<token_t>(quote));
+                t.set_string(s);
+                return t;
+            }
+            snapdev::NOT_REACHED();
+
+        case U'0':
+        case U'1':
+        case U'2':
+        case U'3':
+        case U'4':
+        case U'5':
+        case U'6':
+        case U'7':
+        case U'8':
+        case U'9':
+        case U'.':
+            {
+                bool is_floating_point(false);
+                std::string s;
+                while((c >= U'0' && c <= U'9')
+                   || c == '+'
+                   || c == '-'
+                   || c == '.'
+                   || c == 'e'
+                   || c == 'E')
+                {
+                    if(c == '.')
+                    {
+                        is_floating_point = true;
+                    }
+                    s += libutf8::to_u8string(c);
+                }
+                if(is_floating_point)
+                {
+                    double value(0.0);
+                    if(!advgetopt::validator_double::convert_string(s, value))
+                    {
+                        error(t, "invalid floating point (" + s + ").");
+                        return t;
+                    }
+                    t.set_token(token_t::TOKEN_FLOATING_POINT);
+                    t.set_floating_point(value);
+                }
+                else
+                {
+                    std::int64_t value(0);
+                    if(!advgetopt::validator_integer::convert_string(s, value))
+                    {
+                        error(t, "invalid integer (" + s + ").");
+                        return t;
+                    }
+                    t.set_token(token_t::TOKEN_INTEGER);
+                    t.set_floating_point(value);
+                }
+                return t;
+            }
+            snapdev::NOT_REACHED();
+
+
+        default:
+            if((c >= U'A' && c <= U'Z')
+            || (c >= U'a' && c <= U'z')
+            || c == U'_')
+            {
+                std::string s;
+                for(;;)
+                {
+                    s += libutf8::to_u8string(c);
+                    c = getc();
+                    if((c < U'A' || c > U'Z')
+                    && (c < U'a' || c > U'z')
+                    && (c < U'0' || c > U'9')
+                    && c != U'_')
+                    {
+                        break;
+                    }
+                }
+                ungetc(c);
+                t.set_token(token_t::TOKEN_IDENTIFIER);
+                t.set_string(s);
+                return t;
+            }
+
+            error(t, "unexpected character (" + libutf8::to_u8string(c) + ").");
+            return t;
+
+        }
+    }
+    snapdev::NOT_REACHED();
+}
+
+
+void lexer::error(token & t, std::string const & msg)
+{
+    std::cerr
+        << "error:"
+        << f_filename
+        << ':'
+        << t.get_line()
+        << ':'
+        << t.get_column()
+        << ": "
+        << msg
+        << "\n";
+
+    t.set_token(token_t::TOKEN_ERROR);
+}
+
+
+char32_t lexer::getc()
+{
+    if(f_unget_pos > 0)
+    {
+        --f_unget_pos;
+        return f_unget[f_unget_pos];
+    }
+
+    char32_t c(*f_iterator++);
+
+    if(c == 'r')
+    {
+        c = *f_iterator;
+        if(c == '\n')
+        {
+            ++f_iterator;
+        }
+        else
+        {
+            c = '\n';
+        }
+    }
+
+    if(c == '\n')
+    {
+        ++f_line;
+        f_column = 1;
+    }
+    else
+    {
+        ++f_column;
+    }
+
+    return c;
+}
+
+
+void lexer::ungetc(char32_t c)
+{
+    // no need to unget the end of string marker
+    //
+    if(c == libutf8::EOS)
+    {
+        return;
+    }
+
+    if(f_unget_pos >= sizeof(f_unget))
+    {
+        throw std::logic_error("too many ungetc() calls.");
+    }
+
+    f_unget[f_unget_pos] = c;
+    ++f_unget_pos;
+}
+
+
+
+} // namespace reporter
+} // namespace SNAP_CATCH2_NAMESPACE
+// vim: ts=4 sw=4 et

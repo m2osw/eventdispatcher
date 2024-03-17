@@ -17,20 +17,18 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
-// catch2
+// self
 //
-#include    <catch2/snapcatch2.hpp>
+#include    "lexer.h"
+#include    "statement.h"
 
 
 // C++
 //
-#include    <map>
-#include    <memory>
-#include    <string>
+//#include    <vector>
 
 
 
-// view these as an extension of the snapcatch2 library
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter
@@ -38,24 +36,31 @@ namespace reporter
 
 
 
-class state;
-
-
-class instruction
+class parser
 {
 public:
-    typedef std::shared_ptr<instruction>        pointer_t;
-    typedef std::map<std::string, pointer_t>    map_t;
+    typedef std::shared_ptr<parser>  pointer_t;
 
-                            instruction(std::string const & name);
-    virtual                 ~instruction();
+                            parser(lexer::pointer_t l);
 
-    std::string const &     get_name() const;
-
-    virtual void            func(state & s) = 0;
+    statement::vector_t     parse_program();
 
 private:
-    std::string             f_name = std::string();
+    bool                    next_token();
+    void                    one_statement();
+    void                    parameters();
+    void                    one_parameter();
+    expression::pointer_t   expression_list();
+    expression::pointer_t   list_item();
+    expression::pointer_t   additive();
+    expression::pointer_t   multiplicative();
+    expression::pointer_t   primary();
+
+    lexer::pointer_t        f_lexer = lexer::pointer_t();
+    token                   f_token = token();
+    statement::vector_t     f_statements = statement::vector_t();
+    statement::pointer_t    f_statement = statement::pointer_t();
+    variable::pointer_t     f_parameter = variable::pointer_t();
 };
 
 

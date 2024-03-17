@@ -21,6 +21,12 @@
 #include    "statement.h"
 
 
+// last include
+//
+#include    <snapdev/poison.h>
+
+
+
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter
@@ -40,18 +46,18 @@ instruction::pointer_t statement::get_instruction() const
 }
 
 
-void statement::add_parameter(variable::pointer_t var)
+void statement::add_parameter(std::string const & name, expression::pointer_t expr)
 {
-    f_parameters[var->get_name()] = var;
+    f_parameters[name] = expr;
 }
 
 
-variable::pointer_t statement::get_parameter(std::string const & name) const
+expression::pointer_t statement::get_parameter(std::string const & name) const
 {
     auto it(f_parameters.find(name));
     if(it == f_parameters.end())
     {
-        return variable::pointer_t();
+        return expression::pointer_t();
     }
     return it->second;
 }
