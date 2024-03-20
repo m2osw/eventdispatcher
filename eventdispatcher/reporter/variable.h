@@ -73,6 +73,22 @@ private:
 };
 
 
+class variable_string
+    : public variable
+{
+public:
+    typedef std::shared_ptr<variable_string>        pointer_t;
+
+                            variable_string(std::string const & name);
+
+    std::string const &     get_string() const;
+    void                    set_string(std::string const & s);
+
+private:
+    std::string             f_string = std::string();
+};
+
+
 
 } // namespace reporter
 } // namespace SNAP_CATCH2_NAMESPACE

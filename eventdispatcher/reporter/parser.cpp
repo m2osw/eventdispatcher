@@ -23,6 +23,11 @@
 #include    <eventdispatcher/reporter/instruction_factory.h>
 
 
+// snapdev
+//
+#include    <snapdev/not_reached.h>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -36,8 +41,9 @@ namespace reporter
 
 
 
-parser::parser(lexer::pointer_t l)
+parser::parser(lexer::pointer_t l, state::pointer_t s)
     : f_lexer(l)
+    , f_state(s)
 {
 }
 
@@ -107,14 +113,12 @@ parser::parser(lexer::pointer_t l)
  *
  * \return A vector of statements.
  */
-statement::vector_t parser::parse_program()
+void parser::parse_program()
 {
     while(!next_token())
     {
         one_statement();
     }
-
-    return f_statements;
 }
 
 
@@ -123,7 +127,7 @@ bool parser::next_token()
     f_token = f_lexer->next_token();
     if(f_token.get_token() == token_t::TOKEN_ERROR)
     {
-        throw std::runtime_error("invalid token");
+        throw std::runtime_error("invalid token.");
     }
     return f_token.get_token() == token_t::TOKEN_EOF;
 }
@@ -134,21 +138,26 @@ void parser::one_statement()
     if(f_token.get_token() != token_t::TOKEN_IDENTIFIER)
     {
         f_lexer->error(f_token, "a statement is expected to start with the name of an instruction (a.k.a. an identifier).");
-        throw std::runtime_error("expected identifier");
+        throw std::runtime_error("expected identifier.");
     }
 
-    instruction::pointer_t inst(get_instruction(f_token.get_string()));
+    std::string const inst_name(f_token.get_string());
+    instruction::pointer_t inst(get_instruction(inst_name));
     if(inst == nullptr)
     {
-        f_lexer->error(f_token, "unknown instruction \"" + f_token.get_string() + "\".");
-        throw std::runtime_error("unknown instruction");
+        f_lexer->error(f_token, "unknown instruction \"" + inst_name + "\".");
+        throw std::runtime_error("unknown instruction.");
     }
 
     f_statement = std::make_shared<statement>(inst);
 
-    if(!next_token())
+    if(next_token())
     {
-        f_lexer->error(f_token, "an instruction must include parenthesis, end of file found.");
+        f_lexer->error(
+              f_token
+            , "an instruction (\""
+            + inst_name
+            + "\" here) must include parenthesis, end of file found.");
         throw std::runtime_error("expected '(' parenthesis instead of EOF.");
     }
     if(f_token.get_token() != token_t::TOKEN_OPEN_PARENTHESIS)
@@ -156,7 +165,7 @@ void parser::one_statement()
         f_lexer->error(f_token, "an instruction name must be followed by '('.");
         throw std::runtime_error("expected '(' parenthesis.");
     }
-    if(!next_token())
+    if(next_token())
     {
         f_lexer->error(f_token, "an instruction must end with a closing parenthesis, end of file found.");
         throw std::runtime_error("expected ')' parenthesis instead of EOF.");
@@ -171,7 +180,8 @@ void parser::one_statement()
         throw std::runtime_error("expected ')' parenthesis to end parameter list.");
     }
 
-    f_statements.push_back(f_statement);
+    f_state->add_statement(f_statement);
+    f_statement.reset();
 }
 
 
@@ -184,6 +194,7 @@ void parser::parameters()
         {
             break;
         }
+        next_token();
     }
 }
 
@@ -196,15 +207,20 @@ void parser::one_parameter()
         throw std::runtime_error("expected identifier to name parameter.");
     }
     std::string const name(f_token.get_string());
-    if(!next_token())
+    if(next_token())
     {
-        f_lexer->error(f_token, "expected ':' after parameter name.");
-        throw std::runtime_error("expected ':' after parameter name.");
+        f_lexer->error(f_token, "expected ':' after parameter name, not EOF.");
+        throw std::runtime_error("expected ':' after parameter name, not EOF.");
     }
     if(f_token.get_token() != token_t::TOKEN_COLON)
     {
         f_lexer->error(f_token, "an instruction parameter must be followed by a ':'.");
         throw std::runtime_error("expected ':' after parameter name.");
+    }
+    if(next_token())
+    {
+        f_lexer->error(f_token, "an instruction parameter must be followed by ':' and then an expression; expression missing.");
+        throw std::runtime_error("expected expression.");
     }
 
     expression::pointer_t expr;
@@ -231,6 +247,7 @@ expression::pointer_t parser::expression_list()
     //
     if(f_token.get_token() == token_t::TOKEN_CLOSE_CURLY_BRACE)
     {
+        next_token();
         return list;
     }
 
@@ -248,7 +265,7 @@ expression::pointer_t parser::expression_list()
             next_token();
             return list;
         }
-        if(!next_token())
+        if(next_token())
         {
             f_lexer->error(f_token, "end of file found before end of list ('}' missing).");
             throw std::runtime_error("end of file found before end of list ('}' missing).");
@@ -267,7 +284,7 @@ expression::pointer_t parser::list_item()
     std::string const name(f_token.get_string());
     //variable::pointer_t name(std::make_shared<variable>());
 
-    if(!next_token())
+    if(next_token())
     {
         f_lexer->error(f_token, "a list must end with a '}'.");
         throw std::runtime_error("a list must end with a '}'.");
@@ -276,7 +293,7 @@ expression::pointer_t parser::list_item()
     item->set_operator(operator_t::OPERATOR_NAMED);
     if(f_token.get_token() == token_t::TOKEN_COLON)
     {
-        if(!next_token())
+        if(next_token())
         {
             f_lexer->error(f_token, "a list item with a colon (:) must be followed by an expression.");
             throw std::runtime_error("a list item with a colon (:) must be followed by an expression.");
@@ -307,6 +324,7 @@ expression::pointer_t parser::additive()
             return left;
         }
 
+        next_token();
         expression::pointer_t right(multiplicative());
         expression::pointer_t expr(std::make_shared<expression>());
         expr->set_operator(op);
@@ -314,7 +332,9 @@ expression::pointer_t parser::additive()
         expr->add_expression(right);
         left = expr;
     }
-}
+
+    snapdev::NOT_REACHED();
+}   // LCOV_EXCL_LINE
 
 
 expression::pointer_t parser::multiplicative()
@@ -340,6 +360,7 @@ expression::pointer_t parser::multiplicative()
             return left;
         }
 
+        next_token();
         expression::pointer_t right(primary());
         expression::pointer_t expr(std::make_shared<expression>());
         expr->set_operator(op);
@@ -347,7 +368,9 @@ expression::pointer_t parser::multiplicative()
         expr->add_expression(right);
         left = expr;
     }
-}
+
+    snapdev::NOT_REACHED();
+}   // LCOV_EXCL_LINE
 
 
 expression::pointer_t parser::primary()
@@ -366,6 +389,7 @@ expression::pointer_t parser::primary()
             expression::pointer_t expr(std::make_shared<expression>());
             expr->set_operator(operator_t::OPERATOR_PRIMARY);
             expr->set_token(f_token);
+            next_token();
             return expr;
         }
         break;
@@ -377,6 +401,7 @@ expression::pointer_t parser::primary()
             expr->set_operator(f_token.get_token() == token_t::TOKEN_PLUS
                                         ? operator_t::OPERATOR_IDENTITY
                                         : operator_t::OPERATOR_NEGATE);
+            next_token();
             expr->add_expression(additive());
             return expr;
         }
@@ -384,7 +409,7 @@ expression::pointer_t parser::primary()
 
     case token_t::TOKEN_OPEN_PARENTHESIS:
         {
-            if(!next_token())
+            if(next_token())
             {
                 f_lexer->error(f_token, "an expression between parenthesis must include at least one primary expression.");
                 throw std::runtime_error("an expression between parenthesis must include at least one primary expression.");
@@ -395,6 +420,7 @@ expression::pointer_t parser::primary()
                 f_lexer->error(f_token, "an expression between parenthesis must include the ')' at the end.");
                 throw std::runtime_error("an expression between parenthesis must include the ')' at the end.");
             }
+            next_token();
             return expr;
         }
         break;

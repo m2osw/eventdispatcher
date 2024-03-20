@@ -19,8 +19,8 @@
 
 // self
 //
-#include    "lexer.h"
-#include    "statement.h"
+#include    <eventdispatcher/reporter/lexer.h>
+#include    <eventdispatcher/reporter/state.h>
 
 
 // C++
@@ -41,9 +41,9 @@ class parser
 public:
     typedef std::shared_ptr<parser>  pointer_t;
 
-                            parser(lexer::pointer_t l);
+                            parser(lexer::pointer_t l, state::pointer_t s);
 
-    statement::vector_t     parse_program();
+    void                    parse_program();
 
 private:
     bool                    next_token();
@@ -57,8 +57,8 @@ private:
     expression::pointer_t   primary();
 
     lexer::pointer_t        f_lexer = lexer::pointer_t();
+    state::pointer_t        f_state = state::pointer_t();
     token                   f_token = token();
-    statement::vector_t     f_statements = statement::vector_t();
     statement::pointer_t    f_statement = statement::pointer_t();
     variable::pointer_t     f_parameter = variable::pointer_t();
 };

@@ -31,6 +31,11 @@
 #include    <eventdispatcher/reporter/token.h>
 
 
+// last include
+//
+#include    <snapdev/poison.h>
+
+
 
 namespace
 {

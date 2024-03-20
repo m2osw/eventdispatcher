@@ -49,6 +49,23 @@ std::string const & variable::get_type() const
 }
 
 
+variable_string::variable_string(std::string const & name)
+    : variable(name, "string")
+{
+}
+
+std::string const & variable_string::get_string() const
+{
+    return f_string;
+}
+
+
+void variable_string::set_string(std::string const & s)
+{
+    f_string = s;
+}
+
+
 
 } // namespace reporter
 } // namespace SNAP_CATCH2_NAMESPACE

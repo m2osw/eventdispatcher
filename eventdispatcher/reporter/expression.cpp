@@ -21,6 +21,13 @@
 #include    "expression.h"
 
 
+
+// last include
+//
+#include    <snapdev/poison.h>
+
+
+
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter
@@ -72,18 +79,6 @@ void expression::set_token(token const & t)
 {
     f_token = t;
 }
-
-
-//variable::pointer_t expression::get_variable() const
-//{
-//    return f_variable;
-//}
-//
-//
-//void expression::set_variable(variable::pointer_t var)
-//{
-//    f_variable = var;
-//}
 
 
 

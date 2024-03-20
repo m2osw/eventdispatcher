@@ -46,6 +46,7 @@ public:
     void                add_parameter(std::string const & name, expression::pointer_t expr);
     expression::pointer_t
                         get_parameter(std::string const & name) const;
+    void                verify_parameters() const;
 
 private:
     instruction::pointer_t

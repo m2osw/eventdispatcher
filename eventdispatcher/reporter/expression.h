@@ -75,14 +75,11 @@ public:
     void                        add_expression(pointer_t expr);
     token const &               get_token() const;
     void                        set_token(token const & t);
-    //variable::pointer_t         get_variable() const;
-    //void                        set_variable(variable::pointer_t var);
 
 private:
     operator_t                  f_operator = operator_t::OPERATOR_NULL;
     vector_t                    f_expressions = vector_t();
     token                       f_token = token();
-    //variable::pointer_t         f_variable = variable::pointer_t();
 };
 
 

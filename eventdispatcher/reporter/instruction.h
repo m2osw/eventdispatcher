@@ -41,6 +41,14 @@ namespace reporter
 class state;
 
 
+struct parameter_declaration
+{
+    char const *    f_name = nullptr;
+    char const *    f_type = nullptr;
+    bool            f_required = true;
+};
+
+
 class instruction
 {
 public:
@@ -53,6 +61,8 @@ public:
     std::string const &     get_name() const;
 
     virtual void            func(state & s) = 0;
+    virtual parameter_declaration const *
+                            parameter_declarations() const;
 
 private:
     std::string             f_name = std::string();

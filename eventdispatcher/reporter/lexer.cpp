@@ -486,7 +486,6 @@ char32_t lexer::getc()
     }
 
     char32_t c(*f_iterator++);
-
     if(c == '\r')
     {
         c = *f_iterator;

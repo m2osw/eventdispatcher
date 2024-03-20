@@ -79,10 +79,21 @@ On a condition, go to one label (true) or another (false).
 The `if()` uses the result of the last `compare_...()`, `has_...()` and
 other similar instructions to decide where to go.
 
-    if(true: <label-name>, false: <label-name>)
+    if(<operator>: <label-name>)
 
-Only one of `true:` or `false:` is required. If both are specified, then
-the code after the `if()` will not be reached unless it is a `label()`.
+The `<operator>` is one of:
+
+* `less` -- go to `<label-name>` if less (compare result is -1)
+* `less_or_equal` -- go to `<label-name>` if less (compare result is -1 or 0)
+* `greater` -- go to `<label-name>` if greater (compare result is 1)
+* `greater_or_equal` -- go to `<label-name>` if greater (compare result is 0 or 1)
+* `equal` -- go to `<label-name>` if equal (compare result is 0)
+* `not_equal` -- go to `<label-name>` if not equal (compare result is not 0)
+* `unordered` -- go to `<label-name>` if unordered (compare result is 2)
+
+multiple `<operator>` can be used within a single `if()`. They each must be
+distinct and not overlap (i.e. `less` and `equal` is good, `greater_or_equal`
+and `not_equal` is wrong).
 
 ## Sleep
 

@@ -37,6 +37,10 @@ namespace reporter
 statement::statement(instruction::pointer_t inst)
     : f_instruction(inst)
 {
+    if(f_instruction == nullptr)
+    {
+        throw std::logic_error("an instruction must always be attached to a statement.");
+    }
 }
 
 
@@ -48,7 +52,29 @@ instruction::pointer_t statement::get_instruction() const
 
 void statement::add_parameter(std::string const & name, expression::pointer_t expr)
 {
-    f_parameters[name] = expr;
+    auto const it(f_parameters.find(name));
+    if(it != f_parameters.end())
+    {
+        throw std::runtime_error("parameter \"" + name + "\" defined more than once.");
+    }
+
+    for(parameter_declaration const * decl(f_instruction->parameter_declarations());
+        decl->f_name != nullptr;
+        ++decl)
+    {
+        if(name == decl->f_name)
+        {
+            f_parameters[name] = expr;
+            return;
+        }
+    }
+
+    throw std::runtime_error(
+              "parameter \""
+            + name
+            + "\" not accepted by \""
+            + f_instruction->get_name()
+            + "\".");
 }
 
 
@@ -60,6 +86,29 @@ expression::pointer_t statement::get_parameter(std::string const & name) const
         return expression::pointer_t();
     }
     return it->second;
+}
+
+
+void statement::verify_parameters() const
+{
+    for(parameter_declaration const * decl(f_instruction->parameter_declarations());
+        decl->f_name != nullptr;
+        ++decl)
+    {
+        if(decl->f_required)
+        {
+            auto const it(f_parameters.find(decl->f_name));
+            if(it == f_parameters.end())
+            {
+                throw std::runtime_error(
+                          "parameter \""
+                        + std::string(decl->f_name)
+                        + "\" is required by \""
+                        + f_instruction->get_name()
+                        + "\".");
+            }
+        }
+    }
 }
 
 

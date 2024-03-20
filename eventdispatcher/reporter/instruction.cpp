@@ -34,6 +34,19 @@ namespace reporter
 
 
 
+namespace
+{
+
+
+
+constexpr parameter_declaration const g_no_params[] = {{}};
+
+
+
+} // no name namespace
+
+
+
 instruction::instruction(std::string const & name)
     : f_name(name)
 {
@@ -48,6 +61,12 @@ instruction::~instruction()
 std::string const & instruction::get_name() const
 {
     return f_name;
+}
+
+
+parameter_declaration const * instruction::parameter_declarations() const
+{
+    return g_no_params;
 }
 
 
