@@ -18,7 +18,7 @@
 
 // self
 //
-#include    "variable.h"
+#include    "variable_string.h"
 
 
 namespace SNAP_CATCH2_NAMESPACE
@@ -28,29 +28,20 @@ namespace reporter
 
 
 
-variable::variable(
-          std::string const & name
-        , std::string const & type)
-    : f_name(name)
-    , f_type(type)
+variable_string::variable_string(std::string const & name)
+    : variable(name, "string")
 {
 }
 
-
-variable::~variable()
+std::string const & variable_string::get_string() const
 {
+    return f_string;
 }
 
 
-std::string const & variable::get_name() const
+void variable_string::set_string(std::string const & s)
 {
-    return f_name;
-}
-
-
-std::string const & variable::get_type() const
-{
-    return f_type;
+    f_string = s;
 }
 
 

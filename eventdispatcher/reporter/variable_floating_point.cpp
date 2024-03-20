@@ -18,7 +18,7 @@
 
 // self
 //
-#include    "variable.h"
+#include    "variable_floating_point.h"
 
 
 namespace SNAP_CATCH2_NAMESPACE
@@ -28,29 +28,20 @@ namespace reporter
 
 
 
-variable::variable(
-          std::string const & name
-        , std::string const & type)
-    : f_name(name)
-    , f_type(type)
+variable_floating_point::variable_floating_point(std::string const & name)
+    : variable(name, "floating_point")
 {
 }
 
-
-variable::~variable()
+double variable_floating_point::get_floating_point() const
 {
+    return f_floating_point;
 }
 
 
-std::string const & variable::get_name() const
+void variable_floating_point::set_floating_point(double d)
 {
-    return f_name;
-}
-
-
-std::string const & variable::get_type() const
-{
-    return f_type;
+    f_floating_point = d;
 }
 
 

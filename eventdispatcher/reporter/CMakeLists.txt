@@ -24,6 +24,7 @@
 project(reporter)
 
 add_library(${PROJECT_NAME} SHARED
+    basic_instructions.cpp
     expression.cpp
     instruction.cpp
     instruction_factory.cpp
@@ -33,6 +34,9 @@ add_library(${PROJECT_NAME} SHARED
     statement.cpp
     token.cpp
     variable.cpp
+    variable_floating_point.cpp
+    variable_integer.cpp
+    variable_string.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

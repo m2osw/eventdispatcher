@@ -18,7 +18,7 @@
 
 // self
 //
-#include    "variable.h"
+#include    "variable_integer.h"
 
 
 namespace SNAP_CATCH2_NAMESPACE
@@ -28,29 +28,20 @@ namespace reporter
 
 
 
-variable::variable(
-          std::string const & name
-        , std::string const & type)
-    : f_name(name)
-    , f_type(type)
+variable_integer::variable_integer(std::string const & name)
+    : variable(name, "integer")
 {
 }
 
-
-variable::~variable()
+std::int64_t variable_integer::get_integer() const
 {
+    return f_integer;
 }
 
 
-std::string const & variable::get_name() const
+void variable_integer::set_integer(std::int64_t i)
 {
-    return f_name;
-}
-
-
-std::string const & variable::get_type() const
-{
-    return f_type;
+    f_integer = i;
 }
 
 

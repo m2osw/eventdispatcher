@@ -63,6 +63,7 @@ public:
                             variable(
                                   std::string const & name
                                 , std::string const & type);
+    virtual                 ~variable();
 
     std::string const &     get_name() const;
     std::string const &     get_type() const;
@@ -70,22 +71,6 @@ public:
 private:
     std::string             f_name = std::string();
     std::string             f_type = std::string();
-};
-
-
-class variable_string
-    : public variable
-{
-public:
-    typedef std::shared_ptr<variable_string>        pointer_t;
-
-                            variable_string(std::string const & name);
-
-    std::string const &     get_string() const;
-    void                    set_string(std::string const & s);
-
-private:
-    std::string             f_string = std::string();
 };
 
 

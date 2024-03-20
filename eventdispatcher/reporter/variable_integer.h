@@ -15,12 +15,22 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
 // self
 //
-#include    "variable.h"
+#include    <eventdispatcher/reporter/variable.h>
 
 
+// C++
+//
+#include    <map>
+#include    <memory>
+#include    <string>
+
+
+
+// view these as an extension of the snapcatch2 library
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter
@@ -28,30 +38,20 @@ namespace reporter
 
 
 
-variable::variable(
-          std::string const & name
-        , std::string const & type)
-    : f_name(name)
-    , f_type(type)
+class variable_integer
+    : public variable
 {
-}
+public:
+    typedef std::shared_ptr<variable_integer>        pointer_t;
 
+                            variable_integer(std::string const & name);
 
-variable::~variable()
-{
-}
+    std::int64_t            get_integer() const;
+    void                    set_integer(std::int64_t i);
 
-
-std::string const & variable::get_name() const
-{
-    return f_name;
-}
-
-
-std::string const & variable::get_type() const
-{
-    return f_type;
-}
+private:
+    std::int64_t            f_integer = 0;
+};
 
 
 

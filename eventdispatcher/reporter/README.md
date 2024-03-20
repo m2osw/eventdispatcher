@@ -60,6 +60,25 @@ the next newline.
 
 # Instructions
 
+* `call()`
+* `compare_message_command()`
+* `done()`
+* `error()`
+* `goto()`
+* `has_parameter()`
+* `has_parameter_with_value()`
+* `if()`
+* `label()`
+* `listen()`
+* `return()`
+* `run()`
+* `save_parameter_value()`
+* `send_message()`
+* `set_variable()`
+* `sleep()`
+* `verify_message()`
+* `wait()`
+
 ## Label
 
 Define a label you can go to.

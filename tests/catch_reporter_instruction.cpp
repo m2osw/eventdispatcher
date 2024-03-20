@@ -31,6 +31,7 @@
 #include    <eventdispatcher/reporter/instruction_factory.h>
 
 #include    <eventdispatcher/reporter/state.h>
+#include    <eventdispatcher/reporter/variable_string.h>
 
 
 // last include
