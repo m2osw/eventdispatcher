@@ -281,7 +281,8 @@ expression::pointer_t parser::list_item()
         f_lexer->error(f_token, "a list item must be named using an identifier.");
         throw std::runtime_error("a list item must be named using an identifier.");
     }
-    std::string const name(f_token.get_string());
+    token const name(f_token);
+    //std::string const name(f_token.get_string());
     //variable::pointer_t name(std::make_shared<variable>());
 
     if(next_token())
@@ -291,6 +292,12 @@ expression::pointer_t parser::list_item()
     }
     expression::pointer_t item(std::make_shared<expression>());
     item->set_operator(operator_t::OPERATOR_NAMED);
+
+    expression::pointer_t identifier(std::make_shared<expression>());
+    identifier->set_operator(operator_t::OPERATOR_PRIMARY);
+    identifier->set_token(name);
+    item->add_expression(identifier);
+
     if(f_token.get_token() == token_t::TOKEN_COLON)
     {
         if(next_token())

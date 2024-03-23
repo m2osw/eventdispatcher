@@ -65,8 +65,8 @@ the next newline.
 * `done()`
 * `error()`
 * `goto()`
-* `has_parameter()`
-* `has_parameter_with_value()`
+* `message_has_parameter()`
+* `message_has_parameter_with_value()`
 * `if()`
 * `label()`
 * `listen()`
@@ -93,10 +93,10 @@ Go to a label unconditionally.
 
 ## If
 
-On a condition, go to one label (true) or another (false).
+On a condition, go to the corresponding label.
 
-The `if()` uses the result of the last `compare_...()`, `has_...()` and
-other similar instructions to decide where to go.
+The `if()` uses the result of the last `compare_...()`, `<object>_has_...()`
+and other similar instructions to decide where to go.
 
     if(<operator>: <label-name>)
 
@@ -111,8 +111,9 @@ The `<operator>` is one of:
 * `unordered` -- go to `<label-name>` if unordered (compare result is 2)
 
 multiple `<operator>` can be used within a single `if()`. They each must be
-distinct and not overlap (i.e. `less` and `equal` is good, `greater_or_equal`
-and `not_equal` is wrong).
+distinct and not overlap (i.e. `less` and `equal` can be used together,
+`greater_or_equal` and `not_equal` overlap since "greater" also represents
+"not equal").
 
 ## Sleep
 
@@ -127,6 +128,8 @@ Wait for a message to arrive on our connection.
     wait(timeout: <double>)
 
 The `timeout` parameter is how much time we can wait before failing.
+
+A `listen()` instruction must appear before the first `wait()`.
 
 ## Run
 
@@ -144,24 +147,51 @@ UDP, Unix, etc.) through the use of the scheme in the URI.
 
     listen(uri: <uri>)
 
-## Done
+A `listen()` must appear before the first `wait()` call.
 
-Indicate that the reporter does not expect to receive any more messages
-from the client. If it does receive anything from the client after this
-instruction, the test fails.
+## Exit
 
-    done(timeout: <double>)
+Exit the reporter. The `exit()` command can be used in three different
+modes:
 
-This `timeout` parameter is the same as the one on the `wait()` instruction.
-It uses exactly the same polling mechanism with that timeout. The `done()`
-expects the timeout to happen, however. If it does not happen, we detected
-an error.
+* Success
 
-## Error
+  In this case, use the `exit()` command with no parameters:
 
-Immediately exit the reporter with the specified error message.
+      exit()
 
-    error(message: <message>)
+  It will simply return without error and consider that the reporter script
+  was successful.
+
+* Failure
+
+  If you detect a failure (i.e. received the wrong message), then you can
+  immediately stop the script using this failure mode. In this case, you
+  pass an error message to the command:
+
+      exit(error_message: "<the error description>")
+
+  This makes the process exit immediately.
+
+* Timeout
+
+  Whenever you use the `run()` command, you may then end the transmission
+  and clearly not expect any additional messages from the other end. To
+  make sure that works as expected, you can wait a second or two before
+  exiting. If while waiting a message is received from the other end, then
+  it is viewed as an error and the script fails.
+
+      exit(timeout: "2s")
+
+  The `timeout` parameter accepts a duration as defined in the advgetopt
+  duration validator. It is used the same way as in the `wait()`
+  instruction.
+
+  **Note:** A `listen()` must have occurred in order for this feature to
+            be used.
+
+Note that the `error_message` and `timeout` parameters are mutually
+exclusive. If both are specified, you get a script error.
 
 ## Verify Message
 
@@ -206,9 +236,7 @@ instruction is used for that purpose.
         command: <name>,
         parameters: { <name>: <value>, ... } )
 
-Note that as far as the reporter language is concerned, the `parameters`
-variable has one single value. The `send_message()` further parses that
-value to distinguish each parameter.
+**Note:** Until a client connects, the `send_message()` is not going to work.
 
 ## Compare Message Command
 
@@ -218,21 +246,21 @@ Check whether we received a certain message command.
 
 This is most often followed by an `if(false: <label-name>)` instruction.
 
-## Has Parameter
+## Message Has Parameter
 
 Check whether we the message includes this specific parameter.
 
-    has_parameter(name: <parameter-name>)
+    message_has_parameter(name: <parameter-name>)
 
 This is most often followed by an `if(false: <label-name>)` instruction.
 
-## Has Parameter with Value
+## Message Has Parameter with Value
 
 Check whether the message has the specified parameter and that parameter
 is set to the specified value. If both of these are true then the function
 sets the current result to true.
 
-    has_parameter_with_value(name: <parameter-name>, value: <value>)
+    message_has_parameter_with_value(name: <parameter-name>, value: <value>)
 
 This is most often followed by an `if(false: <label-name>)` instruction.
 

@@ -21,7 +21,6 @@
 //
 #include    "expression.h"
 #include    "instruction.h"
-#include    "variable.h"
 
 
 

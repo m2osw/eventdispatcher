@@ -58,7 +58,7 @@ CATCH_TEST_CASE("reporter_instruction", "[instruction][reporter]")
         CATCH_REQUIRE(label != nullptr);
         CATCH_REQUIRE(label->get_name() == "label");
         SNAP_CATCH2_NAMESPACE::reporter::state s;
-        SNAP_CATCH2_NAMESPACE::reporter::state const safe_copy(s);
+        //SNAP_CATCH2_NAMESPACE::reporter::state const safe_copy(s);
         label->func(s);
         //CATCH_REQUIRE(safe_copy == s); -- TODO?
     }
@@ -385,7 +385,7 @@ CATCH_TEST_CASE("reporter_instruction_error", "[instruction][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("return does not accept any parameters")
+    CATCH_START_SECTION("\"return()\" does not accept any parameters")
     {
         SNAP_CATCH2_NAMESPACE::reporter::instruction::pointer_t inst(SNAP_CATCH2_NAMESPACE::reporter::get_instruction("return"));
         CATCH_REQUIRE(inst != nullptr);
@@ -405,6 +405,21 @@ CATCH_TEST_CASE("reporter_instruction_error", "[instruction][reporter][error]")
             , std::runtime_error
             , Catch::Matchers::ExceptionMessage(
                       "parameter \"void\" not accepted by \"return\"."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("\"run()\" cannot be called")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::instruction::pointer_t inst(SNAP_CATCH2_NAMESPACE::reporter::get_instruction("run"));
+        CATCH_REQUIRE(inst != nullptr);
+        CATCH_REQUIRE(inst->get_name() == "run");
+
+        SNAP_CATCH2_NAMESPACE::reporter::state s;
+        CATCH_REQUIRE_THROWS_MATCHES(
+              inst->func(s)
+            , std::logic_error
+            , Catch::Matchers::ExceptionMessage(
+                      "run::func() was called when it should be intercepted by the executor."));
     }
     CATCH_END_SECTION()
 }

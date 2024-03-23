@@ -19,14 +19,18 @@
 
 // self
 //
-#include    <eventdispatcher/reporter/variable.h>
+#include    <eventdispatcher/reporter/state.h>
 
 
-// C++
+// eventdispatcher
 //
-//#include    <map>
-//#include    <memory>
-//#include    <string>
+//#include    <eventdispatcher/message.h>
+
+
+// cppthread
+//
+#include    <cppthread/runner.h>
+#include    <cppthread/thread.h>
 
 
 
@@ -38,19 +42,19 @@ namespace reporter
 
 
 
-class variable_string
-    : public variable
+class executor
 {
 public:
-    typedef std::shared_ptr<variable_string>        pointer_t;
+    typedef std::shared_ptr<executor>   pointer_t;
 
-                            variable_string(std::string const & name, std::string const & type = "string");
+                                    executor(state::pointer_t s);
 
-    std::string const &     get_string() const;
-    void                    set_string(std::string const & s);
+    void                            run();
+    void                            wait();
 
 private:
-    std::string             f_string = std::string();
+    cppthread::runner::pointer_t    f_runner = cppthread::runner::pointer_t();
+    cppthread::thread::pointer_t    f_thread = cppthread::thread::pointer_t();
 };
 
 

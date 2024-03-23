@@ -36,6 +36,7 @@ if(SnapCatch2_FOUND)
         catch_unix_stream.cpp
         catch_version.cpp
 
+        catch_reporter_executor.cpp
         catch_reporter_expression.cpp
         catch_reporter_instruction.cpp
         catch_reporter_lexer.cpp

@@ -21,6 +21,12 @@
 #include    "variable.h"
 
 
+// last include
+//
+#include    <snapdev/poison.h>
+
+
+
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter

@@ -50,10 +50,18 @@ enum class compare_t : int8_t
 };
 
 
+enum class callback_reason_t
+{
+    CALLBACK_REASON_BEFORE_CALL,
+    CALLBACK_REASON_AFTER_CALL,
+};
+
+
 class state
 {
 public:
     typedef std::shared_ptr<state>  pointer_t;
+    typedef std::function<void(state & s, callback_reason_t reason)> trace_callback_t;
 
     ip_t                    get_ip() const;
     void                    set_ip(ip_t ip);
@@ -73,30 +81,36 @@ public:
 
     ip_t                    get_label_position(std::string const & name) const;
 
-    void                    execute_instruction();
-
     compare_t               get_compare() const;
     void                    set_compare(compare_t c);
 
     ed::message const &     get_message() const;
     void                    set_message(ed::message const & msg);
 
+    bool                    get_in_thread() const;
+    void                    set_in_thread(bool in_thread);
+
     int                     get_exit_code() const;
     void                    set_exit_code(int code);
 
+    trace_callback_t        get_trace_callback() const;
+    void                    set_trace_callback(trace_callback_t callback);
+
 private:
     typedef std::map<std::string, ip_t>     label_map_t;
-    typedef std::vector<ip_t>               call_statck_t;
+    typedef std::vector<ip_t>               call_stack_t;
 
     ip_t                    f_ip = 0;                               // instruction pointer in f_program
-    call_statck_t           f_stack = call_statck_t();
+    call_stack_t            f_stack = call_stack_t();
     statement::vector_t     f_program = statement::vector_t();      // instruction being executed with original parameters
     variable::map_t         f_parameters = variable::map_t();       // parameters at time of call (replaced variables in strings, etc.)
     variable::map_t         f_variables = variable::map_t();        // program variables ("globals")
     label_map_t             f_labels = label_map_t();
     compare_t               f_compare = compare_t::COMPARE_UNDEFINED;
+    bool                    f_in_thread = false;
     int                     f_exit_code = -1;
     ed::message             f_message = ed::message();
+    trace_callback_t        f_trace_callback = trace_callback_t();
 };
 
 

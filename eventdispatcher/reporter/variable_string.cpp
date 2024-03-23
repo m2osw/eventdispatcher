@@ -28,8 +28,8 @@ namespace reporter
 
 
 
-variable_string::variable_string(std::string const & name)
-    : variable(name, "string")
+variable_string::variable_string(std::string const & name, std::string const & type)
+    : variable(name, type)
 {
 }
 

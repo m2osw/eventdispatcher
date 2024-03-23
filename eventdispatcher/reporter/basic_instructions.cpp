@@ -52,7 +52,6 @@ constexpr parameter_declaration const g_call_params[] =
     {
         .f_name = "label",
         .f_type = "identifier",
-        .f_required = true,
     },
     {}
 };
@@ -63,6 +62,12 @@ constexpr parameter_declaration const g_exit_params[] =
     {
         .f_name = "error_message",
         .f_type = "string",
+        .f_required = false,
+    },
+    {
+        .f_name = "timeout",
+        .f_type = "number",
+        .f_required = false,
     },
     {}
 };
@@ -73,7 +78,6 @@ constexpr parameter_declaration const g_goto_params[] =
     {
         .f_name = "label",
         .f_type = "identifier",
-        .f_required = true,
     },
     {}
 };
@@ -84,30 +88,37 @@ constexpr parameter_declaration const g_if_params[] =
     {
         .f_name = "unordered",
         .f_type = "identifier",
+        .f_required = false,
     },
     {
         .f_name = "less",
         .f_type = "identifier",
+        .f_required = false,
     },
     {
         .f_name = "less_or_equal",
         .f_type = "identifier",
+        .f_required = false,
     },
     {
         .f_name = "greater",
         .f_type = "identifier",
+        .f_required = false,
     },
     {
         .f_name = "greater_or_equal",
         .f_type = "identifier",
+        .f_required = false,
     },
     {
         .f_name = "equal",
         .f_type = "identifier",
+        .f_required = false,
     },
     {
         .f_name = "not_equal",
         .f_type = "identifier",
+        .f_required = false,
     },
     {}
 };
@@ -118,7 +129,16 @@ constexpr parameter_declaration const g_label_params[] =
     {
         .f_name = "name",
         .f_type = "identifier",
-        .f_required = true,
+    },
+    {}
+};
+
+
+constexpr parameter_declaration const g_sleep_params[] =
+{
+    {
+        .f_name = "seconds",
+        .f_type = "number",
     },
     {}
 };
@@ -129,35 +149,41 @@ constexpr parameter_declaration const g_verify_message_params[] =
     {
         .f_name = "sent_server",
         .f_type = "identifer",
+        .f_required = false,
     },
     {
         .f_name = "sent_service",
         .f_type = "identifer",
+        .f_required = false,
     },
     {
         .f_name = "server",
         .f_type = "identifer",
+        .f_required = false,
     },
     {
         .f_name = "service",
         .f_type = "identifer",
+        .f_required = false,
     },
     {
         .f_name = "command",
         .f_type = "identifer",
-        .f_required = true,
     },
     {
         .f_name = "required_parameters",
         .f_type = "list",
+        .f_required = false,
     },
     {
         .f_name = "optional_parameters",
         .f_type = "list",
+        .f_required = false,
     },
     {
         .f_name = "forbidden_parameters",
         .f_type = "list",
+        .f_required = false,
     },
     {}
 };
@@ -183,7 +209,15 @@ public:
         s.push_ip();
 
         variable::pointer_t label_name(s.get_parameter("label", true));
+        if(label_name == nullptr)
+        {
+            throw std::logic_error("label_name not available in call().");
+        }
         variable_string::pointer_t name(std::static_pointer_cast<variable_string>(label_name));
+        if(name == nullptr)
+        {
+            throw std::logic_error("label_name -> name not available in call().");
+        }
         ip_t const ip(s.get_label_position(name->get_string()));
         s.set_ip(ip);
     }
@@ -211,9 +245,17 @@ public:
 
     virtual void func(state & s) override
     {
+        s.set_exit_code(0);
+
+        variable::pointer_t timeout(s.get_parameter("timeout"));
         variable::pointer_t error_message(s.get_parameter("error_message"));
         if(error_message != nullptr)
         {
+            if(timeout != nullptr)
+            {
+                throw std::runtime_error("\"timeout\" and \"error_message\" from the exit() instruction are mutually exclusive.");
+            }
+
             variable_string::pointer_t message(std::static_pointer_cast<variable_string>(error_message));
 
             std::cerr
@@ -223,9 +265,11 @@ public:
 
             s.set_exit_code(1);
         }
-        else
+        else if(timeout != nullptr)
         {
-            s.set_exit_code(0);
+            // wait until timeout, if the timeout does not happen, we failed
+            //
+throw std::logic_error("exit(timeout: ...) not yet implemented");
         }
 
         // jump to the very end so the executor knows it has to quit
@@ -285,6 +329,8 @@ public:
 
     virtual void func(state & s) override
     {
+        // TODO: verify the potential overlaps
+        //
         variable::pointer_t label_name;
         switch(s.get_compare())
         {
@@ -335,7 +381,7 @@ public:
 
         }
 
-        // if we found a matching label, act on it
+        // if a matching label was found, act on it
         //
         if(label_name != nullptr)
         {
@@ -398,6 +444,28 @@ private:
 INSTRUCTION(return);
 
 
+// RUN
+//
+class inst_run
+    : public instruction
+{
+public:
+    inst_run()
+        : instruction("run")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        snapdev::NOT_USED(s);
+        throw std::logic_error("run::func() was called when it should be intercepted by the executor.");
+    }
+
+private:
+};
+INSTRUCTION(run);
+
+
 // SLEEP
 //
 class inst_sleep
@@ -436,6 +504,11 @@ public:
                 << ".\n";
             throw std::runtime_error("nanosleep failed.");
         }
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_sleep_params;
     }
 
 private:
@@ -482,20 +555,19 @@ INSTRUCTION(verify_message);
 
 // `call()` -- DONE
 // `compare_message_command()`
-// `done()`
-// `error()`
+// `exit()` -- PARTIAL
 // `goto()` -- DONE
-// `has_parameter()`
-// `has_parameter_with_value()`
+// `message_has_parameter()`
+// `message_has_parameter_with_value()`
 // `if()` -- DONE
 // `label()` -- DONE
 // `listen()`
 // `return()` -- DONE
-// `run()`
+// `run()` -- DONE
 // `save_parameter_value()`
 // `send_message()`
 // `set_variable()`
-// `sleep()`
+// `sleep()` -- DONE
 // `verify_message()` -- AVAILABLE, NOT IMPLEMENTED
 // `wait()`
 

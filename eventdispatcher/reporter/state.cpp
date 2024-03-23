@@ -21,6 +21,11 @@
 #include    "state.h"
 
 
+// last include
+//
+#include    <snapdev/poison.h>
+
+
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter
@@ -201,6 +206,18 @@ void state::set_message(ed::message const & msg)
 }
 
 
+bool state::get_in_thread() const
+{
+    return f_in_thread;
+}
+
+
+void state::set_in_thread(bool in_thread)
+{
+    f_in_thread = in_thread;
+}
+
+
 int state::get_exit_code() const
 {
     return f_exit_code;
@@ -210,6 +227,18 @@ int state::get_exit_code() const
 void state::set_exit_code(int code)
 {
     f_exit_code = code;
+}
+
+
+state::trace_callback_t state::get_trace_callback() const
+{
+    return f_trace_callback;
+}
+
+
+void state::set_trace_callback(trace_callback_t callback)
+{
+    f_trace_callback = callback;
 }
 
 

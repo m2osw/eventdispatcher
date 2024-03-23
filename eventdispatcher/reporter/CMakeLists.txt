@@ -25,6 +25,7 @@ project(reporter)
 
 add_library(${PROJECT_NAME} SHARED
     basic_instructions.cpp
+    executor.cpp
     expression.cpp
     instruction.cpp
     instruction_factory.cpp
