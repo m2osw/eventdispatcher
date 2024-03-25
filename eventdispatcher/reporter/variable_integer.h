@@ -49,6 +49,11 @@ public:
     std::int64_t            get_integer() const;
     void                    set_integer(std::int64_t i);
 
+    // variable implementation
+    //
+    virtual variable::pointer_t
+                            clone(std::string const & name) const override;
+
 private:
     std::int64_t            f_integer = 0;
 };

@@ -94,7 +94,7 @@ public:
     static bool                 compare(pointer_t const & lhs, pointer_t const & rhs);
 
     std::uint16_t               get_event_limit() const;
-    void                        set_event_limit(uint16_t event_limit);
+    void                        set_event_limit(std::uint16_t event_limit);
     std::uint16_t               get_processing_time_limit() const;
     void                        set_processing_time_limit(std::int32_t processing_time_limit);
 

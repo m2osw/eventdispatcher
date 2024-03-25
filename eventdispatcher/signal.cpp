@@ -350,11 +350,14 @@ signalfd_siginfo const * signal::get_signal_info() const
  *
  * For each instance found in the signal queue, the process_signal() gets
  * called.
+ *
+ * \note
+ * This function is considered internal. You should not call it directly
+ * unless you know for sure that some signals were received.
  */
 void signal::process()
 {
-    // loop any number of times as required
-    // (or can we receive a maximum of 1 such signal at a time?)
+    // loop through all the signals received so far
     //
     while(f_socket != -1)
     {
@@ -390,7 +393,7 @@ void signal::process()
                     << r
                     << ", expected "
                     << sizeof(f_signal_info)
-                    << ")"
+                    << ")."
                     << SNAP_LOG_SEND;
             }
             break;

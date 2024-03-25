@@ -49,6 +49,11 @@ public:
     double                  get_floating_point() const;
     void                    set_floating_point(double i);
 
+    // variable implementation
+    //
+    virtual variable::pointer_t
+                            clone(std::string const & name) const override;
+
 private:
     double                  f_floating_point = 0.0;
 };

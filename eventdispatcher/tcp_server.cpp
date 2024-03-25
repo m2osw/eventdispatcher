@@ -72,28 +72,24 @@ namespace ed
  * The server constructor creates a socket, binds it, and then listen to it.
  *
  * By default the server accepts a maximum of \p max_connections (set to
- * 0 or less to get the default tcp_server::MAX_CONNECTIONS) in its waiting queue.
- * If you use the server and expect a low connection rate, you may want to
- * reduce the count to 5. Although some very busy servers use larger numbers.
- * This value gets clamped to a minimum of 5 and a maximum of 1,000.
+ * 0 or less to get the default tcp_server::MAX_CONNECTIONS) in its waiting
+ * queue. If you use the server and expect a low connection rate, you may
+ * want to reduce the count to 5. On the other hand, busy servers use larger
+ * numbers. This value gets clamped to a minimum of 5 and a maximum of 1,000.
  *
  * Note that the maximum number of connections is actually limited to
- * /proc/sys/net/core/somaxconn connections. This number is generally 128 
- * in 2016. So the  super high limit of 1,000 is anyway going to be ignored
- * by the OS.
+ * /proc/sys/net/core/somaxconn connections. This number was around 128 
+ * in 2016. In 2024, I see that it is now 4096. So the high limit of 1,000
+ * prevents you to use the OS maximum.
  *
- * The address is made non-reusable (which is the default for TCP sockets.)
+ * The address is made non-reusable (which is the default for TCP sockets).
  * It is possible to mark the server address as immediately reusable by
  * setting the \p reuse_addr to true.
  *
  * By default the server is marked as "keepalive". You can turn it off
  * using the keepalive() function with false.
  *
- * \exception tcp_client_server_parameter_error
- * This exception is raised if the address parameter is an empty string or
- * otherwise an invalid IP address, or if the port is out of range.
- *
- * \exception tcp_client_server_runtime_error
+ * \exception runtime_error
  * This exception is raised if the socket cannot be created, bound to
  * the specified IP address and port, or listen() fails on the socket.
  *
@@ -107,18 +103,10 @@ tcp_server::tcp_server(
         , int max_connections
         , bool reuse_addr
         , bool auto_close)
-    : f_max_connections(max_connections <= 0 ? MAX_CONNECTIONS : max_connections)
-    , f_address(address)
+    : f_address(address)
     , f_auto_close(auto_close)
 {
-    if(f_max_connections < 5)
-    {
-        f_max_connections = 5;
-    }
-    else if(f_max_connections > 1000)
-    {
-        f_max_connections = 1000;
-    }
+    f_max_connections = std::clamp(max_connections <= 0 ? MAX_CONNECTIONS : max_connections, 5, 1000);
 
     f_socket = f_address.create_socket(
                   (reuse_addr
@@ -127,14 +115,16 @@ tcp_server::tcp_server(
     if(f_socket < 0)
     {
         int const e(errno);
+        std::stringstream ss;
+        ss << "addr::create_socket() failed to create a socket descriptor (errno: "
+           << std::to_string(e)
+           << " -- "
+           << strerror(e)
+           << ')';
         SNAP_LOG_ERROR
-            << "addr::create_socket() failed to create a socket descriptor (errno: "
-            << std::to_string(e)
-            << " -- "
-            << strerror(e)
-            << ")"
+            << ss
             << SNAP_LOG_SEND;
-        throw runtime_error("could not create socket for client");
+        throw runtime_error(ss.str());
     }
 
     if(f_address.bind(f_socket) != 0)
@@ -143,7 +133,7 @@ tcp_server::tcp_server(
         std::stringstream ss;
         ss << "could not bind the socket to \""
            << f_address.to_ipv4or6_string(addr::STRING_IP_ADDRESS | addr::STRING_IP_PORT)
-           << "\"\n";
+           << '"';
         SNAP_LOG_ERROR
             << ss
             << SNAP_LOG_SEND;
@@ -169,7 +159,7 @@ tcp_server::tcp_server(
  * This function ensures that the server sockets get cleaned up.
  *
  * If the \p auto_close parameter was set to true in the constructor, then
- * the last accepter socket gets closed by this function.
+ * the last accepted socket gets closed by this function.
  *
  * \note
  * DO NOT use the shutdown() call since we may end up forking and using

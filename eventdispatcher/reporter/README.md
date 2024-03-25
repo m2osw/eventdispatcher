@@ -142,12 +142,26 @@ to this reporter thread runner.
 ## Listen
 
 Prepare a connection used to listen for messages coming from your service.
-The `listen` can be used to specify the type of connection to create (TCP,
-UDP, Unix, etc.) through the use of the scheme in the URI.
+The `listen` creates the connection with the specified address. You can
+change the type of connection with the `connection_type()` instruction.
+The default is TCP.
 
-    listen(uri: <uri>)
+    listen(address: <address>)
 
-A `listen()` must appear before the first `wait()` call.
+    TODO: add support for certificate: ... & key: ...
+
+A `listen()` must appear before the first `wait()` call. You can use the
+`disconnect()` function to stop listening for new connections.
+
+## Disconnect
+
+The `listen()` instruction creates a socket to listen for incoming
+connections. The `disconnect()` can be used to remove that connection.
+
+    disconnect()
+
+After a `disconnect()` you cannot use the `wait()` instruction unless you
+first call `listen()` again.
 
 ## Exit
 

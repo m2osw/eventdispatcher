@@ -26,6 +26,7 @@
 
 // eventdispatcher
 //
+#include    <eventdispatcher/connection.h>
 #include    <eventdispatcher/message.h>
 
 
@@ -57,6 +58,12 @@ enum class callback_reason_t
 };
 
 
+enum class connection_type_t
+{
+    CONNECTION_TYPE_TCP,        // tcp:... (tcp_server_connection)
+};
+
+
 class state
 {
 public:
@@ -72,6 +79,8 @@ public:
     std::size_t             get_statement_size() const;
     void                    add_statement(statement::pointer_t stmt);
 
+    statement::pointer_t    get_running_statement() const;
+    void                    set_running_statement(statement::pointer_t stmt);
     void                    clear_parameters();
     void                    add_parameter(variable::pointer_t param);
     variable::pointer_t     get_parameter(std::string const & name, bool required = false) const;
@@ -96,6 +105,14 @@ public:
     trace_callback_t        get_trace_callback() const;
     void                    set_trace_callback(trace_callback_t callback);
 
+    ed::connection::pointer_t
+                            get_listen_connection() const;
+    void                    listen(addr::addr const & a);
+    void                    disconnect();
+    void                    add_connection(ed::connection::pointer_t c);
+    ed::connection::vector_t
+                            get_connections() const;
+
 private:
     typedef std::map<std::string, ip_t>     label_map_t;
     typedef std::vector<ip_t>               call_stack_t;
@@ -103,6 +120,7 @@ private:
     ip_t                    f_ip = 0;                               // instruction pointer in f_program
     call_stack_t            f_stack = call_stack_t();
     statement::vector_t     f_program = statement::vector_t();      // instruction being executed with original parameters
+    statement::pointer_t    f_running_statement = statement::pointer_t();
     variable::map_t         f_parameters = variable::map_t();       // parameters at time of call (replaced variables in strings, etc.)
     variable::map_t         f_variables = variable::map_t();        // program variables ("globals")
     label_map_t             f_labels = label_map_t();
@@ -110,7 +128,12 @@ private:
     bool                    f_in_thread = false;
     int                     f_exit_code = -1;
     ed::message             f_message = ed::message();
-    trace_callback_t        f_trace_callback = trace_callback_t();
+    trace_callback_t        f_trace_callback = nullptr;
+    connection_type_t       f_connection_type = connection_type_t::CONNECTION_TYPE_TCP;
+    ed::connection::pointer_t
+                            f_listen = ed::connection::pointer_t();
+    ed::connection::vector_t
+                            f_connections = ed::connection::vector_t();
 };
 
 

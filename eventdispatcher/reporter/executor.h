@@ -24,7 +24,7 @@
 
 // eventdispatcher
 //
-//#include    <eventdispatcher/message.h>
+#include    <eventdispatcher/thread_done_signal.h>
 
 
 // cppthread
@@ -48,11 +48,15 @@ public:
     typedef std::shared_ptr<executor>   pointer_t;
 
                                     executor(state::pointer_t s);
+                                    ~executor();
 
+    void                            start();
     void                            run();
-    void                            wait();
+    void                            stop();
 
 private:
+    ed::thread_done_signal::pointer_t
+                                    f_done_signal = ed::thread_done_signal::pointer_t();
     cppthread::runner::pointer_t    f_runner = cppthread::runner::pointer_t();
     cppthread::thread::pointer_t    f_thread = cppthread::thread::pointer_t();
 };

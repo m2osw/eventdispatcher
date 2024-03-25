@@ -19,9 +19,11 @@
 #pragma once
 
 /** \file
- * \brief Event dispatch class.
+ * \brief Handle the "thread done" signal.
  *
- * Class used to handle events.
+ * This class is used to send a signal through a pipe when a thread is
+ * done for the main thread (usually the main thread is the one listening
+ * for event from the communicator).
  */
 
 // self
@@ -45,6 +47,7 @@ public:
     virtual                     ~thread_done_signal() override;
 
     // connection implementation
+    //
     virtual bool                is_reader() const override;
     virtual int                 get_socket() const override;
     virtual void                process_read() override;

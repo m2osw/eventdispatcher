@@ -15,22 +15,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#pragma once
 
 // self
 //
-#include    <eventdispatcher/reporter/variable.h>
+#include    "variable_address.h"
 
 
-// C++
-//
-//#include    <map>
-//#include    <memory>
-//#include    <string>
-
-
-
-// view these as an extension of the snapcatch2 library
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter
@@ -38,25 +28,30 @@ namespace reporter
 
 
 
-class variable_string
-    : public variable
+variable_address::variable_address(std::string const & name)
+    : variable(name, "address")
 {
-public:
-    typedef std::shared_ptr<variable_string>        pointer_t;
+}
 
-                            variable_string(std::string const & name, std::string const & type = "string");
 
-    std::string const &     get_string() const;
-    void                    set_string(std::string const & s);
+addr::addr variable_address::get_address() const
+{
+    return f_address;
+}
 
-    // variable implementation
-    //
-    virtual variable::pointer_t
-                            clone(std::string const & name) const override;
 
-private:
-    std::string             f_string = std::string();
-};
+void variable_address::set_address(addr::addr const & a)
+{
+    f_address = a;
+}
+
+
+variable::pointer_t variable_address::clone(std::string const & name) const
+{
+    pointer_t clone(std::make_shared<variable_address>(name));
+    clone->f_address = f_address;
+    return clone;
+}
 
 
 

@@ -19,7 +19,17 @@
 
 // self
 //
-#include    <eventdispatcher/reporter/variable.h>
+//#include    <eventdispatcher/reporter/variable.h>
+
+
+// eventdispatcher
+//
+#include    <eventdispatcher/tcp_server_client_message_connection.h>
+
+
+// snapcatch2
+//
+#include    <catch2/snapcatch2.hpp>
 
 
 // C++
@@ -38,24 +48,27 @@ namespace reporter
 
 
 
-class variable_string
-    : public variable
+class state;
+
+
+class messenger_tcp_client
+    : public ed::tcp_server_client_message_connection
 {
 public:
-    typedef std::shared_ptr<variable_string>        pointer_t;
+    typedef std::shared_ptr<messenger_tcp_client>        pointer_t;
 
-                            variable_string(std::string const & name, std::string const & type = "string");
+                            messenger_tcp_client(
+                                  state * s
+                                , ed::tcp_bio_client::pointer_t client);
+                            messenger_tcp_client(messenger_tcp_client const &) = delete;
 
-    std::string const &     get_string() const;
-    void                    set_string(std::string const & s);
+    messenger_tcp_client &  operator = (messenger_tcp_client const &) = delete;
 
-    // variable implementation
-    //
-    virtual variable::pointer_t
-                            clone(std::string const & name) const override;
+    // ed::connection implementation
+    virtual void            process_message(ed::message & msg) override;
 
 private:
-    std::string             f_string = std::string();
+    state *                 f_state = nullptr;
 };
 
 

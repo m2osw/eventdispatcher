@@ -59,11 +59,9 @@ public:
     pid_t                       get_child_pid() const;
     signalfd_siginfo const *    get_signal_info() const;
 
-private:
-    friend communicator;
-
     void                        process();
 
+private:
     int                         f_signal = 0;   // i.e. SIGHUP, SIGTERM...
     int                         f_socket = -1;  // output of signalfd()
     signalfd_siginfo            f_signal_info = signalfd_siginfo();

@@ -18,7 +18,7 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
- * \brief Implementation of the Snap Communicator class.
+ * \brief Implementation of the communicator class.
  *
  * This class wraps the C poll() interface in a C++ object with many types
  * of objects:
@@ -35,8 +35,8 @@
  *
  * Using the poll() function is the easiest and allows us to listen
  * on pretty much any number of sockets (on my server it is limited
- * at 16,768 and frankly over 1,000 we probably will start to have
- * real slowness issues on small VPN servers.)
+ * at 16,768 and frankly over 1,000 it will probably start to have
+ * real slowness issues on small VPN servers).
  */
 
 // to get the POLLRDHUP definition
@@ -99,7 +99,8 @@ namespace
 /** \brief The instance of the communicator singleton.
  *
  * This pointer is the one instance of the communicator
- * we create to run an event loop.
+ * created to run an event loop. There can only be one
+ * valid instance.
  */
 communicator::pointer_t *           g_instance = nullptr;
 
@@ -661,7 +662,7 @@ bool communicator::run()
             //
             if(static_cast<size_t>(r) > connections.size())
             {
-                throw runtime_error("communicator::run(): poll() returned a number of events to handle larger than the input allows");
+                throw runtime_error("communicator::run(): poll() returned a number of events to handle larger than the input allows.");
             }
 //SNAP_LOG_TRACE
 //    <<"tid="
@@ -815,7 +816,7 @@ bool communicator::run()
                 //       use the signal with the Unix signals that may
                 //       happen while calling poll().
                 //
-                throw runtime_error("communicator::run(): EINTR occurred while in poll() -- interrupts are not supported yet though");
+                throw runtime_error("communicator::run(): EINTR occurred while in poll() -- interrupts are not supported yet");
             }
             if(errno == EFAULT)
             {
@@ -825,8 +826,8 @@ bool communicator::run()
             {
                 // if this is really because nfds is too large then it may be
                 // a "soft" error that can be fixed; that being said, my
-                // current version is 16K files which frankly when we reach
-                // that level we have a problem...
+                // current Linux version supports 16K files which frankly
+                // when we reach that level we have a problem...
                 //
                 struct rlimit rl;
                 getrlimit(RLIMIT_NOFILE, &rl);
@@ -838,7 +839,7 @@ bool communicator::run()
             }
             if(errno == ENOMEM)
             {
-                throw runtime_error("communicator::run(): poll() failed because of memory");
+                throw runtime_error("communicator::run(): poll() failed trying to allocate memory");
             }
             int const e(errno);
             throw runtime_error(

@@ -20,9 +20,15 @@
 //
 #include    "executor.h"
 
+#include    "variable_address.h"
 #include    "variable_floating_point.h"
 #include    "variable_integer.h"
 #include    "variable_string.h"
+
+
+// eventdispatcher
+//
+#include    <eventdispatcher/communicator.h>
 
 
 // libaddr
@@ -30,9 +36,15 @@
 #include    <libaddr/addr_parser.h>
 
 
+// snapdev
+//
+#include    <snapdev/not_reached.h>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
+
 
 
 namespace SNAP_CATCH2_NAMESPACE
@@ -60,7 +72,9 @@ class background_executor
 public:
     typedef std::shared_ptr<background_executor>    pointer_t;
 
-                            background_executor(state::pointer_t s);
+                            background_executor(
+                                  state::pointer_t s
+                                , ed::thread_done_signal::pointer_t done_signal);
 
     // cppthread::runner implementation
     //
@@ -70,15 +84,21 @@ public:
 
     step_t                  execute_instruction();
     expression::pointer_t   compute(expression::pointer_t expr);
+    state::pointer_t        get_state() const;
 
 private:
     state::pointer_t        f_state = state::pointer_t();
+    ed::thread_done_signal::pointer_t
+                            f_done_signal = ed::thread_done_signal::pointer_t();
 };
 
 
-background_executor::background_executor(state::pointer_t s)
+background_executor::background_executor(
+          state::pointer_t s
+        , ed::thread_done_signal::pointer_t done_signal)
     : runner("background_executor")
     , f_state(s)
+    , f_done_signal(done_signal)
 {
 }
 
@@ -103,12 +123,13 @@ void background_executor::run()
 
 void background_executor::leave(cppthread::leave_status_t status)
 {
+    f_done_signal->thread_done();
+    f_state->set_in_thread(false);
+
     if(status != cppthread::leave_status_t::LEAVE_STATUS_NORMAL)
     {
-        throw std::runtime_error("thread failed with status: " + std::to_string(static_cast<int>(status))); // LCOV_EXCL_LINE
+        throw std::runtime_error("thread failed with status: " + std::to_string(static_cast<int>(status)));
     }
-
-    f_state->set_in_thread(false);
 }
 
 
@@ -122,6 +143,7 @@ step_t background_executor::execute_instruction()
         return step_t::STEP_DONE;
     }
     statement::pointer_t stmt(f_state->get_statement(ip));
+    f_state->set_running_statement(stmt);
     f_state->set_ip(ip + 1);
 
     f_state->clear_parameters();
@@ -148,12 +170,14 @@ step_t background_executor::execute_instruction()
         {
             if(decls->f_required)
             {
+                // LCOV_EXCL_START
                 throw std::runtime_error(
                       "parameter \""
                     + std::string(decls->f_name)
                     + "\" was expected for instruction \""
                     + stmt->get_instruction()->get_name()
                     + "\".");
+                // LCOV_EXCL_STOP
             }
             continue;
         }
@@ -192,6 +216,18 @@ step_t background_executor::execute_instruction()
                     std::static_pointer_cast<variable_string>(param)->set_string(t.get_string());
                     break;
 
+                case token_t::TOKEN_ADDRESS:
+                    {
+                        type = "address";
+                        addr::addr_parser p;
+                        p.set_protocol("tcp");
+                        p.set_allow(addr::allow_t::ALLOW_MASK, true);
+                        addr::addr_range::vector_t const a(p.parse(t.get_string()));
+                        param = std::make_shared<variable_address>(decls->f_name);
+                        std::static_pointer_cast<variable_address>(param)->set_address(a[0].get_from());
+                    }
+                    break;
+
                 default:
                     throw std::runtime_error(
                           "support for primary \""
@@ -212,8 +248,8 @@ throw std::runtime_error("not yet implemented.");
         }
         if(decls->f_type != type)
         {
-            if(strcmp(decls->f_type, "number") != 0
-            || (type != "integer" && type != "floating_point"))
+            if(strcmp(decls->f_type, "any") != 0
+            && (strcmp(decls->f_type, "number") != 0 || (type != "integer" && type != "floating_point")))
             {
                 throw std::runtime_error(std::string("parameter type mismatch for ") + decls->f_name + ".");
             }
@@ -242,7 +278,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
 {
     if(expr == nullptr)
     {
-        throw std::runtime_error("compute() called with a nullptr.");
+        throw std::logic_error("compute() called with a nullptr."); // LCOV_EXCL_LINE
     }
 
     constexpr auto mix_token = [](token_t l, token_t r)
@@ -808,27 +844,83 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
         throw std::runtime_error("unsupported expression type in compute().");
 
     }
+    snapdev::NOT_REACHED();
+    return expression::pointer_t();
 }
 
+
+state::pointer_t background_executor::get_state() const
+{
+    return f_state;
+}
+
+
+class processor_thread_done
+    : public ed::thread_done_signal
+{
+public:
+    processor_thread_done()
+        : thread_done_signal()
+    {
+        set_name("processor_thread");
+    }
+
+
+    // thread_done_signal implementation
+    //
+    virtual void process_read() override
+    {
+        thread_done_signal::process_read();
+        ed::communicator::instance()->remove_connection(shared_from_this());
+    }
+
+private:
+};
 
 
 } // no name namespace
 
 
+
 executor::executor(state::pointer_t s)
-    : f_runner(std::make_shared<background_executor>(s))
+    : f_done_signal(std::make_shared<processor_thread_done>())
+    , f_runner(std::make_shared<background_executor>(s, f_done_signal))
     , f_thread(std::make_shared<cppthread::thread>("executor_thread", f_runner))
 {
+    f_thread->set_log_all_exceptions(true);
+    ed::communicator::instance()->add_connection(f_done_signal);
 }
 
 
-void executor::run()
+executor::~executor()
+{
+    // do an explicit stop() so we can capture exceptions
+    // if you do not want terminate() to be called, make sure to do that
+    // just after your e->run() call
+    //
+    stop();
+}
+
+
+/** \brief Start execution.
+ *
+ * This function starts the script execution up to the run() instruction.
+ *
+ * When this function returns, you can implement your own code such as
+ * create connections you want to test. Once done with that, call the
+ * run() or the stop() functions.
+ */
+void executor::start()
 {
     for(;;)
     {
         step_t const step(std::static_pointer_cast<background_executor>(f_runner)->execute_instruction());
         if(step == step_t::STEP_DONE)
         {
+            // the thread was never started, but we still need to mark it as
+            // done so the client exits the communicator::run() function.
+            //
+            f_done_signal->thread_done();
             return;
         }
         if(step == step_t::STEP_START)
@@ -839,11 +931,53 @@ void executor::run()
 
     // the thread takes over running the loop
     //
+    state::trace_callback_t trace(std::static_pointer_cast<background_executor>(f_runner)->get_state()->get_trace_callback());
+    if(trace != nullptr)
+    {
+        trace(*std::static_pointer_cast<background_executor>(f_runner)->get_state(), callback_reason_t::CALLBACK_REASON_BEFORE_CALL);
+    }
     f_thread->start();
+    if(trace != nullptr)
+    {
+        trace(*std::static_pointer_cast<background_executor>(f_runner)->get_state(), callback_reason_t::CALLBACK_REASON_AFTER_CALL);
+    }
 }
 
 
-void executor::wait()
+/** \brief Start the communicator loop.
+ *
+ * This is the next logical step after calling the start() function.
+ *
+ * This simply starts the communicator run() loop. It will exit once all
+ * the connections were removed from the communicator. If your test does
+ * not properly clean up a connection, then it will be stuck in this
+ * loop.
+ *
+ * You must have called the start() function first to make sure that
+ * the thread was started. If the start function does not start a
+ * thread, you still need to call this function because the "thread
+ * done" connection is in the list of communicator connections that
+ * need clean up.
+ */
+void executor::run()
+{
+    ed::communicator::instance()->run();
+}
+
+
+/** \brief Stop the executor thread as soon as possible.
+ *
+ * The function asks for the runner to stop as soon as possible. It will
+ * set the "continue" flag to false so the child stops quickly (i.e. once
+ * the current instruction returns).
+ *
+ * Everything the child does is a quick process or includes a timeout
+ * (like the wait() instruction). So it should happen pretty quickly.
+ *
+ * To instead wait for the thread to terminate normally, just wait for
+ * the communicator::run() function to return.
+ */
+void executor::stop()
 {
     f_thread->stop();
 }

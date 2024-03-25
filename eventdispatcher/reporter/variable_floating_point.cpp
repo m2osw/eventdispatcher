@@ -33,6 +33,7 @@ variable_floating_point::variable_floating_point(std::string const & name)
 {
 }
 
+
 double variable_floating_point::get_floating_point() const
 {
     return f_floating_point;
@@ -42,6 +43,14 @@ double variable_floating_point::get_floating_point() const
 void variable_floating_point::set_floating_point(double d)
 {
     f_floating_point = d;
+}
+
+
+variable::pointer_t variable_floating_point::clone(std::string const & name) const
+{
+    pointer_t clone(std::make_shared<variable_floating_point>(name));
+    clone->f_floating_point = f_floating_point;
+    return clone;
 }
 
 

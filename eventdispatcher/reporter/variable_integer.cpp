@@ -33,6 +33,7 @@ variable_integer::variable_integer(std::string const & name)
 {
 }
 
+
 std::int64_t variable_integer::get_integer() const
 {
     return f_integer;
@@ -42,6 +43,14 @@ std::int64_t variable_integer::get_integer() const
 void variable_integer::set_integer(std::int64_t i)
 {
     f_integer = i;
+}
+
+
+variable::pointer_t variable_integer::clone(std::string const & name) const
+{
+    pointer_t clone(std::make_shared<variable_integer>(name));
+    clone->f_integer = f_integer;
+    return clone;
 }
 
 

@@ -20,14 +20,25 @@
 //
 #include    "instruction_factory.h"
 #include    "state.h"
+#include    "variable_address.h"
 #include    "variable_floating_point.h"
 #include    "variable_integer.h"
 #include    "variable_string.h"
 
 
+// eventdispatcher
+//
+#include    <eventdispatcher/signal.h>
+
+
 // snapdev
 //
 #include    <snapdev/not_used.h>
+
+
+// C
+//
+#include    <poll.h>
 
 
 // last include
@@ -134,6 +145,30 @@ constexpr parameter_declaration const g_label_params[] =
 };
 
 
+constexpr parameter_declaration const g_listen_params[] =
+{
+    {
+        .f_name = "address",
+        .f_type = "address",
+    },
+    {}
+};
+
+
+constexpr parameter_declaration const g_set_variable_params[] = 
+{
+    {
+        .f_name = "name",
+        .f_type = "identifier",
+    },
+    {
+        .f_name = "value",
+        .f_type = "any",
+    },
+    {}
+};
+
+
 constexpr parameter_declaration const g_sleep_params[] =
 {
     {
@@ -183,6 +218,17 @@ constexpr parameter_declaration const g_verify_message_params[] =
     {
         .f_name = "forbidden_parameters",
         .f_type = "list",
+        .f_required = false,
+    },
+    {}
+};
+
+
+constexpr parameter_declaration const g_wait_params[] = 
+{
+    {
+        .f_name = "timeout",
+        .f_type = "number",
         .f_required = false,
     },
     {}
@@ -423,6 +469,31 @@ public:
 INSTRUCTION(label);
 
 
+// LISTEN
+//
+class inst_listen
+    : public instruction
+{
+public:
+    inst_listen()
+        : instruction("listen")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        variable::pointer_t address(s.get_parameter("address", true));
+        s.listen(std::static_pointer_cast<variable_address>(address)->get_address());
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_listen_params;
+    }
+};
+INSTRUCTION(listen);
+
+
 // RETURN
 //
 class inst_return
@@ -464,6 +535,37 @@ public:
 private:
 };
 INSTRUCTION(run);
+
+
+// SET VARIABLE
+//
+class inst_set_variable
+    : public instruction
+{
+public:
+    inst_set_variable()
+        : instruction("set_variable")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        variable::pointer_t name(s.get_parameter("name", true));
+        variable::pointer_t value(s.get_parameter("value", true));
+
+        std::string var_name(std::static_pointer_cast<variable_string>(name)->get_string());
+        variable::pointer_t var(value->clone(var_name));
+        s.set_variable(var);
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_set_variable_params;
+    }
+
+private:
+};
+INSTRUCTION(set_variable);
 
 
 // SLEEP
@@ -553,21 +655,174 @@ private:
 INSTRUCTION(verify_message);
 
 
-// `call()` -- DONE
+// WAIT
+//
+class inst_wait
+    : public instruction
+{
+public:
+    inst_wait()
+        : instruction("wait")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        snapdev::timespec_ex timeout_duration;
+        variable::pointer_t timeout(s.get_parameter("timeout", true));
+        variable_integer::pointer_t int_seconds(std::dynamic_pointer_cast<variable_integer>(timeout));
+        if(int_seconds == nullptr)
+        {
+            variable_floating_point::pointer_t flt_seconds(std::dynamic_pointer_cast<variable_floating_point>(timeout));
+            if(flt_seconds == nullptr)
+            {
+                throw std::runtime_error("'timeout' parameter expected to be a number.");
+            }
+            timeout_duration.set(flt_seconds->get_floating_point());
+        }
+        else
+        {
+            timeout_duration.set(int_seconds->get_integer(), 0);
+        }
+std::cerr << "----------- got timeout " << timeout_duration << "\n";
+        std::vector<struct pollfd> fds;
+std::cerr << "----------- connections count " << s.get_connections().size() << "\n";
+        std::map<ed::connection *, int> position;
+        ed::connection::vector_t connections(s.get_connections());
+        ed::connection::pointer_t listen(s.get_listen_connection());
+        if(listen != nullptr)
+        {
+            connections.push_back(listen);
+        }
+        for(auto & c : connections)
+        {
+std::cerr << "----------- found connection " << c->get_name() << "\n";
+            int e(0);
+            if(c->is_listener() || c->is_signal())
+            {
+                e |= POLLIN;
+            }
+            if(c->is_reader())
+            {
+                e |= POLLIN | POLLPRI | POLLRDHUP;
+            }
+            if(c->is_writer())
+            {
+                e |= POLLOUT | POLLRDHUP;
+            }
+            if(e == 0)
+            {
+                // this should only happen on timer objects
+                //
+                continue;
+            }
+
+std::cerr << "----------- add connection to list " << c->get_name() << "\n";
+            position[c.get()] = fds.size();
+            struct pollfd fd;
+            fd.fd = c->get_socket();
+            fd.events = e;
+            fd.revents = 0;
+            fds.push_back(fd);
+        }
+std::cerr << "----------- ppoll() connections " << fds.size() << "\n";
+        int const r(ppoll(&fds[0], fds.size(), &timeout_duration, nullptr));
+        if(r < 0)
+        {
+            // TODO: enhance error message
+            //
+std::cerr << "----------- wait() timed out?\n";
+            throw std::runtime_error("ppoll() returned an error.");
+        }
+std::cerr << "----------- wait() returning: " << r << "\n";
+        bool timed_out(true);
+        for(auto & c : connections)
+        {
+            struct pollfd * fd(&fds[position[c.get()]]);
+            if(fd->revents != 0)
+            {
+                timed_out = false;
+
+                // an event happened on this one
+                //
+                if((fd->revents & (POLLIN | POLLPRI)) != 0)
+                {
+                    // we consider that Unix signals have the greater priority
+                    // and thus handle them first
+                    //
+                    if(c->is_signal())
+                    {
+                        ed::signal * ss(dynamic_cast<ed::signal *>(c.get()));
+                        if(ss != nullptr)
+                        {
+                            ss->process();
+                        }
+                    }
+                    else if(c->is_listener())
+                    {
+                        // a listener is a special case and we want
+                        // to call process_accept() instead
+                        //
+                        c->process_accept();
+                    }
+                    else
+                    {
+                        c->process_read();
+                    }
+                }
+                if((fd->revents & POLLOUT) != 0)
+                {
+                    c->process_write();
+                }
+                if((fd->revents & POLLERR) != 0)
+                {
+                    c->process_error();
+                }
+                if((fd->revents & (POLLHUP | POLLRDHUP)) != 0)
+                {
+                    c->process_hup();
+                }
+                if((fd->revents & POLLNVAL) != 0)
+                {
+                    c->process_invalid();
+                }
+            }
+        }
+        if(timed_out)
+        {
+            // if we wake up without any event then we have a timeout
+            //
+            // TBD: we may need to call the process_timeout() on some
+            //      connections? At this point I don't see why the
+            //      server side would need such...
+            //
+            throw std::runtime_error("ppoll() timed out.");
+        }
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_wait_params;
+    }
+};
+INSTRUCTION(wait);
+
+
+// `call()` -- DONE / TESTED
 // `compare_message_command()`
-// `exit()` -- PARTIAL
+// `exit()` -- PARTIAL / PARTIAL
 // `goto()` -- DONE
 // `message_has_parameter()`
 // `message_has_parameter_with_value()`
 // `if()` -- DONE
-// `label()` -- DONE
+// `label()` -- DONE / TESTED
 // `listen()`
-// `return()` -- DONE
-// `run()` -- DONE
+// `return()` -- DONE / TESTED
+// `run()` -- DONE / TESTED
 // `save_parameter_value()`
 // `send_message()`
-// `set_variable()`
-// `sleep()` -- DONE
+// `set_variable()` -- DONE / TESTED
+// `sleep()` -- DONE / TESTED
 // `verify_message()` -- AVAILABLE, NOT IMPLEMENTED
 // `wait()`
 

@@ -33,6 +33,7 @@ variable_string::variable_string(std::string const & name, std::string const & t
 {
 }
 
+
 std::string const & variable_string::get_string() const
 {
     return f_string;
@@ -42,6 +43,14 @@ std::string const & variable_string::get_string() const
 void variable_string::set_string(std::string const & s)
 {
     f_string = s;
+}
+
+
+variable::pointer_t variable_string::clone(std::string const & name) const
+{
+    pointer_t clone(std::make_shared<variable_string>(name));
+    clone->f_string = f_string;
+    return clone;
 }
 
 

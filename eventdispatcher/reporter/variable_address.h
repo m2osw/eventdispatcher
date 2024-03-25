@@ -22,11 +22,17 @@
 #include    <eventdispatcher/reporter/variable.h>
 
 
+
+// libaddr
+//
+#include    <libaddr/addr.h>
+
+
 // C++
 //
-//#include    <map>
-//#include    <memory>
-//#include    <string>
+#include    <map>
+#include    <memory>
+#include    <string>
 
 
 
@@ -38,16 +44,16 @@ namespace reporter
 
 
 
-class variable_string
+class variable_address
     : public variable
 {
 public:
-    typedef std::shared_ptr<variable_string>        pointer_t;
+    typedef std::shared_ptr<variable_address>        pointer_t;
 
-                            variable_string(std::string const & name, std::string const & type = "string");
+                            variable_address(std::string const & name);
 
-    std::string const &     get_string() const;
-    void                    set_string(std::string const & s);
+    addr::addr              get_address() const;
+    void                    set_address(addr::addr const & a);
 
     // variable implementation
     //
@@ -55,7 +61,7 @@ public:
                             clone(std::string const & name) const override;
 
 private:
-    std::string             f_string = std::string();
+    addr::addr              f_address = addr::addr();
 };
 
 

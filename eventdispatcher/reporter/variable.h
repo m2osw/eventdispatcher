@@ -68,6 +68,8 @@ public:
     std::string const &     get_name() const;
     std::string const &     get_type() const;
 
+    virtual pointer_t       clone(std::string const & name) const = 0;
+
 private:
     std::string             f_name = std::string();
     std::string             f_type = std::string();

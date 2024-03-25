@@ -18,16 +18,16 @@
 // 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
- * \brief Event dispatch class.
+ * \brief Low level TCP server implementation.
  *
- * Class used to handle events.
+ * This class is the low level TCP server implementation which supports
+ * encrypted connections using TLS.
  */
 
 // make sure we use OpenSSL with multi-thread support
-// (TODO: move to .cpp once we have the impl!)
+//
 #define OPENSSL_THREAD_DEFINES
 
-#define USE_KLUDGE 1
 
 // self
 //
@@ -126,13 +126,6 @@ public:
  * The certificate file may include a chain in which case the whole chain
  * will be taken in account.
  *
- * \warning
- * Currently the max_connections parameter is pretty much ignored since
- * there is no way to pass that parameter down to the BIO interface. In
- * that code they use the SOMAXCONN definition which under Linux is
- * defined at 128 (Ubuntu 16.04.1). See:
- * /usr/include/x86_64-linux-gnu/bits/socket.h
- *
  * \param[in] address  The address and port defined in an addr object.
  * \param[in] max_connections  The number of connections to keep in the listen queue.
  * \param[in] reuse_addr  Whether to mark the socket with the SO_REUSEADDR flag.
@@ -153,6 +146,9 @@ tcp_bio_server::tcp_bio_server(
 
     detail::bio_initialize();
 
+std::cerr << "----------------- mode: " << static_cast<int>(mode) << " vs " << static_cast<int>(mode_t::MODE_PLAIN)
+<< " with address " << address.to_ipv4or6_string(addr::STRING_IP_BRACKET_ADDRESS | addr::STRING_IP_PORT)
+<< "\n";
     switch(mode)
     {
     case mode_t::MODE_ALWAYS_SECURE:
@@ -247,15 +243,15 @@ tcp_bio_server::tcp_bio_server(
 
             // create a listening connection
             //
-            std::shared_ptr<BIO> listen;  // use reset(), see SNAP-507
-            listen.reset(BIO_new_accept(address.to_ipv4or6_string(addr::STRING_IP_BRACKET_ADDRESS | addr::STRING_IP_PORT).c_str()), detail::bio_deleter);
-            if(!listen)
+            std::shared_ptr<BIO> socket;  // use reset(), see SNAP-507
+            socket.reset(BIO_new_accept(address.to_ipv4or6_string(addr::STRING_IP_BRACKET_ADDRESS | addr::STRING_IP_PORT).c_str()), detail::bio_deleter);
+            if(!socket)
             {
                 detail::bio_log_errors();
                 throw initialization_error("failed initializing a BIO server object");
             }
 
-            BIO_set_bind_mode(listen.get(), reuse_addr ? BIO_BIND_REUSEADDR : BIO_BIND_NORMAL);
+            BIO_set_bind_mode(socket.get(), reuse_addr ? BIO_BIND_REUSEADDR : BIO_BIND_NORMAL);
 
             // Attach the SSL bio to the listening BIO, this means whenever
             // a new connection is accepted, it automatically attaches it to
@@ -263,7 +259,7 @@ tcp_bio_server::tcp_bio_server(
             //
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
-            BIO_set_accept_bios(listen.get(), bio.get());
+            BIO_set_accept_bios(socket.get(), bio.get());
 #pragma GCC diagnostic pop
 
             // WARNING: the listen object takes ownership of the `bio`
@@ -277,29 +273,17 @@ tcp_bio_server::tcp_bio_server(
             // I called BIO_do_accept() before, but this looks cleaner
             // (although both calls do the same thing)
             //
-            int const r(BIO_do_connect(listen.get()));
+            int const r(BIO_do_connect(socket.get()));
             if(r <= 0)
             {
                 detail::bio_log_errors();
-                throw initialization_error("failed initializing the BIO server socket to listen for client connections");
+                throw initialization_error("failed initializing the secure BIO server socket to listen for client connections");
             }
 
-#if USE_KLUDGE
-            // HUGE KLUDGE!
-            //
-            // the BIO_do_connect() does not correctly report errors in
-            // case the IP address is not valid for the bind() call
-            // (i.e. the address is 1.2.3.4 and none of your interfaces
-            // support that IP address) our KLUDGE checks that the socket
-            // is valid because at least the library closes it on failure
-            //
-            // newer versions of the library have a fix since Thu Apr 9 12:36:37 2020 +0100
-            // (it should be in there for 1.1.2 or so)
-            //
             int c(-1);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
-            BIO_get_fd(listen.get(), &c);
+            BIO_get_fd(socket.get(), &c);
 #pragma GCC diagnostic pop
             if(c < 0)
             {
@@ -308,7 +292,16 @@ tcp_bio_server::tcp_bio_server(
                    << address;
                 throw initialization_error(ss.str());
             }
-            int error_code(0);
+            int const l(listen(c, f_impl->f_max_connections));
+            if(l != 0)
+            {
+                SNAP_LOG_CONFIGURATION
+                    << "failed setting the socket backlog to "
+                    << f_impl->f_max_connections
+                    << '.'
+                    << SNAP_LOG_SEND;
+            }
+            int error_code(ENOTCONN);
             socklen_t error_code_size = sizeof(error_code);
             int const g(getsockopt(c, SOL_SOCKET, SO_ERROR, reinterpret_cast<void *>(&error_code), &error_code_size));
             if(g != 0)
@@ -326,11 +319,10 @@ tcp_bio_server::tcp_bio_server(
                    << strerror(error_code);
                 throw initialization_error(ss.str());
             }
-#endif
 
             // it worked, save the results
             f_impl->f_ssl_ctx.swap(ssl_ctx);
-            f_impl->f_listen.swap(listen);
+            f_impl->f_listen.swap(socket);
 
             // secure connection ready
         }
@@ -338,44 +330,32 @@ tcp_bio_server::tcp_bio_server(
 
     case mode_t::MODE_PLAIN:
         {
-            std::shared_ptr<BIO> listen; // use reset(), see SNAP-507
-            listen.reset(BIO_new_accept(address.to_ipv4or6_string(addr::STRING_IP_BRACKET_ADDRESS | addr::STRING_IP_PORT).c_str()), detail::bio_deleter);
-            if(listen == nullptr)
+            std::shared_ptr<BIO> socket; // use reset(), see SNAP-507
+            socket.reset(BIO_new_accept(address.to_ipv4or6_string(addr::STRING_IP_BRACKET_ADDRESS | addr::STRING_IP_PORT).c_str()), detail::bio_deleter);
+            if(socket == nullptr)
             {
                 detail::bio_log_errors();
                 throw initialization_error("failed initializing a BIO server object");
             }
 
-            BIO_set_bind_mode(listen.get(), BIO_BIND_REUSEADDR);
+            BIO_set_bind_mode(socket.get(), BIO_BIND_REUSEADDR);
 
             // Call bind() and listen() on the socket
             //
             // I called BIO_do_accept() before, but this looks cleaner
             // (although both calls do the same thing)
             //
-            int const r(BIO_do_connect(listen.get()));
+            int const r(BIO_do_connect(socket.get()));
             if(r <= 0)
             {
                 detail::bio_log_errors();
-                throw initialization_error("failed initializing the BIO server socket to listen for client connections");
+                throw initialization_error("failed initializing the plain BIO server socket to listen for client connections");
             }
 
-#if USE_KLUDGE
-            // HUGE KLUDGE!
-            //
-            // the BIO_do_connect() does not correctly report errors in
-            // case the IP address is not valid for the bind() call
-            // (i.e. the address is 1.2.3.4 and none of your interfaces
-            // support that IP address) our KLUDGE checks that the socket
-            // is valid because at least the library closes it on failure
-            //
-            // newer versions of the library have a fix since Thu Apr 9 12:36:37 2020 +0100
-            // (it should be in there for 1.1.2 or so)
-            //
             int c(-1);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
-            BIO_get_fd(listen.get(), &c);
+            BIO_get_fd(socket.get(), &c);
 #pragma GCC diagnostic pop
             if(c < 0)
             {
@@ -383,6 +363,15 @@ tcp_bio_server::tcp_bio_server(
                 ss << "plain: bind() failed to connect to "
                    << address;
                 throw initialization_error(ss.str());
+            }
+            int const l(listen(c, f_impl->f_max_connections));
+            if(l != 0)
+            {
+                SNAP_LOG_CONFIGURATION
+                    << "failed setting the socket backlog to "
+                    << f_impl->f_max_connections
+                    << '.'
+                    << SNAP_LOG_SEND;
             }
             int error_code(ENOTCONN);
             socklen_t error_code_size = sizeof(error_code);
@@ -402,11 +391,10 @@ tcp_bio_server::tcp_bio_server(
                    << strerror(error_code);
                 throw initialization_error(ss.str());
             }
-#endif
 
             // it worked, save the results
             //
-            f_impl->f_listen.swap(listen);
+            f_impl->f_listen.swap(socket);
         }
         break;
 
@@ -614,6 +602,10 @@ int tcp_bio_server::get_socket() const
  *
  * If the socket is made non-blocking then the function may return without
  * a bio_client object (i.e. a null pointer instead.)
+ *
+ * \exception runtime_error
+ * If the accept() fails returning a new valid client connection, then
+ * this error is raised.
  *
  * \return A shared pointer to a newly allocated bio_client object.
  */

@@ -44,7 +44,7 @@ public:
     typedef std::shared_ptr<tcp_server_connection>    pointer_t;
 
                                 tcp_server_connection(
-                                      addr::addr const & addr
+                                      addr::addr const & address
                                     , std::string const & certificate
                                     , std::string const & private_key
                                     , mode_t mode = mode_t::MODE_PLAIN

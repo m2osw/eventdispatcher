@@ -15,22 +15,21 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#pragma once
 
 // self
 //
-#include    <eventdispatcher/reporter/variable.h>
+#include    "messenger_tcp_server.h"
+
+#include    "messenger_tcp_client.h"
+#include    "state.h"
 
 
-// C++
+// last include
 //
-//#include    <map>
-//#include    <memory>
-//#include    <string>
+#include    <snapdev/poison.h>
 
 
 
-// view these as an extension of the snapcatch2 library
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter
@@ -38,25 +37,26 @@ namespace reporter
 
 
 
-class variable_string
-    : public variable
+messenger_tcp_server::messenger_tcp_server(
+          state * s
+        , addr::addr const & a)
+    : tcp_server_connection(a, std::string(), std::string())
+    , f_state(s)
 {
-public:
-    typedef std::shared_ptr<variable_string>        pointer_t;
+}
 
-                            variable_string(std::string const & name, std::string const & type = "string");
 
-    std::string const &     get_string() const;
-    void                    set_string(std::string const & s);
+void messenger_tcp_server::process_accept()
+{
+    ed::tcp_bio_client::pointer_t client(accept());
+    if(client == nullptr)
+    {
+        throw std::runtime_error("accept() failed to return a pointer.");
+    }
 
-    // variable implementation
-    //
-    virtual variable::pointer_t
-                            clone(std::string const & name) const override;
-
-private:
-    std::string             f_string = std::string();
-};
+    messenger_tcp_client::pointer_t service(std::make_shared<messenger_tcp_client>(f_state, client));
+    f_state->add_connection(service);
+}
 
 
 

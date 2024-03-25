@@ -33,8 +33,11 @@ add_library(${PROJECT_NAME} SHARED
     parser.cpp
     state.cpp
     statement.cpp
+    messenger_tcp_client.cpp
+    messenger_tcp_server.cpp
     token.cpp
     variable.cpp
+    variable_address.cpp
     variable_floating_point.cpp
     variable_integer.cpp
     variable_string.cpp

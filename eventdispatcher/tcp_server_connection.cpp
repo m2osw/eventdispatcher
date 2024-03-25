@@ -18,25 +18,12 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
- * \brief Implementation of the Snap Communicator class.
+ * \brief Implementation of the TCP server class.
  *
- * This class wraps the C poll() interface in a C++ object with many types
- * of objects:
- *
- * \li Server Connections; for software that want to offer a port to
- *     which clients can connect to; the server will call accept()
- *     once a new client connection is ready; this results in a
- *     Server/Client connection object
- * \li Client Connections; for software that want to connect to
- *     a server; these expect the IP address and port to connect to
- * \li Server/Client Connections; for the server when it accepts a new
- *     connection; in this case the server gets a socket from accept()
- *     and creates one of these objects to handle the connection
- *
- * Using the poll() function is the easiest and allows us to listen
- * on pretty much any number of sockets (on my server it is limited
- * at 16,768 and frankly over 1,000 we probably will start to have
- * real slowness issues on small VPN servers.)
+ * When instantiated, this class creates a TCP server. It creates a socket
+ * and listen(2)'s on it for connection from clients. When such a
+ * connection happens, the accept() function returns a socket with the
+ * connection to the client and uses that to communicate with said client.
  */
 
 
@@ -90,14 +77,7 @@ namespace ed
  * signed certificates. This does not prevent fully secure transactions,
  * it just cannot verify that the computer on the other side is correct.
  *
- * \warning
- * The \p max_connections parameter is currently ignored because the
- * BIO implementation does not give you an API to change that parameter.
- * That being said, they default to the maximum number that the Linux
- * kernel will accept so it should be just fine.
- *
- * \param[in] addr  The address to listen on. It may be set to "0.0.0.0".
- * \param[in] port  The port to listen on.
+ * \param[in] address  The address and port to listen on. It may be set to "0.0.0.0".
  * \param[in] certificate  The filename to a .pem file.
  * \param[in] private_key  The filename to a .pem file.
  * \param[in] mode  The mode to use to open the connection (PLAIN or SECURE.)

@@ -15,22 +15,19 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#pragma once
 
 // self
 //
-#include    <eventdispatcher/reporter/variable.h>
+#include    "messenger_tcp_client.h"
 
+#include    "state.h"
 
-// C++
+// last include
 //
-//#include    <map>
-//#include    <memory>
-//#include    <string>
+#include    <snapdev/poison.h>
 
 
 
-// view these as an extension of the snapcatch2 library
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter
@@ -38,25 +35,19 @@ namespace reporter
 
 
 
-class variable_string
-    : public variable
+messenger_tcp_client::messenger_tcp_client(
+          state * s
+        , ed::tcp_bio_client::pointer_t client)
+    : tcp_server_client_message_connection(client)
+    , f_state(s)
 {
-public:
-    typedef std::shared_ptr<variable_string>        pointer_t;
+}
 
-                            variable_string(std::string const & name, std::string const & type = "string");
 
-    std::string const &     get_string() const;
-    void                    set_string(std::string const & s);
-
-    // variable implementation
-    //
-    virtual variable::pointer_t
-                            clone(std::string const & name) const override;
-
-private:
-    std::string             f_string = std::string();
-};
+void messenger_tcp_client::process_message(ed::message & msg)
+{
+    f_state->set_message(msg);
+}
 
 
 

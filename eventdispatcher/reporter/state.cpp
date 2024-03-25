@@ -20,10 +20,18 @@
 //
 #include    "state.h"
 
+#include    "messenger_tcp_server.h"
+
+
+// eventdispatcher
+//
+#include    <eventdispatcher/tcp_server_connection.h>
+
 
 // last include
 //
 #include    <snapdev/poison.h>
+
 
 
 namespace SNAP_CATCH2_NAMESPACE
@@ -113,6 +121,18 @@ void state::add_statement(statement::pointer_t stmt)
     }
 
     f_program.push_back(stmt);
+}
+
+
+statement::pointer_t state::get_running_statement() const
+{
+    return f_running_statement;
+}
+
+
+void state::set_running_statement(statement::pointer_t stmt)
+{
+    f_running_statement = stmt;
 }
 
 
@@ -239,6 +259,59 @@ state::trace_callback_t state::get_trace_callback() const
 void state::set_trace_callback(trace_callback_t callback)
 {
     f_trace_callback = callback;
+}
+
+
+ed::connection::pointer_t state::get_listen_connection() const
+{
+    return f_listen;
+}
+
+
+void state::listen(addr::addr const & a)
+{
+    if(f_listen != nullptr)
+    {
+        throw std::runtime_error("the listen() instruction cannot be reused without an intermediate disconnect() instruction.");
+    }
+
+    // WARNING: create an ed::connection to listen for client's connection
+    //          requests; however, do NOT add that ed::connection to the
+    //          communicator (i.e. these are our server connections, not
+    //          client ones)
+    //
+    switch(f_connection_type)
+    {
+    case connection_type_t::CONNECTION_TYPE_TCP:
+        // add support for encryption
+        //
+std::cerr << "------------------- try creating TCP server\n";
+        f_listen = std::make_shared<messenger_tcp_server>(this, a);
+std::cerr << "------------------- got TCP server?!\n";
+        break;
+
+    default:
+        throw std::runtime_error("unsupported connection type in connect().");
+
+    }
+}
+
+
+void state::disconnect()
+{
+    f_listen.reset();
+}
+
+
+void state::add_connection(ed::connection::pointer_t c)
+{
+    f_connections.push_back(c);
+}
+
+
+ed::connection::vector_t state::get_connections() const
+{
+    return f_connections;
 }
 
 
