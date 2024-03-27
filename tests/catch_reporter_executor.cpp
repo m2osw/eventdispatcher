@@ -41,6 +41,7 @@
 #include    <eventdispatcher/communicator.h>
 #include    <eventdispatcher/tcp_client_permanent_message_connection.h>
 
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -240,10 +241,39 @@ private:
 };
 
 
-//    virtual bool is_connected() const override
-//    {
-//        return tcp_client_permanent_message_connection::is_connected();
-//    }
+class messenger_timer
+    : public ed::timer
+{
+public:
+    typedef std::shared_ptr<messenger_timer>        pointer_t;
+
+    messenger_timer(messenger_responder::pointer_t m)
+        : timer(10'000'000)
+        , f_messenger(m)
+    {
+std::cerr << "--------- messenger timer created\n";
+    }
+
+    void process_timeout()
+    {
+std::cerr << "--------- messenger timer timed out\n";
+        remove_from_communicator();
+        f_messenger->remove_from_communicator();
+        f_timed_out = true;
+    }
+
+    bool timed_out_prima() const
+    {
+        return f_timed_out;
+    }
+
+private:
+    messenger_responder::pointer_t      f_messenger = messenger_responder::pointer_t();
+    bool                                f_timed_out = false;
+};
+
+
+
 
 
 
@@ -379,8 +409,15 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
         a.set_ipv4(ip);
         messenger_responder::pointer_t messenger(std::make_shared<messenger_responder>(a, ed::mode_t::MODE_PLAIN, 1));
         ed::communicator::instance()->add_connection(messenger);
+        messenger_timer::pointer_t timer(std::make_shared<messenger_timer>(messenger));
+        ed::communicator::instance()->add_connection(timer);
+
 std::cerr << "---------- START RUN! addr = " << a.to_ipv4or6_string(addr::STRING_IP_ALL) << "\n";
         e->run();
+
+        // if we exited because of our timer, then the test did not pass
+        //
+        CATCH_REQUIRE_FALSE(timer->timed_out_prima());
     }
     CATCH_END_SECTION()
 }
