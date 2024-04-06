@@ -61,10 +61,11 @@ the next newline.
 # Instructions
 
 * `call()`
-* `compare_message_command()`
-* `done()`
+* `clear_message()`
 * `error()`
+* `exit()`
 * `goto()`
+* `has_message()`
 * `message_has_parameter()`
 * `message_has_parameter_with_value()`
 * `if()`
@@ -106,14 +107,18 @@ The `<operator>` is one of:
 * `less_or_equal` -- go to `<label-name>` if less (compare result is -1 or 0)
 * `greater` -- go to `<label-name>` if greater (compare result is 1)
 * `greater_or_equal` -- go to `<label-name>` if greater (compare result is 0 or 1)
-* `equal` -- go to `<label-name>` if equal (compare result is 0)
-* `not_equal` -- go to `<label-name>` if not equal (compare result is not 0)
+* `equal` or `false` -- go to `<label-name>` if equal (compare result is 0)
+* `not_equal` or `true` -- go to `<label-name>` if not equal (compare result is not 0)
 * `unordered` -- go to `<label-name>` if unordered (compare result is 2)
 
 multiple `<operator>` can be used within a single `if()`. They each must be
-distinct and not overlap (i.e. `less` and `equal` can be used together,
+distinct and not overlapped (i.e. `less` and `equal` can be used together,
 `greater_or_equal` and `not_equal` overlap since "greater" also represents
 "not equal").
+
+The `false` and `true` labels can be used for functions such as the
+`has_message()` function. This makes it easier to read than using the
+corresponding `equal` or `not_equal` labels.
 
 ## Sleep
 
@@ -125,11 +130,25 @@ Sleep for the specified amount of time.
 
 Wait for a message to arrive on our connection.
 
-    wait(timeout: <double>)
+    wait(
+        timeout: <double>,
+        mode: wait | drain)
 
-The `timeout` parameter is how much time we can wait before failing.
+The `timeout` parameter is how much time we can wait before failing. It
+is mandatory.
 
-A `listen()` instruction must appear before the first `wait()`.
+The `mode` defines how to wait. At this point we have the default, which
+is `wait` and the special `drain` mode which allows for draining the
+last `send_message()` and not accept new connections or messages.
+
+In `wait` mode, there must be at least one connection available. This
+means the `listen()` must have been called and possibly a client
+connected.
+
+**WARNING:** The `wait()` instruction waits and processes one single event.
+This could be a connection from a client, a message (or part of a large
+message), a signal, etc. It is likely that you will have to loop until
+a specific event occurs (i.e. receive the `STOP` or `DISCONNECT` message).
 
 ## Run
 
@@ -149,6 +168,9 @@ The default is TCP.
     listen(address: <address>)
 
     TODO: add support for certificate: ... & key: ...
+    TODO: add support for a type (TCP, UDP, Pipe, Unix...)
+    TODO: add support for a name so multiple listen()-ing connections can be
+          created
 
 A `listen()` must appear before the first `wait()` call. You can use the
 `disconnect()` function to stop listening for new connections.
@@ -160,8 +182,12 @@ connections. The `disconnect()` can be used to remove that connection.
 
     disconnect()
 
-After a `disconnect()` you cannot use the `wait()` instruction unless you
-first call `listen()` again.
+    TODO: support the name parameter list in the listen()
+
+After a `disconnect()` you can still use the `wait()` instruction as long
+as there is at least one client connected or the `drain` mode is used.
+
+Note: at the moment you cannot disconnect clients.
 
 ## Exit
 
@@ -250,15 +276,54 @@ instruction is used for that purpose.
         command: <name>,
         parameters: { <name>: <value>, ... } )
 
+The `command` parameter is mandatory.
+
 **Note:** Until a client connects, the `send_message()` is not going to work.
 
-## Compare Message Command
+## Clear Message
 
-Check whether we received a certain message command.
+Once done with a message, you may want to clear it before using the
+`wait()` instruction again. This gives you the ability to use the
+`has_message()` again as expected.
 
-    compare_message_command(command: <name>)
+    clear_message()
 
-This is most often followed by an `if(false: <label-name>)` instruction.
+## Has Message
+
+Check whether a message was received.
+
+    has_message(command: <name>)
+
+This sets the condition to either `false` (no message) or `true`
+(a message is present) if the `command` parameter is omitted. In other
+words, you may use the `if()` instruction like so after this instruction:
+
+    if(false: still_no_message, true: got_a_message)
+
+If the `command` parameter is used, then `true` is returned only if there
+is a message and it has that specific command. The `<name>` is likely all
+uppercase words separated by underscores.
+
+Note that once a message was received, it sticks to the state until cleared.
+To forget about the last message received, make sure to use the
+`clear_message()` instruction before the next `wait()`.
+
+Here is an example showing how one can use the `has_message()` instruction:
+
+    listen()
+    run()
+    label(name: wait_message)
+    clear_message()
+    wait(timeout: 10.0)
+    has_message()
+    if(false: wait_message)
+    has_message(command: REGISTER)
+    if(false: other_message)
+    verify_message(command: REGISTER, ...)
+    send_message(command: READY)
+    goto(wait_message)
+    label(name: other_message)
+    ...
 
 ## Message Has Parameter
 

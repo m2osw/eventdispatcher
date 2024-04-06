@@ -146,9 +146,6 @@ tcp_bio_server::tcp_bio_server(
 
     detail::bio_initialize();
 
-std::cerr << "----------------- mode: " << static_cast<int>(mode) << " vs " << static_cast<int>(mode_t::MODE_PLAIN)
-<< " with address " << address.to_ipv4or6_string(addr::STRING_IP_BRACKET_ADDRESS | addr::STRING_IP_PORT)
-<< "\n";
     switch(mode)
     {
     case mode_t::MODE_ALWAYS_SECURE:

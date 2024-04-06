@@ -251,7 +251,14 @@ throw std::runtime_error("not yet implemented.");
             if(strcmp(decls->f_type, "any") != 0
             && (strcmp(decls->f_type, "number") != 0 || (type != "integer" && type != "floating_point")))
             {
-                throw std::runtime_error(std::string("parameter type mismatch for ") + decls->f_name + ".");
+                throw std::runtime_error(
+                      std::string("parameter type mismatch for ")
+                    + decls->f_name
+                    + ", expected \""
+                    + decls->f_type
+                    + "\", got \""
+                    + type
+                    + "\" instead.");
             }
         }
 
@@ -855,14 +862,14 @@ state::pointer_t background_executor::get_state() const
 }
 
 
-class processor_thread_done
+class executor_thread_done
     : public ed::thread_done_signal
 {
 public:
-    processor_thread_done()
+    executor_thread_done()
         : thread_done_signal()
     {
-        set_name("processor_thread");
+        set_name("thread_done");
     }
 
 
@@ -883,7 +890,7 @@ private:
 
 
 executor::executor(state::pointer_t s)
-    : f_done_signal(std::make_shared<processor_thread_done>())
+    : f_done_signal(std::make_shared<executor_thread_done>())
     , f_runner(std::make_shared<background_executor>(s, f_done_signal))
     , f_thread(std::make_shared<cppthread::thread>("executor_thread", f_runner))
 {

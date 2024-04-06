@@ -28,6 +28,7 @@
 
 // eventdispatcher
 //
+#include    <eventdispatcher/connection_with_send_message.h>
 #include    <eventdispatcher/signal.h>
 
 
@@ -94,6 +95,17 @@ constexpr parameter_declaration const g_goto_params[] =
 };
 
 
+constexpr parameter_declaration const g_has_message_params[] =
+{
+    {
+        .f_name = "command",
+        .f_type = "identifier",
+        .f_required = false,
+    },
+    {}
+};
+
+
 constexpr parameter_declaration const g_if_params[] = 
 {
     {
@@ -127,7 +139,17 @@ constexpr parameter_declaration const g_if_params[] =
         .f_required = false,
     },
     {
+        .f_name = "false",
+        .f_type = "identifier",
+        .f_required = false,
+    },
+    {
         .f_name = "not_equal",
+        .f_type = "identifier",
+        .f_required = false,
+    },
+    {
+        .f_name = "true",
         .f_type = "identifier",
         .f_required = false,
     },
@@ -150,6 +172,41 @@ constexpr parameter_declaration const g_listen_params[] =
     {
         .f_name = "address",
         .f_type = "address",
+    },
+    {}
+};
+
+
+constexpr parameter_declaration const g_send_message_params[] =
+{
+    {
+        .f_name = "sent_server",
+        .f_type = "identifier",
+        .f_required = false,
+    },
+    {
+        .f_name = "sent_service",
+        .f_type = "identifier",
+        .f_required = false,
+    },
+    {
+        .f_name = "server",
+        .f_type = "identifier",
+        .f_required = false,
+    },
+    {
+        .f_name = "service",
+        .f_type = "identifier",
+        .f_required = false,
+    },
+    {
+        .f_name = "command",
+        .f_type = "identifier",
+    },
+    {
+        .f_name = "parameters",
+        .f_type = "list",
+        .f_required = false,
     },
     {}
 };
@@ -183,27 +240,27 @@ constexpr parameter_declaration const g_verify_message_params[] =
 {
     {
         .f_name = "sent_server",
-        .f_type = "identifer",
+        .f_type = "identifier",
         .f_required = false,
     },
     {
         .f_name = "sent_service",
-        .f_type = "identifer",
+        .f_type = "identifier",
         .f_required = false,
     },
     {
         .f_name = "server",
-        .f_type = "identifer",
+        .f_type = "identifier",
         .f_required = false,
     },
     {
         .f_name = "service",
-        .f_type = "identifer",
+        .f_type = "identifier",
         .f_required = false,
     },
     {
         .f_name = "command",
-        .f_type = "identifer",
+        .f_type = "identifier",
     },
     {
         .f_name = "required_parameters",
@@ -229,6 +286,10 @@ constexpr parameter_declaration const g_wait_params[] =
     {
         .f_name = "timeout",
         .f_type = "number",
+    },
+    {
+        .f_name = "mode",
+        .f_type = "identifier",
         .f_required = false,
     },
     {}
@@ -278,6 +339,52 @@ private:
 INSTRUCTION(call);
 
 
+// CLEAR MESSAGE
+//
+class inst_clear_message
+    : public instruction
+{
+public:
+    inst_clear_message()
+        : instruction("clear_message")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        s.clear_message();
+    }
+
+private:
+};
+INSTRUCTION(clear_message);
+
+
+// DISCONNECT
+//
+class inst_disconnect
+    : public instruction
+{
+public:
+    inst_disconnect()
+        : instruction("disconnect")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        s.disconnect();
+    }
+
+    // at some point we may support a "name: <identifier>" parameter...
+    //virtual parameter_declaration const * parameter_declarations() const override
+    //{
+    //    return g_disconnect_params;
+    //}
+};
+INSTRUCTION(disconnect);
+
+
 // EXIT
 //
 class inst_exit
@@ -313,7 +420,8 @@ public:
         }
         else if(timeout != nullptr)
         {
-            // wait until timeout, if the timeout does not happen, we failed
+            // wait for timeout seconds, if a message is received before
+            // the wait times out, it failed
             //
 throw std::logic_error("exit(timeout: ...) not yet implemented");
         }
@@ -360,6 +468,47 @@ public:
 private:
 };
 INSTRUCTION(goto);
+
+
+// HAS MESSAGE
+//
+class inst_has_message
+    : public instruction
+{
+public:
+    inst_has_message()
+        : instruction("has_message")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        ed::message const & msg(s.get_message());
+        std::string const & command(msg.get_command());
+        bool has_command(!command.empty());
+
+        if(has_command)
+        {
+            variable::pointer_t command_name(s.get_parameter("command"));
+            if(command_name != nullptr)
+            {
+                variable_string::pointer_t name(std::static_pointer_cast<variable_string>(command_name));
+                has_command = command == name->get_string();
+            }
+        }
+        s.set_compare(has_command
+            ? compare_t::COMPARE_TRUE
+            : compare_t::COMPARE_FALSE);
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_has_message_params;
+    }
+
+private:
+};
+INSTRUCTION(has_message);
 
 
 // IF
@@ -409,6 +558,10 @@ public:
                 if(label_name == nullptr)
                 {
                     label_name = s.get_parameter("greater_or_equal");
+                    if(label_name == nullptr)
+                    {
+                        label_name = s.get_parameter("false");
+                    }
                 }
             }
             break;
@@ -421,6 +574,10 @@ public:
                 if(label_name == nullptr)
                 {
                     label_name = s.get_parameter("not_equal");
+                    if(label_name == nullptr)
+                    {
+                        label_name = s.get_parameter("true");
+                    }
                 }
             }
             break;
@@ -537,6 +694,87 @@ private:
 INSTRUCTION(run);
 
 
+// SEND MESSAGE
+//
+class inst_send_message
+    : public instruction
+{
+public:
+    inst_send_message()
+        : instruction("send_message")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        ed::connection::vector_t v(s.get_connections());
+        if(v.empty())
+        {
+            throw std::runtime_error("send_message() has no connection to send a message to.");
+        }
+        // TODO: fix the connection selection, if we have more than one,
+        //       how do we know which one to select?
+        //
+        ed::connection_with_send_message::pointer_t c(std::dynamic_pointer_cast<ed::connection_with_send_message>(v[0]));
+        if(c == nullptr)
+        {
+            throw std::runtime_error("send_message() called without a valid listener connection.");
+        }
+
+        ed::message msg;
+
+        variable::pointer_t param(s.get_parameter("sent_server"));
+        if(param != nullptr)
+        {
+            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+            msg.set_sent_from_server(var->get_string());
+        }
+
+        param = s.get_parameter("sent_service");
+        if(param != nullptr)
+        {
+            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+            msg.set_sent_from_service(var->get_string());
+        }
+
+        param = s.get_parameter("server");
+        if(param != nullptr)
+        {
+            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+            msg.set_server(var->get_string());
+        }
+
+        param = s.get_parameter("service");
+        if(param != nullptr)
+        {
+            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+            msg.set_service(var->get_string());
+        }
+
+        param = s.get_parameter("command", true);
+        variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+        msg.set_command(var->get_string());
+
+        param = s.get_parameter("parameters");
+        if(param != nullptr)
+        {
+            //variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+            //msg.add_parameter(var->get_string());
+        }
+
+        c->send_message(msg);
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_send_message_params;
+    }
+
+private:
+};
+INSTRUCTION(send_message);
+
+
 // SET VARIABLE
 //
 class inst_set_variable
@@ -637,12 +875,96 @@ public:
         if(param != nullptr)
         {
             variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
-            if(var->get_string() != msg.get_server())
+            if(var->get_string() != msg.get_sent_from_server())
             {
-                throw std::runtime_error("message expected server name mismatch.");
+                throw std::runtime_error(
+                      "message expected sent from server name \""
+                    + var->get_string()
+                    + "\" did not match \""
+                    + msg.get_server()
+                    + "\".");
             }
         }
-        // TODO: test all params
+
+        param = s.get_parameter("sent_service");
+        if(param != nullptr)
+        {
+            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+            if(var->get_string() != msg.get_sent_from_service())
+            {
+                throw std::runtime_error(
+                      "message expected sent from service name \""
+                    + var->get_string()
+                    + "\" did not match \""
+                    + msg.get_server()
+                    + "\".");
+            }
+        }
+
+        param = s.get_parameter("server");
+        if(param != nullptr)
+        {
+            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+            if(var->get_string() != msg.get_server())
+            {
+                throw std::runtime_error(
+                      "message expected server name \""
+                    + var->get_string()
+                    + "\" did not match \""
+                    + msg.get_server()
+                    + "\".");
+            }
+        }
+
+        param = s.get_parameter("service");
+        if(param != nullptr)
+        {
+            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+            if(var->get_string() != msg.get_service())
+            {
+                throw std::runtime_error(
+                      "message expected service name \""
+                    + var->get_string()
+                    + "\" did not match \""
+                    + msg.get_server()
+                    + "\".");
+            }
+        }
+
+        param = s.get_parameter("command");
+        if(param != nullptr)
+        {
+            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+            if(var->get_string() != msg.get_command())
+            {
+                throw std::runtime_error(
+                      "message expected command \""
+                    + var->get_string()
+                    + "\" did not match \""
+                    + msg.get_server()
+                    + "\".");
+            }
+        }
+
+//        param = s.get_parameter("required_parameters");
+//        if(param != nullptr)
+//        {
+//            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+//            if(var->get_string() != msg.get_command())
+//            {
+//                throw std::runtime_error(
+//                      "message expected command \""
+//                    + var->get_string()
+//                    + "\" did not match \""
+//                    + msg.get_server()
+//                    + "\".");
+//            }
+//        }
+//
+//
+//required_parameters: { <name>: <value>, ... },
+//optional_parameters: { <name>: <value>, ... },
+//forbidden_parameters: { <name>, ... } )
     }
 
     virtual parameter_declaration const * parameter_declarations() const override
@@ -661,6 +983,12 @@ class inst_wait
     : public instruction
 {
 public:
+    enum class mode_t
+    {
+        MODE_WAIT,
+        MODE_DRAIN,
+    };
+
     inst_wait()
         : instruction("wait")
     {
@@ -684,9 +1012,55 @@ public:
         {
             timeout_duration.set(int_seconds->get_integer(), 0);
         }
-std::cerr << "----------- got timeout " << timeout_duration << "\n";
+
+        mode_t mode(mode_t::MODE_WAIT);
+        variable::pointer_t mode_param(s.get_parameter("mode"));
+        if(mode_param != nullptr)
+        {
+            variable_string::pointer_t mode_name(std::static_pointer_cast<variable_string>(mode_param));
+            if(mode_name == nullptr)
+            {
+                throw std::logic_error("mode_param -> mode_name not available in wait().");
+            }
+            std::string const & m(mode_name->get_string());
+            if(m == "wait")
+            {
+                mode = mode_t::MODE_WAIT;
+            }
+            else if(m == "drain")
+            {
+                mode = mode_t::MODE_DRAIN;
+            }
+            else
+            {
+                throw std::runtime_error(
+                      "unknown mode \""
+                    + m
+                    + "\" in wait().");
+            }
+        }
+
+        for(;;)
+        {
+            int const r(poll(s, timeout_duration, mode));
+            if(r == 0)
+            {
+                if(mode == mode_t::MODE_DRAIN)
+                {
+                    break;
+                }
+                throw std::runtime_error("no connections to wait() on.");
+            }
+            if(mode != mode_t::MODE_DRAIN)
+            {
+                break;
+            }
+        }
+    }
+
+    int poll(state & s, snapdev::timespec_ex timeout_duration, mode_t mode)
+    {
         std::vector<struct pollfd> fds;
-std::cerr << "----------- connections count " << s.get_connections().size() << "\n";
         std::map<ed::connection *, int> position;
         ed::connection::vector_t connections(s.get_connections());
         ed::connection::pointer_t listen(s.get_listen_connection());
@@ -696,15 +1070,17 @@ std::cerr << "----------- connections count " << s.get_connections().size() << "
         }
         for(auto & c : connections)
         {
-std::cerr << "----------- found connection " << c->get_name() << "\n";
             int e(0);
-            if(c->is_listener() || c->is_signal())
+            if(mode != mode_t::MODE_DRAIN)
             {
-                e |= POLLIN;
-            }
-            if(c->is_reader())
-            {
-                e |= POLLIN | POLLPRI | POLLRDHUP;
+                if(c->is_listener() || c->is_signal())
+                {
+                    e |= POLLIN;
+                }
+                if(c->is_reader())
+                {
+                    e |= POLLIN | POLLPRI | POLLRDHUP;
+                }
             }
             if(c->is_writer())
             {
@@ -717,7 +1093,6 @@ std::cerr << "----------- found connection " << c->get_name() << "\n";
                 continue;
             }
 
-std::cerr << "----------- add connection to list " << c->get_name() << "\n";
             position[c.get()] = fds.size();
             struct pollfd fd;
             fd.fd = c->get_socket();
@@ -725,16 +1100,25 @@ std::cerr << "----------- add connection to list " << c->get_name() << "\n";
             fd.revents = 0;
             fds.push_back(fd);
         }
-std::cerr << "----------- ppoll() connections " << fds.size() << "\n";
+        if(fds.empty())
+        {
+            // if draining, this means "DONE" otherwise it's an error
+            //
+            return 0;
+        }
+
         int const r(ppoll(&fds[0], fds.size(), &timeout_duration, nullptr));
         if(r < 0)
         {
             // TODO: enhance error message
             //
-std::cerr << "----------- wait() timed out?\n";
-            throw std::runtime_error("ppoll() returned an error.");
+            int const e(errno);
+            throw std::runtime_error(
+                    "ppoll() returned an error: "
+                  + std::to_string(e)
+                  + ", "
+                  + strerror(e));
         }
-std::cerr << "----------- wait() returning: " << r << "\n";
         bool timed_out(true);
         for(auto & c : connections)
         {
@@ -798,6 +1182,8 @@ std::cerr << "----------- wait() returning: " << r << "\n";
             //
             throw std::runtime_error("ppoll() timed out.");
         }
+
+        return fds.size();
     }
 
     virtual parameter_declaration const * parameter_declarations() const override

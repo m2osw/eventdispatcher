@@ -226,6 +226,12 @@ void state::set_message(ed::message const & msg)
 }
 
 
+void state::clear_message()
+{
+    f_message = {};
+}
+
+
 bool state::get_in_thread() const
 {
     return f_in_thread;
@@ -285,9 +291,7 @@ void state::listen(addr::addr const & a)
     case connection_type_t::CONNECTION_TYPE_TCP:
         // add support for encryption
         //
-std::cerr << "------------------- try creating TCP server\n";
         f_listen = std::make_shared<messenger_tcp_server>(this, a);
-std::cerr << "------------------- got TCP server?!\n";
         break;
 
     default:

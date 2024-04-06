@@ -43,6 +43,7 @@ messenger_tcp_server::messenger_tcp_server(
     : tcp_server_connection(a, std::string(), std::string())
     , f_state(s)
 {
+    set_name("tcp_server");
 }
 
 

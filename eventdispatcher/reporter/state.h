@@ -48,6 +48,9 @@ enum class compare_t : int8_t
     COMPARE_LESS      = -1,
     COMPARE_EQUAL     = 0,
     COMPARE_GREATER   = 1,
+
+    COMPARE_TRUE      = COMPARE_GREATER,
+    COMPARE_FALSE     = COMPARE_EQUAL,
 };
 
 
@@ -95,6 +98,7 @@ public:
 
     ed::message const &     get_message() const;
     void                    set_message(ed::message const & msg);
+    void                    clear_message();
 
     bool                    get_in_thread() const;
     void                    set_in_thread(bool in_thread);

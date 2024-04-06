@@ -86,7 +86,16 @@ constexpr char const * const g_program_start_thread_twice =
 constexpr char const * const g_program_accept_one_message =
     "run()\n"
     "listen(address: <127.0.0.1:20002>)\n"
-    "wait(timeout: 10.0)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 10.0)\n" // first wait reacts on connect(), second wait receives the REGISTER message
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "verify_message(command: REGISTER)\n"
+    "send_message(command: READY)\n"
+    "wait(timeout: 10.0, mode: drain)\n"
+    "disconnect()\n"
+    "exit()\n"
 ;
 
 
@@ -200,6 +209,8 @@ class messenger_responder
     : public ed::tcp_client_permanent_message_connection
 {
 public:
+    typedef std::shared_ptr<messenger_responder> pointer_t;
+
     messenger_responder(
               addr::addr const & a
             , ed::mode_t mode
@@ -212,13 +223,11 @@ public:
             , "responder")  // service name
         , f_sequence(sequence)
     {
-std::cerr << "--------- created message responder\n";
         set_name("messenger_responder");    // connection name
     }
 
     virtual void process_connected() override
     {
-std::cerr << "--------- got connected, sending REGISTER\n";
         // always register at the time we connect
         //
         tcp_client_permanent_message_connection::process_connected();
@@ -227,10 +236,15 @@ std::cerr << "--------- got connected, sending REGISTER\n";
 
     void process_message(ed::message & msg)
     {
-        std::cerr
-            << "got message! "
-            << msg
-            << "\n";
+        snapdev::NOT_USED(msg);
+//std::cerr << "got message! " << msg << "\n";
+        remove_from_communicator();
+        f_timer->remove_from_communicator();
+    }
+
+    void set_timer(ed::connection::pointer_t done_timer)
+    {
+        f_timer = done_timer;
     }
 
 private:
@@ -238,6 +252,8 @@ private:
     //
     int         f_sequence = 0;
     int         f_step = 0;
+    ed::connection::pointer_t
+                f_timer = ed::connection::pointer_t();
 };
 
 
@@ -251,12 +267,11 @@ public:
         : timer(10'000'000)
         , f_messenger(m)
     {
-std::cerr << "--------- messenger timer created\n";
+        set_name("messenger_timer");
     }
 
     void process_timeout()
     {
-std::cerr << "--------- messenger timer timed out\n";
         remove_from_communicator();
         f_messenger->remove_from_communicator();
         f_timed_out = true;
@@ -393,7 +408,7 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
 
-        CATCH_REQUIRE(s->get_statement_size() == 3);
+        CATCH_REQUIRE(s->get_statement_size() == 12);
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
@@ -411,8 +426,8 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
         ed::communicator::instance()->add_connection(messenger);
         messenger_timer::pointer_t timer(std::make_shared<messenger_timer>(messenger));
         ed::communicator::instance()->add_connection(timer);
+        messenger->set_timer(timer);
 
-std::cerr << "---------- START RUN! addr = " << a.to_ipv4or6_string(addr::STRING_IP_ALL) << "\n";
         e->run();
 
         // if we exited because of our timer, then the test did not pass

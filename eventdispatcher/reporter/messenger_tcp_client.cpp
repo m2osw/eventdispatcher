@@ -41,6 +41,7 @@ messenger_tcp_client::messenger_tcp_client(
     : tcp_server_client_message_connection(client)
     , f_state(s)
 {
+    set_name("tcp_client");
 }
 
 
