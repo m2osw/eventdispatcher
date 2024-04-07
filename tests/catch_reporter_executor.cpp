@@ -91,7 +91,8 @@ constexpr char const * const g_program_accept_one_message =
     "wait(timeout: 10.0)\n" // first wait reacts on connect(), second wait receives the REGISTER message
     "has_message()\n"
     "if(false: wait_message)\n"
-    "verify_message(command: REGISTER)\n"
+    "show_message()\n"
+    "verify_message(command: REGISTER, required_parameters: { service: responder, version: 1 })\n"
     "send_message(command: READY)\n"
     "wait(timeout: 10.0, mode: drain)\n"
     "disconnect()\n"
@@ -408,7 +409,7 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
 
-        CATCH_REQUIRE(s->get_statement_size() == 12);
+        CATCH_REQUIRE(s->get_statement_size() == 13);
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();

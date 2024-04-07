@@ -23,7 +23,9 @@
 #include    "variable_address.h"
 #include    "variable_floating_point.h"
 #include    "variable_integer.h"
+#include    "variable_list.h"
 #include    "variable_string.h"
+#include    "variable_void.h"
 
 
 // eventdispatcher
@@ -83,6 +85,7 @@ public:
     virtual void            leave(cppthread::leave_status_t status) override;
 
     step_t                  execute_instruction();
+    variable::pointer_t     primary_to_variable(expression::pointer_t value, std::string const & name);
     expression::pointer_t   compute(expression::pointer_t expr);
     state::pointer_t        get_state() const;
 
@@ -182,74 +185,65 @@ step_t background_executor::execute_instruction()
             continue;
         }
         expression::pointer_t value(compute(expr));
-        std::string type;
         variable::pointer_t param;
         switch(value->get_operator())
         {
         case operator_t::OPERATOR_PRIMARY:
-            {
-                token t(value->get_token());
-                switch(t.get_token())
-                {
-                case token_t::TOKEN_IDENTIFIER:
-                    type = "identifier";
-                    param = std::make_shared<variable_string>(decls->f_name, type);
-                    std::static_pointer_cast<variable_string>(param)->set_string(t.get_string());
-                    break;
-
-                case token_t::TOKEN_FLOATING_POINT:
-                    type = "floating_point";
-                    param = std::make_shared<variable_floating_point>(decls->f_name);
-                    std::static_pointer_cast<variable_floating_point>(param)->set_floating_point(t.get_floating_point());
-                    break;
-
-                case token_t::TOKEN_INTEGER:
-                    type = "integer";
-                    param = std::make_shared<variable_integer>(decls->f_name);
-                    std::static_pointer_cast<variable_integer>(param)->set_integer(t.get_integer());
-                    break;
-
-                case token_t::TOKEN_SINGLE_STRING:
-                case token_t::TOKEN_DOUBLE_STRING:
-                    type = "string";
-                    param = std::make_shared<variable_string>(decls->f_name, type);
-                    std::static_pointer_cast<variable_string>(param)->set_string(t.get_string());
-                    break;
-
-                case token_t::TOKEN_ADDRESS:
-                    {
-                        type = "address";
-                        addr::addr_parser p;
-                        p.set_protocol("tcp");
-                        p.set_allow(addr::allow_t::ALLOW_MASK, true);
-                        addr::addr_range::vector_t const a(p.parse(t.get_string()));
-                        param = std::make_shared<variable_address>(decls->f_name);
-                        std::static_pointer_cast<variable_address>(param)->set_address(a[0].get_from());
-                    }
-                    break;
-
-                default:
-                    throw std::runtime_error(
-                          "support for primary \""
-                        + std::to_string(static_cast<int>(t.get_token()))
-                        + "\" not yet implemented.");
-
-                }
-            }
+            param = background_executor::primary_to_variable(value, decls->f_name);
             break;
 
         case operator_t::OPERATOR_LIST:
-throw std::runtime_error("not yet implemented.");
+            // go through each element and convert them
+            //
+            param = std::make_shared<variable_list>(decls->f_name);
+            for(std::size_t idx(0); idx < value->get_expression_size(); ++idx)
+            {
+                expression::pointer_t item(value->get_expression(idx));
+                if(item->get_operator() != operator_t::OPERATOR_NAMED)
+                {
+                    throw std::logic_error("list item was not an OPERATOR_NAMED expression.");
+                }
+                std::size_t const count(item->get_expression_size());
+                switch(count)
+                {
+                case 1:
+                case 2:
+                    break;
+
+                default:
+                    throw std::logic_error("OPERATOR_NAMED list item expression does not have one or two items.");
+
+                }
+                expression::pointer_t name_expr(item->get_expression(0));
+                token t(name_expr->get_token());
+                if(t.get_token() != token_t::TOKEN_IDENTIFIER)
+                {
+                    throw std::logic_error("OPERATOR_NAMED first item is not an identifier.");
+                }
+                std::string const & name(t.get_string());
+                variable::pointer_t p;
+                if(count == 1)
+                {
+                    p = std::make_shared<variable_void>(name);
+                }
+                else
+                {
+                    p = background_executor::primary_to_variable(item->get_expression(1), name);
+                }
+                std::static_pointer_cast<variable_list>(param)->add_item(p);
+            }
             break;
 
         default:
             throw std::runtime_error("operator type not supported to convert expression to variable.");
 
         }
-        if(decls->f_type != type)
+        if(decls->f_type != param->get_type())
         {
             if(strcmp(decls->f_type, "any") != 0
-            && (strcmp(decls->f_type, "number") != 0 || (type != "integer" && type != "floating_point")))
+            && (strcmp(decls->f_type, "number") != 0
+                || (param->get_type() != "integer"
+                    && param->get_type() != "floating_point")))
             {
                 throw std::runtime_error(
                       std::string("parameter type mismatch for ")
@@ -257,7 +251,7 @@ throw std::runtime_error("not yet implemented.");
                     + ", expected \""
                     + decls->f_type
                     + "\", got \""
-                    + type
+                    + param->get_type()
                     + "\" instead.");
             }
         }
@@ -278,6 +272,56 @@ throw std::runtime_error("not yet implemented.");
     }
 
     return step_t::STEP_CONTINUE;
+}
+
+
+variable::pointer_t background_executor::primary_to_variable(expression::pointer_t value, std::string const & name)
+{
+    variable::pointer_t param;
+    token t(value->get_token());
+    switch(t.get_token())
+    {
+    case token_t::TOKEN_IDENTIFIER:
+        param = std::make_shared<variable_string>(name, "identifier");
+        std::static_pointer_cast<variable_string>(param)->set_string(t.get_string());
+        break;
+
+    case token_t::TOKEN_FLOATING_POINT:
+        param = std::make_shared<variable_floating_point>(name);
+        std::static_pointer_cast<variable_floating_point>(param)->set_floating_point(t.get_floating_point());
+        break;
+
+    case token_t::TOKEN_INTEGER:
+        param = std::make_shared<variable_integer>(name);
+        std::static_pointer_cast<variable_integer>(param)->set_integer(t.get_integer());
+        break;
+
+    case token_t::TOKEN_SINGLE_STRING:
+    case token_t::TOKEN_DOUBLE_STRING:
+        param = std::make_shared<variable_string>(name, "string");
+        std::static_pointer_cast<variable_string>(param)->set_string(t.get_string());
+        break;
+
+    case token_t::TOKEN_ADDRESS:
+        {
+            addr::addr_parser p;
+            p.set_protocol("tcp");
+            p.set_allow(addr::allow_t::ALLOW_MASK, true);
+            addr::addr_range::vector_t const a(p.parse(t.get_string()));
+            param = std::make_shared<variable_address>(name);
+            std::static_pointer_cast<variable_address>(param)->set_address(a[0].get_from());
+        }
+        break;
+
+    default:
+        throw std::runtime_error(
+              "support for primary \""
+            + std::to_string(static_cast<int>(t.get_token()))
+            + "\" not yet implemented.");
+
+    }
+
+    return param;
 }
 
 
@@ -823,6 +867,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                     throw std::logic_error("only named expressions are allowed in a list.");
                 }
                 expression::pointer_t new_named_expr(std::make_shared<expression>());
+                new_named_expr->set_operator(operator_t::OPERATOR_NAMED);
                 switch(named_expr->get_expression_size())
                 {
                 case 1:
@@ -841,7 +886,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                     throw std::logic_error("named expressions must have a name and an optional expression.");
 
                 }
-                result_expr->add_expression(named_expr);
+                result_expr->add_expression(new_named_expr);
             }
             return result_expr;
         }

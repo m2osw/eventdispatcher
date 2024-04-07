@@ -23,6 +23,7 @@
 #include    "variable_address.h"
 #include    "variable_floating_point.h"
 #include    "variable_integer.h"
+#include    "variable_list.h"
 #include    "variable_string.h"
 
 
@@ -806,6 +807,31 @@ private:
 INSTRUCTION(set_variable);
 
 
+// SHOW MESSAGE
+//
+class inst_show_message
+    : public instruction
+{
+public:
+    inst_show_message()
+        : instruction("show_message")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        ed::message const & msg(s.get_message());
+        std::cout
+            << "--- message: "
+            << msg
+            << "\n";
+    }
+
+private:
+};
+INSTRUCTION(show_message);
+
+
 // SLEEP
 //
 class inst_sleep
@@ -946,25 +972,98 @@ public:
             }
         }
 
-//        param = s.get_parameter("required_parameters");
-//        if(param != nullptr)
-//        {
-//            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
-//            if(var->get_string() != msg.get_command())
-//            {
-//                throw std::runtime_error(
-//                      "message expected command \""
-//                    + var->get_string()
-//                    + "\" did not match \""
-//                    + msg.get_server()
-//                    + "\".");
-//            }
-//        }
-//
-//
-//required_parameters: { <name>: <value>, ... },
-//optional_parameters: { <name>: <value>, ... },
-//forbidden_parameters: { <name>, ... } )
+        check_parameters(s, msg, "required_parameters", false, false);
+        check_parameters(s, msg, "optional_parameters", true, false);
+        check_parameters(s, msg, "forbidden_parameters", false, true);
+    }
+
+    void check_parameters(
+              state & s
+            , ed::message const & msg
+            , std::string const & list_name
+            , bool optional
+            , bool forbidden)
+    {
+        variable::pointer_t param(s.get_parameter(list_name));
+        if(param != nullptr)
+        {
+            variable_list::pointer_t list(std::static_pointer_cast<variable_list>(param));
+            std::size_t const max(list->get_item_size());
+            for(std::size_t idx(0); idx < max; ++idx)
+            {
+                variable::pointer_t var(list->get_item(idx));
+                std::string const & name(var->get_name());
+                if(msg.has_parameter(name))
+                {
+                    if(forbidden)
+                    {
+                        throw std::runtime_error(
+                              "message forbidden parameter \""
+                            + name
+                            + "\" was found in this message.");
+                    }
+                }
+                else if(optional || forbidden)
+                {
+                    continue;
+                }
+                else // if(required)
+                {
+                    throw std::runtime_error(
+                          "message required parameter \""
+                        + name
+                        + "\" was not found in this message.");
+                }
+
+                std::string const & type(var->get_type());
+                if(type == "integer")
+                {
+                    std::int64_t const value(msg.get_integer_parameter(name));
+                    variable_integer::pointer_t int_var(std::static_pointer_cast<variable_integer>(var));
+                    if(int_var->get_integer() != value)
+                    {
+                        throw std::runtime_error(
+                              "message expected parameter \""
+                            + name
+                            + "\" to be an integer set to \""
+                            + std::to_string(value)
+                            + "\" but found \""
+                            + std::to_string(int_var->get_integer())
+                            + "\" instead.");
+                    }
+                }
+                else if(type == "string" || type == "identifier")
+                {
+                    std::string const value(msg.get_parameter(name));
+                    variable_string::pointer_t str_var(std::static_pointer_cast<variable_string>(var));
+                    if(str_var->get_string() != value)
+                    {
+                        throw std::runtime_error(
+                              "message expected parameter \""
+                            + name
+                            + "\" to be a string set to \""
+                            + value
+                            + "\" but found \""
+                            + str_var->get_string()
+                            + "\" instead.");
+                    }
+                }
+                else if(type == "void")
+                {
+                    // we already checked that the parameter exists
+                    // we don't need to the the value since all values
+                    // match "void"
+                    ;
+                }
+                else
+                {
+                    throw std::runtime_error(
+                          "message parameter type \""
+                        + type
+                        + "\" not supported yet.");
+                }
+            }
+        }
     }
 
     virtual parameter_declaration const * parameter_declarations() const override
@@ -1208,6 +1307,7 @@ INSTRUCTION(wait);
 // `save_parameter_value()`
 // `send_message()`
 // `set_variable()` -- DONE / TESTED
+// `show_message()`
 // `sleep()` -- DONE / TESTED
 // `verify_message()` -- AVAILABLE, NOT IMPLEMENTED
 // `wait()`

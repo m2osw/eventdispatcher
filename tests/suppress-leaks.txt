@@ -1,0 +1,4 @@
+leak:^CRYPTO_zalloc$
+leak:^BIO_lookup_ex$
+leak:^CRYPTO_strdup$
+leak:^CRYPTO_strndup$

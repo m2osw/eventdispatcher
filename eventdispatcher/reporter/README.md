@@ -27,11 +27,13 @@ There is no default parameter order, so all parameters to a function must
 have a parameter name. The value can be quoted (" or '). It must be quoted
 if it includes a quote, a comma, or a parenthesis.
 
-To allow for out of sequence execution, we support labels and goto
-instructions. Both use the same syntax as above:
+To allow for out of sequence execution, we support the `label()`, `goto()`,
+and `if()` instructions. All use the same syntax as above:
 
     label(name: <label-name>)
     goto(label: <label-name>)
+    if(true: <label-name>, false: <label-name>)
+
 
 # Variable Support
 
@@ -76,6 +78,7 @@ the next newline.
 * `save_parameter_value()`
 * `send_message()`
 * `set_variable()`
+* `show_message()`
 * `sleep()`
 * `verify_message()`
 * `wait()`
@@ -232,6 +235,17 @@ modes:
 
 Note that the `error_message` and `timeout` parameters are mutually
 exclusive. If both are specified, you get a script error.
+
+## Show Message
+
+Once a message was received, you generally want to verify it with the
+`verify_message()`. At times, though, the `verify_message()` may be
+difficult to write if you do not know all the exact parameters it
+is expected to receive. This is where this instruction becomes handy.
+It allos you to write the message in your console and thus see the
+complete list of parameters it includes and write your test accordingly.
+
+    show_message()
 
 ## Verify Message
 
