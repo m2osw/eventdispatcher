@@ -201,7 +201,7 @@ step_t background_executor::execute_instruction()
                 expression::pointer_t item(value->get_expression(idx));
                 if(item->get_operator() != operator_t::OPERATOR_NAMED)
                 {
-                    throw std::logic_error("list item was not an OPERATOR_NAMED expression.");
+                    throw std::logic_error("list item was not an OPERATOR_NAMED expression."); // LCOV_EXCL_LINE
                 }
                 std::size_t const count(item->get_expression_size());
                 switch(count)
@@ -210,15 +210,17 @@ step_t background_executor::execute_instruction()
                 case 2:
                     break;
 
+                // LCOV_EXCL_START
                 default:
                     throw std::logic_error("OPERATOR_NAMED list item expression does not have one or two items.");
+                // LCOV_EXCL_STOP
 
                 }
                 expression::pointer_t name_expr(item->get_expression(0));
                 token t(name_expr->get_token());
                 if(t.get_token() != token_t::TOKEN_IDENTIFIER)
                 {
-                    throw std::logic_error("OPERATOR_NAMED first item is not an identifier.");
+                    throw std::logic_error("OPERATOR_NAMED first item is not an identifier."); // LCOV_EXCL_LINE
                 }
                 std::string const & name(t.get_string());
                 variable::pointer_t p;
@@ -234,8 +236,10 @@ step_t background_executor::execute_instruction()
             }
             break;
 
+        // LCOV_EXCL_START
         default:
             throw std::runtime_error("operator type not supported to convert expression to variable.");
+        // LCOV_EXCL_STOP
 
         }
         if(decls->f_type != param->get_type())

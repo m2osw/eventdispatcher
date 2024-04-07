@@ -294,8 +294,10 @@ void state::listen(addr::addr const & a)
         f_listen = std::make_shared<messenger_tcp_server>(this, a);
         break;
 
+    // LCOV_EXCL_START
     default:
-        throw std::runtime_error("unsupported connection type in connect().");
+        throw std::logic_error("unsupported connection type in connect().");
+    // LCOV_EXCL_STOP
 
     }
 }

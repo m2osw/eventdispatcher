@@ -52,7 +52,7 @@ void messenger_tcp_server::process_accept()
     ed::tcp_bio_client::pointer_t client(accept());
     if(client == nullptr)
     {
-        throw std::runtime_error("accept() failed to return a pointer.");
+        throw std::runtime_error("accept() failed to return a pointer."); // LCOV_EXCL_LINE
     }
 
     messenger_tcp_client::pointer_t service(std::make_shared<messenger_tcp_client>(f_state, client));

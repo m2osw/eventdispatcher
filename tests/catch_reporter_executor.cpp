@@ -92,11 +92,25 @@ constexpr char const * const g_program_accept_one_message =
     "has_message()\n"
     "if(false: wait_message)\n"
     "show_message()\n"
-    "verify_message(command: REGISTER, required_parameters: { service: responder, version: 1 })\n"
+    "verify_message(command: REGISTER, required_parameters: { service: responder, version: 1 }, optional_parameters: { commands: \"READY,HELP,STOP\" }, forbidden_parameters: { forbidden })\n"
     "send_message(command: READY)\n"
     "wait(timeout: 10.0, mode: drain)\n"
     "disconnect()\n"
     "exit()\n"
+;
+
+constexpr char const * const g_program_error_message =
+    "exit(error_message: \"testing exit with an error\")\n"
+;
+
+constexpr char const * const g_program_no_condition =
+    "if(true: exit)\n"
+    "label(name: exit)\n"
+;
+
+constexpr char const * const g_program_two_listen =
+    "listen(address: <127.0.0.1:20002>)\n"
+    "listen(address: <127.0.0.1:20003>)\n"
 ;
 
 
@@ -240,7 +254,12 @@ public:
         snapdev::NOT_USED(msg);
 //std::cerr << "got message! " << msg << "\n";
         remove_from_communicator();
-        f_timer->remove_from_communicator();
+
+        ed::connection::pointer_t timer_ptr(f_timer.lock());
+        if(timer_ptr != nullptr)
+        {
+            timer_ptr->remove_from_communicator();
+        }
     }
 
     void set_timer(ed::connection::pointer_t done_timer)
@@ -253,8 +272,8 @@ private:
     //
     int         f_sequence = 0;
     int         f_step = 0;
-    ed::connection::pointer_t
-                f_timer = ed::connection::pointer_t();
+    ed::connection::weak_pointer_t
+                f_timer = ed::connection::weak_pointer_t();
 };
 
 
@@ -434,18 +453,73 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
         // if we exited because of our timer, then the test did not pass
         //
         CATCH_REQUIRE_FALSE(timer->timed_out_prima());
+
+        CATCH_REQUIRE(s->get_exit_code() == 0);
     }
     CATCH_END_SECTION()
 }
 
 
-//CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
-//{
-//    CATCH_START_SECTION("statement without instruction")
-//    {
-//    }
-//    CATCH_END_SECTION()
-//}
+CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
+{
+    CATCH_START_SECTION("if() before any condition")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("if_too_soon", g_program_no_condition));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 2);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->start()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "trying to use a 'compare' result when none are currently defined."));
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              s->set_compare(SNAP_CATCH2_NAMESPACE::reporter::compare_t::COMPARE_UNDEFINED)
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "'compare' cannot be set to \"undefined\"."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("exit() + error message")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("exit_error_message", g_program_error_message));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 1);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+
+        CATCH_REQUIRE(s->get_exit_code() == 1);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("listen() + listen()")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("two_listen", g_program_two_listen));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 2);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->start()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "the listen() instruction cannot be reused without an intermediate disconnect() instruction."));
+    }
+    CATCH_END_SECTION()
+}
 
 
 // vim: ts=4 sw=4 et
