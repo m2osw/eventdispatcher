@@ -68,7 +68,7 @@ char g_simple_tokens[] = {
     U'}',
     U',',
     U':',
-    U'=',
+    //U'=',
     U'+',
     U'-',
     U'*',

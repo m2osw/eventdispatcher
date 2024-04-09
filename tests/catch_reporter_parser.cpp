@@ -50,6 +50,7 @@ constexpr char const * const g_program1 =
     "if(less: when_smaller, equal: when_equal, greater: when_larger)\n"
     "label(name: label_name)\n"
     "verify_message(sent_server: name,"
+                " command: BACKGROUND,"
                 " required_parameters: { color: orange, timeout: 1 + 57 * (3600 / 3) % 7200 - 34, length: -567, height: +33.21 },"
                 " optional_parameters: {},"
                 " forbidden_parameters: { hurray })\n"
@@ -321,6 +322,19 @@ CATCH_TEST_CASE("reporter_parser_error", "[parser][reporter][error]")
             , std::runtime_error
             , Catch::Matchers::ExceptionMessage(
                       "expected a primary token for expression."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("command parameter missing in verify_message()")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("missing_parameter.rptr", "verify_message(required_parameters: { color: red })"));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              p->parse_program()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "parameter \"command\" is required by \"verify_message\"."));
     }
     CATCH_END_SECTION()
 }

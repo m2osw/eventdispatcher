@@ -25,6 +25,7 @@
 #include    "variable_integer.h"
 #include    "variable_list.h"
 #include    "variable_string.h"
+#include    "variable_timestamp.h"
 #include    "variable_void.h"
 
 
@@ -317,11 +318,24 @@ variable::pointer_t background_executor::primary_to_variable(expression::pointer
         }
         break;
 
+    case token_t::TOKEN_TIMESPEC:
+        {
+            param = std::make_shared<variable_timestamp>(name);
+            snapdev::timespec_ex timestamp(
+                t.get_integer() >> 64,
+                t.get_integer()
+            );
+            std::static_pointer_cast<variable_timestamp>(param)->set_timestamp(timestamp);
+        }
+        break;
+
+    // LCOV_EXCL_START
     default:
         throw std::runtime_error(
               "support for primary \""
             + std::to_string(static_cast<int>(t.get_token()))
             + "\" not yet implemented.");
+    // LCOV_EXCL_STOP
 
     }
 
@@ -348,14 +362,14 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_ADD:
         if(expr->get_expression_size() != 2)
         {
-            throw std::logic_error("+ operator (add) did not receive exactly two parameters.");
+            throw std::logic_error("+ operator (add) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
             expression::pointer_t l(compute(expr->get_expression(0)));
             expression::pointer_t r(compute(expr->get_expression(1)));
             token const & lt(l->get_token());
-            token const & rt(l->get_token());
+            token const & rt(r->get_token());
 
             token result;
             switch(mix_token(lt.get_token(), rt.get_token()))
@@ -458,9 +472,19 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 result.set_string(lt.get_string() + std::to_string(static_cast<std::int64_t>(rt.get_integer())));
                 break;
 
+            case mix_token(token_t::TOKEN_INTEGER, token_t::TOKEN_SINGLE_STRING):
+                result.set_token(token_t::TOKEN_SINGLE_STRING);
+                result.set_string(std::to_string(static_cast<std::int64_t>(lt.get_integer())) + rt.get_string());
+                break;
+
             case mix_token(token_t::TOKEN_DOUBLE_STRING, token_t::TOKEN_INTEGER):
                 result.set_token(token_t::TOKEN_DOUBLE_STRING);
                 result.set_string(lt.get_string() + std::to_string(static_cast<std::int64_t>(rt.get_integer())));
+                break;
+
+            case mix_token(token_t::TOKEN_INTEGER, token_t::TOKEN_DOUBLE_STRING):
+                result.set_token(token_t::TOKEN_DOUBLE_STRING);
+                result.set_string(std::to_string(static_cast<std::int64_t>(lt.get_integer())) + rt.get_string());
                 break;
 
             case mix_token(token_t::TOKEN_ADDRESS, token_t::TOKEN_INTEGER):
@@ -509,14 +533,14 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_SUBTRACT:
         if(expr->get_expression_size() != 2)
         {
-            throw std::logic_error("- operator (subtract) did not receive exactly two parameters.");
+            throw std::logic_error("- operator (subtract) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
             expression::pointer_t l(compute(expr->get_expression(0)));
             expression::pointer_t r(compute(expr->get_expression(1)));
             token const & lt(l->get_token());
-            token const & rt(l->get_token());
+            token const & rt(r->get_token());
 
             token result;
             switch(mix_token(lt.get_token(), rt.get_token()))
@@ -590,7 +614,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
 #pragma GCC diagnostic ignored "-Wpedantic"
                     __int128 const timestamp_int(rt.get_integer());
                     snapdev::timespec_ex const timestamp(timestamp_int >> 64, timestamp_int & 0xffffffffffffffff);
-                    snapdev::timespec_ex offset(-lt.get_floating_point());
+                    snapdev::timespec_ex offset(lt.get_floating_point());
                     offset -= timestamp;
                     result.set_integer((static_cast<__int128>(offset.tv_sec) << 64) | offset.tv_nsec);
 #pragma GCC diagnostic pop
@@ -640,7 +664,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_IDENTITY:
         if(expr->get_expression_size() != 1)
         {
-            throw std::logic_error("+ operator (identity) did not receive exactly two parameters.");
+            throw std::logic_error("+ operator (identity) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
@@ -651,7 +675,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_NEGATE:
         if(expr->get_expression_size() != 1)
         {
-            throw std::logic_error("+ operator (identity) did not receive exactly two parameters.");
+            throw std::logic_error("+ operator (identity) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
@@ -699,14 +723,14 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_MULTIPLY:
         if(expr->get_expression_size() != 2)
         {
-            throw std::logic_error("* operator (multiply) did not receive exactly two parameters.");
+            throw std::logic_error("* operator (multiply) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
             expression::pointer_t l(compute(expr->get_expression(0)));
             expression::pointer_t r(compute(expr->get_expression(1)));
             token const & lt(l->get_token());
-            token const & rt(l->get_token());
+            token const & rt(r->get_token());
 
             token result;
             switch(mix_token(lt.get_token(), rt.get_token()))
@@ -740,7 +764,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                     int const count(rt.get_integer());
                     if(count < 0 || count > 1000)
                     {
-                        throw std::runtime_error("string repeat needs to be positive and under 1001");
+                        throw std::runtime_error("string repeat needs to be positive and under 1001.");
                     }
                     std::size_t const size(len * count);
                     str.resize(size);
@@ -769,14 +793,14 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_DIVIDE:
         if(expr->get_expression_size() != 2)
         {
-            throw std::logic_error("/ operator (divide) did not receive exactly two parameters.");
+            throw std::logic_error("/ operator (divide) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
             expression::pointer_t l(compute(expr->get_expression(0)));
             expression::pointer_t r(compute(expr->get_expression(1)));
             token const & lt(l->get_token());
-            token const & rt(l->get_token());
+            token const & rt(r->get_token());
 
             token result;
             switch(mix_token(lt.get_token(), rt.get_token()))
@@ -815,14 +839,14 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_MODULO:
         if(expr->get_expression_size() != 2)
         {
-            throw std::logic_error("% operator (modulo) did not receive exactly two parameters.");
+            throw std::logic_error("% operator (modulo) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
             expression::pointer_t l(compute(expr->get_expression(0)));
             expression::pointer_t r(compute(expr->get_expression(1)));
             token const & lt(l->get_token());
-            token const & rt(l->get_token());
+            token const & rt(r->get_token());
 
             token result;
             switch(mix_token(lt.get_token(), rt.get_token()))
@@ -848,7 +872,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 break;
 
             default:
-                throw std::runtime_error("unsupported division.");
+                throw std::runtime_error("unsupported modulo.");
 
             }
             expression::pointer_t result_expr(std::make_shared<expression>());
@@ -868,7 +892,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 expression::pointer_t named_expr(expr->get_expression(idx));
                 if(named_expr->get_operator() != operator_t::OPERATOR_NAMED)
                 {
-                    throw std::logic_error("only named expressions are allowed in a list.");
+                    throw std::logic_error("only named expressions are allowed in a list."); // LCOV_EXCL_LINE
                 }
                 expression::pointer_t new_named_expr(std::make_shared<expression>());
                 new_named_expr->set_operator(operator_t::OPERATOR_NAMED);
@@ -886,8 +910,10 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                     }
                     break;
 
+                // LCOV_EXCL_START
                 default:
                     throw std::logic_error("named expressions must have a name and an optional expression.");
+                // LCOV_EXCL_STOP
 
                 }
                 result_expr->add_expression(new_named_expr);
@@ -896,8 +922,10 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
         }
         break;
 
+    // LCOV_EXCL_START
     default:
-        throw std::runtime_error("unsupported expression type in compute().");
+        throw std::logic_error("unsupported expression type in compute().");
+    // LCOV_EXCL_STOP
 
     }
     snapdev::NOT_REACHED();
@@ -1036,6 +1064,7 @@ void executor::run()
 void executor::stop()
 {
     f_thread->stop();
+    ed::communicator::instance()->remove_connection(f_done_signal);
 }
 
 

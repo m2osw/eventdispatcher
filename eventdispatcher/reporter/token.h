@@ -53,7 +53,7 @@ enum class token_t : char32_t
     TOKEN_CLOSE_CURLY_BRACE = '}',
     TOKEN_COMMA             = ',',
     TOKEN_COLON             = ':',
-    TOKEN_EQUAL             = '=',  // for parameters: <name>=<value>
+    //TOKEN_EQUAL             = '=',  // not currently used
     TOKEN_DOUBLE_STRING     = '"',
     TOKEN_SINGLE_STRING     = '\'',
     TOKEN_PLUS              = '+',

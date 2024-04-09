@@ -180,6 +180,8 @@ void parser::one_statement()
         throw std::runtime_error("expected ')' parenthesis to end parameter list.");
     }
 
+    f_statement->verify_parameters();
+
     f_state->add_statement(f_statement);
     f_statement.reset();
 }
@@ -409,7 +411,7 @@ expression::pointer_t parser::primary()
                                         ? operator_t::OPERATOR_IDENTITY
                                         : operator_t::OPERATOR_NEGATE);
             next_token();
-            expr->add_expression(additive());
+            expr->add_expression(primary());
             return expr;
         }
         break;

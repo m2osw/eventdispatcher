@@ -42,6 +42,7 @@ add_library(${PROJECT_NAME} SHARED
     variable_integer.cpp
     variable_list.cpp
     variable_string.cpp
+    variable_timestamp.cpp
     variable_void.cpp
 )
 

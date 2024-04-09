@@ -57,7 +57,7 @@ constexpr SNAP_CATCH2_NAMESPACE::reporter::token_t const g_all_tokens[] =
     SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_CLOSE_CURLY_BRACE,
     SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_COMMA,
     SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_COLON,
-    SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EQUAL,
+    //SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EQUAL,
     SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_DOUBLE_STRING,
     SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_SINGLE_STRING,
     SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_PLUS,

@@ -319,12 +319,12 @@ public:
         variable::pointer_t label_name(s.get_parameter("label", true));
         if(label_name == nullptr)
         {
-            throw std::logic_error("label_name not available in call().");
+            throw std::logic_error("label_name not available in call()."); // LCOV_EXCL_LINE
         }
         variable_string::pointer_t name(std::static_pointer_cast<variable_string>(label_name));
         if(name == nullptr)
         {
-            throw std::logic_error("label_name -> name not available in call().");
+            throw std::logic_error("label_name -> name not available in call()."); // LCOV_EXCL_LINE
         }
         ip_t const ip(s.get_label_position(name->get_string()));
         s.set_ip(ip);
@@ -424,12 +424,98 @@ public:
             // wait for timeout seconds, if a message is received before
             // the wait times out, it failed
             //
-throw std::logic_error("exit(timeout: ...) not yet implemented");
+            snapdev::timespec_ex timeout_duration;
+            variable_integer::pointer_t int_seconds(std::dynamic_pointer_cast<variable_integer>(timeout));
+            if(int_seconds == nullptr)
+            {
+                variable_floating_point::pointer_t flt_seconds(std::dynamic_pointer_cast<variable_floating_point>(timeout));
+                if(flt_seconds == nullptr)
+                {
+                    throw std::runtime_error("'timeout' parameter expected to be a number.");
+                }
+                timeout_duration.set(flt_seconds->get_floating_point());
+            }
+            else
+            {
+                timeout_duration.set(int_seconds->get_integer(), 0);
+            }
+            if(poll(s, timeout_duration) != 0)
+            {
+                s.set_exit_code(1);
+            }
         }
 
         // jump to the very end so the executor knows it has to quit
         //
         s.set_ip(s.get_statement_size());
+    }
+
+    int poll(state & s, snapdev::timespec_ex timeout_duration)
+    {
+        std::vector<struct pollfd> fds;
+        ed::connection::vector_t connections(s.get_connections());
+        ed::connection::pointer_t listen(s.get_listen_connection());
+        if(listen != nullptr)
+        {
+            connections.push_back(listen);
+        }
+        for(auto & c : connections)
+        {
+            int e(0);
+            if(c->is_listener() || c->is_signal())
+            {
+                e |= POLLIN;
+            }
+            if(c->is_reader())
+            {
+                e |= POLLIN | POLLPRI | POLLRDHUP;
+            }
+            if(c->is_writer())
+            {
+                e |= POLLOUT | POLLRDHUP;
+            }
+            if(e == 0)
+            {
+                continue;
+            }
+
+            struct pollfd fd;
+            fd.fd = c->get_socket();
+            fd.events = e;
+            fd.revents = 0;
+            fds.push_back(fd);
+        }
+        if(fds.empty())
+        {
+            // no connection means we cannot receive invalid data before
+            // exiting so all good here
+            //
+            return 0;
+        }
+
+        int const r(ppoll(&fds[0], fds.size(), &timeout_duration, nullptr));
+        if(r < 0)
+        {
+            // TODO: enhance error message
+            //
+            int const e(errno);
+            throw std::runtime_error(
+                    "ppoll() returned an error: "
+                  + std::to_string(e)
+                  + ", "
+                  + strerror(e));
+        }
+        for(auto & fd : fds)
+        {
+            if(fd.revents != 0)
+            {
+                return 1;
+            }
+        }
+
+        // if no events happened, then we timed out which is good in this case
+        //
+        return 0;
     }
 
     virtual parameter_declaration const * parameter_declarations() const override
@@ -824,7 +910,7 @@ public:
         std::cout
             << "--- message: "
             << msg
-            << "\n";
+            << std::endl;
     }
 
 private:
@@ -1187,8 +1273,6 @@ public:
             }
             if(e == 0)
             {
-                // this should only happen on timer objects
-                //
                 continue;
             }
 
