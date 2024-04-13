@@ -46,6 +46,7 @@ class executor
 {
 public:
     typedef std::shared_ptr<executor>   pointer_t;
+    typedef std::function<void()>       thread_done_callback_t;
 
                                     executor(state::pointer_t s);
                                     ~executor();
@@ -53,6 +54,8 @@ public:
     void                            start();
     void                            run();
     void                            stop();
+
+    void                            set_thread_done_callback(thread_done_callback_t callback);
 
 private:
     ed::thread_done_signal::pointer_t

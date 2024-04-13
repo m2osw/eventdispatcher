@@ -447,8 +447,16 @@ token lexer::next_token()
                     }
                 }
                 ungetc(c);
-                t.set_token(token_t::TOKEN_IDENTIFIER);
-                t.set_string(s);
+                if(s == "NaN")
+                {
+                    t.set_token(token_t::TOKEN_FLOATING_POINT);
+                    t.set_floating_point(std::numeric_limits<double>::quiet_NaN());
+                }
+                else
+                {
+                    t.set_token(token_t::TOKEN_IDENTIFIER);
+                    t.set_string(s);
+                }
                 return t;
             }
 

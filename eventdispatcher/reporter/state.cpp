@@ -183,6 +183,16 @@ void state::set_variable(variable::pointer_t var)
 }
 
 
+void state::unset_variable(std::string const & name)
+{
+    auto it(f_variables.find(name));
+    if(it != f_variables.end())
+    {
+        f_variables.erase(it);
+    }
+}
+
+
 ip_t state::get_label_position(std::string const & name) const
 {
     auto const it(f_labels.find(name));

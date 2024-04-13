@@ -107,10 +107,34 @@ constexpr parameter_declaration const g_has_message_params[] =
 };
 
 
+constexpr parameter_declaration const g_has_type_params[] =
+{
+    {
+        .f_name = "name",
+        .f_type = "identifier",
+    },
+    {
+        .f_name = "type",
+        .f_type = "identifier",
+    },
+    {}
+};
+
+
 constexpr parameter_declaration const g_if_params[] = 
 {
     {
+        .f_name = "variable",
+        .f_type = "identifier",
+        .f_required = false,
+    },
+    {
         .f_name = "unordered",
+        .f_type = "identifier",
+        .f_required = false,
+    },
+    {
+        .f_name = "ordered",
         .f_type = "identifier",
         .f_required = false,
     },
@@ -232,6 +256,16 @@ constexpr parameter_declaration const g_sleep_params[] =
     {
         .f_name = "seconds",
         .f_type = "number",
+    },
+    {}
+};
+
+
+constexpr parameter_declaration const g_unset_variable_params[] =
+{
+    {
+        .f_name = "name",
+        .f_type = "identifier",
     },
     {}
 };
@@ -429,20 +463,13 @@ public:
             if(int_seconds == nullptr)
             {
                 variable_floating_point::pointer_t flt_seconds(std::dynamic_pointer_cast<variable_floating_point>(timeout));
-                if(flt_seconds == nullptr)
-                {
-                    throw std::runtime_error("'timeout' parameter expected to be a number.");
-                }
                 timeout_duration.set(flt_seconds->get_floating_point());
             }
             else
             {
                 timeout_duration.set(int_seconds->get_integer(), 0);
             }
-            if(poll(s, timeout_duration) != 0)
-            {
-                s.set_exit_code(1);
-            }
+            s.set_exit_code(poll(s, timeout_duration));
         }
 
         // jump to the very end so the executor knows it has to quit
@@ -453,6 +480,7 @@ public:
     int poll(state & s, snapdev::timespec_ex timeout_duration)
     {
         std::vector<struct pollfd> fds;
+        std::map<ed::connection *, int> position;
         ed::connection::vector_t connections(s.get_connections());
         ed::connection::pointer_t listen(s.get_listen_connection());
         if(listen != nullptr)
@@ -472,13 +500,14 @@ public:
             }
             if(c->is_writer())
             {
-                e |= POLLOUT | POLLRDHUP;
+                e |= POLLOUT | POLLRDHUP; // LCOV_EXCL_LINE
             }
             if(e == 0)
             {
-                continue;
+                continue; // LCOV_EXCL_LINE
             }
 
+            position[c.get()] = fds.size();
             struct pollfd fd;
             fd.fd = c->get_socket();
             fd.events = e;
@@ -496,20 +525,30 @@ public:
         int const r(ppoll(&fds[0], fds.size(), &timeout_duration, nullptr));
         if(r < 0)
         {
-            // TODO: enhance error message
-            //
+            // LCOV_EXCL_START
             int const e(errno);
             throw std::runtime_error(
                     "ppoll() returned an error: "
                   + std::to_string(e)
                   + ", "
                   + strerror(e));
+            // LCOV_EXCL_STOP
         }
-        for(auto & fd : fds)
+        for(auto & c : connections)
         {
-            if(fd.revents != 0)
+            struct pollfd const * fd(&fds[position[c.get()]]);
+            if(fd->revents != 0)
             {
-                return 1;
+                if((fd->revents & (POLLHUP | POLLRDHUP)) != 0)
+                {
+                    // hang ups are expected, so process them naturally
+                    //
+                    c->process_hup();
+                }
+                else
+                {
+                    return 1;
+                }
             }
         }
 
@@ -598,6 +637,47 @@ private:
 INSTRUCTION(has_message);
 
 
+// HAS TYPE
+//
+class inst_has_type
+    : public instruction
+{
+public:
+    inst_has_type()
+        : instruction("has_type")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        variable::pointer_t variable_name(s.get_parameter("name", true));
+        variable_string::pointer_t name(std::static_pointer_cast<variable_string>(variable_name));
+        variable::pointer_t var(s.get_variable(name->get_string()));
+
+        if(var == nullptr)
+        {
+            s.set_compare(compare_t::COMPARE_UNORDERED);
+        }
+        else
+        {
+            variable::pointer_t variable_type(s.get_parameter("type", true));
+            variable_string::pointer_t type(std::static_pointer_cast<variable_string>(variable_type));
+            s.set_compare(var->get_type() == type->get_string()
+                ? compare_t::COMPARE_TRUE
+                : compare_t::COMPARE_FALSE);
+        }
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_has_type_params;
+    }
+
+private:
+};
+INSTRUCTION(has_type);
+
+
 // IF
 //
 class inst_if
@@ -611,15 +691,84 @@ public:
 
     virtual void func(state & s) override
     {
-        // TODO: verify the potential overlaps
+        // TODO: verify potential overlaps (i.e. if the instruction has
+        //       multiple labels and we could have the choice between
+        //       two or more in variable situations)
         //
         variable::pointer_t label_name;
-        switch(s.get_compare())
+        compare_t compare(compare_t::COMPARE_UNDEFINED);
+        variable::pointer_t const var_name(s.get_parameter("variable"));
+        if(var_name != nullptr)
         {
+            variable_string::pointer_t name(std::dynamic_pointer_cast<variable_string>(var_name));
+            variable::pointer_t value(s.get_variable(name->get_string()));
+            if(value != nullptr)
+            {
+                std::string const & type(value->get_type());
+                if(type == "integer")
+                {
+                    variable_integer::pointer_t int_value(std::static_pointer_cast<variable_integer>(value));
+                    int const v(int_value->get_integer());
+                    if(v == 0)
+                    {
+                        compare = compare_t::COMPARE_EQUAL;
+                    }
+                    else if(v < 0)
+                    {
+                        compare = compare_t::COMPARE_LESS;
+                    }
+                    else
+                    {
+                        compare = compare_t::COMPARE_GREATER;
+                    }
+                }
+                else if(type == "floating_point")
+                {
+                    variable_floating_point::pointer_t int_value(std::static_pointer_cast<variable_floating_point>(value));
+                    double const v(int_value->get_floating_point());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+                    if(std::isnan(v))
+                    {
+                        compare = compare_t::COMPARE_UNORDERED;
+                    }
+                    else if(v == 0.0)
+                    {
+                        compare = compare_t::COMPARE_EQUAL;
+                    }
+                    else if(v < 0.0)
+                    {
+                        compare = compare_t::COMPARE_LESS;
+                    }
+                    else
+                    {
+                        compare = compare_t::COMPARE_GREATER;
+                    }
+#pragma GCC diagnostic pop
+                }
+                else
+                {
+                    throw std::runtime_error("if(variable: ...) only supports variables of type integer or floating point.");
+                }
+            }
+            else
+            {
+                compare = compare_t::COMPARE_UNORDERED;
+            }
+        }
+        else
+        {
+            compare = s.get_compare();
+        }
+        switch(compare)
+        {
+        // LCOV_EXCL_START
         case compare_t::COMPARE_UNDEFINED:
             // this cannot happen since we already throw in get_compare()
+            // and in case of a variable, we throw if we get an invalid type
             //
             throw std::logic_error("got undefined compare in inst_if::func"); // LCOV_EXCL_LINE
+        // LCOV_EXCL_STOP
 
         case compare_t::COMPARE_UNORDERED:
             label_name = s.get_parameter("unordered");
@@ -633,6 +782,14 @@ public:
                 if(label_name == nullptr)
                 {
                     label_name = s.get_parameter("not_equal");
+                    if(label_name == nullptr)
+                    {
+                        label_name = s.get_parameter("true");
+                        if(label_name == nullptr)
+                        {
+                            label_name = s.get_parameter("ordered");
+                        }
+                    }
                 }
             }
             break;
@@ -648,6 +805,10 @@ public:
                     if(label_name == nullptr)
                     {
                         label_name = s.get_parameter("false");
+                        if(label_name == nullptr)
+                        {
+                            label_name = s.get_parameter("ordered");
+                        }
                     }
                 }
             }
@@ -664,6 +825,10 @@ public:
                     if(label_name == nullptr)
                     {
                         label_name = s.get_parameter("true");
+                        if(label_name == nullptr)
+                        {
+                            label_name = s.get_parameter("ordered");
+                        }
                     }
                 }
             }
@@ -800,12 +965,13 @@ public:
             throw std::runtime_error("send_message() has no connection to send a message to.");
         }
         // TODO: fix the connection selection, if we have more than one,
-        //       how do we know which one to select?
+        //       how do we know which one to select? (i.e. have a connection
+        //       name included in the parameters)
         //
         ed::connection_with_send_message::pointer_t c(std::dynamic_pointer_cast<ed::connection_with_send_message>(v[0]));
         if(c == nullptr)
         {
-            throw std::runtime_error("send_message() called without a valid listener connection.");
+            throw std::runtime_error("send_message() called without a valid listener connection."); // LCOV_EXCL_LINE
         }
 
         ed::message msg;
@@ -841,6 +1007,7 @@ public:
         param = s.get_parameter("command", true);
         variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
         msg.set_command(var->get_string());
+//std::cerr << "--- send message [" << msg.get_command() << "]\n";
 
         param = s.get_parameter("parameters");
         if(param != nullptr)
@@ -908,7 +1075,7 @@ public:
     {
         ed::message const & msg(s.get_message());
         std::cout
-            << "--- message: "
+            << "--- script message: "
             << msg
             << std::endl;
     }
@@ -937,10 +1104,6 @@ public:
         if(int_seconds == nullptr)
         {
             variable_floating_point::pointer_t flt_seconds(std::dynamic_pointer_cast<variable_floating_point>(seconds));
-            if(flt_seconds == nullptr)
-            {
-                throw std::runtime_error("'seconds' parameter expected to be a number.");
-            }
             pause_duration.set(flt_seconds->get_floating_point());
         }
         else
@@ -949,12 +1112,14 @@ public:
         }
         if(nanosleep(&pause_duration, nullptr) != 0)
         {
+            // LCOV_EXCL_START
             int const e(errno);
             std::cerr
                 << "error: nanosleep() failed with "
                 << strerror(e)
                 << ".\n";
             throw std::runtime_error("nanosleep failed.");
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -966,6 +1131,34 @@ public:
 private:
 };
 INSTRUCTION(sleep);
+
+
+// UNSET VARIABLE
+//
+class inst_unset_variable
+    : public instruction
+{
+public:
+    inst_unset_variable()
+        : instruction("unset_variable")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        variable::pointer_t name(s.get_parameter("name", true));
+        std::string const var_name(std::static_pointer_cast<variable_string>(name)->get_string());
+        s.unset_variable(var_name);
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_unset_variable_params;
+    }
+
+private:
+};
+INSTRUCTION(unset_variable);
 
 
 // VERIFY MESSAGE
@@ -993,7 +1186,7 @@ public:
                       "message expected sent from server name \""
                     + var->get_string()
                     + "\" did not match \""
-                    + msg.get_server()
+                    + msg.get_sent_from_server()
                     + "\".");
             }
         }
@@ -1008,7 +1201,7 @@ public:
                       "message expected sent from service name \""
                     + var->get_string()
                     + "\" did not match \""
-                    + msg.get_server()
+                    + msg.get_sent_from_service()
                     + "\".");
             }
         }
@@ -1038,7 +1231,7 @@ public:
                       "message expected service name \""
                     + var->get_string()
                     + "\" did not match \""
-                    + msg.get_server()
+                    + msg.get_service()
                     + "\".");
             }
         }
@@ -1047,13 +1240,14 @@ public:
         if(param != nullptr)
         {
             variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+//std::cerr << "--- verify message [" << msg.get_command() << "]\n";
             if(var->get_string() != msg.get_command())
             {
                 throw std::runtime_error(
                       "message expected command \""
                     + var->get_string()
                     + "\" did not match \""
-                    + msg.get_server()
+                    + msg.get_command()
                     + "\".");
             }
         }
@@ -1112,9 +1306,9 @@ public:
                               "message expected parameter \""
                             + name
                             + "\" to be an integer set to \""
-                            + std::to_string(value)
-                            + "\" but found \""
                             + std::to_string(int_var->get_integer())
+                            + "\" but found \""
+                            + std::to_string(value)
                             + "\" instead.");
                     }
                 }
@@ -1128,16 +1322,16 @@ public:
                               "message expected parameter \""
                             + name
                             + "\" to be a string set to \""
-                            + value
-                            + "\" but found \""
                             + str_var->get_string()
+                            + "\" but found \""
+                            + value
                             + "\" instead.");
                     }
                 }
                 else if(type == "void")
                 {
                     // we already checked that the parameter exists
-                    // we don't need to the the value since all values
+                    // we don't need to check the value since all values
                     // match "void"
                     ;
                 }
@@ -1181,16 +1375,17 @@ public:
 
     virtual void func(state & s) override
     {
+        if(!s.get_in_thread())
+        {
+            throw std::runtime_error("wait() used before run().");
+        }
+
         snapdev::timespec_ex timeout_duration;
         variable::pointer_t timeout(s.get_parameter("timeout", true));
         variable_integer::pointer_t int_seconds(std::dynamic_pointer_cast<variable_integer>(timeout));
         if(int_seconds == nullptr)
         {
             variable_floating_point::pointer_t flt_seconds(std::dynamic_pointer_cast<variable_floating_point>(timeout));
-            if(flt_seconds == nullptr)
-            {
-                throw std::runtime_error("'timeout' parameter expected to be a number.");
-            }
             timeout_duration.set(flt_seconds->get_floating_point());
         }
         else
@@ -1203,10 +1398,6 @@ public:
         if(mode_param != nullptr)
         {
             variable_string::pointer_t mode_name(std::static_pointer_cast<variable_string>(mode_param));
-            if(mode_name == nullptr)
-            {
-                throw std::logic_error("mode_param -> mode_name not available in wait().");
-            }
             std::string const & m(mode_name->get_string());
             if(m == "wait")
             {
@@ -1293,19 +1484,19 @@ public:
         int const r(ppoll(&fds[0], fds.size(), &timeout_duration, nullptr));
         if(r < 0)
         {
-            // TODO: enhance error message
-            //
+            // LCOV_EXCL_START
             int const e(errno);
             throw std::runtime_error(
                     "ppoll() returned an error: "
                   + std::to_string(e)
                   + ", "
                   + strerror(e));
+            // LCOV_EXCL_STOP
         }
         bool timed_out(true);
         for(auto & c : connections)
         {
-            struct pollfd * fd(&fds[position[c.get()]]);
+            struct pollfd const * fd(&fds[position[c.get()]]);
             if(fd->revents != 0)
             {
                 timed_out = false;
@@ -1319,11 +1510,13 @@ public:
                     //
                     if(c->is_signal())
                     {
+                        // LCOV_EXCL_START
                         ed::signal * ss(dynamic_cast<ed::signal *>(c.get()));
                         if(ss != nullptr)
                         {
                             ss->process();
                         }
+                        // LCOV_EXCL_STOP
                     }
                     else if(c->is_listener())
                     {
@@ -1343,7 +1536,7 @@ public:
                 }
                 if((fd->revents & POLLERR) != 0)
                 {
-                    c->process_error();
+                    c->process_error(); // LCOV_EXCL_LINE
                 }
                 if((fd->revents & (POLLHUP | POLLRDHUP)) != 0)
                 {
@@ -1351,7 +1544,7 @@ public:
                 }
                 if((fd->revents & POLLNVAL) != 0)
                 {
-                    c->process_invalid();
+                    c->process_invalid(); // LCOV_EXCL_LINE
                 }
             }
         }

@@ -90,6 +90,7 @@ public:
 
     variable::pointer_t     get_variable(std::string const & name) const;
     void                    set_variable(variable::pointer_t variable);
+    void                    unset_variable(std::string const & name);
 
     ip_t                    get_label_position(std::string const & name) const;
 

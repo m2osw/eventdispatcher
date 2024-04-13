@@ -943,6 +943,8 @@ class executor_thread_done
     : public ed::thread_done_signal
 {
 public:
+    typedef std::shared_ptr<executor_thread_done>   pointer_t;
+
     executor_thread_done()
         : thread_done_signal()
     {
@@ -956,9 +958,20 @@ public:
     {
         thread_done_signal::process_read();
         ed::communicator::instance()->remove_connection(shared_from_this());
+
+        if(f_thread_done_callback != nullptr)
+        {
+            f_thread_done_callback();
+        }
+    }
+
+    void set_thread_done_callback(executor::thread_done_callback_t callback)
+    {
+        f_thread_done_callback = callback;
     }
 
 private:
+    executor::thread_done_callback_t    f_thread_done_callback = executor::thread_done_callback_t();
 };
 
 
@@ -1065,6 +1078,27 @@ void executor::stop()
 {
     f_thread->stop();
     ed::communicator::instance()->remove_connection(f_done_signal);
+}
+
+
+/** \brief Setup a callback to know when the thread is done.
+ *
+ * If the thread exits too soon (an expected or unexpected error occurred,)
+ * you may not have the correct sequence of events to properly clean
+ * the client connections. Setting up this function may help your test
+ * to exit properly instead of being stuck waiting for more events
+ * which would never occur.
+ *
+ * \param[in] callback  A callback pointer.
+ */
+void executor::set_thread_done_callback(thread_done_callback_t callback)
+{
+    executor_thread_done::pointer_t thread_done(dynamic_pointer_cast<executor_thread_done>(f_done_signal));
+    if(thread_done == nullptr)
+    {
+        throw std::logic_error("f_done_signal is not an executor_thread_done object?"); // LCOV_EXCL_LINE
+    }
+    thread_done->set_thread_done_callback(callback);
 }
 
 

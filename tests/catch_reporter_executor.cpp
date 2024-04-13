@@ -34,8 +34,10 @@
 #include    <eventdispatcher/reporter/variable_address.h>
 #include    <eventdispatcher/reporter/variable_floating_point.h>
 #include    <eventdispatcher/reporter/variable_integer.h>
+#include    <eventdispatcher/reporter/variable_list.h>
 #include    <eventdispatcher/reporter/variable_string.h>
 #include    <eventdispatcher/reporter/variable_timestamp.h>
+#include    <eventdispatcher/reporter/variable_void.h>
 
 
 // libaddr
@@ -240,7 +242,7 @@ constexpr char const * const g_program_accept_one_message =
     "if(false: wait_message)\n"
     "show_message()\n"
     "verify_message(command: REGISTER, required_parameters: { service: responder, version: 1 }, optional_parameters: { commands: \"READY,HELP,STOP\" }, forbidden_parameters: { forbidden })\n"
-    "send_message(command: READY)\n"
+    "send_message(command: READY, sent_server: reporter_test_extension, sent_service: test_processor, server: reporter_test, service: accept_one_message, parameters: { status: alive })\n"
     "wait(timeout: 10.0, mode: drain)\n"
     "disconnect()\n"
     "exit()\n"
@@ -257,8 +259,197 @@ constexpr char const * const g_program_receive_unwanted_message =
     "show_message()\n"
     "verify_message(command: REGISTER, required_parameters: { service: responder, version: 1 }, optional_parameters: { commands: \"READY,HELP,STOP\" }, forbidden_parameters: { forbidden })\n"
     "send_message(command: READY)\n"
+    //"wait(timeout: 10.0, mode: drain)\n"
+    "exit(timeout: 2.5)\n"
+;
+
+constexpr char const * const g_program_send_and_receive_complete_messages =
+    "run()\n"
+    "set_variable(name: got_register, value: 0)\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 12, mode: wait)\n" // first wait reacts on connect(), second wait receives the REGISTER message
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "has_message(command: REGISTER)\n"
+    "if(false: not_register)\n"
+    "set_variable(name: got_register, value: 1)\n"
+    "verify_message(command: REGISTER, required_parameters: { service: responder, version: 1 })\n"
+    "send_message(command: READY, sent_server: reporter_test_extension, sent_service: test_processor, server: reporter_test, service: accept_one_message, parameters: { status: alive })\n"
+    "sleep(seconds: 1)\n"
+    "send_message(command: HELP, sent_server: reporter_test_extension, sent_service: test_processor, server: reporter_test, service: accept_one_message)\n"
+    "goto(label: wait_message)\n"
+    "label(name: not_register)\n"
+    "has_message(command: COMMANDS)\n"
+    "if(false: not_commands)\n"
+    "verify_message(command: COMMANDS, sent_server: reporter_test, sent_service: commands_message, server: reporter_test_extension, service: test_processor, required_parameters: { list: \"HELP,READY,STOP\" })\n"
+    "if(variable: got_register, false: register_missing)\n"
+    "unset_variable(name: got_register)\n"
+    "send_message(command: STOP)\n"
     "wait(timeout: 10.0, mode: drain)\n"
     "exit(timeout: 2.5)\n"
+    "label(name: not_commands)\n"
+    "exit(error_message: \"expected message REGISTER or COMMANDS.\")\n"
+    "label(name: register_missing)\n"
+    "exit(error_message: \"message REGISTER not received before COMMANDS message.\")\n"
+;
+
+constexpr char const * const g_program_undefined_variable =
+    "has_type(name: undefined_variable, type: void)\n"
+    "if(unordered: it_worked)\n"
+    "exit(error_message: \"undefined variable not properly detected.\")\n"
+    "label(name: it_worked)\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_integer_variable =
+    "set_variable(name: my_int, value: 33)\n"
+    "has_type(name: my_int, type: string)\n"
+    "if(false: not_string)\n"
+    "exit(error_message: \"integer variable detected as a string.\")\n"
+    "label(name: not_string)\n"
+    "has_type(name: my_int, type: integer)\n"
+    "if(true: is_integer)\n"
+    "exit(error_message: \"integer variable not properly detected as such.\")\n"
+    "label(name: is_integer)\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_string_variable =
+    "set_variable(name: my_str, value: \"3.3\")\n"
+    "has_type(name: my_str, type: floating_point)\n"
+    "if(false: not_floating_point)\n"
+    "exit(error_message: \"string variable detected as a floating_point.\")\n"
+    "label(name: not_floating_point)\n"
+    "has_type(name: my_str, type: string)\n"
+    "if(true: is_string)\n"
+    "exit(error_message: \"string variable not properly detected as such.\")\n"
+    "label(name: is_string)\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_if_variable =
+    "if(variable: not_defined, unordered: not_defined_worked)\n"
+    "exit(error_message: \"if(variable: <undefined>) failed test.\")\n"
+    "label(name: not_defined_worked)\n"
+
+    // >, >=, !=, true, ordered
+    "set_variable(name: my_var, value: 5)\n"
+    "if(variable: my_var, greater: positive_greater_int_worked)\n"
+    "exit(error_message: \"if(variable: <positive integer> + greater) failed test.\")\n"
+    "label(name: positive_greater_int_worked)\n"
+    "if(variable: my_var, greater_or_equal: positive_greater_or_equal_int_worked)\n"
+    "exit(error_message: \"if(variable: <positive integer> + greater_or_equal) failed test.\")\n"
+    "label(name: positive_greater_or_equal_int_worked)\n"
+    "if(variable: my_var, not_equal: positive_not_equal_int_worked)\n"
+    "exit(error_message: \"if(variable: <positive integer> + not_equal) failed test.\")\n"
+    "label(name: positive_not_equal_int_worked)\n"
+    "if(variable: my_var, true: positive_true_int_worked)\n"
+    "exit(error_message: \"if(variable: <positive integer> + true) failed test.\")\n"
+    "label(name: positive_true_int_worked)\n"
+    "if(variable: my_var, ordered: positive_ordered_int_worked)\n"
+    "exit(error_message: \"if(variable: <positive integer> + ordered) failed test.\")\n"
+    "label(name: positive_ordered_int_worked)\n"
+
+    // <, <=, !=, true, ordered
+    "set_variable(name: my_var, value: -5)\n"
+    "if(variable: my_var, less: negative_less_int_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + less) failed test.\")\n"
+    "label(name: negative_less_int_worked)\n"
+    "if(variable: my_var, less_or_equal: negative_less_or_equal_int_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + less_or_equal) failed test.\")\n"
+    "label(name: negative_less_or_equal_int_worked)\n"
+    "if(variable: my_var, not_equal: negative_not_equal_int_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + not_equal) failed test.\")\n"
+    "label(name: negative_not_equal_int_worked)\n"
+    "if(variable: my_var, true: negative_true_int_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + true) failed test.\")\n"
+    "label(name: negative_true_int_worked)\n"
+    "if(variable: my_var, ordered: negative_ordered_int_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + ordered) failed test.\")\n"
+    "label(name: negative_ordered_int_worked)\n"
+
+    // ==, false, ordered
+    "set_variable(name: my_var, value: 0)\n"
+    "if(variable: my_var, equal: zero_equal_int_worked)\n"
+    "exit(error_message: \"if(variable: <zero integer> + equal) failed test.\")\n"
+    "label(name: zero_equal_int_worked)\n"
+    "if(variable: my_var, less_or_equal: zero_less_or_equal_int_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + less_or_equal) failed test.\")\n"
+    "label(name: zero_less_or_equal_int_worked)\n"
+    "if(variable: my_var, greater_or_equal: zero_greater_or_equal_int_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + greater_or_equal) failed test.\")\n"
+    "label(name: zero_greater_or_equal_int_worked)\n"
+    "if(variable: my_var, false: zero_false_int_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + false) failed test.\")\n"
+    "label(name: zero_false_int_worked)\n"
+    "if(variable: my_var, ordered: zero_ordered_int_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + ordered) failed test.\")\n"
+    "label(name: zero_ordered_int_worked)\n"
+
+    // >, >=, !=, true, ordered
+    "set_variable(name: my_var, value: 7.3)\n"
+    "if(variable: my_var, greater: positive_greater_flt_worked)\n"
+    "exit(error_message: \"if(variable: <positive floating point> + greater) failed test.\")\n"
+    "label(name: positive_greater_flt_worked)\n"
+    "if(variable: my_var, greater_or_equal: positive_greater_or_equal_flt_worked)\n"
+    "exit(error_message: \"if(variable: <positive floating point> + greater_or_equal) failed test.\")\n"
+    "label(name: positive_greater_or_equal_flt_worked)\n"
+    "if(variable: my_var, not_equal: positive_not_equal_flt_worked)\n"
+    "exit(error_message: \"if(variable: <positive floating point> + not_equal) failed test.\")\n"
+    "label(name: positive_not_equal_flt_worked)\n"
+    "if(variable: my_var, true: positive_true_flt_worked)\n"
+    "exit(error_message: \"if(variable: <positive floating point> + true) failed test.\")\n"
+    "label(name: positive_true_flt_worked)\n"
+    "if(variable: my_var, ordered: positive_ordered_flt_worked)\n"
+    "exit(error_message: \"if(variable: <positive floating point> + ordered) failed test.\")\n"
+    "label(name: positive_ordered_flt_worked)\n"
+
+    // <, <=, !=, true, ordered
+    "set_variable(name: my_var, value: -7.3)\n"
+    "if(variable: my_var, less: negative_less_flt_worked)\n"
+    "exit(error_message: \"if(variable: <negative floating point> + less) failed test.\")\n"
+    "label(name: negative_less_flt_worked)\n"
+    "if(variable: my_var, less_or_equal: negative_less_or_equal_flt_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + less_or_equal) failed test.\")\n"
+    "label(name: negative_less_or_equal_flt_worked)\n"
+    "if(variable: my_var, not_equal: negative_not_equal_flt_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + not_equal) failed test.\")\n"
+    "label(name: negative_not_equal_flt_worked)\n"
+    "if(variable: my_var, true: negative_true_flt_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + true) failed test.\")\n"
+    "label(name: negative_true_flt_worked)\n"
+    "if(variable: my_var, ordered: negative_ordered_flt_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + ordered) failed test.\")\n"
+    "label(name: negative_ordered_flt_worked)\n"
+
+    // ==, false, ordered
+    "set_variable(name: my_var, value: 0.0)\n"
+    "if(variable: my_var, equal: zero_equal_flt_worked)\n"
+    "exit(error_message: \"if(variable: <zero floating point> + equal) failed test.\")\n"
+    "label(name: zero_equal_flt_worked)\n"
+    "if(variable: my_var, less_or_equal: zero_less_or_equal_flt_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + less_or_equal) failed test.\")\n"
+    "label(name: zero_less_or_equal_flt_worked)\n"
+    "if(variable: my_var, greater_or_equal: zero_greater_or_equal_flt_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + greater_or_equal) failed test.\")\n"
+    "label(name: zero_greater_or_equal_flt_worked)\n"
+    "if(variable: my_var, false: zero_false_flt_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + false) failed test.\")\n"
+    "label(name: zero_false_flt_worked)\n"
+    "if(variable: my_var, ordered: zero_ordered_flt_worked)\n"
+    "exit(error_message: \"if(variable: <negative integer> + ordered) failed test.\")\n"
+    "label(name: zero_ordered_flt_worked)\n"
+
+    // unordered
+    "set_variable(name: my_var, value: NaN)\n"
+    "if(variable: my_var, unordered: unordered_flt_worked)\n"
+    "exit(error_message: \"if(variable: <unordered floating point>) failed test.\")\n"
+    "label(name: unordered_flt_worked)\n"
+
+    "exit()\n"
 ;
 
 constexpr char const * const g_program_error_message =
@@ -471,6 +662,197 @@ constexpr char const * const g_program_bad_exit_timeout =
     "exit(timeout: 'bad')\n"
 ;
 
+constexpr char const * const g_program_send_message_without_connection =
+    "send_message(command: WITHOUT_CONNECTION)\n"
+;
+
+constexpr char const * const g_program_if_invalid_type =
+    "set_variable(name: my_str, value: \"bad\")\n"
+    "if(variable: my_str, unordered: unused)\n"
+    "exit(error_message: \"if() did not fail.\")\n"
+    "label(name: unused)\n"
+    "exit(error_message: \"if() branched unexpectendly.\")\n"
+;
+
+constexpr char const * const g_program_wait_outside_thread =
+    "wait(timeout: 10)\n"
+;
+
+constexpr char const * const g_program_wait_invalid_mode =
+    "run()\n"
+    "wait(timeout: 10, mode: not_this_one)\n"
+;
+
+constexpr char const * const g_program_wait_no_connections =
+    "run()\n"
+    "wait(timeout: 10, mode: wait)\n"
+;
+
+constexpr char const * const g_program_verify_message_fail_sent_server =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "verify_message(command: REGISTER, sent_server: not_this_one)\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_verify_message_fail_sent_service =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "verify_message(command: REGISTER, sent_service: not_this_one)\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_verify_message_fail_server =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "verify_message(command: REGISTER, server: not_this_one)\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_verify_message_fail_service =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "verify_message(command: REGISTER, service: not_this_one)\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_verify_message_fail_command =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "verify_message(command: NOT_THIS_ONE)\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_verify_message_fail_forbidden =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "verify_message(command: REGISTER, forbidden_parameters: { version })\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_verify_message_fail_required =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "verify_message(command: REGISTER, required_parameters: { not_this_one: 123 })\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_verify_message_fail_required_int_value =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "verify_message(command: REGISTER, required_parameters: { version: 200 })\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_verify_message_fail_required_str_value =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "verify_message(command: REGISTER, required_parameters: { service: not_this_one })\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_verify_message_fail_required_flt_value =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "verify_message(command: REGISTER, required_parameters: { version: 1.0 })\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_last_wait =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 10.0, mode: wait)\n" // first wait reacts on connect(), second wait receives the REGISTER message
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "verify_message(command: REGISTER, required_parameters: { service: responder, version: 1 }, optional_parameters: { commands: \"READY,HELP,STOP\" }, forbidden_parameters: { forbidden })\n"
+    "send_message(command: READY, sent_server: reporter_test_extension, sent_service: test_processor, server: reporter_test, service: accept_one_message, parameters: { status: alive })\n"
+    "wait(timeout: 1.0, mode: drain)\n"
+    "wait(timeout: 1.0)\n"
+    "disconnect()\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_wait_for_nothing =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 10.0, mode: wait)\n" // first wait reacts on connect(), second wait receives the REGISTER message
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "verify_message(command: REGISTER, required_parameters: { service: responder, version: 1 }, optional_parameters: { commands: \"READY,HELP,STOP\" }, forbidden_parameters: { forbidden })\n"
+    "send_message(command: READY, sent_server: reporter_test_extension, sent_service: test_processor, server: reporter_test, service: accept_one_message, parameters: { status: alive })\n"
+    "wait(timeout: 1.0, mode: drain)\n"
+    "wait(timeout: 1.0)\n"
+    "wait(timeout: 1.0)\n" // one too many wait(), it will time out
+    "exit()\n"
+;
+
+
 
 struct expected_trace_t
 {
@@ -577,7 +959,7 @@ private:
 };
 
 
-class messenger_responder
+class messenger_responder // an equivalent to a client
     : public ed::tcp_client_permanent_message_connection
 {
 public:
@@ -587,6 +969,7 @@ public:
     {
         SEQUENCE_ONE_MESSAGE,
         SEQUENCE_UNWANTED_MESSAGE,
+        SEQUENCE_READY_HELP_MESSAGE,
     };
 
     messenger_responder(
@@ -614,9 +997,16 @@ public:
 
     void process_message(ed::message & msg)
     {
+        ++f_step;
+        std::cout
+            << "--- \"client\" message ("
+            << f_step
+            << "): "
+            << msg
+            << std::endl;
+
         bool disconnect_all(false);
 
-        ++f_step;
         if(f_step == 1)
         {
             if(msg.get_command() != "READY")
@@ -648,12 +1038,59 @@ public:
             }
             break;
 
+        case sequence_t::SEQUENCE_READY_HELP_MESSAGE:
+            switch(f_step)
+            {
+            case 1:
+                // done in this case
+                break;
+
+            case 2:
+                if(msg.get_command() != "HELP")
+                {
+                    throw std::runtime_error(
+                          "second message expected to be HELP, got "
+                        + msg.get_command()
+                        + " instead.");
+                }
+
+                {
+                    ed::message commands;
+                    commands.reply_to(msg);
+                    commands.set_sent_from_server("reporter_test");
+                    commands.set_sent_from_service("commands_message");
+                    commands.set_command("COMMANDS");
+                    commands.add_parameter("list", "HELP,READY,STOP");
+//std::cerr << "--- respond with COMMANDS\n";
+                    if(!send_message(commands, false))
+                    {
+                        throw std::runtime_error("could not send COMMANDS message");
+                    }
+                }
+                break;
+
+            case 3:
+                if(msg.get_command() != "STOP")
+                {
+                    throw std::runtime_error(
+                          "third message expected to be STOP, got "
+                        + msg.get_command()
+                        + " instead.");
+                }
+
+                disconnect_all = true;
+                break;
+
+            default:
+                throw std::runtime_error("reached step 4 of SEQUENCE_READY_HELP_MESSAGE?");
+
+            }
+            break;
+
         }
 
         if(disconnect_all)
         {
-            snapdev::NOT_USED(msg);
-//std::cerr << "got message! " << msg << "\n";
             remove_from_communicator();
 
             ed::connection::pointer_t timer_ptr(f_timer.lock());
@@ -1216,12 +1653,12 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
 
     CATCH_START_SECTION("receive one unwanted/unexpected message")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_accept_unwanted_message", g_program_receive_unwanted_message));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_receive_unwanted_message", g_program_receive_unwanted_message));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
 
-        CATCH_REQUIRE(s->get_statement_size() == 12);
+        CATCH_REQUIRE(s->get_statement_size() == 11);
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
@@ -1240,17 +1677,269 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
                 , ed::mode_t::MODE_PLAIN
                 , messenger_responder::sequence_t::SEQUENCE_UNWANTED_MESSAGE));
         ed::communicator::instance()->add_connection(messenger);
-        //messenger_timer::pointer_t timer(std::make_shared<messenger_timer>(messenger));
-        //ed::communicator::instance()->add_connection(timer);
-        //messenger->set_timer(timer);
+        e->set_thread_done_callback([messenger]()
+            {
+                ed::communicator::instance()->remove_connection(messenger);
+            });
+
+        e->run();
+
+        CATCH_REQUIRE(s->get_exit_code() == 1);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("send & receive complete messages")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_send_and_receive_complete_message", g_program_send_and_receive_complete_messages));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 30);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        messenger_responder::pointer_t messenger(std::make_shared<messenger_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , messenger_responder::sequence_t::SEQUENCE_READY_HELP_MESSAGE));
+        ed::communicator::instance()->add_connection(messenger);
+        messenger_timer::pointer_t timer(std::make_shared<messenger_timer>(messenger));
+        ed::communicator::instance()->add_connection(timer);
+        messenger->set_timer(timer);
 
         e->run();
 
         // if we exited because of our timer, then the test did not pass
         //
-        //CATCH_REQUIRE_FALSE(timer->timed_out_prima());
+        CATCH_REQUIRE_FALSE(timer->timed_out_prima());
 
-        CATCH_REQUIRE(s->get_exit_code() == 1);
+        CATCH_REQUIRE(s->get_exit_code() == 0);
+
+        // we unset that variable, make sure that worked
+        //
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var(s->get_variable("got_register"));
+        CATCH_REQUIRE(var == nullptr);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("verify last wait (disconnect -> HUP)")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_verify_last_wait", g_program_last_wait));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        messenger_responder::pointer_t messenger(std::make_shared<messenger_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , messenger_responder::sequence_t::SEQUENCE_ONE_MESSAGE));
+        ed::communicator::instance()->add_connection(messenger);
+        messenger_timer::pointer_t timer(std::make_shared<messenger_timer>(messenger));
+        ed::communicator::instance()->add_connection(timer);
+        messenger->set_timer(timer);
+        e->set_thread_done_callback([messenger, timer]()
+            {
+                ed::communicator::instance()->remove_connection(messenger);
+                ed::communicator::instance()->remove_connection(timer);
+            });
+        e->run();
+        e->stop();
+
+        // if we exited because of our timer, then the test did not pass
+        //
+        CATCH_REQUIRE_FALSE(timer->timed_out_prima());
+
+        CATCH_REQUIRE(s->get_exit_code() == 0);
+    }
+    CATCH_END_SECTION()
+}
+
+
+CATCH_TEST_CASE("reporter_executor_variables", "[executor][reporter][variable]")
+{
+    CATCH_START_SECTION("undefined variable")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_undefined_variable", g_program_undefined_variable));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 5);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        e->run();
+
+        CATCH_REQUIRE(s->get_exit_code() == 0);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("detect integer variable")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_integer_variable", g_program_integer_variable));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 10);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        e->run();
+
+        CATCH_REQUIRE(s->get_exit_code() == 0);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("detect string variable")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_string_variable", g_program_string_variable));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 10);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        e->run();
+
+        CATCH_REQUIRE(s->get_exit_code() == 0);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("if variable")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_if_variable", g_program_if_variable));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 104);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        e->run();
+
+        CATCH_REQUIRE(s->get_exit_code() == 0);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("void variable cloning")
+    {
+        // Note: at the moment there is no call to the clone() function
+        //       inside the library, so make sure it works as expected
+        //       within the test
+        //
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::variable_void>("void_var"));
+        CATCH_REQUIRE(var != nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable_void::pointer_t v(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_void>(var));
+        CATCH_REQUIRE(v != nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t clone(v->clone("clone"));
+        CATCH_REQUIRE(clone != nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable_void::pointer_t c(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_void>(clone));
+        CATCH_REQUIRE(c != nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t clone2(var->clone("clone2"));
+        CATCH_REQUIRE(clone2 != nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable_void::pointer_t c2(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_void>(clone2));
+        CATCH_REQUIRE(c2 != nullptr);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("list variable")
+    {
+        // Note: some of the list variable functions are not fully tested
+        //       from within the app. so test more here
+        //
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t list(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::variable_list>("list_var"));
+        CATCH_REQUIRE(list != nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable_list::pointer_t l(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_list>(list));
+        CATCH_REQUIRE(l != nullptr);
+
+        CATCH_REQUIRE(l->get_item_size() == 0);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var1(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::variable_void>("void_var"));
+        CATCH_REQUIRE(var1 != nullptr);
+        l->add_item(var1);
+        CATCH_REQUIRE(l->get_item(0) == var1);
+        CATCH_REQUIRE(l->get_item(-1) == nullptr);
+        CATCH_REQUIRE(l->get_item(1) == nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var2(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>("integer_var"));
+        CATCH_REQUIRE(var2 != nullptr);
+        l->add_item(var2);
+        CATCH_REQUIRE(l->get_item(0) == var2);      // this is a map so the order is sorted by variable name
+        CATCH_REQUIRE(l->get_item(-1) == nullptr);
+        CATCH_REQUIRE(l->get_item(1) == var1);
+        CATCH_REQUIRE(l->get_item(2) == nullptr);
+        CATCH_REQUIRE(l->get_item("void_var") == var1);
+        CATCH_REQUIRE(l->get_item("integer_var") == var2);
+        CATCH_REQUIRE(l->get_item("undefined_var") == nullptr);
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              l->add_item(var1)
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage("variable_list::add_item() trying to re-add item named \"void_var\"."));
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              l->add_item(var2)
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage("variable_list::add_item() trying to re-add item named \"integer_var\"."));
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t clone(list->clone("clone"));
+        CATCH_REQUIRE(clone != nullptr);
+        SNAP_CATCH2_NAMESPACE::reporter::variable_list::pointer_t l2(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_list>(clone));
+        CATCH_REQUIRE(l2 != nullptr);
+
+        CATCH_REQUIRE(l2->get_item(-1) == nullptr);
+        CATCH_REQUIRE(l2->get_item(2) == nullptr);
+
+        // the items are also cloned so we can quickly test that they are not
+        // equal and then we can verify the type or the name
+        //
+        CATCH_REQUIRE(l2->get_item(0) != var1);
+        CATCH_REQUIRE(l2->get_item(1) != var1);
+        CATCH_REQUIRE(l2->get_item(0) != var2);
+        CATCH_REQUIRE(l2->get_item(1) != var2);
+
+        CATCH_REQUIRE(l2->get_item(0)->get_type() == "integer");
+        CATCH_REQUIRE(l2->get_item(1)->get_type() == "void");
+
+        // make sure original is still valid
+        //
+        CATCH_REQUIRE(l->get_item(0) == var2);
+        CATCH_REQUIRE(l->get_item(-1) == nullptr);
+        CATCH_REQUIRE(l->get_item(1) == var1);
+        CATCH_REQUIRE(l->get_item(2) == nullptr);
     }
     CATCH_END_SECTION()
 }
@@ -1658,7 +2347,290 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
                       "parameter type mismatch for timeout, expected \"number\", got \"string\" instead."));
     }
     CATCH_END_SECTION()
+
+    CATCH_START_SECTION("send_message() when not connected")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("bad_send_message.vpr", g_program_send_message_without_connection));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 1);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->start()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "send_message() has no connection to send a message to."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("if(variable) with invalid type")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("if_invalid_type.vpr", g_program_if_invalid_type));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 5);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->start()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "if(variable: ...) only supports variables of type integer or floating point."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("wait() before starting thread")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("wait_outside_thread.vpr", g_program_wait_outside_thread));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 1);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->start()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "wait() used before run()."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("wait() with invalid mode")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_wait_invalid_mode", g_program_wait_invalid_mode));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 2);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        messenger_responder::pointer_t messenger(std::make_shared<messenger_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , messenger_responder::sequence_t::SEQUENCE_ONE_MESSAGE));
+        ed::communicator::instance()->add_connection(messenger);
+        messenger_timer::pointer_t timer(std::make_shared<messenger_timer>(messenger));
+        ed::communicator::instance()->add_connection(timer);
+        messenger->set_timer(timer);
+        e->set_thread_done_callback([messenger, timer]()
+            {
+                ed::communicator::instance()->remove_connection(messenger);
+                ed::communicator::instance()->remove_connection(timer);
+            });
+
+        e->run();
+
+        // the thread exception happens when e->stop() is called
+        //
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->stop()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage("unknown mode \"not_this_one\" in wait()."));
+
+        // if we exited because of our timer, then the test did not pass
+        //
+        CATCH_REQUIRE_FALSE(timer->timed_out_prima());
+
+        CATCH_REQUIRE(s->get_exit_code() == -1);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("wait() + drain without connections")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_wait_no_connection", g_program_wait_no_connections));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 2);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        e->run();
+
+        // the thread exception happens when e->stop() is called
+        //
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->stop()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage("no connections to wait() on."));
+
+        CATCH_REQUIRE(s->get_exit_code() == -1);
+    }
+    CATCH_END_SECTION()
 }
+
+
+CATCH_TEST_CASE("reporter_executor_error_message", "[executor][reporter][error]")
+{
+    CATCH_START_SECTION("verify message fails")
+    {
+        struct bad_verification_t
+        {
+            char const * const  f_program = nullptr;
+            char const * const  f_error = nullptr;
+        };
+        bad_verification_t const bad_verifications[] =
+        {
+            {
+                g_program_verify_message_fail_sent_server,
+                "message expected sent from server name \"not_this_one\" did not match \"\".",
+            },
+            {
+                g_program_verify_message_fail_sent_service,
+                "message expected sent from service name \"not_this_one\" did not match \"\".",
+            },
+            {
+                g_program_verify_message_fail_server,
+                "message expected server name \"not_this_one\" did not match \"\".",
+            },
+            {
+                g_program_verify_message_fail_service,
+                "message expected service name \"not_this_one\" did not match \"\".",
+            },
+            {
+                g_program_verify_message_fail_command,
+                "message expected command \"NOT_THIS_ONE\" did not match \"REGISTER\".",
+            },
+            {
+                g_program_verify_message_fail_forbidden,
+                "message forbidden parameter \"version\" was found in this message.",
+            },
+            {
+                g_program_verify_message_fail_required,
+                "message required parameter \"not_this_one\" was not found in this message.",
+            },
+            {
+                g_program_verify_message_fail_required_int_value,
+                "message expected parameter \"version\" to be an integer set to \"200\" but found \"1\" instead.",
+            },
+            {
+                g_program_verify_message_fail_required_str_value,
+                "message expected parameter \"service\" to be a string set to \"not_this_one\" but found \"responder\" instead.",
+            },
+            {
+                g_program_verify_message_fail_required_flt_value,
+                "message parameter type \"floating_point\" not supported yet.",
+            },
+        };
+        for(auto const & bv : bad_verifications)
+        {
+            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_verify_message_fail", bv.f_program));
+            SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+            SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+            p->parse_program();
+
+            SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+            e->start();
+            addr::addr a;
+            sockaddr_in ip = {
+                .sin_family = AF_INET,
+                .sin_port = htons(20002),
+                .sin_addr = {
+                    .s_addr = htonl(0x7f000001),
+                },
+                .sin_zero = {},
+            };
+            a.set_ipv4(ip);
+            messenger_responder::pointer_t messenger(std::make_shared<messenger_responder>(
+                      a
+                    , ed::mode_t::MODE_PLAIN
+                    , messenger_responder::sequence_t::SEQUENCE_ONE_MESSAGE));
+            ed::communicator::instance()->add_connection(messenger);
+            messenger_timer::pointer_t timer(std::make_shared<messenger_timer>(messenger));
+            ed::communicator::instance()->add_connection(timer);
+            messenger->set_timer(timer);
+            e->set_thread_done_callback([messenger, timer]()
+                {
+                    ed::communicator::instance()->remove_connection(messenger);
+                    ed::communicator::instance()->remove_connection(timer);
+                });
+
+            e->run();
+
+            // the thread exception happens when e->stop() is called
+            //
+            CATCH_REQUIRE_THROWS_MATCHES(
+                  e->stop()
+                , std::runtime_error
+                , Catch::Matchers::ExceptionMessage(bv.f_error));
+
+            // if we exited because of our timer, then the test did not pass
+            //
+            CATCH_REQUIRE_FALSE(timer->timed_out_prima());
+
+            CATCH_REQUIRE(s->get_exit_code() == -1);
+        }
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("wait for nothing (should time out)")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_wait_for_nothing", g_program_wait_for_nothing));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        messenger_responder::pointer_t messenger(std::make_shared<messenger_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , messenger_responder::sequence_t::SEQUENCE_ONE_MESSAGE));
+        ed::communicator::instance()->add_connection(messenger);
+        messenger_timer::pointer_t timer(std::make_shared<messenger_timer>(messenger));
+        ed::communicator::instance()->add_connection(timer);
+        messenger->set_timer(timer);
+        e->set_thread_done_callback([messenger, timer]()
+            {
+                ed::communicator::instance()->remove_connection(messenger);
+                ed::communicator::instance()->remove_connection(timer);
+            });
+        e->run();
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->stop()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage("ppoll() timed out."));
+
+        // if we exited because of our timer, then the test did not pass
+        //
+        CATCH_REQUIRE_FALSE(timer->timed_out_prima());
+
+        CATCH_REQUIRE(s->get_exit_code() == -1);
+    }
+    CATCH_END_SECTION()
+}
+
 
 
 // vim: ts=4 sw=4 et

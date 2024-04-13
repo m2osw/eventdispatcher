@@ -752,8 +752,7 @@ bool message::from_json(std::string const & msg)
  * \sa to_binary()
  * \sa get_sent_from_server()
  * \sa get_sent_from_service()
- * \sa set_reply_to_server()
- * \sa set_reply_to_service()
+ * \sa reply_to()
  */
 std::string message::to_message(format_t format) const
 {
@@ -798,8 +797,7 @@ std::string message::to_message(format_t format) const
  *
  * \sa get_sent_from_server()
  * \sa get_sent_from_service()
- * \sa set_reply_to_server()
- * \sa set_reply_to_service()
+ * \sa reply_to()
  */
 std::string message::to_string() const
 {
@@ -925,8 +923,7 @@ std::string message::to_string() const
  *
  * \sa get_sent_from_server()
  * \sa get_sent_from_service()
- * \sa set_reply_to_server()
- * \sa set_reply_to_service()
+ * \sa reply_to()
  */
 std::string message::to_json() const
 {

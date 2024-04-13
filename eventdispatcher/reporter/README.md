@@ -68,6 +68,7 @@ the next newline.
 * `exit()`
 * `goto()`
 * `has_message()`
+* `has_type()`
 * `message_has_parameter()`
 * `message_has_parameter_with_value()`
 * `if()`
@@ -80,6 +81,7 @@ the next newline.
 * `set_variable()`
 * `show_message()`
 * `sleep()`
+* `unset_variable()`
 * `verify_message()`
 * `wait()`
 
@@ -102,7 +104,15 @@ On a condition, go to the corresponding label.
 The `if()` uses the result of the last `compare_...()`, `<object>_has_...()`
 and other similar instructions to decide where to go.
 
-    if(<operator>: <label-name>)
+    if(variable: <name>, <operator>: <label-name>)
+
+The `variable` parameter is optional. It can be used to test using the value
+of an integer variable as the input instead of the last compare value. If
+the variable is undefined, then the operator `unordered` will be a match.
+If the variable is not an integer, the script fails. If it is an integer,
+0 is transformed in `equal`, negative numbers in `less` and positive
+numbers in `greater`. Note: to test whether a variable is defined, use
+the `has_type()` instruction and then `if([un]ordered: ...)`.
 
 The `<operator>` is one of:
 
@@ -112,7 +122,8 @@ The `<operator>` is one of:
 * `greater_or_equal` -- go to `<label-name>` if greater (compare result is 0 or 1)
 * `equal` or `false` -- go to `<label-name>` if equal (compare result is 0)
 * `not_equal` or `true` -- go to `<label-name>` if not equal (compare result is not 0)
-* `unordered` -- go to `<label-name>` if unordered (compare result is 2)
+* `ordered` -- go to `<label-name>` if ordered (compare result is not -2)
+* `unordered` -- go to `<label-name>` if unordered (compare result is -2)
 
 multiple `<operator>` can be used within a single `if()`. They each must be
 distinct and not overlapped (i.e. `less` and `equal` can be used together,
@@ -122,6 +133,33 @@ distinct and not overlapped (i.e. `less` and `equal` can be used together,
 The `false` and `true` labels can be used for functions such as the
 `has_message()` function. This makes it easier to read than using the
 corresponding `equal` or `not_equal` labels.
+
+If the compare value is still undefined and not variable name was specified,
+then the function fails.
+
+## Has Type
+
+Check the type of a variable and set the compare value to `unordered`,
+`true`, or `false`.
+
+    has_type(name: <variable-name>, type: <type-name>)
+
+`<type-name>` is expected to be an identifier. The currently supported
+types are:
+
+* `address`
+* `floating_point`
+* `integer`
+* `list`
+* `string`
+* `timestamp`
+* `void`
+
+You can use this instruction to determine whether a variable is set or
+not like so:
+
+    has_type(name: <variable-name>, type: void)
+    if(unordered: variable_is_not_set, ordered: variable_is_defined)
 
 ## Sleep
 
@@ -215,6 +253,13 @@ modes:
       exit(error_message: "<the error description>")
 
   This makes the process exit immediately.
+
+  This instruction can be used as a _not reached_ statement. For example,
+  if you have an `if()` which is expected to always branch, you can place
+  an `exit()` with an error message just after it:
+
+      if(ordered: go_here, unordered: go_there)
+      exit(error_message: "logic error: statement should not be reached")
 
 * Timeout
 
@@ -335,7 +380,7 @@ Here is an example showing how one can use the `has_message()` instruction:
     if(false: other_message)
     verify_message(command: REGISTER, ...)
     send_message(command: READY)
-    goto(wait_message)
+    goto(label: wait_message)
     label(name: other_message)
     ...
 
