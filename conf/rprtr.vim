@@ -56,7 +56,7 @@ syn match	rprtrOperator		"%"
 syn case match
 
 " Internal Instructions
-syn keyword	rprtrKeyword		label goto
+syn keyword	rprtrKeyword		label goto return call
 
 " Constants
 syn match	rprtrConstant		"\<0[xX][0-9A-F]\+n\?\>"

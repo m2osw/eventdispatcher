@@ -62,15 +62,6 @@ namespace
 
 
 
-// `call()` -- DONE
-// `exit()` -- PARTIAL
-// `goto()` -- DONE
-// `if()` -- DONE
-// `label()` -- DONE
-// `return()` -- DONE
-// `run()` -- DONE
-// `sleep()` -- DONE
-
 constexpr char const * const g_program_sleep_func =
     "call(label: func_sleep_1s)\n"
     "exit(timeout: 1)\n"
@@ -232,6 +223,11 @@ constexpr char const * const g_program_verify_computation_string_repeat =
     "set_variable(name: t04, value: \"one\" * 1)\n"
 ;
 
+constexpr char const * const g_program_verify_variable_in_string =
+    "set_variable(name: foo, value: 'abc')\n"
+    "set_variable(name: bar, value: \"[${foo}]\")\n"
+;
+
 constexpr char const * const g_program_accept_one_message =
     "run()\n"
     "listen(address: <127.0.0.1:20002>)\n"
@@ -261,39 +257,6 @@ constexpr char const * const g_program_receive_unwanted_message =
     "send_message(command: READY)\n"
     //"wait(timeout: 10.0, mode: drain)\n"
     "exit(timeout: 2.5)\n"
-;
-
-constexpr char const * const g_program_send_and_receive_complete_messages =
-    "run()\n"
-    "set_variable(name: got_register, value: 0)\n"
-    "listen(address: <127.0.0.1:20002>)\n"
-    "label(name: wait_message)\n"
-    "clear_message()\n"
-    "wait(timeout: 12, mode: wait)\n" // first wait reacts on connect(), second wait receives the REGISTER message
-    "has_message()\n"
-    "if(false: wait_message)\n"
-    "show_message()\n"
-    "has_message(command: REGISTER)\n"
-    "if(false: not_register)\n"
-    "set_variable(name: got_register, value: 1)\n"
-    "verify_message(command: REGISTER, required_parameters: { service: responder, version: 1 })\n"
-    "send_message(command: READY, sent_server: reporter_test_extension, sent_service: test_processor, server: reporter_test, service: accept_one_message, parameters: { status: alive })\n"
-    "sleep(seconds: 1)\n"
-    "send_message(command: HELP, sent_server: reporter_test_extension, sent_service: test_processor, server: reporter_test, service: accept_one_message)\n"
-    "goto(label: wait_message)\n"
-    "label(name: not_register)\n"
-    "has_message(command: COMMANDS)\n"
-    "if(false: not_commands)\n"
-    "verify_message(command: COMMANDS, sent_server: reporter_test, sent_service: commands_message, server: reporter_test_extension, service: test_processor, required_parameters: { list: \"HELP,READY,STOP\" })\n"
-    "if(variable: got_register, false: register_missing)\n"
-    "unset_variable(name: got_register)\n"
-    "send_message(command: STOP)\n"
-    "wait(timeout: 10.0, mode: drain)\n"
-    "exit(timeout: 2.5)\n"
-    "label(name: not_commands)\n"
-    "exit(error_message: \"expected message REGISTER or COMMANDS.\")\n"
-    "label(name: register_missing)\n"
-    "exit(error_message: \"message REGISTER not received before COMMANDS message.\")\n"
 ;
 
 constexpr char const * const g_program_undefined_variable =
@@ -1159,7 +1122,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 {
     CATCH_START_SECTION("verify sleep in a function")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_sleep_func", g_program_sleep_func));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_sleep_func.rprtr", g_program_sleep_func));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1180,7 +1143,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
     {
         trace tracer(g_verify_starting_thread);
 
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_start_thread", g_program_start_thread));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_start_thread.rprtr", g_program_start_thread));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
 
         // use std::bind() to avoid copies of the tracer object
@@ -1219,7 +1182,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 
     CATCH_START_SECTION("verify computation (integers)")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("verify_computation_integer", g_program_verify_computation_integer));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("verify_computation_integer.rprtr", g_program_verify_computation_integer));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1326,7 +1289,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 
     CATCH_START_SECTION("verify computation (floating points)")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("verify_computation_floating_point", g_program_verify_computation_floating_point));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("verify_computation_floating_point.rprtr", g_program_verify_computation_floating_point));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1425,7 +1388,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 
     CATCH_START_SECTION("verify computation (timestamp)")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("verify_computation_timestamp", g_program_verify_computation_timestamp));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("verify_computation_timestamp.rprtr", g_program_verify_computation_timestamp));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1471,7 +1434,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 
     CATCH_START_SECTION("verify computation (address)")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("verify_computation_address", g_program_verify_computation_address));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("verify_computation_address.rprtr", g_program_verify_computation_address));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1521,7 +1484,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 
     CATCH_START_SECTION("verify computation (concatenation)")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("verify_computation_concatenation", g_program_verify_computation_concatenation));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("verify_computation_concatenation.rprtr", g_program_verify_computation_concatenation));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1569,7 +1532,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 
     CATCH_START_SECTION("verify computation (string repeat)")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("verify_computation_string_repeat", g_program_verify_computation_string_repeat));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("verify_computation_string_repeat.rprtr", g_program_verify_computation_string_repeat));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1606,6 +1569,45 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
         }
     }
     CATCH_END_SECTION()
+
+
+    CATCH_START_SECTION("verify computation (string repeat)")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("verify_variable_in_string.rprtr", g_program_verify_variable_in_string));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 2);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        e->run();
+
+        struct verify_t
+        {
+            char const *            f_name = nullptr;
+            char const *            f_value = nullptr;
+        };
+
+        verify_t verify[] =
+        {
+            { "foo", "abc" },
+            { "bar", "[abc]" },
+        };
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var;
+        for(auto const & v : verify)
+        {
+//std::cerr << "--- testing \"" << v.f_name << "\".\n";
+            var = s->get_variable(v.f_name);
+            CATCH_REQUIRE(var != nullptr);
+            CATCH_REQUIRE(var->get_name() == v.f_name);
+            CATCH_REQUIRE(var->get_type() == "string");
+            CATCH_REQUIRE(std::static_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var)->get_string() == v.f_value);
+        }
+    }
+    CATCH_END_SECTION()
 }
 
 
@@ -1613,7 +1615,7 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
 {
     CATCH_START_SECTION("send/receive one message")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_accept_one_message", g_program_accept_one_message));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_accept_one_message.rprtr", g_program_accept_one_message));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1653,7 +1655,7 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
 
     CATCH_START_SECTION("receive one unwanted/unexpected message")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_receive_unwanted_message", g_program_receive_unwanted_message));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_receive_unwanted_message.rprtr", g_program_receive_unwanted_message));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1690,7 +1692,12 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
 
     CATCH_START_SECTION("send & receive complete messages")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_send_and_receive_complete_message", g_program_send_and_receive_complete_messages));
+        // in this case, load the program from a file
+        // to verify that this works as expected
+        //
+        std::string const source_dir(SNAP_CATCH2_NAMESPACE::g_source_dir());
+        std::string const filename(source_dir + "/tests/rprtr/send_and_receive_complete_messages");
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(SNAP_CATCH2_NAMESPACE::reporter::create_lexer(filename));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1735,7 +1742,7 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
 
     CATCH_START_SECTION("verify last wait (disconnect -> HUP)")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_verify_last_wait", g_program_last_wait));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_verify_last_wait.rprtr", g_program_last_wait));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1782,7 +1789,7 @@ CATCH_TEST_CASE("reporter_executor_variables", "[executor][reporter][variable]")
 {
     CATCH_START_SECTION("undefined variable")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_undefined_variable", g_program_undefined_variable));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_undefined_variable.rprtr", g_program_undefined_variable));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1799,7 +1806,7 @@ CATCH_TEST_CASE("reporter_executor_variables", "[executor][reporter][variable]")
 
     CATCH_START_SECTION("detect integer variable")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_integer_variable", g_program_integer_variable));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_integer_variable.rprtr", g_program_integer_variable));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1816,7 +1823,7 @@ CATCH_TEST_CASE("reporter_executor_variables", "[executor][reporter][variable]")
 
     CATCH_START_SECTION("detect string variable")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_string_variable", g_program_string_variable));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_string_variable.rprtr", g_program_string_variable));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1833,7 +1840,7 @@ CATCH_TEST_CASE("reporter_executor_variables", "[executor][reporter][variable]")
 
     CATCH_START_SECTION("if variable")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_if_variable", g_program_if_variable));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_if_variable.rprtr", g_program_if_variable));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1949,7 +1956,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 {
     CATCH_START_SECTION("if() before any condition")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("if_too_soon", g_program_no_condition));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("if_too_soon.rprtr.rprtr", g_program_no_condition));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1973,7 +1980,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("exit() + error message")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("exit_error_message", g_program_error_message));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("exit_error_message.rprtr.rprtr", g_program_error_message));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1989,7 +1996,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("listen() + listen()")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("two_listen", g_program_two_listen));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("two_listen.rprtr.rprtr", g_program_two_listen));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -2007,7 +2014,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("label(name: ...) does not accept integers")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("label_bad_type", g_program_label_bad_type));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("label_bad_type.rprtr.rprtr", g_program_label_bad_type));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
 
@@ -2024,7 +2031,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("exit(error_message: ...) does not accept floating points")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("exit_bad_type", g_program_exit_bad_type));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("exit_bad_type.rprtr", g_program_exit_bad_type));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -2042,7 +2049,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("verify starting the thread twice")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_start_thread_twice", g_program_start_thread_twice));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_start_thread_twice.rprtr", g_program_start_thread_twice));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -2094,7 +2101,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
         for(auto const & program : bad_additions)
         {
-            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("<type> + <type> that is not valid", program));
+            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_additions.rprtr", program));
             SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
             SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
             p->parse_program();
@@ -2126,7 +2133,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
         for(auto const & program : bad_subtractions)
         {
 //std::cerr << "testing [" << program << "]\n";
-            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("<type> - <type> that is not valid", program));
+            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_subtractions.rprtr", program));
             SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
             SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
             p->parse_program();
@@ -2161,7 +2168,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
         for(auto const & program : bad_multiplications)
         {
 //std::cerr << "testing [" << program << "]\n";
-            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("<type> * <type> that is not valid", program));
+            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_multiplications.rprtr", program));
             SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
             SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
             p->parse_program();
@@ -2196,7 +2203,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
         for(auto const & program : bad_divisions)
         {
 //std::cerr << "testing [" << program << "]\n";
-            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("<type> / <type> that is not valid", program));
+            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_divisions.rprtr", program));
             SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
             SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
             p->parse_program();
@@ -2215,7 +2222,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("<type> % <type> that are not valid")
     {
-        constexpr char const * const bad_divisions[] =
+        constexpr char const * const bad_modulos[] =
         {
             g_program_unsupported_modulo_address_address,
             g_program_unsupported_modulo_address_string,
@@ -2228,10 +2235,10 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
             g_program_unsupported_modulo_identifier_identifier,
         };
 
-        for(auto const & program : bad_divisions)
+        for(auto const & program : bad_modulos)
         {
 //std::cerr << "testing [" << program << "]\n";
-            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("<type> % <type> that is not valid", program));
+            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_modulos.rprtr", program));
             SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
             SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
             p->parse_program();
@@ -2259,7 +2266,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
         for(auto const & program : bad_negations)
         {
-            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("-<type> is not valid", program));
+            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_negate.rprtr", program));
             SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
             SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
             p->parse_program();
@@ -2278,7 +2285,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("<string> * <negative> is not valid")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("<string> * <negative> is not valid", g_program_unsupported_negation_repeat));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_string_multiplication_negative.rprtr", g_program_unsupported_negation_repeat));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -2296,7 +2303,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("<string> * <large repeat> is not valid")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("<string> * <large repeat> is not valid", g_program_unsupported_large_repeat));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_string_multiplication_large.rprtr", g_program_unsupported_large_repeat));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -2314,7 +2321,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("exit() with timeout & error_message is invalid")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("bad_exit.vpr", g_program_bad_exit));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("bad_exit.rprtr", g_program_bad_exit));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -2332,7 +2339,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("exit() with timeout which is not a number")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("bad_exit.vpr", g_program_bad_exit_timeout));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("bad_exit.rprtr", g_program_bad_exit_timeout));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -2350,7 +2357,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("send_message() when not connected")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("bad_send_message.vpr", g_program_send_message_without_connection));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("bad_send_message.rprtr", g_program_send_message_without_connection));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -2368,7 +2375,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("if(variable) with invalid type")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("if_invalid_type.vpr", g_program_if_invalid_type));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("if_invalid_type.rprtr", g_program_if_invalid_type));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -2386,7 +2393,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("wait() before starting thread")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("wait_outside_thread.vpr", g_program_wait_outside_thread));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("wait_outside_thread.rprtr", g_program_wait_outside_thread));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -2404,7 +2411,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("wait() with invalid mode")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_wait_invalid_mode", g_program_wait_invalid_mode));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_wait_invalid_mode.rprtr", g_program_wait_invalid_mode));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -2456,7 +2463,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("wait() + drain without connections")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_wait_no_connection", g_program_wait_no_connections));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_wait_no_connection.rprtr", g_program_wait_no_connections));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -2475,6 +2482,15 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
             , Catch::Matchers::ExceptionMessage("no connections to wait() on."));
 
         CATCH_REQUIRE(s->get_exit_code() == -1);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("try reading missing file")
+    {
+        std::string const source_dir(SNAP_CATCH2_NAMESPACE::g_source_dir());
+        std::string const filename(source_dir + "/tests/rprtr/not_this_one");
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(SNAP_CATCH2_NAMESPACE::reporter::create_lexer(filename));
+        CATCH_REQUIRE(l == nullptr);
     }
     CATCH_END_SECTION()
 }
@@ -2534,7 +2550,7 @@ CATCH_TEST_CASE("reporter_executor_error_message", "[executor][reporter][error]"
         };
         for(auto const & bv : bad_verifications)
         {
-            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_verify_message_fail", bv.f_program));
+            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_verify_message_fail.rprtr", bv.f_program));
             SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
             SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
             p->parse_program();
@@ -2585,7 +2601,7 @@ CATCH_TEST_CASE("reporter_executor_error_message", "[executor][reporter][error]"
 
     CATCH_START_SECTION("wait for nothing (should time out)")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_wait_for_nothing", g_program_wait_for_nothing));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_wait_for_nothing.rprtr", g_program_wait_for_nothing));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();

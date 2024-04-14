@@ -24,6 +24,7 @@
 // snapdev
 //
 #include    <snapdev/not_reached.h>
+#include    <snapdev/file_contents.h>
 #include    <snapdev/timespec_ex.h>
 
 
@@ -538,6 +539,40 @@ void lexer::ungetc(char32_t c)
 
     f_unget[f_unget_pos] = c;
     ++f_unget_pos;
+}
+
+
+/** \brief Create a lexer object from a file.
+ *
+ * This function tries to open the specified \p filename as is and with
+ * an additional suffix, .rprtr. If either file exists, it gets loaded
+ * in memory and passed to a lexer object as the program input. Then
+ * the lexer pointer is returned.
+ *
+ * If no file can be loaded, then the function returns a null pointer.
+ *
+ * \param[in] filename  The name of the file to load.
+ *
+ * \return A lexer object or nullptr if no program could be loaded.
+ */
+lexer::pointer_t create_lexer(std::string const & filename)
+{
+    std::shared_ptr<snapdev::file_contents> input(std::make_shared<snapdev::file_contents>(filename));
+    if(!input->exists())
+    {
+        input = std::make_shared<snapdev::file_contents>(filename + ".rprtr");
+        if(!input->exists())
+        {
+            return lexer::pointer_t();
+        }
+    }
+
+    if(!input->read_all())
+    {
+        return lexer::pointer_t(); // LCOV_EXCL_LINE
+    }
+
+    return std::make_shared<lexer>(filename, input->contents());
 }
 
 

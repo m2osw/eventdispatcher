@@ -1,0 +1,62 @@
+// This test is written in a separate file to verify that this works as
+// expected; the creation of the lexer allows for an automatic load of
+// an .rprtr file
+
+set_variable(name: got_register, value: 0)
+run()
+listen(address: <127.0.0.1:20002>)
+
+// loop waiting for a message
+//
+label(name: wait_message)
+clear_message()
+wait(timeout: 12, mode: wait) // first wait reacts on connect(), second wait receives the REGISTER message
+has_message()
+if(false: wait_message)
+
+show_message()
+
+// handle the REGISTER message
+//
+has_message(command: REGISTER)
+if(false: not_register)
+set_variable(name: got_register, value: 1)
+verify_message(command: REGISTER,
+	required_parameters: { service: responder, version: 1 })
+send_message(command: READY,
+	sent_server: reporter_test_extension, sent_service: test_processor,
+	server: reporter_test, service: accept_one_message,
+	parameters: { status: alive })
+sleep(seconds: 1)
+send_message(command: HELP,
+	sent_server: reporter_test_extension, sent_service: test_processor,
+	server: reporter_test, service: accept_one_message)
+goto(label: wait_message)
+
+// handle the COMMANDS message
+//
+label(name: not_register)
+has_message(command: COMMANDS)
+if(false: not_commands)
+verify_message(command: COMMANDS,
+	sent_server: reporter_test, sent_service: commands_message,
+	server: reporter_test_extension, service: test_processor,
+	required_parameters: { list: "HELP,READY,STOP" })
+if(variable: got_register, false: register_missing)
+unset_variable(name: got_register)
+send_message(command: STOP)
+wait(timeout: 10.0, mode: drain)
+exit(timeout: 2.5)
+
+// error in case we don't recognize the message command
+// (should not happen)
+//
+label(name: not_commands)
+exit(error_message: "expected message REGISTER or COMMANDS.")
+
+// error in case we received the COMMANDS message but never received the
+// REGISTER message (should not happen)
+//
+label(name: register_missing)
+exit(error_message: "message REGISTER not received before COMMANDS message.")
+

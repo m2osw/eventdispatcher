@@ -72,6 +72,9 @@ private:
 };
 
 
+lexer::pointer_t create_lexer(std::string const & filename);
+
+
 
 } // namespace reporter
 } // namespace SNAP_CATCH2_NAMESPACE
