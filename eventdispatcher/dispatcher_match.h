@@ -226,6 +226,10 @@ dispatcher_match define_match(ARGS ...args)
 
     if(match.f_callback == nullptr)
     {
+        // this one cannot happen because the f_callback above requires an
+        // argument or the compiler fails; still the pointer could be set
+        // to nullptr
+        //
         throw parameter_error("a callback function is required in dispatcher_match, it cannot be set to nullptr.");
     }
 
@@ -235,7 +239,7 @@ dispatcher_match define_match(ARGS ...args)
         // although it works (won't crash) a message command cannot be
         // the empty string so we forbid that in our tables
         //
-        throw parameter_error("an expression is required for the one_to_one_match().");
+        throw parameter_error("an expression is required for the one_to_one_match()."); // LCOV_EXCL_LINE
     }
 
     if(match.f_priority > dispatcher_match::DISPATCHER_MATCH_MAX_PRIORITY)

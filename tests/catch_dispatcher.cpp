@@ -38,7 +38,10 @@ namespace
 {
 
 
-
+void callback(ed::message & msg)
+{
+    snapdev::NOT_USED(msg);
+}
 
 
 } // no name namespace
@@ -47,17 +50,60 @@ namespace
 
 CATCH_TEST_CASE("dispatcher_setup_error", "[dispatcher][error][setup]")
 {
-    CATCH_START_SECTION("create a dispatcher with missing callback")
+    CATCH_START_SECTION("create a dispatcher with callback set to nullptr")
     {
         // the callback is required
         //
         CATCH_REQUIRE_THROWS_MATCHES(
               ::ed::define_match(
-                    ::ed::Expression("REGISTER")
-                  //, ::ed::Callback(std::bind(function, this, std::placeholders::_1))
+                  ::ed::Expression("REGISTER"),
+                  ::ed::Callback(nullptr),
+                  ::ed::MatchFunc(&ed::one_to_one_match)
               )
-            , std::runtime_error
-            , Catch::Matchers::ExceptionMessage("variable_list::add_item() trying to re-add item named \"void_var\"."));
+            , ed::parameter_error
+            , Catch::Matchers::ExceptionMessage("parameter_error: a callback function is required in dispatcher_match, it cannot be set to nullptr."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("create a dispatcher with missing expression when using the one_to_one_match() function")
+    {
+        // the callback is required
+        //
+        CATCH_REQUIRE_THROWS_MATCHES(
+              ::ed::define_match(
+                  ::ed::Callback(&::callback),
+                  ::ed::MatchFunc(&ed::one_to_one_match)
+              )
+            , ed::parameter_error
+            , Catch::Matchers::ExceptionMessage("parameter_error: an expression is required for the one_to_one_match()."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("create a dispatcher with missing expression when using the one_to_one_match() function")
+    {
+        // the priority must be between min & max
+        //
+        for(int count(0); count < 100; ++count)
+        {
+            ed::dispatcher_match::priority_t priority(0);
+            for(;;)
+            {
+                priority = rand();
+                if(priority > ed::dispatcher_match::DISPATCHER_MATCH_MAX_PRIORITY)
+                {
+                    break;
+                }
+            }
+            CATCH_REQUIRE_THROWS_MATCHES(
+                  ::ed::define_match(
+                      ::ed::Expression("REGISTER"),
+                      ::ed::Callback(&::callback),
+                      ::ed::MatchFunc(&ed::one_to_one_match),
+                      ::ed::Priority(priority)
+                  )
+                , ed::parameter_error
+                , Catch::Matchers::ExceptionMessage("parameter_error: priority too large for dispatcher match."));
+        }
     }
     CATCH_END_SECTION()
 }

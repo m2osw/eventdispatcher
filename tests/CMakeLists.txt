@@ -74,6 +74,41 @@ endif(SnapCatch2_FOUND)
 
 
 ##
+## Verify expected compile time errors
+##
+include(CheckCXXSourceCompiles)
+
+set(CMAKE_REQUIRED_QUIET FALSE)
+set(CHECK_INCLUDES
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}
+    ${LIBEXCEPT_INCLUDE_DIRS}
+)
+list(TRANSFORM CHECK_INCLUDES PREPEND "-I")
+
+try_compile(
+    COMPILED_DISPATCHER_WITHOUT_COMMAND
+    ${CMAKE_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}/tests/check_dispatcher_without_command.cpp
+
+    COMPILE_DEFINITIONS
+        ${CMAKE_REQUIRED_DEFINITIONS}
+        ${CHECK_INCLUDES}
+    CMAKE_FLAGS
+        -DCOMPILE_DEFINITIONS:STRING=${CMAKE_REQUIRED_FLAGS}
+    CXX_STANDARD
+        23
+    CXX_EXTENSIONS
+        TRUE
+    OUTPUT_VARIABLE
+        OUTPUT)
+
+if(${COMPILED_DISPATCHER_WITHOUT_COMMAND} OR NOT "${OUTPUT}" MATCHES "no matching function for call to.*find_match_value.*ed::Callback")
+    message(FATAL_ERROR "ed::define_match() worked with without an ed::Callback().")
+endif()
+
+
+##
 ## Process Listener
 ##
 project(process-listener)
