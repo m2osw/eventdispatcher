@@ -76,9 +76,6 @@ endif(SnapCatch2_FOUND)
 ##
 ## Verify expected compile time errors
 ##
-include(CheckCXXSourceCompiles)
-
-set(CMAKE_REQUIRED_QUIET FALSE)
 set(CHECK_INCLUDES
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}
