@@ -190,7 +190,7 @@ step_t background_executor::execute_instruction()
         switch(value->get_operator())
         {
         case operator_t::OPERATOR_PRIMARY:
-            param = background_executor::primary_to_variable(value, decls->f_name);
+            param = primary_to_variable(value, decls->f_name);
             break;
 
         case operator_t::OPERATOR_LIST:
@@ -231,7 +231,7 @@ step_t background_executor::execute_instruction()
                 }
                 else
                 {
-                    p = background_executor::primary_to_variable(item->get_expression(1), name);
+                    p = primary_to_variable(item->get_expression(1), name);
                 }
                 std::static_pointer_cast<variable_list>(param)->add_item(p);
             }
@@ -302,9 +302,68 @@ variable::pointer_t background_executor::primary_to_variable(expression::pointer
         break;
 
     case token_t::TOKEN_SINGLE_STRING:
-    case token_t::TOKEN_DOUBLE_STRING:
         param = std::make_shared<variable_string>(name, "string");
         std::static_pointer_cast<variable_string>(param)->set_string(t.get_string());
+        break;
+
+    case token_t::TOKEN_DOUBLE_STRING:
+        {
+            param = std::make_shared<variable_string>(name, "string");
+            std::string original(t.get_string());
+            std::string replaced;
+            for(std::string::size_type pos(0); pos < original.length();)
+            {
+                std::string::size_type dollar(original.find('$', pos));
+                if(dollar == std::string::npos)
+                {
+                    replaced += original.substr(pos);
+                    break;
+                }
+                if(dollar > pos)
+                {
+                    replaced += original.substr(pos, dollar - pos);
+                }
+                if(dollar + 1 >= original.length())
+                {
+                    replaced += '$';
+                    pos = dollar + 1;
+                    continue;
+                }
+                if(original[dollar + 1] == '{')
+                {
+                    // found start of variable declaration
+                    //
+                    dollar += 2;
+                    std::string::size_type end(original.find('}', dollar));
+                    if(end == std::string::npos)
+                    {
+                        throw std::runtime_error("found unclosed variable in \"" + original + "\".");
+                    }
+                    std::string const var_name(original.substr(dollar, end - dollar));;
+                    pos = end + 1;
+                    if(var_name.empty())
+                    {
+                        throw std::runtime_error("found variable without name in \"" + original + "\".");
+                    }
+                    variable::pointer_t var(f_state->get_variable(var_name));
+                    if(var != nullptr)
+                    {
+                        if(var->get_type() == "string")
+                        {
+                            replaced += std::dynamic_pointer_cast<variable_string>(var)->get_string();
+                        }
+                        else
+                        {
+                            throw std::logic_error(
+                                  "found variable of type \"" 
+                                + var->get_type()
+                                + "\" which is not yet supported in ${...}.");
+                        }
+                    }
+                }
+            }
+            std::static_pointer_cast<variable_string>(param)->set_string(replaced);
+        }
         break;
 
     case token_t::TOKEN_ADDRESS:

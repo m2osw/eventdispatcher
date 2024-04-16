@@ -1570,8 +1570,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
     }
     CATCH_END_SECTION()
 
-
-    CATCH_START_SECTION("verify computation (string repeat)")
+    CATCH_START_SECTION("verify variable in string")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("verify_variable_in_string.rprtr", g_program_verify_variable_in_string));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
