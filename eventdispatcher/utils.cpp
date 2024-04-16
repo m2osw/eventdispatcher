@@ -73,6 +73,7 @@ std::int64_t get_current_date()
     timeval tv;
     if(gettimeofday(&tv, nullptr) != 0)
     {
+        // LCOV_EXCL_START
         int const err(errno);
         SNAP_LOG_FATAL
             << "gettimeofday() failed with errno: "
@@ -82,6 +83,7 @@ std::int64_t get_current_date()
             << ")"
             << SNAP_LOG_SEND;
         throw runtime_error("gettimeofday() failed");
+        // LCOV_EXCL_STOP
     }
 
     return static_cast<int64_t>(tv.tv_sec) * static_cast<int64_t>(1000000)
