@@ -86,7 +86,7 @@ std::int64_t get_current_date()
         // LCOV_EXCL_STOP
     }
 
-    return static_cast<int64_t>(tv.tv_sec) * static_cast<int64_t>(1000000)
+    return static_cast<int64_t>(tv.tv_sec) * static_cast<int64_t>(1'000'000)
          + static_cast<int64_t>(tv.tv_usec);
 }
 
@@ -104,6 +104,7 @@ std::int64_t get_current_date_ns()
     timespec ts;
     if(clock_gettime(CLOCK_REALTIME_COARSE, &ts) != 0)
     {
+        // LCOV_EXCL_START
         int const err(errno);
         SNAP_LOG_FATAL
             << "clock_gettime() failed with errno: "
@@ -113,9 +114,10 @@ std::int64_t get_current_date_ns()
             << ")"
             << SNAP_LOG_SEND;
         throw runtime_error("clock_gettime() failed");
+        // LCOV_EXCL_STOP
     }
 
-    return static_cast<int64_t>(ts.tv_sec) * static_cast<int64_t>(1000000000)
+    return static_cast<int64_t>(ts.tv_sec) * static_cast<int64_t>(1'000'000'000)
          + static_cast<int64_t>(ts.tv_nsec);
 }
 
