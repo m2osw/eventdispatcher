@@ -91,11 +91,14 @@ install(
 )
 
 install(
-    FILES
-        *.h
+    DIRECTORY
+        ${CMAKE_CURRENT_SOURCE_DIR}/
 
     DESTINATION
         include/eventdispatcher/reporter
+
+    FILES_MATCHING PATTERN
+        "*.h"
 )
 
 
