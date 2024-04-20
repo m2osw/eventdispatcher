@@ -958,7 +958,7 @@ public:
         register_service();
     }
 
-    void process_message(ed::message & msg)
+    virtual void process_message(ed::message & msg) override
     {
         ++f_step;
         std::cout
