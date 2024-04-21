@@ -189,14 +189,15 @@ ssize_t tcp_server_client_buffer_connection::write(void const * data, size_t con
  * Look into a way, if possible, to have a single instantiation since
  * as far as I know this code matches the one written in the
  * process_read() of the tcp_client_buffer_connection and
- * the pipe_buffer_connection classes.
+ * the pipe_buffer_connection classes. (See TODO.txt file
+ * about templates.)
  */
 void tcp_server_client_buffer_connection::process_read()
 {
     // we read one character at a time until we get a '\n'
     // since we have a non-blocking socket we can read as
-    // much as possible and then check for a '\n' and keep
-    // any extra data in a cache.
+    // much as possible and then check for a '\n' in our
+    // buffer and keep any extra data in a cache.
     //
     if(get_socket() != -1)
     {
@@ -216,8 +217,9 @@ void tcp_server_client_buffer_connection::process_read()
                     if(it == buffer.begin() + r)
                     {
                         // no newline, just add the whole thing
+                        //
                         f_line += std::string(&buffer[position], r - position);
-                        break; // do not waste time, we know we are done
+                        break;
                     }
 
                     // retrieve the characters up to the newline
@@ -255,6 +257,7 @@ void tcp_server_client_buffer_connection::process_read()
             else if(r == 0 || errno == 0 || errno == EAGAIN || errno == EWOULDBLOCK)
             {
                 // no more data available at this time
+                //
                 break;
             }
             else //if(r < 0)
@@ -274,6 +277,7 @@ void tcp_server_client_buffer_connection::process_read()
     }
 
     // process next level too
+    //
     tcp_server_client_connection::process_read();
 }
 
