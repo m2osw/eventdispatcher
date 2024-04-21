@@ -21,6 +21,7 @@
 #include    "variable_string.h"
 
 
+
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter

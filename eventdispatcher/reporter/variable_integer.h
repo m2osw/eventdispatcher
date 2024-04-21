@@ -22,13 +22,6 @@
 #include    <eventdispatcher/reporter/variable.h>
 
 
-// C++
-//
-#include    <map>
-#include    <memory>
-#include    <string>
-
-
 
 // view these as an extension of the snapcatch2 library
 namespace SNAP_CATCH2_NAMESPACE

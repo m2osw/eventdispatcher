@@ -21,6 +21,7 @@
 #include    "variable_address.h"
 
 
+
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter

@@ -67,6 +67,16 @@ Description: C++ library for easy event based networking and communication.
  This library provides an additional connection to support Qt as one of the
  input sockets.
 
+Package: reporter
+Section: libdevel
+Architecture: any
+Suggests: eventdispatcher-doc
+Depends: eventdispatcher-dev (= ${binary:Version}), ${misc:Depends}
+Description: SnapCatch2 extension for the C++ Event Dispatcher library.
+ This library and headers provide support to create unit tests that actually
+ create network connections and send messages as in the real world allowing
+ you to debug your services before they hit production.
+
 Package: cppprocess
 Section: libs
 Architecture: any

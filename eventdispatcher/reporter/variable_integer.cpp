@@ -21,6 +21,7 @@
 #include    "variable_integer.h"
 
 
+
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter

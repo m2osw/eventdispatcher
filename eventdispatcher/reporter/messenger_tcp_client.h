@@ -17,11 +17,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
-// self
-//
-//#include    <eventdispatcher/reporter/variable.h>
-
-
 // eventdispatcher
 //
 #include    <eventdispatcher/tcp_server_client_message_connection.h>
@@ -30,13 +25,6 @@
 // snapcatch2
 //
 #include    <catch2/snapcatch2.hpp>
-
-
-// C++
-//
-//#include    <map>
-//#include    <memory>
-//#include    <string>
 
 
 
