@@ -7,6 +7,7 @@ project=ed
 cmd_absolutely=ABSOLUTELY
 cmd_alive=ALIVE
 cmd_help=HELP
+cmd_invalid=INVALID
 cmd_leak=LEAK
 cmd_log_rotate=LOG_ROTATE
 cmd_quit=QUIT

@@ -464,13 +464,19 @@ void connection_with_send_message::msg_stop(message & msg)
 }
 
 
-/** \brief Handle the UNKNOWN message.
+/** \brief Handle the UNKNOWN or INVALID message.
  *
- * Whenever we send a command to another daemon, that command can be refused
- * by sending an UNKNOWN reply. This function handles the UNKNOWN command
- * by simply recording that as an error in the logs.
+ * Whenever a command is sent to another daemon, that command can be refused
+ * by sending:
  *
- * \param[in] msg  The UNKNOWN message we just received.
+ * \li an UNKNOWN reply--the message is not handled by the destination;
+ * \li an INVALID reply--the message is understand but was missused (missing
+ * parameter, parameter value of the wrong type, etc.).
+ *
+ * This function handles the UNKNOWN or INVALID command by simply recording
+ * that as an error in the logs.
+ *
+ * \param[in] msg  The UNKNOWN or INVALID message we just received.
  */
 void connection_with_send_message::msg_log_unknown(message & msg)
 {
@@ -482,7 +488,9 @@ void connection_with_send_message::msg_log_unknown(message & msg)
         << (msg.has_parameter("command")
                 ? msg.get_parameter("command")
                 : "<undefined>")
-        << "\" and the destination replied with \"UNKNOWN\""
+        << "\" and the destination replied with \""
+        << msg.get_command()
+        << "\""
            " so we probably did not get the expected result."
         << SNAP_LOG_SEND;
 }

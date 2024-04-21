@@ -131,9 +131,17 @@ void background_executor::leave(cppthread::leave_status_t status)
     f_done_signal->thread_done();
     f_state->set_in_thread(false);
 
-    if(status != cppthread::leave_status_t::LEAVE_STATUS_NORMAL)
+    // if the status is INSTRUMENTATION, then we already received an exception
+    //
+    switch(status)
     {
-        throw std::runtime_error("thread failed with status: " + std::to_string(static_cast<int>(status)));
+    case cppthread::leave_status_t::LEAVE_STATUS_NORMAL:
+    case cppthread::leave_status_t::LEAVE_STATUS_INSTRUMENTATION:
+        break;
+
+    default:
+        throw std::runtime_error("thread failed with leave status: " + std::to_string(static_cast<int>(status)));
+
     }
 }
 
@@ -287,6 +295,22 @@ variable::pointer_t background_executor::primary_to_variable(expression::pointer
     token t(value->get_token());
     switch(t.get_token())
     {
+    case token_t::TOKEN_VARIABLE:
+        param = f_state->get_variable(t.get_string());
+        if(param == nullptr)
+        {
+            // empty string or void?
+            //
+            param = std::make_shared<variable_string>(name, "string");
+        }
+        else
+        {
+            // we need to create a clone because the name is likely different
+            //
+            param = param->clone(name);
+        }
+        break;
+
     case token_t::TOKEN_IDENTIFIER:
         param = std::make_shared<variable_string>(name, "identifier");
         std::static_pointer_cast<variable_string>(param)->set_string(t.get_string());
@@ -422,6 +446,54 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     switch(expr->get_operator())
     {
     case operator_t::OPERATOR_PRIMARY:
+        {
+            token t(expr->get_token());
+            if(t.get_token() == token_t::TOKEN_VARIABLE)
+            {
+                expr = std::make_shared<expression>();
+                expr->set_operator(operator_t::OPERATOR_PRIMARY);
+                token value;
+                value.set_token(token_t::TOKEN_SINGLE_STRING);
+
+                variable::pointer_t param(f_state->get_variable(t.get_string()));
+                if(param != nullptr)
+                {
+                    // we need to create a clone because the name is likely different
+                    //
+                    std::string const & type(param->get_type());
+                    if(type == "integer")
+                    {
+                        value.set_token(token_t::TOKEN_IDENTIFIER);
+                        value.set_integer(std::static_pointer_cast<variable_integer>(param)->get_integer());
+                    }
+                    else if(type == "floating_point")
+                    {
+                        value.set_token(token_t::TOKEN_FLOATING_POINT);
+                        value.set_floating_point(std::static_pointer_cast<variable_floating_point>(param)->get_floating_point());
+                    }
+                    else if(type == "string")
+                    {
+                        //value.set_token(token_t::TOKEN_SINGLE_STRING); -- this is the default
+                        value.set_string(std::static_pointer_cast<variable_string>(param)->get_string());
+                    }
+                    else if(type == "identifier")
+                    {
+                        value.set_token(token_t::TOKEN_IDENTIFIER);
+                        value.set_string(std::static_pointer_cast<variable_string>(param)->get_string());
+                    }
+                    else if(type == "regex")
+                    {
+                        value.set_token(token_t::TOKEN_REGEX);
+                        value.set_string(std::static_pointer_cast<variable_regex>(param)->get_regex());
+                    }
+                    else
+                    {
+                        throw std::runtime_error("primary variable type not yet supported.");
+                    }
+                }
+                expr->set_token(value);
+            }
+        }
         return expr;
 
     case operator_t::OPERATOR_ADD:
@@ -585,7 +657,12 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 break;
 
             default:
-                throw std::runtime_error("unsupported addition.");
+                throw std::runtime_error(
+                      "unsupported addition (token types: "
+                    + std::to_string(static_cast<int>(lt.get_token()))
+                    + " + "
+                    + std::to_string(static_cast<int>(rt.get_token()))
+                    + ").");
 
             }
             expression::pointer_t result_expr(std::make_shared<expression>());
@@ -1120,10 +1197,37 @@ void executor::start()
  * thread, you still need to call this function because the "thread
  * done" connection is in the list of communicator connections that
  * need clean up.
+ *
+ * \code
+ *     SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+ *     e->start();
+ *
+ *     // initialize your object(s)
+ *
+ *     e->set_thread_done_callback(...)
+ *     CATCH_REQUIRE(e->run());
+ * \endcode
  */
-void executor::run()
+bool executor::run()
 {
-    ed::communicator::instance()->run();
+    try
+    {
+        ed::communicator::instance()->run();
+        return true;
+    }
+    catch(std::exception const & ex)
+    {
+        std::cerr
+            << "error: caught unexpected exception in e->run(): "
+            << ex.what()
+            << "\n";
+    }
+    catch(...)
+    {
+        std::cerr << "error: caught unknown exception in executor::run().\n";
+    }
+
+    return false;
 }
 
 

@@ -209,6 +209,30 @@ constexpr parameter_declaration const g_listen_params[] =
 };
 
 
+constexpr parameter_declaration const g_print_params[] =
+{
+    {
+        .f_name = "message",
+        .f_type = "string",
+    },
+    {}
+};
+
+
+constexpr parameter_declaration const g_save_parameter_value_params[] =
+{
+    {
+        .f_name = "parameter_name",
+        .f_type = "identifier",
+    },
+    {
+        .f_name = "variable_name",
+        .f_type = "identifier",
+    },
+    {}
+};
+
+
 constexpr parameter_declaration const g_send_message_params[] =
 {
     {
@@ -910,6 +934,34 @@ public:
 INSTRUCTION(listen);
 
 
+// PRINT
+//
+class inst_print
+    : public instruction
+{
+public:
+    inst_print()
+        : instruction("print")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        variable::pointer_t msg(s.get_parameter("message", true));
+        std::cout
+            << "--- message: "
+            << std::static_pointer_cast<variable_string>(msg)->get_string()
+            << std::endl;
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_print_params;
+    }
+};
+INSTRUCTION(print);
+
+
 // RETURN
 //
 class inst_return
@@ -951,6 +1003,66 @@ public:
 private:
 };
 INSTRUCTION(run);
+
+
+// SAVE PARAMETER VALUE
+//
+class inst_save_parameter_value
+    : public instruction
+{
+public:
+    inst_save_parameter_value()
+        : instruction("save_parameter_value")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        ed::connection::vector_t v(s.get_connections());
+        if(v.empty())
+        {
+            throw std::runtime_error("save_parameter_value() has no connection to send a message to.");
+        }
+        // TODO: fix the connection selection, if we have more than one,
+        //       how do we know which one to select? (i.e. have a connection
+        //       name included in the parameters)
+        //
+        ed::connection_with_send_message::pointer_t c(std::dynamic_pointer_cast<ed::connection_with_send_message>(v[0]));
+        if(c == nullptr)
+        {
+            throw std::runtime_error("save_parameter_value() called without a valid listener connection."); // LCOV_EXCL_LINE
+        }
+
+        ed::message const & msg(s.get_message());
+
+        variable::pointer_t param(s.get_parameter("parameter_name", true));
+        variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+        std::string const & parameter_name(var->get_string());
+        std::string value;
+        if(msg.has_parameter(parameter_name))
+        {
+            value = msg.get_parameter(parameter_name);
+        }
+
+        param = s.get_parameter("variable_name", true);
+        var = std::static_pointer_cast<variable_string>(param);
+        std::string const & variable_name(var->get_string());
+
+        // TODO: support varying types?
+        //
+        variable_string::pointer_t new_var(std::make_shared<variable_string>(variable_name, "string"));
+        new_var->set_string(value);
+        s.set_variable(new_var);
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_save_parameter_value_params;
+    }
+
+private:
+};
+INSTRUCTION(save_parameter_value);
 
 
 // SEND MESSAGE
@@ -1012,15 +1124,40 @@ public:
         }
 
         param = s.get_parameter("command", true);
-        variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
-        msg.set_command(var->get_string());
+        {
+            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+            msg.set_command(var->get_string());
+        }
 //std::cerr << "--- send message [" << msg.get_command() << "]\n";
 
         param = s.get_parameter("parameters");
         if(param != nullptr)
         {
-            //variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
-            //msg.add_parameter(var->get_string());
+            variable_list::pointer_t list(std::static_pointer_cast<variable_list>(param));
+            std::size_t const max(list->get_item_size());
+            for(std::size_t idx(0); idx < max; ++idx)
+            {
+                variable::pointer_t var(list->get_item(idx));
+                std::string const & name(var->get_name());
+                std::string const & type(var->get_type());
+                if(type == "integer")
+                {
+                    variable_integer::pointer_t int_var(std::static_pointer_cast<variable_integer>(var));
+                    msg.add_parameter(name, int_var->get_integer());
+                }
+                else if(type == "string" || type == "identifier")
+                {
+                    variable_string::pointer_t str_var(std::static_pointer_cast<variable_string>(var));
+                    msg.add_parameter(name, str_var->get_string());
+                }
+                else
+                {
+                    throw std::runtime_error(
+                          "message parameter type \""
+                        + type
+                        + "\" not supported yet.");
+                }
+            }
         }
 
         c->send_message(msg);

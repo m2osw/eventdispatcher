@@ -52,7 +52,7 @@ public:
                                     ~executor();
 
     void                            start();
-    void                            run();
+    bool                            run();
     void                            stop();
 
     void                            set_thread_done_callback(thread_done_callback_t callback);

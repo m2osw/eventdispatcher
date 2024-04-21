@@ -74,6 +74,7 @@ the next newline.
 * `if()`
 * `label()`
 * `listen()`
+* `print()`
 * `return()`
 * `run()`
 * `save_parameter_value()`
@@ -280,6 +281,12 @@ modes:
 
 Note that the `error_message` and `timeout` parameters are mutually
 exclusive. If both are specified, you get a script error.
+
+## Print
+
+Print message on the screen.
+
+    print(message: <string>)
 
 ## Show Message
 

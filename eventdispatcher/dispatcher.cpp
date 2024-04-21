@@ -243,6 +243,10 @@ void dispatcher::add_communicator_commands(bool auto_catch_all)
             , ::ed::Callback(std::bind(&connection_with_send_message::msg_help, f_connection, std::placeholders::_1))
         ),
         ::ed::define_match(
+              ::ed::Expression(g_name_ed_cmd_invalid)
+            , ::ed::Callback(std::bind(&connection_with_send_message::msg_log_unknown, f_connection, std::placeholders::_1))
+        ),
+        ::ed::define_match(
               ::ed::Expression(g_name_ed_cmd_leak)
             , ::ed::Callback(std::bind(&connection_with_send_message::msg_leak, f_connection, std::placeholders::_1))
         ),
