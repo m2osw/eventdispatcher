@@ -64,6 +64,7 @@ syn match	rprtrConstant		"\<[1-9][0-9]*\.\=[0-9]*\([eE][+-]\=[0-9]\+\)\=\>"
 syn match	rprtrConstant		"\<0\=\.[0-9]\+\([eE][+-]\=[0-9]\+\)\=\>"
 syn region	rprtrConstant		start=+"+ skip=+\\.+ end=+"+
 syn region	rprtrConstant		start=+'+ skip=+\\.+ end=+'+
+syn region	rprtrConstant		start=+`+ skip=+\\.+ end=+`+
 
 
 " Comments

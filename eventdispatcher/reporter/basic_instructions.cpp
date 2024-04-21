@@ -1343,14 +1343,14 @@ public:
                 std::string const value(msg.get_parameter(name));
                 variable_regex::pointer_t regex_var(std::static_pointer_cast<variable_regex>(var));
                 std::regex const compiled_regex(regex_var->get_regex());
-                if(std::regex_match(value, compiled_regex))
+                if(!std::regex_match(value, compiled_regex))
                 {
                     throw std::runtime_error(
                           "message expected parameter \""
                         + name
-                        + "\" is set to \""
+                        + "\", set to \""
                         + value
-                        + "\" which does not match regex \""
+                        + "\", to match regex \""
                         + regex_var->get_regex()
                         + "\".");
                 }
