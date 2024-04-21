@@ -1,0 +1,3 @@
+usr/include/eventdispatcher/reporter/*
+usr/lib/libreporter.so*
+usr/share/cmake/Reporter/*
