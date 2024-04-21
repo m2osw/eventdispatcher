@@ -103,6 +103,7 @@ parser::parser(lexer::pointer_t l, state::pointer_t s)
  *  | VARIABLE
  *  | DOUBLE_STRING
  *  | SINGLE_STRING
+ *  | REGEX
  *  | '(' additive ')'
  *  | '+' additive
  *  | '-' additive
@@ -394,6 +395,7 @@ expression::pointer_t parser::primary()
     case token_t::TOKEN_VARIABLE:
     case token_t::TOKEN_DOUBLE_STRING:
     case token_t::TOKEN_SINGLE_STRING:
+    case token_t::TOKEN_REGEX:
         {
             expression::pointer_t expr(std::make_shared<expression>());
             expr->set_operator(operator_t::OPERATOR_PRIMARY);

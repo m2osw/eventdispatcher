@@ -19,11 +19,11 @@
 
 // self
 //
-#include    <eventdispatcher/reporter/lexer.h>
-#include    <eventdispatcher/reporter/state.h>
+#include    <eventdispatcher/reporter/variable.h>
 
 
 
+// view these as an extension of the snapcatch2 library
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter
@@ -31,31 +31,24 @@ namespace reporter
 
 
 
-class parser
+class variable_regex
+    : public variable
 {
 public:
-    typedef std::shared_ptr<parser>  pointer_t;
+    typedef std::shared_ptr<variable_regex>        pointer_t;
 
-                            parser(lexer::pointer_t l, state::pointer_t s);
+                            variable_regex(std::string const & name);
 
-    void                    parse_program();
+    std::string const &     get_regex() const;
+    void                    set_regex(std::string const & s);
+
+    // variable implementation
+    //
+    virtual variable::pointer_t
+                            clone(std::string const & name) const override;
 
 private:
-    bool                    next_token();
-    void                    one_statement();
-    void                    parameters();
-    void                    one_parameter();
-    expression::pointer_t   expression_list();
-    expression::pointer_t   list_item();
-    expression::pointer_t   additive();
-    expression::pointer_t   multiplicative();
-    expression::pointer_t   primary();
-
-    lexer::pointer_t        f_lexer = lexer::pointer_t();
-    state::pointer_t        f_state = state::pointer_t();
-    token                   f_token = token();
-    statement::pointer_t    f_statement = statement::pointer_t();
-    variable::pointer_t     f_parameter = variable::pointer_t();
+    std::string             f_regex = std::string();
 };
 
 

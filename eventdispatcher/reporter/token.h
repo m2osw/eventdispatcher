@@ -56,6 +56,7 @@ enum class token_t : char32_t
     //TOKEN_EQUAL             = '=',  // not currently used
     TOKEN_DOUBLE_STRING     = '"',
     TOKEN_SINGLE_STRING     = '\'',
+    TOKEN_REGEX             = '`',
     TOKEN_PLUS              = '+',
     TOKEN_MINUS             = '-',
     TOKEN_MULTIPLY          = '*',

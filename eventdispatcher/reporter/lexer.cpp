@@ -21,6 +21,7 @@
 #include    "lexer.h"
 
 
+
 // snapdev
 //
 #include    <snapdev/not_reached.h>
@@ -291,6 +292,7 @@ token lexer::next_token()
 
         case U'"':
         case U'\'':
+        case U'`':
             {
                 std::string s;
                 char32_t const quote(c);

@@ -24,7 +24,9 @@
 #include    "variable_floating_point.h"
 #include    "variable_integer.h"
 #include    "variable_list.h"
+#include    "variable_regex.h"
 #include    "variable_string.h"
+
 
 
 // eventdispatcher
@@ -36,6 +38,11 @@
 // snapdev
 //
 #include    <snapdev/not_used.h>
+
+
+// C++
+//
+#include    <regex>
 
 
 // C
@@ -1265,83 +1272,102 @@ public:
             , bool forbidden)
     {
         variable::pointer_t param(s.get_parameter(list_name));
-        if(param != nullptr)
+        if(param == nullptr)
         {
-            variable_list::pointer_t list(std::static_pointer_cast<variable_list>(param));
-            std::size_t const max(list->get_item_size());
-            for(std::size_t idx(0); idx < max; ++idx)
-            {
-                variable::pointer_t var(list->get_item(idx));
-                std::string const & name(var->get_name());
-                if(msg.has_parameter(name))
-                {
-                    if(forbidden)
-                    {
-                        throw std::runtime_error(
-                              "message forbidden parameter \""
-                            + name
-                            + "\" was found in this message.");
-                    }
-                }
-                else if(optional || forbidden)
-                {
-                    continue;
-                }
-                else // if(required)
-                {
-                    throw std::runtime_error(
-                          "message required parameter \""
-                        + name
-                        + "\" was not found in this message.");
-                }
+            return;
+        }
 
-                std::string const & type(var->get_type());
-                if(type == "integer")
-                {
-                    std::int64_t const value(msg.get_integer_parameter(name));
-                    variable_integer::pointer_t int_var(std::static_pointer_cast<variable_integer>(var));
-                    if(int_var->get_integer() != value)
-                    {
-                        throw std::runtime_error(
-                              "message expected parameter \""
-                            + name
-                            + "\" to be an integer set to \""
-                            + std::to_string(int_var->get_integer())
-                            + "\" but found \""
-                            + std::to_string(value)
-                            + "\" instead.");
-                    }
-                }
-                else if(type == "string" || type == "identifier")
-                {
-                    std::string const value(msg.get_parameter(name));
-                    variable_string::pointer_t str_var(std::static_pointer_cast<variable_string>(var));
-                    if(str_var->get_string() != value)
-                    {
-                        throw std::runtime_error(
-                              "message expected parameter \""
-                            + name
-                            + "\" to be a string set to \""
-                            + str_var->get_string()
-                            + "\" but found \""
-                            + value
-                            + "\" instead.");
-                    }
-                }
-                else if(type == "void")
-                {
-                    // we already checked that the parameter exists
-                    // we don't need to check the value since all values
-                    // match "void"
-                    ;
-                }
-                else
+        variable_list::pointer_t list(std::static_pointer_cast<variable_list>(param));
+        std::size_t const max(list->get_item_size());
+        for(std::size_t idx(0); idx < max; ++idx)
+        {
+            variable::pointer_t var(list->get_item(idx));
+            std::string const & name(var->get_name());
+            if(msg.has_parameter(name))
+            {
+                if(forbidden)
                 {
                     throw std::runtime_error(
-                          "message parameter type \""
-                        + type
-                        + "\" not supported yet.");
+                          "message forbidden parameter \""
+                        + name
+                        + "\" was found in this message.");
                 }
+            }
+            else if(optional || forbidden)
+            {
+                continue;
+            }
+            else // if(required)
+            {
+                throw std::runtime_error(
+                      "message required parameter \""
+                    + name
+                    + "\" was not found in this message.");
+            }
+
+            std::string const & type(var->get_type());
+            if(type == "integer")
+            {
+                std::int64_t const value(msg.get_integer_parameter(name));
+                variable_integer::pointer_t int_var(std::static_pointer_cast<variable_integer>(var));
+                if(int_var->get_integer() != value)
+                {
+                    throw std::runtime_error(
+                          "message expected parameter \""
+                        + name
+                        + "\" to be an integer set to \""
+                        + std::to_string(int_var->get_integer())
+                        + "\" but found \""
+                        + std::to_string(value)
+                        + "\" instead.");
+                }
+            }
+            else if(type == "string" || type == "identifier")
+            {
+                std::string const value(msg.get_parameter(name));
+                variable_string::pointer_t str_var(std::static_pointer_cast<variable_string>(var));
+                if(str_var->get_string() != value)
+                {
+                    throw std::runtime_error(
+                          "message expected parameter \""
+                        + name
+                        + "\" to be a string set to \""
+                        + str_var->get_string()
+                        + "\" but found \""
+                        + value
+                        + "\" instead.");
+                }
+            }
+            else if(type == "regex")
+            {
+                std::string const value(msg.get_parameter(name));
+                variable_regex::pointer_t regex_var(std::static_pointer_cast<variable_regex>(var));
+                std::regex const compiled_regex(regex_var->get_regex());
+                if(std::regex_match(value, compiled_regex))
+                {
+                    throw std::runtime_error(
+                          "message expected parameter \""
+                        + name
+                        + "\" is set to \""
+                        + value
+                        + "\" which does not match regex \""
+                        + regex_var->get_regex()
+                        + "\".");
+                }
+            }
+            else if(type == "void")
+            {
+                // we already checked that the parameter exists
+                // we don't need to check the value since all values
+                // match "void"
+                ;
+            }
+            else
+            {
+                throw std::runtime_error(
+                      "message parameter type \""
+                    + type
+                    + "\" not supported yet.");
             }
         }
     }

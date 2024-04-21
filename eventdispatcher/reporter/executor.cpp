@@ -24,6 +24,7 @@
 #include    "variable_floating_point.h"
 #include    "variable_integer.h"
 #include    "variable_list.h"
+#include    "variable_regex.h"
 #include    "variable_string.h"
 #include    "variable_timestamp.h"
 #include    "variable_void.h"
@@ -299,6 +300,11 @@ variable::pointer_t background_executor::primary_to_variable(expression::pointer
     case token_t::TOKEN_INTEGER:
         param = std::make_shared<variable_integer>(name);
         std::static_pointer_cast<variable_integer>(param)->set_integer(t.get_integer());
+        break;
+
+    case token_t::TOKEN_REGEX:
+        param = std::make_shared<variable_regex>(name);
+        std::static_pointer_cast<variable_regex>(param)->set_regex(t.get_string());
         break;
 
     case token_t::TOKEN_SINGLE_STRING:

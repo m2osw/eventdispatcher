@@ -41,6 +41,7 @@ add_library(${PROJECT_NAME} SHARED
     variable_floating_point.cpp
     variable_integer.cpp
     variable_list.cpp
+    variable_regex.cpp
     variable_string.cpp
     variable_timestamp.cpp
     variable_void.cpp
