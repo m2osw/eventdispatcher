@@ -1018,21 +1018,6 @@ public:
 
     virtual void func(state & s) override
     {
-        ed::connection::vector_t v(s.get_connections());
-        if(v.empty())
-        {
-            throw std::runtime_error("save_parameter_value() has no connection to send a message to.");
-        }
-        // TODO: fix the connection selection, if we have more than one,
-        //       how do we know which one to select? (i.e. have a connection
-        //       name included in the parameters)
-        //
-        ed::connection_with_send_message::pointer_t c(std::dynamic_pointer_cast<ed::connection_with_send_message>(v[0]));
-        if(c == nullptr)
-        {
-            throw std::runtime_error("save_parameter_value() called without a valid listener connection."); // LCOV_EXCL_LINE
-        }
-
         ed::message const & msg(s.get_message());
 
         variable::pointer_t param(s.get_parameter("parameter_name", true));
@@ -1732,25 +1717,6 @@ public:
 };
 INSTRUCTION(wait);
 
-
-// `call()` -- DONE / TESTED
-// `compare_message_command()`
-// `exit()` -- PARTIAL / PARTIAL
-// `goto()` -- DONE
-// `message_has_parameter()`
-// `message_has_parameter_with_value()`
-// `if()` -- DONE
-// `label()` -- DONE / TESTED
-// `listen()`
-// `return()` -- DONE / TESTED
-// `run()` -- DONE / TESTED
-// `save_parameter_value()`
-// `send_message()`
-// `set_variable()` -- DONE / TESTED
-// `show_message()`
-// `sleep()` -- DONE / TESTED
-// `verify_message()` -- AVAILABLE, NOT IMPLEMENTED
-// `wait()`
 
 
 } // namespace reporter

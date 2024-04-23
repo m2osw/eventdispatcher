@@ -26,6 +26,7 @@
 #include    "catch_main.h"
 
 
+
 // reporter
 //
 #include    <eventdispatcher/reporter/executor.h>
@@ -35,6 +36,7 @@
 #include    <eventdispatcher/reporter/variable_floating_point.h>
 #include    <eventdispatcher/reporter/variable_integer.h>
 #include    <eventdispatcher/reporter/variable_list.h>
+#include    <eventdispatcher/reporter/variable_regex.h>
 #include    <eventdispatcher/reporter/variable_string.h>
 #include    <eventdispatcher/reporter/variable_timestamp.h>
 #include    <eventdispatcher/reporter/variable_void.h>
@@ -238,7 +240,9 @@ constexpr char const * const g_program_accept_one_message =
     "if(false: wait_message)\n"
     "show_message()\n"
     "verify_message(command: REGISTER, required_parameters: { service: responder, version: 1 }, optional_parameters: { commands: \"READY,HELP,STOP\" }, forbidden_parameters: { forbidden })\n"
-    "send_message(command: READY, sent_server: reporter_test_extension, sent_service: test_processor, server: reporter_test, service: accept_one_message, parameters: { status: alive })\n"
+    "save_parameter_value(parameter_name: version, variable_name: register_version)\n"
+    "save_parameter_value(parameter_name: service, variable_name: register_service)\n"
+    "send_message(command: READY, sent_server: reporter_test_extension, sent_service: test_processor, server: reporter_test, service: accept_one_message, parameters: { status: alive, version: 9 })\n"
     "wait(timeout: 10.0, mode: drain)\n"
     "disconnect()\n"
     "exit()\n"
@@ -249,14 +253,29 @@ constexpr char const * const g_program_receive_unwanted_message =
     "listen(address: <127.0.0.1:20002>)\n"
     "label(name: wait_message)\n"
     "clear_message()\n"
+    "wait(timeout: 10.0, mode: wait)\n"
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "verify_message(command: REGISTER, required_parameters: { service: responder, version: `^[0-9]+$` }, optional_parameters: { commands: \"READY,HELP,STOP\" }, forbidden_parameters: { forbidden })\n"
+    "send_message(command: READY, parameters: { version: 9 })\n"
+    //"wait(timeout: 10.0, mode: drain)\n"
+    "print(message: \"nearly done\")\n"
+    "exit(timeout: 2.5)\n"
+;
+
+constexpr char const * const g_program_send_unsupported_message_parameter_type =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
     "wait(timeout: 10.0, mode: wait)\n" // first wait reacts on connect(), second wait receives the REGISTER message
     "has_message()\n"
     "if(false: wait_message)\n"
     "show_message()\n"
     "verify_message(command: REGISTER, required_parameters: { service: responder, version: 1 }, optional_parameters: { commands: \"READY,HELP,STOP\" }, forbidden_parameters: { forbidden })\n"
-    "send_message(command: READY)\n"
-    //"wait(timeout: 10.0, mode: drain)\n"
-    "exit(timeout: 2.5)\n"
+    "send_message(command: READY, parameters: { status: 3.05 })\n"
+    "wait(timeout: 1.0, mode: drain)\n"
 ;
 
 constexpr char const * const g_program_undefined_variable =
@@ -412,6 +431,11 @@ constexpr char const * const g_program_if_variable =
     "exit(error_message: \"if(variable: <unordered floating point>) failed test.\")\n"
     "label(name: unordered_flt_worked)\n"
 
+    "exit()\n"
+;
+
+constexpr char const * const g_program_print_message =
+    "print(message: \"testing print()\")\n"
     "exit()\n"
 ;
 
@@ -625,6 +649,10 @@ constexpr char const * const g_program_bad_exit_timeout =
     "exit(timeout: 'bad')\n"
 ;
 
+constexpr char const * const g_program_bad_print_message =
+    "print(message: string_expected)\n"
+;
+
 constexpr char const * const g_program_send_message_without_connection =
     "send_message(command: WITHOUT_CONNECTION)\n"
 ;
@@ -786,11 +814,28 @@ constexpr char const * const g_program_last_wait =
     "listen(address: <127.0.0.1:20002>)\n"
     "label(name: wait_message)\n"
     "clear_message()\n"
-    "wait(timeout: 10.0, mode: wait)\n" // first wait reacts on connect(), second wait receives the REGISTER message
+    "wait(timeout: 10.0, mode: wait)\n"
     "has_message()\n"
     "if(false: wait_message)\n"
     "show_message()\n"
     "verify_message(command: REGISTER, required_parameters: { service: responder, version: 1 }, optional_parameters: { commands: \"READY,HELP,STOP\" }, forbidden_parameters: { forbidden })\n"
+    "send_message(command: READY, sent_server: reporter_test_extension, sent_service: test_processor, server: reporter_test, service: accept_one_message, parameters: { status: alive })\n"
+    "wait(timeout: 1.0, mode: drain)\n"
+    "wait(timeout: 1.0)\n"
+    "disconnect()\n"
+    "exit()\n"
+;
+
+constexpr char const * const g_program_regex_parameter_no_match =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>)\n"
+    "label(name: wait_message)\n"
+    "clear_message()\n"
+    "wait(timeout: 10.0, mode: wait)\n"
+    "has_message()\n"
+    "if(false: wait_message)\n"
+    "show_message()\n"
+    "verify_message(command: REGISTER, required_parameters: { service: responder, version: `_[a-z]+` }, optional_parameters: { commands: \"READY,HELP,STOP\" }, forbidden_parameters: { forbidden })\n"
     "send_message(command: READY, sent_server: reporter_test_extension, sent_service: test_processor, server: reporter_test, service: accept_one_message, parameters: { status: alive })\n"
     "wait(timeout: 1.0, mode: drain)\n"
     "wait(timeout: 1.0)\n"
@@ -979,6 +1024,19 @@ public:
                     + msg.get_command()
                     + " instead.");
             }
+            if(msg.has_parameter("version"))
+            {
+                // there is one case where I put a version as an integer
+                //
+                std::int64_t version(msg.get_integer_parameter("version"));
+                if(version != 9)
+                {
+                    throw std::runtime_error(
+                          "READY version value invalid; expected 9, got "
+                        + std::to_string(version)
+                        + " instead.");
+                }
+            }
         }
 
         switch(f_sequence)
@@ -1132,7 +1190,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         snapdev::timespec_ex const start(snapdev::now());
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
         snapdev::timespec_ex end(snapdev::now());
         end -= start;
         CATCH_REQUIRE(end.tv_sec >= 2); // we slept for 2.5 seconds, so we expect at least start + 2 seconds
@@ -1164,7 +1222,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         var = s->get_variable("test");
         CATCH_REQUIRE(var != nullptr);
@@ -1191,7 +1249,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var;
 
@@ -1298,7 +1356,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         struct verify_t
         {
@@ -1397,7 +1455,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         struct verify_t
         {
@@ -1443,7 +1501,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
 
     //"set_variable(name: t01, value: <127.0.0.1> + 256)\n"
     //"set_variable(name: t02, value: 256 + <192.168.3.57>)\n"
@@ -1493,7 +1551,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         struct verify_t
         {
@@ -1541,7 +1599,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         struct verify_t
         {
@@ -1581,7 +1639,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         struct verify_t
         {
@@ -1607,6 +1665,22 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
         }
     }
     CATCH_END_SECTION()
+
+    CATCH_START_SECTION("print() + message")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("print_message.rprtr.rprtr", g_program_print_message));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 2);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+
+        CATCH_REQUIRE(s->get_exit_code() == 0);
+    }
+    CATCH_END_SECTION()
 }
 
 
@@ -1619,7 +1693,7 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
 
-        CATCH_REQUIRE(s->get_statement_size() == 13);
+        CATCH_REQUIRE(s->get_statement_size() == 15);
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
@@ -1642,19 +1716,68 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
         ed::communicator::instance()->add_connection(timer);
         messenger->set_timer(timer);
 
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         // if we exited because of our timer, then the test did not pass
         //
         CATCH_REQUIRE_FALSE(timer->timed_out_prima());
 
         CATCH_REQUIRE(s->get_exit_code() == 0);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var(s->get_variable("register_version"));
+        CATCH_REQUIRE(var != nullptr);
+        SNAP_CATCH2_NAMESPACE::reporter::variable_string::pointer_t v(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var));
+        CATCH_REQUIRE(v != nullptr);
+        CATCH_REQUIRE(v->get_string() == "1");
+
+        var = s->get_variable("register_service");
+        CATCH_REQUIRE(var != nullptr);
+        v = std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var);
+        CATCH_REQUIRE(v != nullptr);
+        CATCH_REQUIRE(v->get_string() == "responder");
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("receive one unwanted/unexpected message")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_receive_unwanted_message.rprtr", g_program_receive_unwanted_message));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 12);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        messenger_responder::pointer_t messenger(std::make_shared<messenger_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , messenger_responder::sequence_t::SEQUENCE_UNWANTED_MESSAGE));
+        ed::communicator::instance()->add_connection(messenger);
+        e->set_thread_done_callback([messenger]()
+            {
+                ed::communicator::instance()->remove_connection(messenger);
+            });
+
+        CATCH_REQUIRE(e->run());
+
+        CATCH_REQUIRE(s->get_exit_code() == 1);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("send message with unsupported parameter type fails")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_receive_unwanted_message.rprtr", g_program_send_unsupported_message_parameter_type));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
@@ -1683,9 +1806,14 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
                 ed::communicator::instance()->remove_connection(messenger);
             });
 
-        e->run();
+        CATCH_REQUIRE(e->run());
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->stop()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "message parameter type \"floating_point\" not supported yet."));
 
-        CATCH_REQUIRE(s->get_exit_code() == 1);
+        CATCH_REQUIRE(s->get_exit_code() == -1);
     }
     CATCH_END_SECTION()
 
@@ -1724,7 +1852,7 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
         ed::communicator::instance()->add_connection(timer);
         messenger->set_timer(timer);
 
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         // if we exited because of our timer, then the test did not pass
         //
@@ -1771,7 +1899,7 @@ CATCH_TEST_CASE("reporter_executor_message", "[executor][reporter]")
                 ed::communicator::instance()->remove_connection(messenger);
                 ed::communicator::instance()->remove_connection(timer);
             });
-        e->run();
+        CATCH_REQUIRE(e->run());
         e->stop();
 
         // if we exited because of our timer, then the test did not pass
@@ -1797,7 +1925,7 @@ CATCH_TEST_CASE("reporter_executor_variables", "[executor][reporter][variable]")
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         CATCH_REQUIRE(s->get_exit_code() == 0);
     }
@@ -1814,7 +1942,7 @@ CATCH_TEST_CASE("reporter_executor_variables", "[executor][reporter][variable]")
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         CATCH_REQUIRE(s->get_exit_code() == 0);
     }
@@ -1831,7 +1959,7 @@ CATCH_TEST_CASE("reporter_executor_variables", "[executor][reporter][variable]")
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         CATCH_REQUIRE(s->get_exit_code() == 0);
     }
@@ -1848,7 +1976,7 @@ CATCH_TEST_CASE("reporter_executor_variables", "[executor][reporter][variable]")
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         CATCH_REQUIRE(s->get_exit_code() == 0);
     }
@@ -2064,7 +2192,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
         CATCH_REQUIRE_THROWS_MATCHES(
               e->stop()
             , std::runtime_error
@@ -2087,20 +2215,54 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("<type> + <type> that are not valid")
     {
-        constexpr char const * const bad_additions[] =
+        struct bad_additions_t
         {
-            g_program_unsupported_addition_address_address,
-            g_program_unsupported_addition_address_string,
-            g_program_unsupported_addition_string_address,
-            g_program_unsupported_addition_address_identifier,
-            g_program_unsupported_addition_identifier_address,
-            g_program_unsupported_addition_identifier_string,
-            g_program_unsupported_addition_string_identifier,
+            char const *    f_code = nullptr;
+            SNAP_CATCH2_NAMESPACE::reporter::token_t  f_left_hand_side = SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ERROR;
+            SNAP_CATCH2_NAMESPACE::reporter::token_t  f_right_hand_side = SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ERROR;
+        };
+        constexpr bad_additions_t const bad_additions[] =
+        {
+            {
+                g_program_unsupported_addition_address_address,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ADDRESS,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ADDRESS,
+            },
+            {
+                g_program_unsupported_addition_address_string,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ADDRESS,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_SINGLE_STRING,
+            },
+            {
+                g_program_unsupported_addition_string_address,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_SINGLE_STRING,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ADDRESS,
+            },
+            {
+                g_program_unsupported_addition_address_identifier,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ADDRESS,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER,
+            },
+            {
+                g_program_unsupported_addition_identifier_address,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ADDRESS,
+            },
+            {
+                g_program_unsupported_addition_identifier_string,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_SINGLE_STRING,
+            },
+            {
+                g_program_unsupported_addition_string_identifier,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_SINGLE_STRING,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER,
+            },
         };
 
-        for(auto const & program : bad_additions)
+        for(auto const & ba : bad_additions)
         {
-            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_additions.rprtr", program));
+            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_additions.rprtr", ba.f_code));
             SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
             SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
             p->parse_program();
@@ -2112,7 +2274,11 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
                   e->start()
                 , std::runtime_error
                 , Catch::Matchers::ExceptionMessage(
-                          "unsupported addition."));
+                          "unsupported addition (token types: "
+                        + std::to_string(static_cast<int>(ba.f_left_hand_side))
+                        + " + "
+                        + std::to_string(static_cast<int>(ba.f_right_hand_side))
+                        + ")."));
         }
     }
     CATCH_END_SECTION()
@@ -2354,6 +2520,24 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
     }
     CATCH_END_SECTION()
 
+    CATCH_START_SECTION("exit() with timeout which is not a number")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("bad_print.rprtr", g_program_bad_print_message));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 1);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->start()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "parameter type mismatch for message, expected \"string\", got \"identifier\" instead."));
+    }
+    CATCH_END_SECTION()
+
     CATCH_START_SECTION("send_message() when not connected")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("bad_send_message.rprtr", g_program_send_message_without_connection));
@@ -2443,7 +2627,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
                 ed::communicator::instance()->remove_connection(timer);
             });
 
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         // the thread exception happens when e->stop() is called
         //
@@ -2471,7 +2655,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         // the thread exception happens when e->stop() is called
         //
@@ -2580,7 +2764,7 @@ CATCH_TEST_CASE("reporter_executor_error_message", "[executor][reporter][error]"
                     ed::communicator::instance()->remove_connection(timer);
                 });
 
-            e->run();
+            CATCH_REQUIRE(e->run());
 
             // the thread exception happens when e->stop() is called
             //
@@ -2630,12 +2814,59 @@ CATCH_TEST_CASE("reporter_executor_error_message", "[executor][reporter][error]"
                 ed::communicator::instance()->remove_connection(messenger);
                 ed::communicator::instance()->remove_connection(timer);
             });
-        e->run();
+        CATCH_REQUIRE(e->run());
 
         CATCH_REQUIRE_THROWS_MATCHES(
               e->stop()
             , std::runtime_error
             , Catch::Matchers::ExceptionMessage("ppoll() timed out."));
+
+        // if we exited because of our timer, then the test did not pass
+        //
+        CATCH_REQUIRE_FALSE(timer->timed_out_prima());
+
+        CATCH_REQUIRE(s->get_exit_code() == -1);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("check parameter with incorrect regex fails")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("program_regex_parameter_no_match.rprtr", g_program_regex_parameter_no_match));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        messenger_responder::pointer_t messenger(std::make_shared<messenger_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , messenger_responder::sequence_t::SEQUENCE_ONE_MESSAGE));
+        ed::communicator::instance()->add_connection(messenger);
+        messenger_timer::pointer_t timer(std::make_shared<messenger_timer>(messenger));
+        ed::communicator::instance()->add_connection(timer);
+        messenger->set_timer(timer);
+        e->set_thread_done_callback([messenger, timer]()
+            {
+                ed::communicator::instance()->remove_connection(messenger);
+                ed::communicator::instance()->remove_connection(timer);
+            });
+        CATCH_REQUIRE(e->run());
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->stop()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage("message expected parameter \"version\", set to \"1\", to match regex \"_[a-z]+\"."));
 
         // if we exited because of our timer, then the test did not pass
         //
