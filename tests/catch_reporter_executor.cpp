@@ -1255,7 +1255,7 @@ public:
                 //
                 struct my_exception
                 {
-                    int code = 5;
+                    int code = 0;
                 };
                 throw my_exception({5});
 
