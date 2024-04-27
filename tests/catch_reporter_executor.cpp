@@ -65,17 +65,24 @@ namespace
 
 
 constexpr char const * const g_program_sleep_func =
-    "call(label: func_sleep_1s)\n"
+    "call(label: func_sleep)\n"
     "exit(timeout: 1)\n"
-    "label(name: func_sleep_1s)\n"
+    "label(name: func_sleep)\n"
     "sleep(seconds: 2.5)\n"
     "return()\n"
 ;
 
 constexpr char const * const g_program_start_thread =
     "set_variable(name: test, value: 33)\n"
+    "set_variable(name: test_copy_between_dollars, value: \"$${test}$\")\n"
     "run()\n"
     "set_variable(name: runner, value: 6.07)\n"
+    "set_variable(name: runner_copy_as_is, value: \"runner = ${runner}\")\n"
+    "set_variable(name: time_limit, value: @1713934141.107805991)\n"
+    "set_variable(name: time_limit_copy, value: \"limit: ${time_limit}\")\n"
+    "set_variable(name: host_ip, value: <127.7.3.51>)\n"
+    "set_variable(name: host_ip_copy, value: \"Host is at ${host_ip} address\")\n"
+    "set_variable(name: time_and_host_ip, value: \"time ${time_limit} and address ${host_ip}...\")\n"
 ;
 
 constexpr char const * const g_program_start_thread_twice =
@@ -633,6 +640,35 @@ constexpr char const * const g_program_unsupported_negation_address =
     "set_variable(name: bad, value: -<127.0.0.1:80>)\n"
 ;
 
+constexpr char const * const g_program_unterminated_double_string_variable =
+    "set_variable(name: my_var, value: \"blah\")\n"
+    "set_variable(name: missing_close, value: \"ref. ${my_var\")\n"
+;
+
+constexpr char const * const g_program_regex_in_double_string_variable =
+    "set_variable(name: my_regex, value: `[a-z]+`)\n"
+    "set_variable(name: missing_close, value: \"ref. ${my_regex}\")\n"
+;
+
+constexpr char const * const g_program_primary_string_variable_reference =
+    "set_variable(name: my_var, value: foo)\n"
+    "set_variable(name: longer_var, value: ${my_var})\n"
+;
+
+constexpr char const * const g_program_primary_integer_variable_reference =
+    "set_variable(name: my_var, value: 41)\n"
+    "set_variable(name: longer_var, value: ${my_var})\n"
+;
+
+constexpr char const * const g_program_wrong_primary_variable_reference =
+    "set_variable(name: my_var, value: foo)\n"
+    "set_variable(name: longer_var, value: ${wrong_name})\n"
+;
+
+constexpr char const * const g_program_double_string_variable_without_name =
+    "set_variable(name: missing_close, value: \"ref. ${} is empty\")\n"
+;
+
 constexpr char const * const g_program_unsupported_negation_repeat =
     "set_variable(name: bad, value: 'string' * -5)\n"
 ;
@@ -882,11 +918,67 @@ constexpr expected_trace_t const g_verify_starting_thread[] =
     },
     {
         .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
+        .f_name = "set_variable",
+    },
+    {
+        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
+        .f_name = "set_variable",
+    },
+    {
+        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
         .f_name = "run",
     },
     {
         .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
         .f_name = "run",
+    },
+    {
+        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
+        .f_name = "set_variable",
+    },
+    {
+        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
+        .f_name = "set_variable",
+    },
+    {
+        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
+        .f_name = "set_variable",
+    },
+    {
+        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
+        .f_name = "set_variable",
+    },
+    {
+        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
+        .f_name = "set_variable",
+    },
+    {
+        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
+        .f_name = "set_variable",
+    },
+    {
+        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
+        .f_name = "set_variable",
+    },
+    {
+        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
+        .f_name = "set_variable",
+    },
+    {
+        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
+        .f_name = "set_variable",
+    },
+    {
+        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
+        .f_name = "set_variable",
+    },
+    {
+        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
+        .f_name = "set_variable",
+    },
+    {
+        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
+        .f_name = "set_variable",
     },
     {
         .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
@@ -1211,13 +1303,27 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
 
-        CATCH_REQUIRE(s->get_statement_size() == 3);
+        CATCH_REQUIRE(s->get_statement_size() == 10);
 
         // before we run the script, there are no such variables
         //
         SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var(s->get_variable("test"));
         CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("test_copy_between_dollars");
+        CATCH_REQUIRE(var == nullptr);
         var = s->get_variable("runner");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("runner_copy_as_is");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("time_limit");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("time_limit_copy");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("host_ip");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("host_ip_copy");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("time_and_host_ip");
         CATCH_REQUIRE(var == nullptr);
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
@@ -1230,11 +1336,64 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
         CATCH_REQUIRE(var->get_type() == "integer");
         CATCH_REQUIRE(std::static_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(var)->get_integer() == 33);
 
+        var = s->get_variable("test_copy_between_dollars");
+        CATCH_REQUIRE(var != nullptr);
+        CATCH_REQUIRE(var->get_name() == "test_copy_between_dollars");
+        CATCH_REQUIRE(var->get_type() == "string");
+        CATCH_REQUIRE(std::static_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var)->get_string() == "$33$");
+
         var = s->get_variable("runner");
         CATCH_REQUIRE(var != nullptr);
         CATCH_REQUIRE(var->get_name() == "runner");
         CATCH_REQUIRE(var->get_type() == "floating_point");
         CATCH_REQUIRE(std::static_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_floating_point>(var)->get_floating_point() == 6.07);
+
+        var = s->get_variable("runner_copy_as_is");
+        CATCH_REQUIRE(var != nullptr);
+        CATCH_REQUIRE(var->get_name() == "runner_copy_as_is");
+        CATCH_REQUIRE(var->get_type() == "string");
+        CATCH_REQUIRE(std::static_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var)->get_string() == "runner = 6.07");
+
+        var = s->get_variable("time_limit");
+        CATCH_REQUIRE(var != nullptr);
+        CATCH_REQUIRE(var->get_name() == "time_limit");
+        CATCH_REQUIRE(var->get_type() == "timestamp");
+        snapdev::timespec_ex const time_limit(1713934141, 107805991);
+        CATCH_REQUIRE(std::static_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_timestamp>(var)->get_timestamp() == time_limit);
+
+        var = s->get_variable("time_limit_copy");
+        CATCH_REQUIRE(var != nullptr);
+        CATCH_REQUIRE(var->get_name() == "time_limit_copy");
+        CATCH_REQUIRE(var->get_type() == "string");
+        CATCH_REQUIRE(std::static_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var)->get_string() == "limit: 1713934141.107805991");
+
+        var = s->get_variable("host_ip");
+        CATCH_REQUIRE(var != nullptr);
+        CATCH_REQUIRE(var->get_name() == "host_ip");
+        CATCH_REQUIRE(var->get_type() == "address");
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(0),
+            .sin_addr = {
+                .s_addr = htonl(0x7f070333),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        CATCH_REQUIRE(std::static_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_address>(var)->get_address() == a);
+
+        var = s->get_variable("host_ip_copy");
+        CATCH_REQUIRE(var != nullptr);
+        CATCH_REQUIRE(var->get_name() == "host_ip_copy");
+        CATCH_REQUIRE(var->get_type() == "string");
+        CATCH_REQUIRE(std::static_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var)->get_string() == "Host is at 127.7.3.51 address");
+
+        var = s->get_variable("time_and_host_ip");
+        CATCH_REQUIRE(var != nullptr);
+        CATCH_REQUIRE(var->get_name() == "time_and_host_ip");
+        CATCH_REQUIRE(var->get_type() == "string");
+        CATCH_REQUIRE(std::static_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var)->get_string() == "time 1713934141.107805991 and address 127.7.3.51...");
     }
     CATCH_END_SECTION()
 
@@ -2076,6 +2235,108 @@ CATCH_TEST_CASE("reporter_executor_variables", "[executor][reporter][variable]")
         CATCH_REQUIRE(l->get_item(2) == nullptr);
     }
     CATCH_END_SECTION()
+
+    CATCH_START_SECTION("primary string variable reference")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("primary_variable_reference.rprtr", g_program_primary_string_variable_reference));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 2);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var(s->get_variable("my_var"));
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("longer_var");
+        CATCH_REQUIRE(var == nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        CATCH_REQUIRE(e->run());
+
+        var = s->get_variable("my_var");
+        CATCH_REQUIRE(var != nullptr);
+        SNAP_CATCH2_NAMESPACE::reporter::variable_string::pointer_t v(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var));
+        CATCH_REQUIRE(v != nullptr);
+        CATCH_REQUIRE(v->get_string() == "foo");
+
+        var = s->get_variable("longer_var");
+        CATCH_REQUIRE(var != nullptr);
+        v = std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var);
+        CATCH_REQUIRE(v != nullptr);
+        CATCH_REQUIRE(v->get_string() == "foo");
+
+        CATCH_REQUIRE(s->get_exit_code() == -1);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("primary integer variable reference")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("primary_variable_reference.rprtr", g_program_primary_integer_variable_reference));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 2);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var(s->get_variable("my_var"));
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("longer_var");
+        CATCH_REQUIRE(var == nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        CATCH_REQUIRE(e->run());
+
+        //var = s->get_variable("my_var");
+        //CATCH_REQUIRE(var != nullptr);
+        //SNAP_CATCH2_NAMESPACE::reporter::variable_integer::pointer_t v(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(var));
+        //CATCH_REQUIRE(v != nullptr);
+        //CATCH_REQUIRE(v->get_integer() == 41);
+
+        //var = s->get_variable("longer_var");
+        //CATCH_REQUIRE(var != nullptr);
+        //v = std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(var);
+        //CATCH_REQUIRE(v != nullptr);
+        //CATCH_REQUIRE(v->get_integer() == 41);
+
+        //CATCH_REQUIRE(s->get_exit_code() == -1);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("primary variable reference with wrong name")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("primary_variable_reference.rprtr", g_program_wrong_primary_variable_reference));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 2);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var(s->get_variable("my_var"));
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("longer_var");
+        CATCH_REQUIRE(var == nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        CATCH_REQUIRE(e->run());
+
+        var = s->get_variable("my_var");
+        CATCH_REQUIRE(var != nullptr);
+        SNAP_CATCH2_NAMESPACE::reporter::variable_string::pointer_t v(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var));
+        CATCH_REQUIRE(v != nullptr);
+        CATCH_REQUIRE(v->get_string() == "foo");
+
+        var = s->get_variable("longer_var");
+        CATCH_REQUIRE(var != nullptr);
+        v = std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var);
+        CATCH_REQUIRE(v != nullptr);
+        CATCH_REQUIRE(v->get_string() == ""); // wrong name so we get an empty string
+
+        CATCH_REQUIRE(s->get_exit_code() == -1);
+    }
+    CATCH_END_SECTION()
 }
 
 
@@ -2445,6 +2706,60 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
                 , Catch::Matchers::ExceptionMessage(
                           "unsupported negation."));
         }
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("variable reference without a '}'")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_negate.rprtr", g_program_unterminated_double_string_variable));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 2);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->start()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "found unclosed variable in \"ref. ${my_var\"."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("regex variable in double string")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_negate.rprtr", g_program_regex_in_double_string_variable));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 2);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->start()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "found variable of type \"regex\" which is not yet supported in ${...}."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("variable reference without a name")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_negate.rprtr", g_program_double_string_variable_without_name));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 1);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->start()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "found variable without a name in \"ref. ${} is empty\"."));
     }
     CATCH_END_SECTION()
 

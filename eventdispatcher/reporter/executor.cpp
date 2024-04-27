@@ -356,8 +356,7 @@ variable::pointer_t background_executor::primary_to_variable(expression::pointer
                 if(dollar + 1 >= original.length())
                 {
                     replaced += '$';
-                    pos = dollar + 1;
-                    continue;
+                    break;
                 }
                 if(original[dollar + 1] == '{')
                 {
@@ -373,7 +372,7 @@ variable::pointer_t background_executor::primary_to_variable(expression::pointer
                     pos = end + 1;
                     if(var_name.empty())
                     {
-                        throw std::runtime_error("found variable without name in \"" + original + "\".");
+                        throw std::runtime_error("found variable without a name in \"" + original + "\".");
                     }
                     variable::pointer_t var(f_state->get_variable(var_name));
                     if(var != nullptr)
@@ -382,14 +381,61 @@ variable::pointer_t background_executor::primary_to_variable(expression::pointer
                         {
                             replaced += std::dynamic_pointer_cast<variable_string>(var)->get_string();
                         }
+                        else if(var->get_type() == "integer")
+                        {
+                            replaced += std::to_string(std::dynamic_pointer_cast<variable_integer>(var)->get_integer());
+                        }
+                        else if(var->get_type() == "floating_point")
+                        {
+                            std::string floating_point_value(std::to_string(std::dynamic_pointer_cast<variable_floating_point>(var)->get_floating_point()));
+                            std::string::size_type const decimal_point_pos(floating_point_value.find('.'));
+                            if(decimal_point_pos != std::string::npos)
+                            {
+                                std::string::size_type zero_pos(floating_point_value.length());
+                                while(zero_pos > decimal_point_pos)
+                                {
+                                    --zero_pos;
+                                    if(floating_point_value[zero_pos] != '0')
+                                    {
+                                        break;
+                                    }
+                                }
+                                if(zero_pos != '.')
+                                {
+                                    ++zero_pos;
+                                }
+                                floating_point_value.resize(zero_pos);
+                            }
+                            replaced += floating_point_value;
+                        }
+                        else if(var->get_type() == "timestamp")
+                        {
+                            replaced += std::dynamic_pointer_cast<variable_timestamp>(var)->get_timestamp().to_timestamp();
+                        }
+                        else if(var->get_type() == "address")
+                        {
+                            addr::addr const a(std::dynamic_pointer_cast<variable_address>(var)->get_address());
+                            replaced += a.to_ipv4or6_string(
+                                              addr::STRING_IP_BRACKET_ADDRESS
+                                            | (a.get_port() != 0 ? addr::STRING_IP_PORT : 0)
+                                            | addr::STRING_IP_MASK_IF_NEEDED);
+                        }
                         else
                         {
-                            throw std::logic_error(
+                            throw std::runtime_error(
                                   "found variable of type \"" 
                                 + var->get_type()
                                 + "\" which is not yet supported in ${...}.");
                         }
                     }
+                }
+                else
+                {
+                    // a variable must be introduced with "${" if not then
+                    // it is just a stand alone dollar character
+                    //
+                    replaced += '$';
+                    ++pos;
                 }
             }
             std::static_pointer_cast<variable_string>(param)->set_string(replaced);
@@ -452,9 +498,8 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
             {
                 expr = std::make_shared<expression>();
                 expr->set_operator(operator_t::OPERATOR_PRIMARY);
-                token value;
-                value.set_token(token_t::TOKEN_SINGLE_STRING);
 
+                token value;
                 variable::pointer_t param(f_state->get_variable(t.get_string()));
                 if(param != nullptr)
                 {
@@ -473,7 +518,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                     }
                     else if(type == "string")
                     {
-                        //value.set_token(token_t::TOKEN_SINGLE_STRING); -- this is the default
+                        value.set_token(token_t::TOKEN_SINGLE_STRING);
                         value.set_string(std::static_pointer_cast<variable_string>(param)->get_string());
                     }
                     else if(type == "identifier")
@@ -488,8 +533,15 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                     }
                     else
                     {
-                        throw std::runtime_error("primary variable type not yet supported.");
+                        throw std::runtime_error(
+                              "primary variable type \""
+                            + type
+                            + "\" not yet supported.");
                     }
+                }
+                else
+                {
+                    value.set_token(token_t::TOKEN_SINGLE_STRING);
                 }
                 expr->set_token(value);
             }
