@@ -1077,6 +1077,8 @@ public:
         SEQUENCE_ONE_MESSAGE,
         SEQUENCE_UNWANTED_MESSAGE,
         SEQUENCE_READY_HELP_MESSAGE,
+        SEQUENCE_READY_THROW,
+        SEQUENCE_READY_THROW_WHAT,
     };
 
     messenger_responder(
@@ -1203,6 +1205,62 @@ public:
 
             default:
                 throw std::runtime_error("reached step 4 of SEQUENCE_READY_HELP_MESSAGE?");
+
+            }
+            break;
+
+        case sequence_t::SEQUENCE_READY_THROW:
+            switch(f_step)
+            {
+            case 1:
+                // done in this case
+                break;
+
+            case 2:
+                if(msg.get_command() != "HELP")
+                {
+                    throw std::runtime_error(
+                          "second message expected to be HELP, got "
+                        + msg.get_command()
+                        + " instead.");
+                }
+
+                // got the help message, now do a "legitimate" throw
+                //
+                throw std::runtime_error("testing that the executor catches these exceptions.");
+
+            default:
+                throw std::runtime_error("reached step 4 of SEQUENCE_READY_THROW?");
+
+            }
+            break;
+
+        case sequence_t::SEQUENCE_READY_THROW_WHAT:
+            switch(f_step)
+            {
+            case 1:
+                // done in this case
+                break;
+
+            case 2:
+                if(msg.get_command() != "HELP")
+                {
+                    throw std::runtime_error(
+                          "second message expected to be HELP, got "
+                        + msg.get_command()
+                        + " instead.");
+                }
+
+                // got the help message, now do a "legitimate" throw
+                //
+                struct my_exception
+                {
+                    int code = 5;
+                };
+                throw my_exception({5});
+
+            default:
+                throw std::runtime_error("reached step 4 of SEQUENCE_READY_THROW_WHAT?");
 
             }
             break;
@@ -3086,6 +3144,128 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
         std::string const filename(source_dir + "/tests/rprtr/not_this_one");
         SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(SNAP_CATCH2_NAMESPACE::reporter::create_lexer(filename));
         CATCH_REQUIRE(l == nullptr);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("verify that the executor::run() function does a try/catch as expected")
+    {
+        // in this case, load the program from a file
+        // to verify that this works as expected
+        //
+        std::string const source_dir(SNAP_CATCH2_NAMESPACE::g_source_dir());
+        std::string const filename(source_dir + "/tests/rprtr/send_and_receive_complete_messages");
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(SNAP_CATCH2_NAMESPACE::reporter::create_lexer(filename));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 30);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        messenger_responder::pointer_t messenger(std::make_shared<messenger_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , messenger_responder::sequence_t::SEQUENCE_READY_THROW));
+        ed::communicator::instance()->add_connection(messenger);
+        messenger_timer::pointer_t timer(std::make_shared<messenger_timer>(messenger));
+        ed::communicator::instance()->add_connection(timer);
+        messenger->set_timer(timer);
+
+        // the exception capture in run() is not returned; it should be
+        // printed in the console, making it possible to see what happened
+        //
+        CATCH_REQUIRE_FALSE(e->run());
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->stop()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage("ppoll() timed out."));
+
+        // if we exited because of our timer, then the test did not pass
+        //
+        CATCH_REQUIRE_FALSE(timer->timed_out_prima());
+
+        CATCH_REQUIRE(s->get_exit_code() == -1);
+
+        // in this case, the variable does not get unset because the
+        // crash happens before we have the chance to do that
+        //
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var(s->get_variable("got_register"));
+        CATCH_REQUIRE(var != nullptr);
+        CATCH_REQUIRE(var->get_type() == "integer");
+        CATCH_REQUIRE(std::static_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(var)->get_integer() == 1);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("verify that the executor::run() function does a try/catch of non-standard exceptions")
+    {
+        // in this case, load the program from a file
+        // to verify that this works as expected
+        //
+        std::string const source_dir(SNAP_CATCH2_NAMESPACE::g_source_dir());
+        std::string const filename(source_dir + "/tests/rprtr/send_and_receive_complete_messages");
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(SNAP_CATCH2_NAMESPACE::reporter::create_lexer(filename));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 30);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        messenger_responder::pointer_t messenger(std::make_shared<messenger_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , messenger_responder::sequence_t::SEQUENCE_READY_THROW_WHAT));
+        ed::communicator::instance()->add_connection(messenger);
+        messenger_timer::pointer_t timer(std::make_shared<messenger_timer>(messenger));
+        ed::communicator::instance()->add_connection(timer);
+        messenger->set_timer(timer);
+
+        // the exception capture in run() is not returned; it should be
+        // printed in the console, making it possible to see what happened
+        //
+        CATCH_REQUIRE_FALSE(e->run());
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->stop()
+            , std::runtime_error
+            , Catch::Matchers::ExceptionMessage("ppoll() timed out."));
+
+        // if we exited because of our timer, then the test did not pass
+        //
+        CATCH_REQUIRE_FALSE(timer->timed_out_prima());
+
+        CATCH_REQUIRE(s->get_exit_code() == -1);
+
+        // in this case, the variable does not get unset because the
+        // crash happens before we have the chance to do that
+        //
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var(s->get_variable("got_register"));
+        CATCH_REQUIRE(var != nullptr);
+        CATCH_REQUIRE(var->get_type() == "integer");
+        CATCH_REQUIRE(std::static_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(var)->get_integer() == 1);
     }
     CATCH_END_SECTION()
 }

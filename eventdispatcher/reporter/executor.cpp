@@ -295,21 +295,22 @@ variable::pointer_t background_executor::primary_to_variable(expression::pointer
     token t(value->get_token());
     switch(t.get_token())
     {
-    case token_t::TOKEN_VARIABLE:
-        param = f_state->get_variable(t.get_string());
-        if(param == nullptr)
-        {
-            // empty string or void?
-            //
-            param = std::make_shared<variable_string>(name, "string");
-        }
-        else
-        {
-            // we need to create a clone because the name is likely different
-            //
-            param = param->clone(name);
-        }
-        break;
+    // this case seems to be captured differently at the moment?
+    //case token_t::TOKEN_VARIABLE:
+    //    param = f_state->get_variable(t.get_string());
+    //    if(param == nullptr)
+    //    {
+    //        // empty string or void?
+    //        //
+    //        param = std::make_shared<variable_string>(name, "string");
+    //    }
+    //    else
+    //    {
+    //        // we need to create a clone because the name is likely different
+    //        //
+    //        param = param->clone(name);
+    //    }
+    //    break;
 
     case token_t::TOKEN_IDENTIFIER:
         param = std::make_shared<variable_string>(name, "identifier");
@@ -554,10 +555,12 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                     }
                     else
                     {
+                        // LCOV_EXCL_START
                         throw std::runtime_error(
                               "primary variable of type \""
                             + type
                             + "\" not yet supported.");
+                        // LCOV_EXCL_STOP
                     }
                 }
                 else
