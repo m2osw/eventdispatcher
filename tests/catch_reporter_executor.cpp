@@ -1723,22 +1723,23 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
         {
             char const *            f_name = nullptr;
             char const *            f_value = nullptr;
+            char const *            f_type = nullptr;
         };
 
         verify_t verify[] =
         {
-            { "t01", "identifier" },
-            { "t11", "single string" },
-            { "t12", "single string" },
-            { "t13", "single string" },
-            { "t14", "double string" },
-            { "t21", "identify" },
-            { "t22", "single string" },
-            { "t23", "double string" },
-            { "t31", "single36" },
-            { "t32", "258single" },
-            { "t33", "string102" },
-            { "t34", "5005double" },
+            { "t01", "identifier", "identifier" },
+            { "t11", "single string", "string" },
+            { "t12", "single string", "string" },
+            { "t13", "single string", "string" },
+            { "t14", "double string", "string" },
+            { "t21", "identify", "identifier" },
+            { "t22", "single string", "string" },
+            { "t23", "double string", "string" },
+            { "t31", "single36", "string" },
+            { "t32", "258single", "string" },
+            { "t33", "string102", "string" },
+            { "t34", "5005double", "string" },
         };
 
         SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var;
@@ -1748,7 +1749,7 @@ CATCH_TEST_CASE("reporter_executor", "[executor][reporter]")
             var = s->get_variable(v.f_name);
             CATCH_REQUIRE(var != nullptr);
             CATCH_REQUIRE(var->get_name() == v.f_name);
-            CATCH_REQUIRE(var->get_type() == "string");
+            CATCH_REQUIRE(var->get_type() == v.f_type);
             CATCH_REQUIRE(std::static_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var)->get_string() == v.f_value);
         }
     }
