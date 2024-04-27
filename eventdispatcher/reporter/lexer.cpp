@@ -236,7 +236,7 @@ token lexer::next_token()
                 }
 
                 t.set_token(token_t::TOKEN_TIMESPEC);
-                t.set_string(s); // variable name
+                t.set_string(s);
                 return t;
             }
             snapdev::NOT_REACHED();

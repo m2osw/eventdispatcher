@@ -650,14 +650,21 @@ constexpr char const * const g_program_regex_in_double_string_variable =
     "set_variable(name: missing_close, value: \"ref. ${my_regex}\")\n"
 ;
 
-constexpr char const * const g_program_primary_string_variable_reference =
-    "set_variable(name: my_var, value: foo)\n"
-    "set_variable(name: longer_var, value: ${my_var})\n"
-;
-
-constexpr char const * const g_program_primary_integer_variable_reference =
-    "set_variable(name: my_var, value: 41)\n"
-    "set_variable(name: longer_var, value: ${my_var})\n"
+constexpr char const * const g_program_primary_variable_references =
+    "set_variable(name: my_string_var, value: \"foo\")\n"
+    "set_variable(name: longer_string_var, value: ${my_string_var})\n"
+    "set_variable(name: my_integer_var, value: 41)\n"
+    "set_variable(name: longer_integer_var, value: ${my_integer_var})\n"
+    "set_variable(name: my_floating_point_var, value: 303.601)\n"
+    "set_variable(name: longer_floating_point_var, value: ${my_floating_point_var})\n"
+    "set_variable(name: my_identifier_var, value: bar)\n"
+    "set_variable(name: longer_identifier_var, value: ${my_identifier_var})\n"
+    "set_variable(name: my_regex_var, value: `^[regex]$`)\n"
+    "set_variable(name: longer_regex_var, value: ${my_regex_var})\n"
+    "set_variable(name: my_address_var, value: <10.12.14.16:89>)\n"
+    "set_variable(name: longer_address_var, value: ${my_address_var})\n"
+    "set_variable(name: my_timestamp_var, value: @1714241733.419438123)\n"
+    "set_variable(name: longer_timestamp_var, value: ${my_timestamp_var})\n"
 ;
 
 constexpr char const * const g_program_wrong_primary_variable_reference =
@@ -2236,71 +2243,160 @@ CATCH_TEST_CASE("reporter_executor_variables", "[executor][reporter][variable]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("primary string variable reference")
+    CATCH_START_SECTION("primary variable references")
     {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("primary_variable_reference.rprtr", g_program_primary_string_variable_reference));
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("primary_variable_references.rprtr", g_program_primary_variable_references));
         SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
         SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
         p->parse_program();
 
-        CATCH_REQUIRE(s->get_statement_size() == 2);
+        CATCH_REQUIRE(s->get_statement_size() == 14);
 
-        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var(s->get_variable("my_var"));
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var(s->get_variable("my_string_var"));
         CATCH_REQUIRE(var == nullptr);
-        var = s->get_variable("longer_var");
+        var = s->get_variable("longer_string_var");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("my_integer_var");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("longer_integer_var");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("my_floating_point_var");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("longer_floating_point_var");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("my_identifier_var");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("longer_identifier_var");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("my_regex_var");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("longer_regex_var");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("my_address_var");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("longer_address_var");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("my_timestamp_var");
+        CATCH_REQUIRE(var == nullptr);
+        var = s->get_variable("longer_timestamp_var");
         CATCH_REQUIRE(var == nullptr);
 
         SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
         e->start();
         CATCH_REQUIRE(e->run());
 
-        var = s->get_variable("my_var");
+        var = s->get_variable("my_string_var");
         CATCH_REQUIRE(var != nullptr);
-        SNAP_CATCH2_NAMESPACE::reporter::variable_string::pointer_t v(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var));
-        CATCH_REQUIRE(v != nullptr);
-        CATCH_REQUIRE(v->get_string() == "foo");
+        SNAP_CATCH2_NAMESPACE::reporter::variable_string::pointer_t vs(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var));
+        CATCH_REQUIRE(vs != nullptr);
+        CATCH_REQUIRE(vs->get_type() == "string");
+        CATCH_REQUIRE(vs->get_string() == "foo");
 
-        var = s->get_variable("longer_var");
+        var = s->get_variable("longer_string_var");
         CATCH_REQUIRE(var != nullptr);
-        v = std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var);
-        CATCH_REQUIRE(v != nullptr);
-        CATCH_REQUIRE(v->get_string() == "foo");
+        vs = std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var);
+        CATCH_REQUIRE(vs != nullptr);
+        CATCH_REQUIRE(vs->get_type() == "string");
+        CATCH_REQUIRE(vs->get_string() == "foo");
+
+        var = s->get_variable("my_integer_var");
+        CATCH_REQUIRE(var != nullptr);
+        SNAP_CATCH2_NAMESPACE::reporter::variable_integer::pointer_t vi(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(var));
+        CATCH_REQUIRE(vi != nullptr);
+        CATCH_REQUIRE(vi->get_type() == "integer");
+        CATCH_REQUIRE(vi->get_integer() == 41);
+
+        var = s->get_variable("longer_integer_var");
+        CATCH_REQUIRE(var != nullptr);
+        vi = std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(var);
+        CATCH_REQUIRE(vi != nullptr);
+        CATCH_REQUIRE(vi->get_type() == "integer");
+        CATCH_REQUIRE(vi->get_integer() == 41);
+
+        var = s->get_variable("my_floating_point_var");
+        CATCH_REQUIRE(var != nullptr);
+        SNAP_CATCH2_NAMESPACE::reporter::variable_floating_point::pointer_t vf(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_floating_point>(var));
+        CATCH_REQUIRE(vf != nullptr);
+        CATCH_REQUIRE(vf->get_type() == "floating_point");
+        CATCH_REQUIRE(vf->get_floating_point() == 303.601);
+
+        var = s->get_variable("longer_floating_point_var");
+        CATCH_REQUIRE(var != nullptr);
+        vf = std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_floating_point>(var);
+        CATCH_REQUIRE(vf != nullptr);
+        CATCH_REQUIRE(vf->get_type() == "floating_point");
+        CATCH_REQUIRE(vf->get_floating_point() == 303.601);
+
+        var = s->get_variable("my_identifier_var");
+        CATCH_REQUIRE(var != nullptr);
+        vs = std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var);
+        CATCH_REQUIRE(vs != nullptr);
+        CATCH_REQUIRE(vs->get_type() == "identifier");
+        CATCH_REQUIRE(vs->get_string() == "bar");
+
+        var = s->get_variable("longer_identifier_var");
+        CATCH_REQUIRE(var != nullptr);
+        vs = std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_string>(var);
+        CATCH_REQUIRE(vs != nullptr);
+        CATCH_REQUIRE(vs->get_type() == "identifier");
+        CATCH_REQUIRE(vs->get_string() == "bar");
+
+        var = s->get_variable("my_regex_var");
+        CATCH_REQUIRE(var != nullptr);
+        SNAP_CATCH2_NAMESPACE::reporter::variable_regex::pointer_t vre(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_regex>(var));
+        CATCH_REQUIRE(vre != nullptr);
+        CATCH_REQUIRE(vre->get_type() == "regex");
+        CATCH_REQUIRE(vre->get_regex() == "^[regex]$");
+
+        var = s->get_variable("longer_regex_var");
+        CATCH_REQUIRE(var != nullptr);
+        vre = std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_regex>(var);
+        CATCH_REQUIRE(vre != nullptr);
+        CATCH_REQUIRE(vre->get_type() == "regex");
+        CATCH_REQUIRE(vre->get_regex() == "^[regex]$");
+
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(89),
+            .sin_addr = {
+                .s_addr = htonl(0x0A0C0E10),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+
+        var = s->get_variable("my_address_var");
+        CATCH_REQUIRE(var != nullptr);
+        SNAP_CATCH2_NAMESPACE::reporter::variable_address::pointer_t va(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_address>(var));
+        CATCH_REQUIRE(va != nullptr);
+        CATCH_REQUIRE(va->get_type() == "address");
+        CATCH_REQUIRE(va->get_address() == a);
+
+        var = s->get_variable("longer_address_var");
+        CATCH_REQUIRE(var != nullptr);
+        va = std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_address>(var);
+        CATCH_REQUIRE(va != nullptr);
+        CATCH_REQUIRE(va->get_type() == "address");
+        CATCH_REQUIRE(va->get_address() == a);
+
+        snapdev::timespec_ex const expected_timestamp{ 1714241733, 419438123 };
+
+        var = s->get_variable("my_timestamp_var");
+        CATCH_REQUIRE(var != nullptr);
+        SNAP_CATCH2_NAMESPACE::reporter::variable_timestamp::pointer_t vts(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_timestamp>(var));
+        CATCH_REQUIRE(vts != nullptr);
+        CATCH_REQUIRE(vts->get_type() == "timestamp");
+        CATCH_REQUIRE(vts->get_timestamp() == expected_timestamp);
+
+        var = s->get_variable("longer_timestamp_var");
+        CATCH_REQUIRE(var != nullptr);
+        vts = std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_timestamp>(var);
+        CATCH_REQUIRE(vts != nullptr);
+        CATCH_REQUIRE(vts->get_type() == "timestamp");
+        CATCH_REQUIRE(vts->get_timestamp() == expected_timestamp);
 
         CATCH_REQUIRE(s->get_exit_code() == -1);
-    }
-    CATCH_END_SECTION()
-
-    CATCH_START_SECTION("primary integer variable reference")
-    {
-        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("primary_variable_reference.rprtr", g_program_primary_integer_variable_reference));
-        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
-        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
-        p->parse_program();
-
-        CATCH_REQUIRE(s->get_statement_size() == 2);
-
-        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var(s->get_variable("my_var"));
-        CATCH_REQUIRE(var == nullptr);
-        var = s->get_variable("longer_var");
-        CATCH_REQUIRE(var == nullptr);
-
-        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
-        e->start();
-        CATCH_REQUIRE(e->run());
-
-        //var = s->get_variable("my_var");
-        //CATCH_REQUIRE(var != nullptr);
-        //SNAP_CATCH2_NAMESPACE::reporter::variable_integer::pointer_t v(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(var));
-        //CATCH_REQUIRE(v != nullptr);
-        //CATCH_REQUIRE(v->get_integer() == 41);
-
-        //var = s->get_variable("longer_var");
-        //CATCH_REQUIRE(var != nullptr);
-        //v = std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(var);
-        //CATCH_REQUIRE(v != nullptr);
-        //CATCH_REQUIRE(v->get_integer() == 41);
-
-        //CATCH_REQUIRE(s->get_exit_code() == -1);
     }
     CATCH_END_SECTION()
 

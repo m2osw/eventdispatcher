@@ -49,7 +49,7 @@ void variable_string::set_string(std::string const & s)
 
 variable::pointer_t variable_string::clone(std::string const & name) const
 {
-    pointer_t clone(std::make_shared<variable_string>(name));
+    pointer_t clone(std::make_shared<variable_string>(name, get_type()));
     clone->f_string = f_string;
     return clone;
 }

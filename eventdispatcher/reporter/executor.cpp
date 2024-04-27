@@ -508,7 +508,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                     std::string const & type(param->get_type());
                     if(type == "integer")
                     {
-                        value.set_token(token_t::TOKEN_IDENTIFIER);
+                        value.set_token(token_t::TOKEN_INTEGER);
                         value.set_integer(std::static_pointer_cast<variable_integer>(param)->get_integer());
                     }
                     else if(type == "floating_point")
@@ -518,6 +518,8 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                     }
                     else if(type == "string")
                     {
+                        // note: the string was already converted once by
+                        //       now so use TOKEN_SINGLE_STRING
                         value.set_token(token_t::TOKEN_SINGLE_STRING);
                         value.set_string(std::static_pointer_cast<variable_string>(param)->get_string());
                     }
@@ -531,10 +533,29 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                         value.set_token(token_t::TOKEN_REGEX);
                         value.set_string(std::static_pointer_cast<variable_regex>(param)->get_regex());
                     }
+                    else if(type == "address")
+                    {
+                        value.set_token(token_t::TOKEN_ADDRESS);
+                        value.set_string(std::static_pointer_cast<variable_address>(param)->get_address()
+                                .to_ipv4or6_string(
+                                      addr::STRING_IP_BRACKET_ADDRESS
+                                    | addr::STRING_IP_PORT
+                                    | addr::STRING_IP_MASK_IF_NEEDED));
+                    }
+                    else if(type == "timestamp")
+                    {
+                        value.set_token(token_t::TOKEN_TIMESPEC);
+                        snapdev::timespec_ex const timestamp(std::static_pointer_cast<variable_timestamp>(param)->get_timestamp());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+                        value.set_integer((static_cast<__int128>(timestamp.tv_sec) << 64) | timestamp.tv_nsec);
+#pragma GCC diagnostic pop
+                        value.set_string(timestamp.to_timestamp());
+                    }
                     else
                     {
                         throw std::runtime_error(
-                              "primary variable type \""
+                              "primary variable of type \""
                             + type
                             + "\" not yet supported.");
                     }
