@@ -123,9 +123,8 @@ add_library(${PROJECT_NAME} SHARED
     version.cpp
 )
 
-# TODO: define a variable in our top cmake/Modules/... and then use it
-#       in these statement to force a minimum C++ compiler for all targets
-#target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+# the linux header includes a &= with an enumb which the compiler doesn't like
+set_source_files_properties(process_changed.cpp PROPERTIES COMPILE_FLAGS -fpermissive)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
