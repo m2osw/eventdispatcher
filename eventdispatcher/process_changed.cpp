@@ -53,6 +53,7 @@
 #include    <linux/cn_proc.h>
 #pragma GCC diagnostic pop
 #include    <linux/netlink.h>
+#include    <linux/version.h>
 #include    <sys/socket.h>
 
 
