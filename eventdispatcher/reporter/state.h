@@ -30,6 +30,11 @@
 #include    <eventdispatcher/message.h>
 
 
+// C++
+//
+#include    <functional>
+
+
 
 // view these as an extension of the snapcatch2 library
 namespace SNAP_CATCH2_NAMESPACE
