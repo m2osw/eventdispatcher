@@ -49,7 +49,7 @@
 //
 #include    <linux/connector.h>
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wpermissive"
 #include    <linux/cn_proc.h>
 #pragma GCC diagnostic pop
 #include    <linux/netlink.h>
