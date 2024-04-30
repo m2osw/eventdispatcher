@@ -919,15 +919,24 @@ void process_changed::process_read()
             process_changed_event event;
             event.set_cpu(proc_ev->cpu);
             event.set_timestamp(proc_ev->timestamp_ns);
+
+// in newer versions of Linux the PROC_EVENT_... are not defined inside the
+// proc_event structure
+//
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,8,1)
+#define proc_event_namespace
+#else
+#define proc_event_namespace proc_event::
+#endif
             switch(proc_ev->what)
             {
-            case proc_event::PROC_EVENT_NONE:
+            case proc_event_namespace PROC_EVENT_NONE:
                 // report the error as an exit code (same size, it fits)
                 event.set_event(process_event_t::PROCESS_EVENT_NONE);
                 event.set_exit_code(proc_ev->event_data.ack.err);
                 break;
 
-            case proc_event::PROC_EVENT_FORK:
+            case proc_event_namespace PROC_EVENT_FORK:
                 event.set_event(process_event_t::PROCESS_EVENT_FORK);
                 event.set_pid(proc_ev->event_data.fork.child_pid);
                 event.set_tgid(proc_ev->event_data.fork.child_tgid);
@@ -935,13 +944,13 @@ void process_changed::process_read()
                 event.set_parent_tgid(proc_ev->event_data.fork.parent_tgid);
                 break;
 
-            case proc_event::PROC_EVENT_EXEC:
+            case proc_event_namespace PROC_EVENT_EXEC:
                 event.set_event(process_event_t::PROCESS_EVENT_EXEC);
                 event.set_pid(proc_ev->event_data.id.process_pid);
                 event.set_tgid(proc_ev->event_data.id.process_tgid);
                 break;
 
-            case proc_event::PROC_EVENT_UID:
+            case proc_event_namespace PROC_EVENT_UID:
                 event.set_event(process_event_t::PROCESS_EVENT_UID);
                 event.set_pid(proc_ev->event_data.id.process_pid);
                 event.set_tgid(proc_ev->event_data.id.process_tgid);
@@ -949,7 +958,7 @@ void process_changed::process_read()
                 event.set_euid(proc_ev->event_data.id.e.euid);
                 break;
 
-            case proc_event::PROC_EVENT_GID:
+            case proc_event_namespace PROC_EVENT_GID:
                 event.set_event(process_event_t::PROCESS_EVENT_GID);
                 event.set_pid(proc_ev->event_data.id.process_pid);
                 event.set_tgid(proc_ev->event_data.id.process_tgid);
@@ -957,13 +966,13 @@ void process_changed::process_read()
                 event.set_egid(proc_ev->event_data.id.e.egid);
                 break;
 
-            case proc_event::PROC_EVENT_SID:
+            case proc_event_namespace PROC_EVENT_SID:
                 event.set_event(process_event_t::PROCESS_EVENT_SESSION);
                 event.set_pid(proc_ev->event_data.sid.process_pid);
                 event.set_tgid(proc_ev->event_data.sid.process_tgid);
                 break;
 
-            case proc_event::PROC_EVENT_PTRACE:
+            case proc_event_namespace PROC_EVENT_PTRACE:
                 event.set_event(process_event_t::PROCESS_EVENT_PTRACE);
                 event.set_pid(proc_ev->event_data.ptrace.process_pid);
                 event.set_tgid(proc_ev->event_data.ptrace.process_tgid);
@@ -971,7 +980,7 @@ void process_changed::process_read()
                 event.set_parent_tgid(proc_ev->event_data.ptrace.tracer_tgid);
                 break;
 
-            case proc_event::PROC_EVENT_COMM:
+            case proc_event_namespace PROC_EVENT_COMM:
                 event.set_event(process_event_t::PROCESS_EVENT_COMMAND);
                 event.set_pid(proc_ev->event_data.comm.process_pid);
                 event.set_tgid(proc_ev->event_data.comm.process_tgid);
@@ -986,13 +995,13 @@ void process_changed::process_read()
                                 , sizeof(proc_ev->event_data.comm.comm))));
                 break;
 
-            case proc_event::PROC_EVENT_COREDUMP:
+            case proc_event_namespace PROC_EVENT_COREDUMP:
                 event.set_event(process_event_t::PROCESS_EVENT_COREDUMP);
                 event.set_pid(proc_ev->event_data.coredump.process_pid);
                 event.set_tgid(proc_ev->event_data.coredump.process_tgid);
                 break;
 
-            case proc_event::PROC_EVENT_EXIT:
+            case proc_event_namespace PROC_EVENT_EXIT:
                 event.set_event(process_event_t::PROCESS_EVENT_EXIT);
                 event.set_pid(proc_ev->event_data.exit.process_pid);
                 event.set_tgid(proc_ev->event_data.exit.process_tgid);
