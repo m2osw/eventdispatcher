@@ -53,7 +53,7 @@ class communicator;
 typedef int                             priority_t;
 
 constexpr priority_t                    EVENT_MIN_PRIORITY = 0;
-constexpr priority_t                    EVENT_DEFAULT__PRIORITY = 100;
+constexpr priority_t                    EVENT_DEFAULT_PRIORITY = 100;
 constexpr priority_t                    EVENT_MAX_PRIORITY = 255;
 
 
@@ -95,7 +95,7 @@ public:
 
     std::uint16_t               get_event_limit() const;
     void                        set_event_limit(std::uint16_t event_limit);
-    std::uint16_t               get_processing_time_limit() const;
+    std::int32_t                get_processing_time_limit() const;
     void                        set_processing_time_limit(std::int32_t processing_time_limit);
 
     std::int64_t                get_timeout_delay() const;
@@ -139,12 +139,12 @@ private:
     bool                        f_enabled = true;
     bool                        f_done = false;
     std::uint16_t               f_event_limit = 5;                  // limit before giving other events a chance
-    priority_t                  f_priority = EVENT_DEFAULT__PRIORITY;
+    priority_t                  f_priority = EVENT_DEFAULT_PRIORITY;
     std::int64_t                f_timeout_delay = -1;               // in microseconds
     std::int64_t                f_timeout_next_date = -1;           // in microseconds, when we use the f_timeout_delay
     std::int64_t                f_timeout_date = -1;                // in microseconds
     std::int64_t                f_saved_timeout_stamp = -1;         // in microseconds
-    std::int32_t                f_processing_time_limit = 500000;   // in microseconds
+    std::int32_t                f_processing_time_limit = 500'000;  // in microseconds
     int                         f_fds_position = -1;
 };
 #pragma GCC diagnostic pop

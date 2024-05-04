@@ -33,6 +33,7 @@ if(SnapCatch2_FOUND)
         catch_message.cpp
         catch_process.cpp
         catch_process_info.cpp
+        catch_timer.cpp
         catch_unix_dgram.cpp
         catch_unix_stream.cpp
         catch_version.cpp

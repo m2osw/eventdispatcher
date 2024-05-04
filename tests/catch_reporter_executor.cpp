@@ -1309,6 +1309,10 @@ public:
 
     void process_timeout()
     {
+        // call default function(s)
+        //
+        timer::process_timeout();
+
         remove_from_communicator();
         f_messenger->remove_from_communicator();
         f_timed_out = true;

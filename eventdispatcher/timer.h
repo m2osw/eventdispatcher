@@ -19,9 +19,9 @@
 #pragma once
 
 /** \file
- * \brief Event dispatch class.
+ * \brief Timer connection.
  *
- * Class used to handle events.
+ * Class used to get a signal at a given date or every N seconds.
  */
 
 // self

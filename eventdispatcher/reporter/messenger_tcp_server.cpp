@@ -44,11 +44,16 @@ messenger_tcp_server::messenger_tcp_server(
     , f_state(s)
 {
     set_name("tcp_server");
+    keep_alive();
 }
 
 
 void messenger_tcp_server::process_accept()
 {
+    // make sure lower level has a chance to capture the event
+    //
+    tcp_server_connection::process_accept();
+
     ed::tcp_bio_client::pointer_t client(accept());
     if(client == nullptr)
     {

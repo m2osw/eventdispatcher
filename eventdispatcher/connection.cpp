@@ -274,10 +274,13 @@ int connection::get_priority() const
  */
 void connection::set_priority(priority_t priority)
 {
-    if(priority < 0 || priority > EVENT_MAX_PRIORITY)
+    if(priority < EVENT_MIN_PRIORITY
+    || priority > EVENT_MAX_PRIORITY)
     {
         std::string err("connection::set_priority(): priority out of range,"
-                        " this instance of connection accepts priorities between 0 and ");
+                        " this instance of connection accepts priorities between ");
+        err += std::to_string(EVENT_MIN_PRIORITY);
+        err += " and ";
         err += std::to_string(EVENT_MAX_PRIORITY);
         err += ".";
         throw parameter_error(err);
@@ -384,7 +387,7 @@ void connection::set_event_limit(uint16_t event_limit)
  *
  * \sa set_processing_time_limit()
  */
-uint16_t connection::get_processing_time_limit() const
+std::int32_t connection::get_processing_time_limit() const
 {
     return f_processing_time_limit;
 }
@@ -487,7 +490,11 @@ void connection::set_timeout_delay(std::int64_t timeout_us)
 
     // immediately calculate the next timeout date
     //
-    f_timeout_next_date = get_current_date() + f_timeout_delay;
+    f_timeout_next_date = get_current_date();
+    if(f_timeout_delay != -1)
+    {
+        f_timeout_next_date += f_timeout_delay;
+    }
 }
 
 
@@ -514,11 +521,11 @@ void connection::calculate_next_tick()
 
     // what is now?
     //
-    int64_t const now(get_current_date());
+    std::int64_t const now(get_current_date());
 
     // gap between now and the last time we triggered this timeout
     //
-    int64_t const gap(now - f_timeout_next_date);
+    std::int64_t const gap(now - f_timeout_next_date);
     if(gap < 0)
     {
         // somehow we got called even though now is still larger
@@ -535,7 +542,8 @@ void connection::calculate_next_tick()
     }
 
     // number of ticks in that gap, rounded up
-    int64_t const ticks((gap + f_timeout_delay - 1) / f_timeout_delay);
+    //
+    std::int64_t const ticks((gap + f_timeout_delay - 1) / f_timeout_delay);
 
     // the next date may be equal to now, however, since it is very
     // unlikely that the tick has happened right on time, and took
@@ -661,7 +669,7 @@ int64_t connection::get_timeout_timestamp() const
  * \sa get_saved_timeout_timestamp()
  * \sa run()
  */
-int64_t connection::save_timeout_timestamp()
+std::int64_t connection::save_timeout_timestamp()
 {
     f_saved_timeout_stamp = get_timeout_timestamp();
     return f_saved_timeout_stamp;
@@ -683,7 +691,7 @@ int64_t connection::save_timeout_timestamp()
  * \sa save_timeout_timestamp()
  * \sa run()
  */
-int64_t connection::get_saved_timeout_timestamp() const
+std::int64_t connection::get_saved_timeout_timestamp() const
 {
     return f_saved_timeout_stamp;
 }
@@ -707,6 +715,7 @@ void connection::non_blocking() const
         int optval(1);
         if(ioctl(get_socket(), FIONBIO, &optval) == -1)
         {
+            // LCOV_EXCL_START
             int const e(errno);
             SNAP_LOG_WARNING
                 << "connection::non_blocking(): error "
@@ -715,6 +724,7 @@ void connection::non_blocking() const
                 << strerror(e)
                 << ") occurred trying to mark socket as non-blocking."
                 << SNAP_LOG_SEND;
+            // LCOV_EXCL_STOP
         }
     }
 }
@@ -737,6 +747,7 @@ void connection::keep_alive() const
         socklen_t const optlen(sizeof(optval));
         if(setsockopt(get_socket(), SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) != 0)
         {
+            // LCOV_EXCL_START
             int const e(errno);
             SNAP_LOG_WARNING
                 << "connection::keep_alive(): error "
@@ -745,6 +756,7 @@ void connection::keep_alive() const
                 << strerror(e)
                 << ") occurred trying to mark socket with SO_KEEPALIVE."
                 << SNAP_LOG_SEND;
+            // LCOV_EXCL_STOP
         }
     }
 }
