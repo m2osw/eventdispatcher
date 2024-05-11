@@ -663,6 +663,21 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 }
                 break;
 
+            case mix_token(token_t::TOKEN_TIMESPEC, token_t::TOKEN_TIMESPEC):
+                {
+                    result.set_token(token_t::TOKEN_TIMESPEC);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+                    __int128 timestamp_int(lt.get_integer());
+                    snapdev::timespec_ex lt_timestamp(timestamp_int >> 64, timestamp_int & 0xffffffffffffffff);
+                    timestamp_int = rt.get_integer();
+                    snapdev::timespec_ex const rt_timestamp(timestamp_int >> 64, timestamp_int & 0xffffffffffffffff);
+                    lt_timestamp += rt_timestamp;
+                    result.set_integer((static_cast<__int128>(lt_timestamp.tv_sec) << 64) | lt_timestamp.tv_nsec);
+#pragma GCC diagnostic pop
+                }
+                break;
+
             case mix_token(token_t::TOKEN_IDENTIFIER, token_t::TOKEN_IDENTIFIER):
                 result.set_token(token_t::TOKEN_IDENTIFIER);
                 result.set_string(lt.get_string() + rt.get_string());
@@ -835,6 +850,21 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                     snapdev::timespec_ex offset(lt.get_floating_point());
                     offset -= timestamp;
                     result.set_integer((static_cast<__int128>(offset.tv_sec) << 64) | offset.tv_nsec);
+#pragma GCC diagnostic pop
+                }
+                break;
+
+            case mix_token(token_t::TOKEN_TIMESPEC, token_t::TOKEN_TIMESPEC):
+                {
+                    result.set_token(token_t::TOKEN_TIMESPEC);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+                    __int128 timestamp_int(lt.get_integer());
+                    snapdev::timespec_ex lt_timestamp(timestamp_int >> 64, timestamp_int & 0xffffffffffffffff);
+                    timestamp_int = rt.get_integer();
+                    snapdev::timespec_ex const rt_timestamp(timestamp_int >> 64, timestamp_int & 0xffffffffffffffff);
+                    lt_timestamp -= rt_timestamp;
+                    result.set_integer((static_cast<__int128>(lt_timestamp.tv_sec) << 64) | lt_timestamp.tv_nsec);
 #pragma GCC diagnostic pop
                 }
                 break;

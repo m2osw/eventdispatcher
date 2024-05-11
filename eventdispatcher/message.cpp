@@ -1627,9 +1627,7 @@ void message::add_parameter(
       std::string const & name
     , snapdev::timespec_ex const & value)
 {
-    std::stringstream ss;
-    ss << value;
-    add_parameter(name, ss.str());
+    add_parameter(name, value.to_timestamp(true));
 }
 
 

@@ -48,12 +48,14 @@ enum class match_t
     MATCH_CALLBACK
 };
 
-typedef match_t (*match_func_t)(std::string const & expr, message & msg);
+struct dispatcher_match;
 
-match_t     one_to_one_match(std::string const & expr, message & msg);
-match_t     one_to_one_callback_match(std::string const & expr, message & msg);
-match_t     always_match(std::string const & expr, message & msg);
-match_t     callback_match(std::string const & expr, message & msg);
+typedef match_t (*match_func_t)(dispatcher_match const * m, message & msg);
+
+match_t     one_to_one_match(dispatcher_match const * m, message & msg);
+match_t     one_to_one_callback_match(dispatcher_match const * m, message & msg);
+match_t     always_match(dispatcher_match const * m, message & msg);
+match_t     callback_match(dispatcher_match const * m, message & msg);
 
 struct dispatcher_match
 {

@@ -6,6 +6,7 @@ project=ed
 [public]
 cmd_absolutely=ABSOLUTELY
 cmd_alive=ALIVE
+cmd_commands=COMMANDS
 cmd_help=HELP
 cmd_invalid=INVALID
 cmd_leak=LEAK
@@ -19,5 +20,14 @@ cmd_service_unavailable=SERVICE_UNAVAILABLE
 cmd_stop=STOP
 cmd_unknown=UNKNOWN
 cmd_unregister=UNREGISTER
+
+param_command=command
+param_list=list
+param_message=message
+param_my_address=my_address
+param_reply_timestamp=reply_timestamp
+param_serial=serial
+param_service=service
+param_timestamp=timestamp
 
 # vim: syntax=dosini

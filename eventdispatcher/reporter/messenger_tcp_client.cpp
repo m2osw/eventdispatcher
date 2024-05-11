@@ -48,7 +48,7 @@ messenger_tcp_client::messenger_tcp_client(
 
 void messenger_tcp_client::process_message(ed::message & msg)
 {
-    f_state->set_message(msg);
+    f_state->add_message(msg);
 }
 
 

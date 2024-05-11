@@ -51,18 +51,43 @@ namespace ed
  * The structure takes a few parameters as follow:
  *
  * \li f_expr -- the "expression" to be matched to the command name
- *               for example "HELP".
- * \li f_execute -- the function offset to execute on a match.
+ *               for example "HELP";
+ * \li f_callback -- the function to execute on a match; this parameter is
+ *                   mandatory;
  * \li f_match -- the function to check whether the expression is a match;
  *                it has a default of one_to_one_match() which means the
  *                f_expr string is viewed as a plain string defining the
- *                message name as is.
+ *                message command as is.
  *
  * The command name is called "f_expr" but some matching functions may
  * make use of the "f_expr" parameter as an expression such as a
  * regular expression. Such functions will be added here with time, you
  * may also have your own, of course. The match function is expected to
  * be a static or standalone function.
+ *
+ * The f_match() function accepts two parameters: f_expr and msg. If
+ * f_expr is a null pointer, then an empty string is passed.
+ *
+ * A simplified algorithm representing how these parameters are used:
+ *
+ * \code
+ *     m = f_match(f_expr, msg);
+ *     if(m == TRUE || m == CALLBACK)
+ *     {
+ *         f_callback();
+ *         if(m == TRUE)
+ *         {
+ *             return true;
+ *         }
+ *     }
+ *     return false;
+ * \endcode
+ *
+ * As we can see, if we have a match, the callback gets called. If the
+ * match is TRUE, we stop all processing. If the match is CALLBACK, then
+ * the function always returns false which means it continues to check
+ * for other matches. Using a CALLBACK is useful when you also use
+ * a priority.
  */
 
 
@@ -141,14 +166,21 @@ namespace ed
  * It is permissible to use a match function to modify the
  * message in some way, however, it is not recommended.
  *
- * \param[in] expr  The expression to compare the command against.
+ * \param[in] m  The match being compared to the message.
  * \param[in] msg  The message to match against this expression.
  *
  * \return MATCH_TRUE if it is a match, MATCH_FALSE otherwise.
  */
-match_t one_to_one_match(std::string const & expr, message & msg)
+match_t one_to_one_match(dispatcher_match const * m, message & msg)
 {
-    return expr == msg.get_command()
+    // note: the expression cannot be null if you used the define_match()
+    //       function but if you define the match structure by hand...
+    //
+    if(m->f_expr == nullptr)
+    {
+        return match_t::MATCH_FALSE;
+    }
+    return m->f_expr == msg.get_command()
                     ? match_t::MATCH_TRUE
                     : match_t::MATCH_FALSE;
 }
@@ -163,14 +195,18 @@ match_t one_to_one_match(std::string const & expr, message & msg)
  * This is really useful if you want to capture the arrival of a message
  * but not prevent further captures.
  *
- * \param[in] expr  The expression to compare the command against.
+ * \param[in] m  The match being compared to the message.
  * \param[in] msg  The message to match against this expression.
  *
  * \return MATCH_CALLBACK if it is a match, MATCH_FALSE otherwise.
  */
-match_t one_to_one_callback_match(std::string const & expr, message & msg)
+match_t one_to_one_callback_match(dispatcher_match const * m, message & msg)
 {
-    return expr == msg.get_command()
+    if(m->f_expr == nullptr)
+    {
+        return match_t::MATCH_FALSE;
+    }
+    return m->f_expr == msg.get_command()
                     ? match_t::MATCH_CALLBACK
                     : match_t::MATCH_FALSE;
 }
@@ -182,14 +218,14 @@ match_t one_to_one_callback_match(std::string const & expr, message & msg)
  * close your list of messages and return a specific message. In
  * most cases this is used to reply with the UNKNOWN message.
  *
- * \param[in] expr  The expression to compare the command against.
+ * \param[in] m  The match being compared to the message.
  * \param[in] msg  The message to match against this expression.
  *
  * \return Always returns MATCH_TRUE.
  */
-match_t always_match(std::string const & expr, message & msg)
+match_t always_match(dispatcher_match const * m, message & msg)
 {
-    snapdev::NOT_USED(expr, msg);
+    snapdev::NOT_USED(m, msg);
     return match_t::MATCH_TRUE;
 }
 
@@ -204,14 +240,14 @@ match_t always_match(std::string const & expr, message & msg)
  * some code against many or all messages before actually
  * processing the messages individually.
  *
- * \param[in] expr  The expression is ignored.
+ * \param[in] m  The match being compared to the message.
  * \param[in] msg  The message is ignored.
  *
  * \return Always returns MATCH_CALLBACK.
  */
-match_t callback_match(std::string const & expr, message & msg)
+match_t callback_match(dispatcher_match const * m, message & msg)
 {
-    snapdev::NOT_USED(expr, msg);
+    snapdev::NOT_USED(m, msg);
     return match_t::MATCH_CALLBACK;
 }
 
@@ -253,13 +289,13 @@ match_t callback_match(std::string const & expr, message & msg)
  */
 bool dispatcher_match::execute(message & msg) const
 {
-    match_t const m(f_match(f_expr == nullptr ? std::string() : f_expr, msg));
+    match_t const m(f_match(this, msg));
     if(m == match_t::MATCH_TRUE
     || m == match_t::MATCH_CALLBACK)
     {
         if(f_callback == nullptr)
         {
-            throw invalid_callback("neither f_execute nor f_callback was defined.");
+            throw invalid_callback("dispatcher_match::f_callback is nullptr.");
         }
         f_callback(msg);
         if(m == match_t::MATCH_TRUE)

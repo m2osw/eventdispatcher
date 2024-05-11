@@ -66,6 +66,7 @@ class message
 public:
     typedef std::shared_ptr<message>    pointer_t;
     typedef std::vector<message>        vector_t;
+    typedef std::list<message>          list_t;
     typedef string_map_t                parameters_t;
 
     enum class format_t

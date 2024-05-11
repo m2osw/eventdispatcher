@@ -533,7 +533,7 @@ bool communicator::run()
 
             // check whether a timeout is defined in this connection
             //
-            int64_t const timestamp(c->save_timeout_timestamp());
+            std::int64_t const timestamp(c->save_timeout_timestamp());
             if(timestamp != -1)
             {
                 // the timeout event gives us a time when to tick
@@ -618,17 +618,20 @@ bool communicator::run()
             {
                 // timeout is in the past so timeout immediately, but
                 // still check for events if any
+                //
                 timeout = 0;
             }
             else
             {
                 // convert microseconds to milliseconds for poll()
+                //
                 timeout /= 1000;
                 if(timeout == 0)
                 {
                     // less than one is a waste of time (CPU intensive
                     // until the time is reached, we can be 1 ms off
                     // instead...)
+                    //
                     timeout = 1;
                 }
             }
@@ -771,10 +774,10 @@ bool communicator::run()
 
                 // now check whether we have a timeout on this connection
                 //
-                int64_t const timestamp(c->get_saved_timeout_timestamp());
+                std::int64_t const timestamp(c->get_saved_timeout_timestamp());
                 if(timestamp != -1)
                 {
-                    int64_t const now(get_current_date());
+                    std::int64_t const now(get_current_date());
                     if(now >= timestamp)
                     {
 //SNAP_LOG_TRACE

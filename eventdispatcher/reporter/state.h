@@ -102,8 +102,8 @@ public:
     compare_t               get_compare() const;
     void                    set_compare(compare_t c);
 
-    ed::message const &     get_message() const;
-    void                    set_message(ed::message const & msg);
+    ed::message             get_message() const;
+    void                    add_message(ed::message const & msg);
     void                    clear_message();
 
     bool                    get_in_thread() const;
@@ -137,7 +137,7 @@ private:
     compare_t               f_compare = compare_t::COMPARE_UNDEFINED;
     bool                    f_in_thread = false;
     int                     f_exit_code = -1;
-    ed::message             f_message = ed::message();
+    ed::message::list_t     f_message = ed::message::list_t();
     trace_callback_t        f_trace_callback = nullptr;
     connection_type_t       f_connection_type = connection_type_t::CONNECTION_TYPE_TCP;
     ed::connection::pointer_t

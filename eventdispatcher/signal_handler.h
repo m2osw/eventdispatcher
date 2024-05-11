@@ -141,8 +141,8 @@ public:
     void                        remove_callback(callback_id_t id);
     void                        set_show_stack(signal_mask_t sigs);
     signal_mask_t               get_show_stack() const;
-    void                        add_terminal_signals(signal_mask_t sigs);
-    void                        add_ignored_signals(signal_mask_t sigs);
+    signal_mask_t               add_terminal_signals(signal_mask_t sigs);
+    signal_mask_t               add_ignored_signals(signal_mask_t sigs);
     void                        remove_signals(signal_mask_t sigs);
     void                        remove_all_signals();
     static char const *         get_signal_name(int sig);

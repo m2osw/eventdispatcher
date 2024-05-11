@@ -1,6 +1,10 @@
 
+* Replace the time/date with a timespec_ex and use `ppoll()` which matches
+  one to one (instead of our manually handled `timeout` variable).
+
 * See to have clients and servers for HTTP/HTTPS/HTTP2/HTTP3
-  (we already have such in libsnapwebsites, only it uses `snapuri` -> edhttp)
+  (we already have HTTP/HTTPS in libsnapwebsites, only it uses
+  `snapuri` which was moved to `edhttp`)
 
 * Config describing allowed messages with their parameters and values for
   such and a way to track which message was ever sent (i.e. a form of
@@ -59,9 +63,6 @@
 
 * Update the dispatcher classes documentation to match the new scheme (the
   callback instead of a function offset in one class).
-
-* Replace the time/date with a timespec_ex and use `ppoll()` which matches
-  one to one (instead of our manually handled `timeout` variable).
 
 * Consider using the SO_LINGER to not wait on a `close(socket)` (i.e. turn
   off the lingering). This means the kernel closes the socket in the

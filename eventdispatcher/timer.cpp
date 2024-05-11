@@ -52,11 +52,17 @@ namespace ed
  * This function initializes the timer object with the specified \p timeout
  * defined in microseconds.
  *
- * Note that by default all connection objects are marked as persistent
+ * Note that by default all connection objects are persistent
  * since in most cases that is the type of connections you are interested
- * in. Therefore timers are also marked as persistent. This means if you
+ * in. Therefore timers are also persistent. This means if you
  * want a one time callback, you want to call the remove_connection()
  * function with your timer from your callback.
+ *
+ * Pass 0 as \p timeout to have a one time process_timeout() call once
+ * the run() function is ready. Pass -1 to start with a disabled timer.
+ * Pass a positive number to get ticks every time that amount of
+ * microseconds have passed. You can change these values using the
+ * set_timeout_date() and set_timeout_delay() functions later.
  *
  * \note
  * POSIX offers timers (in Linux since kernel version 2.6), only

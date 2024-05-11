@@ -162,51 +162,6 @@ namespace
 {
 
 
-/** \brief Signal number to signal name table.
- *
- * This table is used to transform a signal number in a name.
- *
- * \sa signal_handler::get_signal_name()
- */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-constexpr char const * g_signal_names[64] =
-{
-    [0]         = nullptr,
-    [SIGHUP]    = "SIGHUP",
-    [SIGINT]    = "SIGINT",
-    [SIGQUIT]   = "SIGQUIT",
-    [SIGILL]    = "SIGILL",
-    [SIGTRAP]   = "SIGTRAP",
-    [SIGABRT]   = "SIGABRT",
-    [SIGBUS]    = "SIGBUS",
-    [SIGFPE]    = "SIGFPE",
-    [SIGKILL]   = "SIGKILL",
-    [SIGUSR1]   = "SIGUSR1",
-    [SIGSEGV]   = "SIGSEGV",
-    [SIGUSR2]   = "SIGUSR2",
-    [SIGPIPE]   = "SIGPIPE",
-    [SIGALRM]   = "SIGALRM",
-    [SIGTERM]   = "SIGTERM",
-    [SIGSTKFLT] = "SIGSTKFLT",
-    [SIGCHLD]   = "SIGCHLD",
-    [SIGCONT]   = "SIGCONT",
-    [SIGSTOP]   = "SIGSTOP",
-    [SIGTSTP]   = "SIGTSTP",
-    [SIGTTIN]   = "SIGTTIN",
-    [SIGTTOU]   = "SIGTTOU",
-    [SIGURG]    = "SIGURG",
-    [SIGXCPU]   = "SIGXCPU",
-    [SIGXFSZ]   = "SIGXFSZ",
-    [SIGVTALRM] = "SIGVTALRM",
-    [SIGPROF]   = "SIGPROF",
-    [SIGWINCH]  = "SIGWINCH",
-    [SIGPOLL]   = "SIGPOLL",
-    [SIGPWR]    = "SIGPWR",
-    [SIGSYS]    = "SIGSYS",
-};
-#pragma GCC diagnostic pop
-
 
 /** \brief Set of signals for which we want to log a stack trace.
  *
@@ -260,15 +215,12 @@ signal_handler::signal_handler()
 /** \brief Restore the signals.
  *
  * The signal handler destructor restores all the signals that it changed.
- *
- * \note
- * At this point, the destructor is never called since we use an instance
- * and we do not give a way to destroy it. Unloading the library would have
- * that effect, but that generally doesn't happen.
  */
 signal_handler::~signal_handler()
 {
     remove_all_signals();
+
+    cppthread::guard g(*cppthread::g_system_mutex);
     g_signal_handler = nullptr;
 }
 
@@ -319,7 +271,7 @@ signal_handler::pointer_t signal_handler::create_instance(
 
     if(g_signal_handler != nullptr)
     {
-        throw invalid_callback("signal_handler::create_instance() must be called once before signal_handler::get_instance() ever gets called.");
+        throw initialization_error("signal_handler::create_instance() must be called once before signal_handler::get_instance() ever gets called.");
     }
 
     pointer_t handler(get_instance());
@@ -390,7 +342,8 @@ void signal_handler::add_callback(callback_id_t id, int sig, callback_t callback
     {
         throw invalid_signal(
                   "signal_handler::add_callback() called with invalid signal number "
-                + std::to_string(sig));
+                + std::to_string(sig)
+                + ".");
     }
 
     if(callback == nullptr)
@@ -485,21 +438,31 @@ signal_handler::signal_mask_t signal_handler::get_show_stack() const
  * the function first sends the stack trace to the logs, then it terminates
  * the process with a log specifying which signal terminated the process.
  *
+ * The function returns the mask of the signals that were added. If some
+ * of the bits are not set as you'd expect, that is because the signal
+ * was already added before hand (and not automatically as a terminal
+ * signal--i.e. it could be an ignored and handled signal).
+ *
  * \note
  * Some signals can't be caught (i.e. SIGKILL). It is useless to add those
  * to this list.
  *
  * \param[in] sigs  The mask of signals that are expected to terminate your
  * process.
+ *
+ * \return A mask of the signals that were added.
  */
-void signal_handler::add_terminal_signals(signal_mask_t sigs)
+signal_handler::signal_mask_t signal_handler::add_terminal_signals(signal_mask_t sigs)
 {
-    cppthread::guard g(f_mutex);
+    signal_mask_t result(0);
 
+    cppthread::guard g(f_mutex);
     for(size_t i(1); i < std::size(f_signal_actions); ++i)
     {
         if((sigs & (1L << i)) != 0 && f_signal_actions[i] == nullptr)
         {
+            result |= 1L << i;
+
             sigaction_t action = sigaction_t();
             action.sa_sigaction = signal_handler_func;
             action.sa_flags = SA_SIGINFO;
@@ -508,6 +471,8 @@ void signal_handler::add_terminal_signals(signal_mask_t sigs)
             sigaction(i, &action, f_signal_actions[i].get());
         }
     }
+
+    return result;
 }
 
 
@@ -522,15 +487,20 @@ void signal_handler::add_terminal_signals(signal_mask_t sigs)
  * Trying to ignore signals such as SIGSEGV and SIGBUS is not a good idea.
  *
  * \param[in] sigs  The mask of signals you want to ignore.
+ *
+ * \return A mask of the signals that were added.
  */
-void signal_handler::add_ignored_signals(signal_mask_t sigs)
+signal_handler::signal_mask_t signal_handler::add_ignored_signals(signal_mask_t sigs)
 {
-    cppthread::guard g(f_mutex);
+    signal_mask_t result(0);
 
+    cppthread::guard g(f_mutex);
     for(size_t i(1); i < std::size(f_signal_actions); ++i)
     {
         if((sigs & (1L << i)) != 0 && f_signal_actions[i] == nullptr)
         {
+            result |= 1L << i;
+
             sigaction_t action = sigaction_t();
             action.sa_handler = SIG_IGN;
 
@@ -538,6 +508,8 @@ void signal_handler::add_ignored_signals(signal_mask_t sigs)
             sigaction(i, &action, f_signal_actions[i].get());
         }
     }
+
+    return result;
 }
 
 
@@ -590,7 +562,13 @@ void signal_handler::remove_all_signals()
 /** \brief Get the name of the signal.
  *
  * This function converts the signal \p sig to a name one can use to print
- * the name in a log or a console.
+ * the name in a log or a console. This is the abbreviated name, meaning
+ * just and only the part after the "SIG" letters (i.e. "ILL", "TERM", etc.)
+ *
+ * \note
+ * It is also possible to use the strsignal() function to get a more
+ * user friendly name (although maybe unknown to some because many
+ * Unix users learned the abbreviated names).
  *
  * \param[in] sig  The signal number.
  *
@@ -598,11 +576,7 @@ void signal_handler::remove_all_signals()
  */
 char const * signal_handler::get_signal_name(int sig)
 {
-    if(static_cast<std::size_t>(sig) >= std::size(g_signal_names))
-    {
-        return nullptr;
-    }
-    return g_signal_names[sig];
+    return sigabbrev_np(sig);
 }
 
 

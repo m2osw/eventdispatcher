@@ -134,15 +134,15 @@ void connection_with_send_message::msg_alive(message & msg)
     absolutely.user_data(msg.user_data<void>());
     absolutely.reply_to(msg);
     absolutely.set_command(g_name_ed_cmd_absolutely);
-    if(msg.has_parameter("serial"))
+    if(msg.has_parameter(g_name_ed_param_serial))
     {
-        absolutely.add_parameter("serial", msg.get_parameter("serial"));
+        absolutely.add_parameter(g_name_ed_param_serial, msg.get_parameter(g_name_ed_param_serial));
     }
-    if(msg.has_parameter("timestamp"))
+    if(msg.has_parameter(g_name_ed_param_timestamp))
     {
-        absolutely.add_parameter("timestamp", msg.get_parameter("timestamp"));
+        absolutely.add_parameter(g_name_ed_param_timestamp, msg.get_parameter(g_name_ed_param_timestamp));
     }
-    absolutely.add_parameter("reply_timestamp", time(nullptr));
+    absolutely.add_parameter(g_name_ed_param_reply_timestamp, time(nullptr));
     if(!send_message(absolutely, false))
     {
         SNAP_LOG_WARNING
@@ -236,8 +236,8 @@ void connection_with_send_message::msg_help(message & msg)
     message reply;
     reply.user_data(msg.user_data<void>());
     reply.reply_to(msg);
-    reply.set_command("COMMANDS");
-    reply.add_parameter("list", snapdev::join_strings(commands, ","));
+    reply.set_command(g_name_ed_cmd_commands);
+    reply.add_parameter(g_name_ed_param_list, snapdev::join_strings(commands, ","));
     if(!send_message(reply, false))
     {
         SNAP_LOG_WARNING
@@ -363,7 +363,7 @@ void connection_with_send_message::msg_ready(message & msg)
 {
     // get this computer address
     //
-    f_my_address = addr::string_to_addr(msg.get_parameter("my_address"));
+    f_my_address = addr::string_to_addr(msg.get_parameter(g_name_ed_param_my_address));
 
     // pass the message so any additional info can be accessed by callee.
     //
@@ -485,13 +485,16 @@ void connection_with_send_message::msg_log_unknown(message & msg)
     //
     SNAP_LOG_ERROR
         << "we sent command \""
-        << (msg.has_parameter("command")
-                ? msg.get_parameter("command")
+        << (msg.has_parameter(g_name_ed_param_command)
+                ? msg.get_parameter(g_name_ed_param_command)
                 : "<undefined>")
         << "\" and the destination replied with \""
         << msg.get_command()
         << "\""
            " so we probably did not get the expected result."
+        << (msg.has_parameter(g_name_ed_param_message)
+                ? " Message: " + msg.get_parameter(g_name_ed_param_message)
+                : "")
         << SNAP_LOG_SEND;
 }
 
@@ -529,7 +532,7 @@ void connection_with_send_message::msg_reply_with_unknown(message & msg)
     unknown.user_data(msg.user_data<void>());
     unknown.reply_to(msg);
     unknown.set_command(g_name_ed_cmd_unknown);
-    unknown.add_parameter("command", msg.get_command());
+    unknown.add_parameter(g_name_ed_param_command, msg.get_command());
     if(!send_message(unknown, false))
     {
         SNAP_LOG_WARNING
@@ -760,7 +763,7 @@ bool connection_with_send_message::register_service()
 {
     message register_msg;
     register_msg.set_command(g_name_ed_cmd_register);
-    register_msg.add_parameter("service", get_service_name());
+    register_msg.add_parameter(g_name_ed_param_service, get_service_name());
     register_msg.add_version_parameter();
     if(!send_message(register_msg, false))
     {
@@ -803,7 +806,7 @@ void connection_with_send_message::unregister_service()
     //
     message unregister_msg;
     unregister_msg.set_command(g_name_ed_cmd_unregister);
-    unregister_msg.add_parameter("service", get_service_name(true));
+    unregister_msg.add_parameter(g_name_ed_param_service, get_service_name(true));
     if(!send_message(unregister_msg, false))
     {
         SNAP_LOG_WARNING

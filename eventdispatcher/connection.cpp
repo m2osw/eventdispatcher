@@ -441,12 +441,13 @@ int64_t connection::get_timeout_delay() const
 }
 
 
-/** \brief Change the timeout of this connection.
+/** \brief Change the timeout tick of this connection.
  *
  * Each connection can be setup with a timeout in microseconds.
- * When that delay is past, the callback function of the connection
- * is called with the EVENT_TIMEOUT flag set (note that the callback
- * may happen along other events.)
+ * When that delay is past, the process_timeout() virtual function
+ * of the connection is called. Note that the process_timeout()
+ * function is called last, after all the other events were
+ * processed.
  *
  * The current date when this function gets called is the starting
  * point for each following trigger. Because many other callbacks
@@ -458,20 +459,35 @@ int64_t connection::get_timeout_delay() const
  * \large tick_i = start-time + k \times delay
  * \f]
  *
- * In other words the time and date when ticks happen does not slip
- * with time. However, this implementation may skip one or more
- * ticks at any time (especially if the delay is very small).
+ * In other words, the time and date when ticks happen does not slip
+ * with time. However, this implementation may skip ticks
+ * (especially if the delay is very small).
  *
- * When a tick triggers an EVENT_TIMEOUT, the communicator::run()
+ * When a connection triggers a tick, the communicator::run()
  * function calls calculate_next_tick() to calculate the time when
- * the next tick will occur which will always be in the function.
+ * the next tick will occur.
+ *
+ * \note
+ * If the set_timeout_date() is also used, then it has priority. That
+ * means the tick will not occur until after the timeout date was
+ * triggered.
+ *
+ * \warning
+ * Some connections offered by the eventdispatcher library make
+ * use of this very timer (a.k.a. tcp_client_permanent_message_connection)
+ * and trying to make use of that connection's timer is likely to
+ * mess up that connection's internals. Please check the documentation
+ * about each connection to make sure you can use its timer before doing
+ * so or just create your own timer object.
  *
  * \exception parameter_error
- * This exception is raised if the timeout_us parameter is not considered
- * valid. The minimum value is 10 and microseconds. You may use -1 to turn
+ * This exception is raised if the \p timeout_us parameter is not considered
+ * valid. The minimum value is 10 microseconds. You may use -1 to turn
  * off the timeout delay feature.
  *
  * \param[in] timeout_us  The new time out in microseconds.
+ *
+ * \sa set_timeout_date()
  */
 void connection::set_timeout_delay(std::int64_t timeout_us)
 {
@@ -490,10 +506,16 @@ void connection::set_timeout_delay(std::int64_t timeout_us)
 
     // immediately calculate the next timeout date
     //
-    f_timeout_next_date = get_current_date();
     if(f_timeout_delay != -1)
     {
-        f_timeout_next_date += f_timeout_delay;
+        f_timeout_delay_start_date = get_current_date();
+        f_timeout_next_date = f_timeout_delay_start_date + f_timeout_delay;
+    }
+    else
+    {
+        // off
+        //
+        f_timeout_next_date = -1;
     }
 }
 
@@ -507,8 +529,11 @@ void connection::set_timeout_delay(snapdev::timespec_ex const & timeout_ns)
 /** \brief Calculate when the next tick shall occur.
  *
  * This function calculates the date and time when the next tick
- * has to be triggered. This function is called after the
- * last time the EVENT_TIMEOUT callback was called.
+ * has to be triggered. This function is called just before the
+ * process_timeout() virtual function gets called. This gives
+ * you the ability to update the value in your function without
+ * affecting this computation.
+ *
  */
 void connection::calculate_next_tick()
 {
@@ -525,8 +550,7 @@ void connection::calculate_next_tick()
 
     // gap between now and the last time we triggered this timeout
     //
-    std::int64_t const gap(now - f_timeout_next_date);
-    if(gap < 0)
+    if(now < f_timeout_next_date)
     {
         // somehow we got called even though now is still larger
         // than f_timeout_next_date
@@ -541,9 +565,9 @@ void connection::calculate_next_tick()
         return;
     }
 
-    // number of ticks in that gap, rounded up
+    // number of ticks since we started, rounded up
     //
-    std::int64_t const ticks((gap + f_timeout_delay - 1) / f_timeout_delay);
+    std::int64_t const ticks((now - f_timeout_delay_start_date + f_timeout_delay - 1) / f_timeout_delay);
 
     // the next date may be equal to now, however, since it is very
     // unlikely that the tick has happened right on time, and took
@@ -576,17 +600,31 @@ int64_t connection::get_timeout_date() const
  * This function can be used to setup one specific date and time
  * at which this connection should timeout. This specific date
  * is used internally to calculate the amount of time the poll()
- * will have to wait, not including the time it will take
- * to execute other callbacks if any needs to be run (i.e. the
- * timeout is executed last, after all other events, and also
+ * has to wait, not including the time it will take
+ * to execute other callbacks if any needs to be run (i.e.
+ * timeouts are executed last, after all other events, and also
  * priority is used to know which other connections are parsed
- * first.)
+ * first).
+ *
+ * \note
+ * This time and date has priority over the delay timeout feature.
+ * If both are set, then only this one is used.
+ *
+ * \warning
+ * Some connections offered by the eventdispatcher library make
+ * use of this very timer (a.k.a. tcp_client_permanent_message_connection)
+ * and trying to make use of that connection's timer is likely to
+ * mess up that connection's internals. Please check the documentation
+ * about each connection to make sure you can use its timer before doing
+ * so or just create your own timer object.
  *
  * \exception parameter_error
  * If the date_us is too small (less than -1) then this exception
  * is raised.
  *
  * \param[in] date_us  The new time out in micro seconds.
+ *
+ * \sa set_timeout_delay()
  */
 void connection::set_timeout_date(std::int64_t date_us)
 {
@@ -611,30 +649,46 @@ void connection::set_timeout_date(snapdev::timespec_ex const & date)
 
 /** \brief Return when this connection expects a timeout.
  *
- * All connections can include a timeout specification which is
- * either a specific day and time set with set_timeout_date()
- * or an repetitive timeout which is defined with the
- * set_timeout_delay().
+ * All connections can include a timeout specification.
  *
- * If neither timeout is set the function returns -1. Otherwise
- * the function will calculate when the connection is to time
- * out and return that date.
+ * There are two possible timeout timestamps:
  *
- * If the date is already in the past then the callback
- * is called immediately with the EVENT_TIMEOUT flag set.
+ * 1. a specific day and time set with set_timeout_date(); or
+ * 2. a repetitive timeout (ticks), which is defined with the
+ *    set_timeout_delay().
+ *
+ * If both are defined, then the date specified with the
+ * set_timeout_date() function has priority. The ticks are
+ * completely ignored until that one date is current and
+ * the process_timeout() gets called. This means you can
+ * skip many ticks on purpose.
+ *
+ * If neither timeout is set the function returns -1.
+ *
+ * The time when the next tick is to happen is calculated by
+ * the calculate_next_tick() function.
+ *
+ * If the date is already in the past, then the process_timeout()
+ * callback is called nearly immediately. The poll() function is
+ * called with a 1ms pause. (This is done that way to avoid tight
+ * loops in case you have an issue somewhere making the ticks
+ * happen too fast).
  *
  * \note
- * If the timeout date is triggered, then the loop calls
+ * If the timeout date is triggered, then the run() function calls
  * set_timeout_date(-1) because the date timeout is expected
  * to only be triggered once. This resetting is done before
- * calling the user callback which can in turn set a new
+ * calling the user callback, which can in turn set a new
  * value back in the connection object.
  *
  * \return This function returns -1 when no timers are set
  *         or a timestamp in microseconds when the timer is
  *         expected to trigger.
+ *
+ * \sa set_timeout_date()
+ * \sa set_timeout_delay()
  */
-int64_t connection::get_timeout_timestamp() const
+std::int64_t connection::get_timeout_timestamp() const
 {
     if(f_timeout_date != -1)
     {

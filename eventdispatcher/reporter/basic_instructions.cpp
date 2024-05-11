@@ -26,6 +26,7 @@
 #include    "variable_list.h"
 #include    "variable_regex.h"
 #include    "variable_string.h"
+#include    "variable_timestamp.h"
 
 
 
@@ -33,6 +34,12 @@
 //
 #include    <eventdispatcher/connection_with_send_message.h>
 #include    <eventdispatcher/signal.h>
+
+
+// advgetopt
+//
+#include    <advgetopt/validator_double.h>
+#include    <advgetopt/validator_integer.h>
 
 
 // snapdev
@@ -209,6 +216,16 @@ constexpr parameter_declaration const g_listen_params[] =
 };
 
 
+constexpr parameter_declaration const g_now_params[] =
+{
+    {
+        .f_name = "variable_name",
+        .f_type = "identifier",
+    },
+    {}
+};
+
+
 constexpr parameter_declaration const g_print_params[] =
 {
     {
@@ -228,6 +245,11 @@ constexpr parameter_declaration const g_save_parameter_value_params[] =
     {
         .f_name = "variable_name",
         .f_type = "identifier",
+    },
+    {
+        .f_name = "type",
+        .f_type = "identifier",
+        .f_required = false,
     },
     {}
 };
@@ -640,7 +662,7 @@ public:
 
     virtual void func(state & s) override
     {
-        ed::message const & msg(s.get_message());
+        ed::message const msg(s.get_message());
         std::string const & command(msg.get_command());
         bool has_command(!command.empty());
 
@@ -934,6 +956,38 @@ public:
 INSTRUCTION(listen);
 
 
+// NOW
+//
+class inst_now
+    : public instruction
+{
+public:
+    inst_now()
+        : instruction("now")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        variable::pointer_t param(s.get_parameter("variable_name", true));
+        variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+        std::string const & variable_name(var->get_string());
+
+        variable_timestamp::pointer_t new_var(std::make_shared<variable_timestamp>(variable_name));
+        new_var->set_timestamp(snapdev::now());
+        s.set_variable(new_var);
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_now_params;
+    }
+
+private:
+};
+INSTRUCTION(now);
+
+
 // PRINT
 //
 class inst_print
@@ -1018,7 +1072,7 @@ public:
 
     virtual void func(state & s) override
     {
-        ed::message const & msg(s.get_message());
+        ed::message const msg(s.get_message());
 
         variable::pointer_t param(s.get_parameter("parameter_name", true));
         variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
@@ -1033,11 +1087,51 @@ public:
         var = std::static_pointer_cast<variable_string>(param);
         std::string const & variable_name(var->get_string());
 
-        // TODO: support varying types?
-        //
-        variable_string::pointer_t new_var(std::make_shared<variable_string>(variable_name, "string"));
-        new_var->set_string(value);
-        s.set_variable(new_var);
+        std::string type("string");
+        param = s.get_parameter("type");
+        if(param != nullptr)
+        {
+            var = std::static_pointer_cast<variable_string>(param);
+            type = var->get_string();
+        }
+        if(type == "string"
+        || type == "identifier")
+        {
+            variable_string::pointer_t new_var(std::make_shared<variable_string>(variable_name, type));
+            new_var->set_string(value);
+            s.set_variable(new_var);
+        }
+        else if(type == "integer")
+        {
+            variable_integer::pointer_t new_var(std::make_shared<variable_integer>(variable_name));
+            std::int64_t int_value(0);
+            if(!value.empty()
+            && !advgetopt::validator_integer::convert_string(value, int_value))
+            {
+                throw std::runtime_error(
+                      "value \""
+                    + value
+                    + "\" not recognized as a valid integer.");
+            }
+            new_var->set_integer(int_value);
+            s.set_variable(new_var);
+        }
+        else if(type == "timestamp")
+        {
+            variable_timestamp::pointer_t new_var(std::make_shared<variable_timestamp>(variable_name));
+            if(!value.empty())
+            {
+                new_var->set_timestamp(value);
+            }
+            s.set_variable(new_var);
+        }
+        else
+        {
+            throw std::runtime_error(
+                  "unsupported type \""
+                + type
+                + "\" for save_parameter_value().");
+        }
     }
 
     virtual parameter_declaration const * parameter_declarations() const override
@@ -1135,6 +1229,11 @@ public:
                     variable_string::pointer_t str_var(std::static_pointer_cast<variable_string>(var));
                     msg.add_parameter(name, str_var->get_string());
                 }
+                else if(type == "timestamp")
+                {
+                    variable_timestamp::pointer_t ts_var(std::static_pointer_cast<variable_timestamp>(var));
+                    msg.add_parameter(name, ts_var->get_timestamp());
+                }
                 else
                 {
                     throw std::runtime_error(
@@ -1202,7 +1301,7 @@ public:
 
     virtual void func(state & s) override
     {
-        ed::message const & msg(s.get_message());
+        ed::message const msg(s.get_message());
         std::cout
             << "--- script message: "
             << msg
@@ -1303,7 +1402,7 @@ public:
 
     virtual void func(state & s) override
     {
-        ed::message const & msg(s.get_message());
+        ed::message const msg(s.get_message());
 
         variable::pointer_t param(s.get_parameter("sent_server"));
         if(param != nullptr)
@@ -1512,8 +1611,9 @@ class inst_wait
 public:
     enum class mode_t
     {
-        MODE_WAIT,
-        MODE_DRAIN,
+        MODE_WAIT,      // cannot timeout and it must have connections (default)
+        MODE_DRAIN,     // empty list of connections expected
+        MODE_TIMEOUT,   // timeout expected
     };
 
     inst_wait()
@@ -1554,6 +1654,10 @@ public:
             else if(m == "drain")
             {
                 mode = mode_t::MODE_DRAIN;
+            }
+            else if(m == "timeout")
+            {
+                mode = mode_t::MODE_TIMEOUT;
             }
             else
             {
@@ -1696,7 +1800,7 @@ public:
                 }
             }
         }
-        if(timed_out)
+        if(timed_out && mode != mode_t::MODE_TIMEOUT)
         {
             // if we wake up without any event then we have a timeout
             //

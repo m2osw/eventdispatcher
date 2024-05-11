@@ -224,21 +224,28 @@ void state::set_compare(compare_t c)
 }
 
 
-ed::message const & state::get_message() const
+ed::message state::get_message() const
 {
-    return f_message;
+    if(f_message.empty())
+    {
+        return {};
+    }
+    return f_message.front();
 }
 
 
-void state::set_message(ed::message const & msg)
+void state::add_message(ed::message const & msg)
 {
-    f_message = msg;
+    f_message.push_back(msg);
 }
 
 
 void state::clear_message()
 {
-    f_message = {};
+    if(!f_message.empty())
+    {
+        f_message.pop_front();
+    }
 }
 
 

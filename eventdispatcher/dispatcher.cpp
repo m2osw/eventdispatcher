@@ -170,6 +170,8 @@ dispatcher::dispatcher(ed::connection_with_send_message * c)
  * This array currently includes:
  *
  * \li ALIVE -- msg_alive() -- auto-reply with ABSOLUTELY
+ * \li INVALID -- msg_log_unknown() -- in case we receive a message we
+ *                understand but with missing/invalid parameters
  * \li HELP -- msg_help() -- returns the list of all the messages
  * \li LEAK -- msg_leak() -- log memory usage
  * \li LOG_ROTATE -- msg_log_rotate() -- reopen() the logger
@@ -393,11 +395,15 @@ void dispatcher::remove_matches(dispatcher_match::tag_t tag)
         return;
     }
 
-    for(auto it(f_matches.begin()); it != f_matches.end(); ++it)
+    for(auto it(f_matches.begin()); it != f_matches.end(); )
     {
         if(it->f_tag == tag)
         {
             it = f_matches.erase(it);
+        }
+        else
+        {
+            ++it;
         }
     }
 }

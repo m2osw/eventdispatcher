@@ -70,7 +70,7 @@ public:
     virtual void                msg_restart(message & msg);
     virtual void                msg_service_unavailable(message & msg);
     virtual void                msg_stop(message & msg);
-    virtual void                msg_log_unknown(message & msg);
+    virtual void                msg_log_unknown(message & msg); // also log INVALID
     virtual void                msg_reply_with_unknown(message & msg);
 
     virtual void                help(string_list_t & commands);

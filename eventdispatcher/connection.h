@@ -140,6 +140,7 @@ private:
     bool                        f_done = false;
     std::uint16_t               f_event_limit = 5;                  // limit before giving other events a chance
     priority_t                  f_priority = EVENT_DEFAULT_PRIORITY;
+    std::int64_t                f_timeout_delay_start_date = 0;     // in microseconds
     std::int64_t                f_timeout_delay = -1;               // in microseconds
     std::int64_t                f_timeout_next_date = -1;           // in microseconds, when we use the f_timeout_delay
     std::int64_t                f_timeout_date = -1;                // in microseconds
