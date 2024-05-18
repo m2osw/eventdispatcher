@@ -458,6 +458,14 @@ bool dispatcher::dispatch(message & msg)
         }
     }
 
+    // if at least one callback was hit, we consider that the message was
+    // processed and return true here
+    //
+    if(msg.was_processed())
+    {
+        return true;
+    }
+
     // the always match is not in the main vector, test it separately
     //
     if(f_end.f_callback != nullptr)

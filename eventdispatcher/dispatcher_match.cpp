@@ -297,6 +297,7 @@ bool dispatcher_match::execute(message & msg) const
         {
             throw invalid_callback("dispatcher_match::f_callback is nullptr.");
         }
+        msg.mark_processed();
         f_callback(msg);
         if(m == match_t::MATCH_TRUE)
         {

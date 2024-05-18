@@ -1926,6 +1926,17 @@ void verify_message_name(std::string const & name, bool can_be_empty, bool can_b
 }
 
 
+void message::mark_processed()
+{
+    f_processed = true;
+}
+
+
+bool message::was_processed() const
+{
+    return f_processed;
+}
+
 
 
 } // namespace ed

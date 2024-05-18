@@ -117,6 +117,9 @@ public:
     template<typename T>
     std::shared_ptr<T>      user_data() { return std::static_pointer_cast<T>(f_user_data); }
 
+    void                    mark_processed();
+    bool                    was_processed() const;
+
 private:
     std::string             f_sent_from_server = std::string();
     std::string             f_sent_from_service = std::string();
@@ -127,6 +130,7 @@ private:
     mutable std::string     f_cached_message = std::string();
     mutable std::string     f_cached_json = std::string();
     std::shared_ptr<void>   f_user_data = std::shared_ptr<void>();
+    bool                    f_processed = false;
 };
 
 
