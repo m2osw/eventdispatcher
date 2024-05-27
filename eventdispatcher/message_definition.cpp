@@ -210,95 +210,108 @@ message_definition::pointer_t get_message_definition(std::string const & command
         return def;
     }
 
-    std::string filename(g_message_definition_path);
-    filename += '/';
-    filename += command;
-    filename += g_message_definition_suffix;
+    std::list<std::string> paths;
+    snapdev::tokenize_string(
+          paths
+        , g_message_definition_path
+        , ":"
+        , true);
 
-std::cerr <<"--- loading msg def from [" << filename << "]\n";
-    if(!snapdev::pathinfo::file_exists(filename))
+    for(auto const & p : paths)
     {
-        // no such file, just return the default message definition
-        //
-        return def;
-    }
+        std::string filename(p);
+        filename += '/';
+        filename += command;
+        filename += g_message_definition_suffix;
 
-    advgetopt::conf_file_setup setup(filename);
-    advgetopt::conf_file::pointer_t config(advgetopt::conf_file::get_conf_file(setup));
-    advgetopt::conf_file::sections_t sections(config->get_sections());
-    for(auto const & s : sections)
-    {
-        message_parameter param = {
-            .f_name = s,
-        };
-
-        std::string param_name(s + "::type");
-        if(config->has_parameter(param_name))
+        if(!snapdev::pathinfo::file_exists(filename))
         {
-            std::string const & type(config->get_parameter(param_name));
-            if(type == "default"
-            || type == "string")
-            {
-                param.f_type = parameter_type_t::PARAMETER_TYPE_STRING;
-            }
-            else if(type == "integer")
-            {
-                param.f_type = parameter_type_t::PARAMETER_TYPE_INTEGER;
-            }
-            else if(type == "address")
-            {
-                param.f_type = parameter_type_t::PARAMETER_TYPE_ADDRESS;
-            }
-            else if(type == "timespec")
-            {
-                param.f_type = parameter_type_t::PARAMETER_TYPE_TIMESPEC;
-            }
-            else
-            {
-                throw invalid_parameter(
-                      "message definition: parameter type \""
-                    + type
-                    + "\" is not a supported type.");
-            }
-        }
-
-        param_name = s + "::flags";
-        if(config->has_parameter(param_name))
-        {
-            // start from a clean slate
+            // no such file, just return the default message definition
             //
-            param.f_flags = 0;
+            continue;
+        }
+std::cerr <<"--- loading msg def from [" << filename << "]\n";
 
-            std::string const & flags(config->get_parameter(param_name));
-            std::list<std::string> flag_names;
-            snapdev::tokenize_string(flag_names, flags, ",", true);
-            for(auto const & f : flag_names)
+        advgetopt::conf_file_setup setup(filename);
+        advgetopt::conf_file::pointer_t config(advgetopt::conf_file::get_conf_file(setup));
+        advgetopt::conf_file::sections_t sections(config->get_sections());
+        for(auto const & s : sections)
+        {
+            // section names use dashes between words
+            // our messages use underscores
+            //
+            message_parameter param = {
+                .f_name = advgetopt::option_with_underscores(s),
+            };
+
+            std::string param_name(s + "::type");
+            if(config->has_parameter(param_name))
             {
-                if(f == "required")
+                std::string const & type(config->get_parameter(param_name));
+                if(type == "default"
+                || type == "string")
                 {
-                    param.f_flags |= PARAMETER_FLAG_REQUIRED;
+                    param.f_type = parameter_type_t::PARAMETER_TYPE_STRING;
                 }
-                else if(f == "empty")
+                else if(type == "integer")
                 {
-                    param.f_flags |= PARAMETER_FLAG_EMPTY;
+                    param.f_type = parameter_type_t::PARAMETER_TYPE_INTEGER;
                 }
-                else if(f == "forbidden")
+                else if(type == "address")
                 {
-                    param.f_flags |= PARAMETER_FLAG_FORBIDDEN;
+                    param.f_type = parameter_type_t::PARAMETER_TYPE_ADDRESS;
                 }
-                else if(f != "optional"
-                     && f != "defined"
-                     && f != "allowed")
+                else if(type == "timespec")
+                {
+                    param.f_type = parameter_type_t::PARAMETER_TYPE_TIMESPEC;
+                }
+                else
                 {
                     throw invalid_parameter(
-                          "message definition: parameter flag \""
-                        + f
-                        + "\" not supported.");
+                          "message definition: parameter type \""
+                        + type
+                        + "\" is not a supported type.");
                 }
             }
-        }
 
-        def->f_parameters.push_back(param);
+            param_name = s + "::flags";
+            if(config->has_parameter(param_name))
+            {
+                // start from a clean slate
+                //
+                param.f_flags = 0;
+
+                std::string const & flags(config->get_parameter(param_name));
+                std::list<std::string> flag_names;
+                snapdev::tokenize_string(flag_names, flags, ",", true);
+                for(auto const & f : flag_names)
+                {
+                    if(f == "required")
+                    {
+                        param.f_flags |= PARAMETER_FLAG_REQUIRED;
+                    }
+                    else if(f == "empty")
+                    {
+                        param.f_flags |= PARAMETER_FLAG_EMPTY;
+                    }
+                    else if(f == "forbidden")
+                    {
+                        param.f_flags |= PARAMETER_FLAG_FORBIDDEN;
+                    }
+                    else if(f != "optional"
+                         && f != "defined"
+                         && f != "allowed")
+                    {
+                        throw invalid_parameter(
+                              "message definition: parameter flag \""
+                            + f
+                            + "\" not supported.");
+                    }
+                }
+            }
+
+            def->f_parameters.push_back(param);
+        }
     }
 
     return def;
