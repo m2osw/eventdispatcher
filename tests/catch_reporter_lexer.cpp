@@ -325,7 +325,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
                 + white_spaces()
                 + "\"vertical tab \\v\"\n"
                 + white_spaces()
-                + "\"others \\\\ \\\" \\\' \\?\"\n"
+                + "\"others \\\\ \\\" \\' \\`\"\n"
                 + white_spaces());
 
         SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
@@ -360,7 +360,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
         CATCH_REQUIRE(t.get_string() == "vertical tab \v");
         t = l.next_token();
         CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_DOUBLE_STRING);
-        CATCH_REQUIRE(t.get_string() == "others \\ \" \' ?");
+        CATCH_REQUIRE(t.get_string() == "others \\ \" ' `");
         t = l.next_token();
         CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
     }
@@ -390,7 +390,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
                 + white_spaces()
                 + "'vertical tab \\v'\n"
                 + white_spaces()
-                + "'others \\\\ \\\" \\\' \\?'\n"
+                + "'others \\\\ \\\" \\' \\`'\n"
                 + white_spaces());
 
         SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
@@ -425,7 +425,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
         CATCH_REQUIRE(t.get_string() == "vertical tab \v");
         t = l.next_token();
         CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_SINGLE_STRING);
-        CATCH_REQUIRE(t.get_string() == "others \\ \" \' ?");
+        CATCH_REQUIRE(t.get_string() == "others \\ \" ' `");
         t = l.next_token();
         CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
     }

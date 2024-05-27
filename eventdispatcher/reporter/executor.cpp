@@ -257,7 +257,10 @@ step_t background_executor::execute_instruction()
             if(strcmp(decls->f_type, "any") != 0
             && (strcmp(decls->f_type, "number") != 0
                 || (param->get_type() != "integer"
-                    && param->get_type() != "floating_point")))
+                    && param->get_type() != "floating_point"))
+            && (strcmp(decls->f_type, "string_or_identifier") != 0
+                || (param->get_type() != "identifier"
+                    && param->get_type() != "string")))
             {
                 throw std::runtime_error(
                       std::string("parameter type mismatch for ")
@@ -571,6 +574,145 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
             }
         }
         return expr;
+
+    case operator_t::OPERATOR_COMPARE:
+        if(expr->get_expression_size() != 2)
+        {
+            throw std::logic_error("<=> operator (compare) did not receive exactly two parameters."); // LCOV_EXCL_LINE
+        }
+        else
+        {
+            expression::pointer_t l(compute(expr->get_expression(0)));
+            expression::pointer_t r(compute(expr->get_expression(1)));
+            token const & lt(l->get_token());
+            token const & rt(r->get_token());
+
+            token result;
+            result.set_token(token_t::TOKEN_INTEGER);
+            switch(mix_token(lt.get_token(), rt.get_token()))
+            {
+            case mix_token(token_t::TOKEN_FLOATING_POINT, token_t::TOKEN_FLOATING_POINT):
+                if(lt.get_floating_point() < rt.get_floating_point())
+                {
+                    result.set_integer(-1);
+                }
+                else if(lt.get_floating_point() > rt.get_floating_point())
+                {
+                    result.set_integer(1);
+                }
+                else
+                {
+                    result.set_integer(0);
+                }
+                break;
+
+            case mix_token(token_t::TOKEN_FLOATING_POINT, token_t::TOKEN_INTEGER):
+                if(lt.get_floating_point() < rt.get_integer())
+                {
+                    result.set_integer(-1);
+                }
+                else if(lt.get_floating_point() > rt.get_integer())
+                {
+                    result.set_integer(1);
+                }
+                else
+                {
+                    result.set_integer(0);
+                }
+                break;
+
+            case mix_token(token_t::TOKEN_INTEGER, token_t::TOKEN_FLOATING_POINT):
+                if(lt.get_integer() < rt.get_floating_point())
+                {
+                    result.set_integer(-1);
+                }
+                else if(lt.get_integer() > rt.get_floating_point())
+                {
+                    result.set_integer(1);
+                }
+                else
+                {
+                    result.set_integer(0);
+                }
+                break;
+
+            case mix_token(token_t::TOKEN_INTEGER, token_t::TOKEN_INTEGER):
+            case mix_token(token_t::TOKEN_TIMESPEC, token_t::TOKEN_TIMESPEC): // timespec are saved as integers so we can compare just the same
+                if(lt.get_integer() < rt.get_integer())
+                {
+                    result.set_integer(-1);
+                }
+                else if(lt.get_integer() > rt.get_integer())
+                {
+                    result.set_integer(1);
+                }
+                else
+                {
+                    result.set_integer(0);
+                }
+                break;
+
+            case mix_token(token_t::TOKEN_IDENTIFIER, token_t::TOKEN_IDENTIFIER):
+            case mix_token(token_t::TOKEN_SINGLE_STRING, token_t::TOKEN_SINGLE_STRING):
+            case mix_token(token_t::TOKEN_SINGLE_STRING, token_t::TOKEN_DOUBLE_STRING):
+            case mix_token(token_t::TOKEN_DOUBLE_STRING, token_t::TOKEN_SINGLE_STRING):
+            case mix_token(token_t::TOKEN_DOUBLE_STRING, token_t::TOKEN_DOUBLE_STRING):
+                if(lt.get_string() < rt.get_string())
+                {
+                    result.set_integer(-1);
+                }
+                else if(lt.get_string() > rt.get_string())
+                {
+                    result.set_integer(1);
+                }
+                else
+                {
+                    result.set_integer(0);
+                }
+                break;
+
+            case mix_token(token_t::TOKEN_ADDRESS, token_t::TOKEN_ADDRESS):
+                {
+                    addr::addr_parser lp;
+                    lp.set_protocol("tcp");
+                    lp.set_allow(addr::allow_t::ALLOW_MASK, true);
+                    addr::addr_range::vector_t const la(lp.parse(lt.get_string()));
+
+                    addr::addr_parser rp;
+                    rp.set_protocol("tcp");
+                    rp.set_allow(addr::allow_t::ALLOW_MASK, true);
+                    addr::addr_range::vector_t const ra(rp.parse(lt.get_string()));
+
+                    if(la < ra)
+                    {
+                        result.set_integer(-1);
+                    }
+                    else if(la > ra)
+                    {
+                        result.set_integer(1);
+                    }
+                    else
+                    {
+                        result.set_integer(0);
+                    }
+                }
+                break;
+
+            default:
+                throw std::runtime_error(
+                      "unsupported compare (token types: "
+                    + std::to_string(static_cast<int>(lt.get_token()))
+                    + " <=> "
+                    + std::to_string(static_cast<int>(rt.get_token()))
+                    + ").");
+
+            }
+            expression::pointer_t result_expr(std::make_shared<expression>());
+            result_expr->set_operator(operator_t::OPERATOR_PRIMARY);
+            result_expr->set_token(result);
+            return result_expr;
+        }
+        break;
 
     case operator_t::OPERATOR_ADD:
         if(expr->get_expression_size() != 2)
@@ -1292,6 +1434,8 @@ void executor::start()
 /** \brief Start the communicator loop.
  *
  * This is the next logical step after calling the start() function.
+ * However, this is only necessary if you are testing a client since
+ * daemons are already expected to call the run() function.
  *
  * This simply starts the communicator run() loop. It will exit once all
  * the connections were removed from the communicator. If your test does

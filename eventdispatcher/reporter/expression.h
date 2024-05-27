@@ -46,6 +46,7 @@ enum class operator_t
     OPERATOR_PRIMARY,               // a primary value in f_token
     OPERATOR_IDENTITY,              // + <additive>
     OPERATOR_NEGATE,                // - <additive>
+    OPERATOR_COMPARE,
     OPERATOR_ADD,
     OPERATOR_SUBTRACT,
     OPERATOR_MULTIPLY,

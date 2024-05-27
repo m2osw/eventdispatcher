@@ -35,6 +35,16 @@
 #include    <libaddr/addr.h>
 
 
+// advgetopt
+//
+#include    <advgetopt/utils.h>
+
+
+// snapdev
+//
+#include    <snapdev/callback_manager.h>
+
+
 // C++
 //
 #include    <list>
@@ -54,6 +64,8 @@ public:
     typedef std::weak_ptr<connection_with_send_message>
                                 weak_t;
     typedef std::list<weak_t>   list_weak_t;
+    typedef std::function<bool(advgetopt::string_set_t & commands)>
+                                help_callback_t;
 
                                 connection_with_send_message(std::string const & service_name = std::string());
     virtual                     ~connection_with_send_message();
@@ -73,7 +85,7 @@ public:
     virtual void                msg_log_unknown(message & msg); // also log INVALID
     virtual void                msg_reply_with_unknown(message & msg);
 
-    virtual void                help(string_list_t & commands);
+    virtual void                help(advgetopt::string_set_t & commands);
     virtual void                ready(message & msg);
     virtual void                restart(message & msg);
     virtual void                stop(bool quitting);
@@ -83,11 +95,15 @@ public:
     addr::addr                  get_my_address() const;
     bool                        register_service();
     void                        unregister_service();
+    void                        add_help_callback(help_callback_t callback);
+    void                        send_commands(message * msg = nullptr);
 
 private:
     std::string                 f_service_name = std::string();
     bool                        f_ready = false;
     addr::addr                  f_my_address = addr::addr();
+    snapdev::callback_manager<help_callback_t>
+                                f_help_callbacks = snapdev::callback_manager<help_callback_t>();
 };
 
 

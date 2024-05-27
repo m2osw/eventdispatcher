@@ -326,7 +326,7 @@ constexpr char const * const g_program_save_parameter_of_type_timestamp =
     "has_message()\n"
     "if(false: wait_second_message)\n"
     "show_message()\n"
-    "verify_message(command: TIMED, required_parameters: { now: `^[0-9]+(\\.[0-9]+)?$` } )\n"
+    "verify_message(command: TIMED, required_parameters: { now: `^[0-9]+(\\\\.[0-9]+)?$` } )\n"
     "save_parameter_value(parameter_name: now, variable_name: timed_value, type: timestamp)\n"
     "save_parameter_value(parameter_name: not_defined, variable_name: default_time, type: timestamp)\n"
     "exit()\n"

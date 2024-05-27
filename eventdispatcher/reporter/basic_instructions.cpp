@@ -84,6 +84,17 @@ constexpr parameter_declaration const g_call_params[] =
 };
 
 
+constexpr parameter_declaration const g_compare_params[] = 
+{
+    {
+        .f_name = "expression",
+        .f_type = "integer",
+        .f_required = true,
+    },
+    {}
+};
+
+
 constexpr parameter_declaration const g_exit_params[] = 
 {
     {
@@ -328,22 +339,22 @@ constexpr parameter_declaration const g_verify_message_params[] =
 {
     {
         .f_name = "sent_server",
-        .f_type = "identifier",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "sent_service",
-        .f_type = "identifier",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "server",
-        .f_type = "identifier",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "service",
-        .f_type = "identifier",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
@@ -446,6 +457,47 @@ public:
 private:
 };
 INSTRUCTION(clear_message);
+
+
+// COMPARE
+//
+class inst_compare
+    : public instruction
+{
+public:
+    inst_compare()
+        : instruction("compare")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        variable::pointer_t expr(s.get_parameter("expression", true));
+        if(expr->get_type() != "integer")
+        {
+            throw std::runtime_error("compare() expected an integer type of expression");
+        }
+        variable_integer::pointer_t integer(std::static_pointer_cast<variable_integer>(expr));
+        int const value(integer->get_integer());
+
+        // TBD: should we instead say <0 is less, >0 is greater and 0 is equal
+        //
+        if(value < -2 || value > 1)
+        {
+            throw std::runtime_error("unsupported integer in compare(), values are limited to -2 to 1.");
+        }
+
+        s.set_compare(static_cast<compare_t>(value));
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_compare_params;
+    }
+
+private:
+};
+INSTRUCTION(compare);
 
 
 // DISCONNECT

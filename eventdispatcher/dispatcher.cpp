@@ -161,7 +161,7 @@ dispatcher::dispatcher(ed::connection_with_send_message * c)
  * In Snap! a certain number of messages are always exactly the same
  * and these can be implemented internally so each daemon doesn't have
  * to duplicate that work over and over again. These are there in part
- * because the snapcommunicator expects those messages there.
+ * because the communicator daemon expects those messages there.
  *
  * IMPORTANT NOTE: If you add your own version in your dispatcher_match
  * vector, then these will be ignored since your version will match first
@@ -176,7 +176,7 @@ dispatcher::dispatcher(ed::connection_with_send_message * c)
  * \li LEAK -- msg_leak() -- log memory usage
  * \li LOG_ROTATE -- msg_log_rotate() -- reopen() the logger
  * \li QUITTING -- msg_quitting() -- calls stop(true);
- * \li READY -- msg_ready() -- calls ready() -- snapcommunicator always
+ * \li READY -- msg_ready() -- calls ready() -- communicatord always
  *              sends that message so it has to be supported
  * \li RESTART -- msg_restart() -- calls restart() -- it is triggered
  *                when a restart is required (i.e. the library was
@@ -525,12 +525,28 @@ void dispatcher::set_show_matches(bool show_matches)
  * The \p commands parameter is not reset. This means you may add commands
  * ahead of this call and they will still be there on return.
  *
+ * \note
+ * The \p commands is a set so we avoid getting duplicates. This is because
+ * a match which accepts a callback does not stop processing the value.
+ * As a result, we can end up processing multiple functions each of which
+ * would understand the exact same command. You may want to make sure that
+ * you use the callback priority on those match definitions.
+ * \node
+ * \code
+ *     ed::define_match(
+ *           ed::Expression(communicatord::g_name_communicatord_cmd_status)
+ *         , ed::Callback(std::bind(&cluckd::msg_status, c, std::placeholders::_1))
+ *         , ed::MatchFunc(&ed::one_to_one_callback_match)
+ *         , ed::Priority(ed::dispatcher_match::DISPATCHER_MATCH_CALLBACK_PRIORITY)
+ *     ),
+ * \endcode
+ *
  * \param[in,out] commands  The place where the list of commands is saved.
  *
  * \return false if the commands were all determined, true if some need
  *         help from the user of this dispatcher.
  */
-bool dispatcher::get_commands(string_list_t & commands)
+bool dispatcher::get_commands(advgetopt::string_set_t & commands)
 {
     bool need_user_help(f_end.f_callback != nullptr);
     for(auto const & m : f_matches)
@@ -550,12 +566,33 @@ bool dispatcher::get_commands(string_list_t & commands)
             //else -- always match is the last entry and that just
             //        means we can return UNKNOWN on an unknown message
         }
-        else if(m.match_is_one_to_one_match())
+        else if(m.match_is_one_to_one_match()
+             || m.match_is_one_to_one_callback_match())
         {
             // add the f_expr as is since it represents a command
             // as is
             //
-            commands.push_back(m.f_expr);
+            auto inserted(commands.insert(m.f_expr));
+            if(!inserted.second)
+            {
+                // tell the user that his configuration includes duplicates
+                // which is fine if those are CALLBACKs as in the match()
+                // functions return match_t::MATCH_CALLBACK
+                //
+                // you can also set the message handler priority if it is
+                // a callback and not for the other (i.e. the callback
+                // priority will insert the match() function earlier)
+                //
+                // i.e. ed::Priority(ed::dispatcher_match::DISPATCHER_MATCH_CALLBACK_PRIORITY)
+                //
+                SNAP_LOG_CONFIGURATION_WARNING
+                    << "command \""
+                    << m.f_expr
+                    << "\" was already inserted. Is it a \"match_t::MATCH_CALLBACK\"?"
+                       " If so then it is fine."
+                       " If not, some of your callback functions may not get called."
+                    << SNAP_LOG_SEND;
+            }
         }
         else
         {
@@ -641,7 +678,7 @@ dispatcher_match dispatcher::define_catch_all() const
  * Because your service may accept and send many messages a full
  * trace on all of them can really be resource intensive. By default
  * the system will not trace anything. By setting this parameter to
- * true (call set_trace() for that) you request the SNAP_LOG_TRACE()
+ * true (call set_trace() for that) you request the SNAP_LOG_TRACE
  * to run on each message received by this dispatcher. This is done
  * on entry so whether the message is processed by the dispatcher
  * or your own send_message() function, it will trace that message.

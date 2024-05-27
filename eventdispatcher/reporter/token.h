@@ -47,6 +47,8 @@ enum class token_t : char32_t
     TOKEN_ADDRESS,              // <ipv4> or <[ipv6]>
     TOKEN_VARIABLE,             // $<name> or ${<name>}
 
+    TOKEN_COMPARE,              // "<=>" operator
+
     TOKEN_OPEN_PARENTHESIS  = '(',
     TOKEN_CLOSE_PARENTHESIS = ')',
     TOKEN_OPEN_CURLY_BRACE  = '{',

@@ -47,6 +47,7 @@ private:
     void                    one_parameter();
     expression::pointer_t   expression_list();
     expression::pointer_t   list_item();
+    expression::pointer_t   comparative();
     expression::pointer_t   additive();
     expression::pointer_t   multiplicative();
     expression::pointer_t   primary();

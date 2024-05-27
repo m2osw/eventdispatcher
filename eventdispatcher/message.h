@@ -25,6 +25,7 @@
 
 // self
 //
+#include    <eventdispatcher/message_definition.h>
 #include    <eventdispatcher/utils.h>
 
 
@@ -107,6 +108,7 @@ public:
     void                    add_parameter(std::string const & name, addr::addr_unix const & value);
     void                    add_parameter(std::string const & name, snapdev::timespec_ex const & value);
     bool                    has_parameter(std::string const & name) const;
+    bool                    check_parameters(message_parameter::vector_t const & parameter_definitions) const;
     std::string             get_parameter(std::string const & name) const;
     std::int64_t            get_integer_parameter(std::string const & name) const;
     snapdev::timespec_ex    get_timespec_parameter(std::string const & name) const;
@@ -140,9 +142,17 @@ void        verify_message_name(
                 , bool can_be_lowercase = true);
 
 
+
+} // namespace ed
+
+
+// IMPORTANT NOTE: placed in global scope to avoid overloading
+//                 and preventing other global scope << from
+//                 being ignored
+//
 template<typename CharT, typename Traits>
 inline std::basic_ostream<CharT, Traits> &
-operator << (std::basic_ostream<CharT, Traits> & os, message const & msg)
+operator << (std::basic_ostream<CharT, Traits> & os, ed::message const & msg)
 {
     std::string const str(msg.to_string());
     snaplogger::message * m(dynamic_cast<snaplogger::message *>(&os));
@@ -155,5 +165,4 @@ operator << (std::basic_ostream<CharT, Traits> & os, message const & msg)
 
 
 
-} // namespace ed
 // vim: ts=4 sw=4 et

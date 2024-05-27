@@ -58,6 +58,12 @@
 #include    <snaplogger/message.h>
 
 
+// libaddr
+//
+#include    <libaddr/addr_parser.h>
+#include    <libaddr/exception.h>
+
+
 // libutf8
 //
 #include    <libutf8/json_tokens.h>
@@ -226,7 +232,7 @@ bool message::from_string(std::string const & original_message)
 
     // sent-from indicated?
     //
-    if(*m != '\0' && *m == '<')
+    if(*m == '<')
     {
         // the name of the server and server sending this message
         //
@@ -1651,6 +1657,150 @@ bool message::has_parameter(std::string const & name) const
     verify_message_name(name);
 
     return f_parameters.find(name) != f_parameters.end();
+}
+
+
+/** \brief Check validity of this message.
+ *
+ * This function takes a list of parameter definitions used to validate this
+ * message. It goes through the list of definitions and makes sure that
+ * the message has required parameters of the right type and that they
+ * are not empty if that is not an option for that parameter.
+ *
+ * If an error is detected, then a noisy error is logged and the function
+ * returns false.
+ *
+ * \note
+ * The function tries to check all the parameters from the parameter
+ * definitions and generate one error per parameter found to be
+ * invalid in some way.
+ *
+ * \return true if all the parameters are considered valid.
+ */
+bool message::check_parameters(message_parameter::vector_t const & parameter_definitions) const
+{
+    bool result(true);
+    for(auto const & p : parameter_definitions)
+    {
+        // look for the given parameter
+        //
+        auto const it(f_parameters.find(p.f_name));
+        if(it == f_parameters.end())
+        {
+            if((p.f_flags & PARAMETER_FLAG_REQUIRED) != 0)
+            {
+                SNAP_LOG_NOISY_ERROR
+                    << "mandatory parameter named \""
+                    << p.f_name
+                    << "\" is missing from message \""
+                    << f_command
+                    << "\"."
+                    << SNAP_LOG_SEND;
+                result = false;
+            }
+            continue;
+        }
+
+        if((p.f_flags & PARAMETER_FLAG_FORBIDDEN) != 0)
+        {
+            SNAP_LOG_NOISY_ERROR
+                << "forbidden parameter named \""
+                << p.f_name
+                << "\" was found in message \""
+                << f_command
+                << "\"."
+                << SNAP_LOG_SEND;
+            result = false;
+            continue;
+        }
+
+        // handle the special case of emptiness
+        //
+        if(it->second.empty())
+        {
+            if((p.f_flags & PARAMETER_FLAG_EMPTY) == 0)
+            {
+                SNAP_LOG_NOISY_ERROR
+                    << "parameter named \""
+                    << p.f_name
+                    << "\" from message \""
+                    << f_command
+                    << "\" connot be empty."
+                    << SNAP_LOG_SEND;
+                result = false;
+            }
+            continue;
+        }
+
+        // verify that the type is a match
+        //
+        switch(p.f_type)
+        {
+        case parameter_type_t::PARAMETER_TYPE_STRING:
+            // nothing to do in this case
+            break;
+
+        case parameter_type_t::PARAMETER_TYPE_INTEGER:
+            {
+                std::int64_t r;
+                if(!advgetopt::validator_integer::convert_string(it->second, r))
+                {
+                    SNAP_LOG_NOISY_ERROR
+                        << "parameter named \""
+                        << p.f_name
+                        << "\" from message \""
+                        << f_command
+                        << "\" must be a valid integer."
+                        << SNAP_LOG_SEND;
+                    result = false;
+                    continue;
+                }
+            }
+            break;
+
+        case parameter_type_t::PARAMETER_TYPE_ADDRESS:
+            try
+            {
+                snapdev::NOT_USED(addr::string_to_addr(it->second));
+            }
+            catch(addr::addr_error const & e)
+            {
+                SNAP_LOG_NOISY_ERROR
+                    << "parameter named \""
+                    << p.f_name
+                    << "\" from message \""
+                    << f_command
+                    << "\" must be a valid IP address: "
+                    << e
+                    << SNAP_LOG_SEND;
+                result = false;
+            }
+            break;
+
+        case parameter_type_t::PARAMETER_TYPE_TIMESPEC:
+            try
+            {
+                snapdev::NOT_USED(snapdev::timespec_ex(it->second));
+            }
+            catch(snapdev::timespec_ex_exception const & e)
+            {
+                SNAP_LOG_NOISY_ERROR
+                    << "parameter named \""
+                    << p.f_name
+                    << "\" from message \""
+                    << f_command
+                    << "\" must be a valid timespec: "
+                    << e
+                    << SNAP_LOG_SEND;
+                result = false;
+                continue;
+            }
+            break;
+
+        }
+    }
+
+    return result;
 }
 
 

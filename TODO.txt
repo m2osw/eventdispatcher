@@ -9,7 +9,11 @@
 * Config describing allowed messages with their parameters and values for
   such and a way to track which message was ever sent (i.e. a form of
   message coverage) so we can verify that all messages were checked
-  (i.e. for debug purposes).
+  (i.e. for debug purposes). [MOSTLY DONE!]
+
+* Verify the message config definitions with a tool at compile time so we
+  are sure that we install valid files and don't break an entire system
+  by installing invalid files (i.e. we throw when we find errors).
 
 * When adding a dispatcher match, detect whether it was already added; when
   we add a message such as STATUS once, then trying to add it again will have

@@ -182,17 +182,23 @@ void base_network_appender::log_message_to_ed_message(
     timespec const & timestamp(msg.get_timestamp());
     log_message.add_parameter("timestamp", timestamp.tv_sec);
 
-    if(!msg.get_filename().empty())
+    std::string const & filename(msg.get_filename());
+    if(!filename.empty())
     {
-        log_message.add_parameter("filename", msg.get_filename());
+        log_message.add_parameter("filename", filename);
     }
-    if(!msg.get_function().empty())
+    std::string const & function(msg.get_function());
+    if(!function.empty())
     {
-        log_message.add_parameter("function", msg.get_function());
+        log_message.add_parameter("function", function);
     }
     if(msg.get_line() != 0)
     {
         log_message.add_parameter("line", msg.get_line());
+    }
+    if(msg.get_column() != 0)
+    {
+        log_message.add_parameter("column", msg.get_column());
     }
     if(msg.get_recursive_message())
     {

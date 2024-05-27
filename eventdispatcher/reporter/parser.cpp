@@ -72,7 +72,7 @@ parser::parser(lexer::pointer_t l, state::pointer_t s)
  *    IDENTIFIER ':' expression
  *
  * expression:
- *    additive
+ *    comparative
  *  | '{' expression_list '}'
  *
  * expression_list:
@@ -81,7 +81,11 @@ parser::parser(lexer::pointer_t l, state::pointer_t s)
  *
  * list_item:
  *    IDENTIFIER
- *  | IDENTIFIER ':' additive
+ *  | IDENTIFIER ':' comparative
+ *
+ * comparative:
+ *    additive
+ *    comparative '<=>' additive
  *
  * additive:
  *    multiplicative
@@ -104,9 +108,9 @@ parser::parser(lexer::pointer_t l, state::pointer_t s)
  *  | DOUBLE_STRING
  *  | SINGLE_STRING
  *  | REGEX
- *  | '(' additive ')'
- *  | '+' additive
- *  | '-' additive
+ *  | '(' comparative ')'
+ *  | '+' comparative
+ *  | '-' comparative
  * \endcode
  *
  * \todo
@@ -234,7 +238,7 @@ void parser::one_parameter()
     }
     else
     {
-        expr = additive();
+        expr = comparative();
     }
 
     f_statement->add_parameter(name, expr);
@@ -308,10 +312,38 @@ expression::pointer_t parser::list_item()
             f_lexer->error(f_token, "a list item with a colon (:) must be followed by an expression.");
             throw std::runtime_error("a list item with a colon (:) must be followed by an expression.");
         }
-        item->add_expression(additive());
+        item->add_expression(comparative());
     }
 
     return item;
+}
+
+
+expression::pointer_t parser::comparative()
+{
+    operator_t op(operator_t::OPERATOR_NULL);
+    expression::pointer_t left(additive());
+    for(;;)
+    {
+        if(f_token.get_token() == token_t::TOKEN_COMPARE)
+        {
+            op = operator_t::OPERATOR_COMPARE;
+        }
+        else
+        {
+            return left;
+        }
+
+        next_token();
+        expression::pointer_t right(additive());
+        expression::pointer_t expr(std::make_shared<expression>());
+        expr->set_operator(op);
+        expr->add_expression(left);
+        expr->add_expression(right);
+        left = expr;
+    }
+
+    snapdev::NOT_REACHED();
 }
 
 
@@ -425,7 +457,7 @@ expression::pointer_t parser::primary()
                 f_lexer->error(f_token, "an expression between parenthesis must include at least one primary expression.");
                 throw std::runtime_error("an expression between parenthesis must include at least one primary expression.");
             }
-            expression::pointer_t expr(additive());
+            expression::pointer_t expr(comparative());
             if(f_token.get_token() != token_t::TOKEN_CLOSE_PARENTHESIS)
             {
                 f_lexer->error(f_token, "an expression between parenthesis must include the ')' at the end.");

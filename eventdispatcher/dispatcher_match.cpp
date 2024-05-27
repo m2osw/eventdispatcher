@@ -29,6 +29,7 @@
 #include    "eventdispatcher/dispatcher_match.h"
 
 #include    "eventdispatcher/connection_with_send_message.h"
+#include    "eventdispatcher/message_definition.h"
 
 
 // last include
@@ -295,10 +296,32 @@ bool dispatcher_match::execute(message & msg) const
     {
         if(f_callback == nullptr)
         {
-            throw invalid_callback("dispatcher_match::f_callback is nullptr.");
+            throw invalid_callback(
+                  "dispatcher_match::f_callback for match \""
+                + std::string(f_expr == nullptr ? "<no expression>" : f_expr)
+                + "\" is nullptr.");
         }
         msg.mark_processed();
-        f_callback(msg);
+        if(f_message_definition == nullptr)
+        {
+            f_message_definition = get_message_definition(msg.get_command());
+        }
+        if(msg.check_parameters(f_message_definition->f_parameters))
+        {
+            f_callback(msg);
+        }
+        else
+        {
+#ifdef __SANITIZE_ADDRESS__
+            throw implementation_error(
+                  "the check_parameters() function detected an invalid message in message: "
+                + msg.to_string());
+#else
+            // TODO: support sending an INVALID reply in debug mode
+            //
+            ;
+#endif
+        }
         if(m == match_t::MATCH_TRUE)
         {
             return true;
@@ -332,6 +355,19 @@ bool dispatcher_match::match_is_one_to_one_match() const
 bool dispatcher_match::match_is_always_match() const
 {
     return f_match == &always_match;
+}
+
+
+/** \brief Check whether f_match is one_to_one_callback_match().
+ *
+ * This function checks whether the f_match function was defined
+ * to one_to_one_callback_match() and if so returns true.
+ *
+ * \return true if f_match is the one_to_one_callback_match() function.
+ */
+bool dispatcher_match::match_is_one_to_one_callback_match() const
+{
+    return f_match == &one_to_one_callback_match;
 }
 
 

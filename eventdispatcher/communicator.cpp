@@ -295,7 +295,7 @@ void communicator::log_connections(snaplogger::severity_t severity)
             , f_connections.end()
             , [severity](auto const & c)
             {
-                snaplogger::message msg(severity, __FILE__, __func__, __LINE__);
+                snaplogger::message msg(severity);
                 msg << "communicator remaining connection: \""
                     << c->get_name()
                     << "\"";
@@ -594,7 +594,7 @@ bool communicator::run()
             if(get_show_connections()
             && f_debug_connections != snaplogger::severity_t::SEVERITY_OFF)
             {
-                snaplogger::message msg(f_debug_connections, __FILE__, __func__, __LINE__);
+                snaplogger::message msg(f_debug_connections);
                 msg << "communicator listening on connection: \""
                     << c->get_name()
                     << "\"";

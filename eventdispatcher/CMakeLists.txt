@@ -39,6 +39,7 @@ add_library(${PROJECT_NAME} SHARED
         dispatcher_match.cpp
         dispatcher_support.cpp
         message.cpp
+        message_definition.cpp
 
         # connections
         connection.cpp
@@ -203,6 +204,7 @@ install(
         local_stream_server_connection.h
         logrotate_udp_messenger.h
         message.h
+        message_definition.h
         ${CMAKE_CURRENT_BINARY_DIR}/names.h
         pipe_buffer_connection.h
         pipe_connection.h
@@ -246,6 +248,12 @@ install(
 ## Generate the reporter library
 ##
 add_subdirectory(reporter)
+
+
+##
+## Install the message definitions
+##
+add_subdirectory(message-definitions)
 
 
 # vim: ts=4 sw=4 et

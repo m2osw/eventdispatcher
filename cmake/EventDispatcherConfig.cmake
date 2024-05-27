@@ -58,4 +58,6 @@ find_package_handle_standard_args(
         EVENTDISPATCHER_LIBRARY
 )
 
+set(EVENTDISPATCHER_SHARE_MESSAGE_DEFINITIONS_CONF_DIR share/eventdispatcher/messages)
+
 # vim: ts=4 sw=4 et

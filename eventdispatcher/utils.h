@@ -57,7 +57,6 @@ enum class mode_t
 };
 
 
-typedef std::vector<std::string>            string_list_t;
 typedef std::map<std::string, std::string>  string_map_t;
 
 

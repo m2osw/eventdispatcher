@@ -263,29 +263,38 @@ token lexer::next_token()
                     error(t, "an empty IP address is not a valid address.");
                     return t;
                 }
-                addr::addr_parser p;
-                p.set_protocol("tcp");
-                p.set_allow(addr::allow_t::ALLOW_MASK, true);
-                addr::addr_range::vector_t addresses(p.parse(s));
-                if(p.has_errors())
+                if(s == "=")
                 {
-                    error(t, "error parsing IP address " + s + ".");
-                    return t;
-                }
-                if(addresses[0].is_range()
-                || !addresses[0].has_from())
-                {
-                    // the parsing is expected to fail against ranges
-                    // so we should not get here
+                    // this is the <=> operator
                     //
-                    throw std::logic_error("parsing of address did not fail with a range."); // LCOV_EXCL_LINE
+                    t.set_token(token_t::TOKEN_COMPARE);
                 }
+                else
+                {
+                    addr::addr_parser p;
+                    p.set_protocol("tcp");
+                    p.set_allow(addr::allow_t::ALLOW_MASK, true);
+                    addr::addr_range::vector_t addresses(p.parse(s));
+                    if(p.has_errors())
+                    {
+                        error(t, "error parsing IP address " + s + ".");
+                        return t;
+                    }
+                    if(addresses[0].is_range()
+                    || !addresses[0].has_from())
+                    {
+                        // the parsing is expected to fail against ranges
+                        // so we should not get here
+                        //
+                        throw std::logic_error("parsing of address did not fail with a range."); // LCOV_EXCL_LINE
+                    }
 
-                t.set_token(token_t::TOKEN_ADDRESS);
-                t.set_string(addresses[0].get_from().to_ipv4or6_string(
-                          addr::STRING_IP_BRACKET_ADDRESS
-                        | addr::STRING_IP_PORT
-                        | addr::STRING_IP_MASK_IF_NEEDED));
+                    t.set_token(token_t::TOKEN_ADDRESS);
+                    t.set_string(addresses[0].get_from().to_ipv4or6_string(
+                              addr::STRING_IP_BRACKET_ADDRESS
+                            | addr::STRING_IP_PORT
+                            | addr::STRING_IP_MASK_IF_NEEDED));
+                }
                 return t;
             }
             snapdev::NOT_REACHED();
@@ -323,6 +332,13 @@ token lexer::next_token()
                         }
                         switch(c)
                         {
+                        case '\\':
+                        case '\'':
+                        case '"':
+                        case '`':
+                            // as is characters
+                            break;
+
                         case U'a':
                             c = U'\a';
                             break;
@@ -352,9 +368,28 @@ token lexer::next_token()
                             break;
 
                         // TODO: add support for \x, \u, \U, \[0-9]{1,3}
+                        case 'x':
+                        case 'u':
+                        case 'U':
+                        case '0':
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '4':
+                        case '5':
+                        case '6':
+                        case '7':
+                        case '8':
+                        case '9':
+                            throw libexcept::fixme("sorry, the \\... with a number to define a character are not yet supported.");
+                            break;
 
-                        // other characters are copied as is for now
-                        // no error on "invalid" character escape at the moment
+                        default:
+                            throw std::runtime_error(
+                                  "invalid escape character '"
+                                + libutf8::to_u8string(c)
+                                + "'");
+
                         }
                     }
                     s += libutf8::to_u8string(c);

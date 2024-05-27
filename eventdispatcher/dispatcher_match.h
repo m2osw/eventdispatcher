@@ -74,13 +74,16 @@ struct dispatcher_match
     bool                execute(message & msg) const;
     bool                match_is_one_to_one_match() const;
     bool                match_is_always_match() const;
+    bool                match_is_one_to_one_callback_match() const;
     bool                match_is_callback_match() const;
 
-    char const *        f_expr = nullptr;
-    execute_callback_t  f_callback = execute_callback_t();
-    match_func_t        f_match = &one_to_one_match;
-    tag_t               f_tag = DISPATCHER_MATCH_NO_TAG;
-    priority_t          f_priority = DISPATCHER_MATCH_DEFAULT_PRIORITY;
+    char const *            f_expr = nullptr;
+    execute_callback_t      f_callback = execute_callback_t();
+    match_func_t            f_match = &one_to_one_match;
+    tag_t                   f_tag = DISPATCHER_MATCH_NO_TAG;
+    priority_t              f_priority = DISPATCHER_MATCH_DEFAULT_PRIORITY;
+    mutable message_definition::pointer_t
+                            f_message_definition = message_definition::pointer_t();
 };
 
 

@@ -87,12 +87,7 @@ snaplogger::message::pointer_t ed_message_to_log_message(ed::message const & mes
         line = message.get_integer_parameter("line");
     }
 
-    snaplogger::message::pointer_t msg(std::make_shared<snaplogger::message>(
-              severity
-            , filename.c_str()
-            , function.c_str()
-            , line));
-
+    snaplogger::message::pointer_t msg(std::make_shared<snaplogger::message>(severity));
     if(message.has_parameter("timestamp"))
     {
 // TODO: once we have stdc++20, remove all defaults & pragma

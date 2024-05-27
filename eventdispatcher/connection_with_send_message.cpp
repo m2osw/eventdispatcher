@@ -29,6 +29,7 @@
 //
 #include    "eventdispatcher/connection_with_send_message.h"
 
+#include    "eventdispatcher/communicator.h"
 #include    "eventdispatcher/connection.h"
 #include    "eventdispatcher/dispatcher.h"
 #include    "eventdispatcher/dispatcher_support.h"
@@ -114,7 +115,8 @@ connection_with_send_message::~connection_with_send_message()
  * "timestamp" parameter.
  *
  * The function also adds one field named "reply_timestamp" with the Unix
- * time in seconds when the reply is being sent.
+ * time in seconds with a precision of nanoseconds (after the decimal point,
+ * see snapdev::timespec_ex) when the reply is being sent.
  *
  * \note
  * The "serial" parameter is expected to be used to make sure that no messages
@@ -142,7 +144,7 @@ void connection_with_send_message::msg_alive(message & msg)
     {
         absolutely.add_parameter(g_name_ed_param_timestamp, msg.get_parameter(g_name_ed_param_timestamp));
     }
-    absolutely.add_parameter(g_name_ed_param_reply_timestamp, time(nullptr));
+    absolutely.add_parameter(g_name_ed_param_reply_timestamp, snapdev::now().to_timestamp());
     if(!send_message(absolutely, false))
     {
         SNAP_LOG_WARNING
@@ -158,7 +160,7 @@ void connection_with_send_message::msg_alive(message & msg)
 
 /** \brief Build the HELP reply and send it.
  *
- * When a daemon registers with the snapcommunicator, it sends a REGISTER
+ * When a service registers with the communicator daemon, it sends a REGISTER
  * command. As a result, your daemon is sent a HELP command which must be
  * answered with a COMMANDS message which includes the list of commands
  * (a.k.a. messages) that your daemon supports.
@@ -179,73 +181,7 @@ void connection_with_send_message::msg_alive(message & msg)
  */
 void connection_with_send_message::msg_help(message & msg)
 {
-    bool need_user_help(true);
-    string_list_t commands;
-
-    dispatcher * d(nullptr);
-    dispatcher_support * ds(dynamic_cast<dispatcher_support *>(this));
-    if(ds != nullptr)
-    {
-        // we extract the bare pointer because in the other case
-        // we only get a bare pointer... (which we can't safely
-        // put in a shared pointer, although we could attempt to
-        // use shared_from_this() but we could have a class without
-        // it?)
-        //
-        d = ds->get_dispatcher().get();
-    }
-    else
-    {
-        // in some cases, the user directly derive from the dispatcher
-        //
-        d = dynamic_cast<dispatcher *>(this);
-    }
-    if(d != nullptr)
-    {
-        need_user_help = d->get_commands(commands);
-    }
-
-    // the user has "unknown" commands (as far as the dispatcher is concerned)
-    // in his list of commands so we have to let him enter them "manually"
-    //
-    // this happens whenever there is an entry which is a regular expression
-    // or something similar which we just cannot grab
-    //
-    if(need_user_help)
-    {
-        help(commands);
-    }
-
-    // the list of commands just cannot be empty
-    //
-    if(commands.empty())
-    {
-        throw implementation_error(
-                "connection_with_send_message::msg_help()"
-                " is not able to determine the commands this messenger supports");
-    }
-
-    // Now prepare the COMMAND message and send it
-    //
-    // Note: we turn off the caching on this message, it does not make sense
-    //       because if snapcommunicator is not running, then caching won't
-    //       happen work anyway (i.e. snapcommunicator has to send HELP first
-    //       and then we send the reply, if it has to restart, then just
-    //       sending COMMANDS will fail.)
-    //
-    message reply;
-    reply.user_data(msg.user_data<void>());
-    reply.reply_to(msg);
-    reply.set_command(g_name_ed_cmd_commands);
-    reply.add_parameter(g_name_ed_param_list, snapdev::join_strings(commands, ","));
-    if(!send_message(reply, false))
-    {
-        SNAP_LOG_WARNING
-            << "could not reply to \""
-            << msg.get_command()
-            << "\" with a \"COMMANDS\" message."
-            << SNAP_LOG_SEND;
-    }
+    send_commands(&msg);
 }
 
 
@@ -265,7 +201,8 @@ void connection_with_send_message::msg_help(message & msg)
  *
  * \todo
  * Find a solution which actually works. The LSAN system doesn't offer
- * to (correctly) print the list of leaks at any given time.
+ * to (correctly) print the list of leaks at any given time. It seems
+ * to only work once.
  *
  * \param[in] msg  The LEAK message, which is ignored.
  */
@@ -277,7 +214,7 @@ void connection_with_send_message::msg_leak(ed::message & msg)
     __lsan_do_recoverable_leak_check();
 #else
     std::cerr << "error: leaks are not being tracked;"
-                " use the --sanitize option to turn on this feature."
+                " use the --sanitize option to compile with this feature."
         << std::endl;
 #endif
 }
@@ -361,9 +298,12 @@ void connection_with_send_message::msg_quitting(message & msg)
  */
 void connection_with_send_message::msg_ready(message & msg)
 {
-    // get this computer address
+    // get this computer's address
     //
-    f_my_address = addr::string_to_addr(msg.get_parameter(g_name_ed_param_my_address));
+    if(msg.has_parameter(g_name_ed_param_my_address))
+    {
+        f_my_address = addr::string_to_addr(msg.get_parameter(g_name_ed_param_my_address));
+    }
 
     // pass the message so any additional info can be accessed by callee.
     //
@@ -407,9 +347,9 @@ void connection_with_send_message::msg_ready(message & msg)
  * \note
  * In those existing implementations, we really just do a restart anyway.
  * \note
- * The new versions will be using fluid-settings. We can still support
- * a RESTART message, but a RELOADCONFIG (as we had in snapcommunicator)
- * should not be used.
+ * New versions will be using fluid-settings. We can still support
+ * a RESTART message, but a RELOADCONFIG (as we had in the communicator
+ * daemon) should not be used.
  *
  * \param[in] msg  The RESTART message.
  *
@@ -433,7 +373,11 @@ void connection_with_send_message::msg_restart(message & msg)
  * that's the only way for a client to know that its message is going
  * to be lost.
  *
- * The default option does nothing.
+ * The default implementation does nothing.
+ *
+ * \note
+ * There is also a TRANSMISSION_REPORT capability in the communicator
+ * daemon which does something similar.
  *
  * \param[in] msg  The SERVICE_UNAVAILABLE message.
  */
@@ -554,13 +498,14 @@ void connection_with_send_message::msg_reply_with_unknown(message & msg)
 }
 
 
-/** \brief The default help() function does nothing.
+/** \brief The default help() function calls your help callbacks.
  *
- * This implementation does nothing. It is expected that you reimplement
- * this function depending on your daemon's need.
+ * It is expected that you reimplement this function or add help callbacks
+ * to your connection_with_send_message object.
  *
  * The help() function gets called whenever the list of commands can't be
- * 100% defined automatically.
+ * 100% defined automatically (i.e. some messages are using regular
+ * expressions, for example).
  *
  * Your function is expected to add commands to the \p commands parameter
  * as in:
@@ -577,11 +522,28 @@ void connection_with_send_message::msg_reply_with_unknown(message & msg)
  *
  * \param[in,out] commands  List of commands to update.
  */
-void connection_with_send_message::help(string_list_t & commands)
+void connection_with_send_message::help(advgetopt::string_set_t & commands)
 {
-    snapdev::NOT_USED(commands);
+    snapdev::NOT_USED(f_help_callbacks.call(std::ref(commands)));
+}
 
-    // do nothing by default -- user is expected to overload this function
+
+/** \brief Add a help callback.
+ *
+ * Whenever some of the callbacks do not use one of the default match
+ * functions (one_to_one_match() or one_to_one_callback_match()), you
+ * need to pass the name to the list of help commands. To do so, you
+ * either
+ *
+ * * reimplement the help() function (if you are overloading
+ *   the connection itself); or
+ * * you add a callback using this function.
+ *
+ * You callback must return `true` to make sure it works as expected.
+ */
+void connection_with_send_message::add_help_callback(help_callback_t callback)
+{
+    f_help_callbacks.add_callback(callback);
 }
 
 
@@ -651,7 +613,7 @@ void connection_with_send_message::stop(bool quitting)
 
 /** \brief Retrieve the name of this service.
  *
- * A messenger used with the snapcommunicator is viewed as a service and
+ * A messenger used with the communicator daemon is viewed as a service and
  * it needs to have a name. That name is specified at the time you create
  * your service (see constructor).
  *
@@ -779,16 +741,20 @@ bool connection_with_send_message::register_service()
 }
 
 
-/** \brief Unregister from the snapcommunicator.
+/** \brief Unregister a service from the communicator daemon.
  *
  * The register_service() function registers your service with the
- * snapcommunicator. This function is the converse. It sends a message
- * to UNREGISTER you from the snapcommunicator. This means other services
+ * communicator daemon. This function is the converse. It sends a message
+ * to UNREGISTER you from the communicator daemon. This means other services
  * will not be able to send you messages anymore.
  *
  * \exception name_undefined
  * The function makes use of the service name as specified in the
  * constructor. It cannot be empty.
+ *
+ * \exception implementation_error
+ * If the connection_with_send_message is not a valid connection object,
+ * then this exception is raised. It should never happen.
  */
 void connection_with_send_message::unregister_service()
 {
@@ -802,7 +768,7 @@ void connection_with_send_message::unregister_service()
     }
     c->mark_done();
 
-    // unregister ourself from the snapcommunicator daemon
+    // unregister ourself from the communicator daemon
     //
     message unregister_msg;
     unregister_msg.set_command(g_name_ed_cmd_unregister);
@@ -813,6 +779,125 @@ void connection_with_send_message::unregister_service()
             << "could not \""
             << g_name_ed_cmd_unregister
             << "\" from communicatord."
+            << SNAP_LOG_SEND;
+
+        communicator::instance()->remove_connection(c->shared_from_this());
+    }
+}
+
+
+/** \brief Sent the COMMANDS message to the communicatord.
+ *
+ * This function gathers the list of commands this connection understands.
+ * It then sends that list the communicator daemon.
+ *
+ * It is expected that the communicator daemon only accumulate the
+ * command names. This is important since
+ *
+ * 1. some services make use of fully dynamic commands, which get
+ *    added only at the time it becomes necessary. For example,
+ *    the cluck service adds a few commands such as LOCKED and
+ *    LOCK_FAILED;
+ * 2. the messages may travel via UDP which does not guarantee
+ *    the order in which the messages will be delivered.
+ *
+ * \warning
+ * The \p msg parameter must be the HELP message from the communicator
+ * daemon. The function verifies such.
+ *
+ * \param[in] msg  The message we are replying to or nullptr.
+ */
+void connection_with_send_message::send_commands(message * msg)
+{
+    if(msg != nullptr
+    && msg->get_command() != g_name_ed_cmd_help)
+    {
+        SNAP_LOG_ERROR
+            << "the 'msg' parameter to send_commands() must be a \""
+            << g_name_ed_cmd_help
+            << "\" message or nullptr. No commands will be sent."
+            << SNAP_LOG_SEND;
+        return;
+    }
+
+    dispatcher * d(nullptr);
+    dispatcher_support * ds(dynamic_cast<dispatcher_support *>(this));
+    if(ds != nullptr)
+    {
+        // we extract the bare pointer because in the other case
+        // we only get a bare pointer... (which we can't safely
+        // put in a shared pointer, although we could attempt to
+        // use shared_from_this() but we could have a class without
+        // it?)
+        //
+        d = ds->get_dispatcher().get();
+    }
+    else
+    {
+        // in some cases, the user directly derive from the dispatcher
+        //
+        d = dynamic_cast<dispatcher *>(this);
+    }
+
+    advgetopt::string_set_t commands;
+    bool need_user_help(true);
+    if(d != nullptr)
+    {
+        need_user_help = d->get_commands(commands);
+    }
+
+    // the user has "unknown" commands (as far as the dispatcher is concerned)
+    // in his list of commands so we have to let him enter them "manually"
+    //
+    // this happens whenever there is an entry which is a regular expression
+    // or something similar which we just cannot grab
+    //
+    if(need_user_help)
+    {
+        help(commands);
+    }
+
+    // the list of commands just cannot be empty
+    //
+    if(commands.empty())
+    {
+        throw implementation_error(
+                "connection_with_send_message::msg_help()"
+                " is not able to determine the commands this messenger supports");
+    }
+
+    // Now prepare the COMMAND message and send it
+    //
+    // Note: we turn off the caching on this message, it does not make sense
+    //       because if the communicator daemon is not running, then caching
+    //       won't work anyway (i.e. the communicator daemon has to send HELP
+    //       first and then we send the reply, if it has to restart, then just
+    //       sending COMMANDS will fail).
+    //
+    message commands_msg;
+    if(msg != nullptr)
+    {
+        commands_msg.user_data(msg->user_data<void>());
+        commands_msg.reply_to(*msg);
+    }
+    else
+    {
+        // TODO: use names? only the ones defining these are in communicatord
+        //       which depends on us
+        //
+        commands_msg.set_server("."); // g_name_communicatord_server_me
+        commands_msg.set_service("communicatord"); // g_name_communicatord_service_communicatord
+    }
+    commands_msg.set_command(g_name_ed_cmd_commands);
+    commands_msg.add_parameter(
+              g_name_ed_param_list
+            , snapdev::join_strings(commands, ","));
+    if(!send_message(commands_msg, false))
+    {
+        SNAP_LOG_WARNING
+            << "could not send \""
+            << g_name_ed_cmd_commands
+            << "\" message."
             << SNAP_LOG_SEND;
     }
 }

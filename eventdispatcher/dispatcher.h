@@ -57,7 +57,7 @@ public:
     bool                dispatch(message & msg);
     void                set_trace(bool trace = true);
     void                set_show_matches(bool show_matches = true);
-    bool                get_commands(string_list_t & commands);
+    bool                get_commands(advgetopt::string_set_t & commands);
     dispatcher_match    define_catch_all() const;
 
 private:

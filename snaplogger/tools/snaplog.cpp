@@ -246,11 +246,7 @@ int snaplog::run()
         line = f_opt.get_long("line");
     }
 
-    snaplogger::message msg(
-              sev->get_severity()
-            , filename.c_str()
-            , function.c_str()
-            , line);
+    snaplogger::message msg(sev->get_severity());
 
     int comp_max(f_opt.size("components"));
     for(int comp(0); comp < comp_max; ++comp)
