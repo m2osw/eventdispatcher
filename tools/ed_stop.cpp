@@ -107,10 +107,7 @@ advgetopt::group_description const g_group_descriptions[] =
 
 
 
-// until we have C++20 remove warnings this way
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-advgetopt::options_environment const g_snapstop_options_environment =
+advgetopt::options_environment const g_options_environment =
 {
     .f_project_name = "ed-stop",
     .f_group_name = "eventdispatcher",
@@ -135,8 +132,6 @@ advgetopt::options_environment const g_snapstop_options_environment =
     .f_build_time = UTC_BUILD_TIME,
     .f_groups = g_group_descriptions
 };
-#pragma GCC diagnostic pop
-
 
 
 
@@ -150,7 +145,7 @@ int main(int argc, char *argv[])
 {
     try
     {
-        advgetopt::getopt opt(g_snapstop_options_environment, argc, argv);
+        advgetopt::getopt opt(g_options_environment, argc, argv);
 
         // make sure it is defined
         //

@@ -187,6 +187,14 @@ void process_message_definition_options(advgetopt::getopt const & opts)
  */
 message_definition::pointer_t get_message_definition(std::string const & command)
 {
+    if(g_message_definition_path.empty())
+    {
+        throw invalid_parameter(
+              "message definition:"
+            + command
+            + ": no paths defined to message definitions. (i.e. did you call the add_message_definition_options() and process_message_definition_options() functions?)");
+    }
+
     verify_message_name(command);
 
     cppthread::guard lock(*cppthread::g_system_mutex);
@@ -201,15 +209,6 @@ message_definition::pointer_t get_message_definition(std::string const & command
     def->f_command = command;
     g_message_definitions[command] = def;
 
-    // if this is still empty, we cannot read the proper files
-    // did you call the add_message_definition_options() and
-    // process_message_definition_options() functions?
-    //
-    if(g_message_definition_path.empty())
-    {
-        return def;
-    }
-
     std::list<std::string> paths;
     snapdev::tokenize_string(
           paths
@@ -217,6 +216,7 @@ message_definition::pointer_t get_message_definition(std::string const & command
         , ":"
         , true);
 
+    bool found(false);
     for(auto const & p : paths)
     {
         std::string filename(p);
@@ -230,6 +230,8 @@ message_definition::pointer_t get_message_definition(std::string const & command
             //
             continue;
         }
+        found = true;
+
 std::cerr <<"--- loading msg def from [" << filename << "]\n";
 
         advgetopt::conf_file_setup setup(filename);
@@ -243,6 +245,7 @@ std::cerr <<"--- loading msg def from [" << filename << "]\n";
             message_parameter param = {
                 .f_name = advgetopt::option_with_underscores(s),
             };
+std::cerr <<"--- defining param [" << param.f_name << "]\n";
 
             std::string param_name(s + "::type");
             if(config->has_parameter(param_name))
@@ -268,7 +271,9 @@ std::cerr <<"--- loading msg def from [" << filename << "]\n";
                 else
                 {
                     throw invalid_parameter(
-                          "message definition: parameter type \""
+                          "message definition:"
+                        + command
+                        + ": parameter type \""
                         + type
                         + "\" is not a supported type.");
                 }
@@ -286,6 +291,7 @@ std::cerr <<"--- loading msg def from [" << filename << "]\n";
                 snapdev::tokenize_string(flag_names, flags, ",", true);
                 for(auto const & f : flag_names)
                 {
+std::cerr << "--- flag: [" << f << "]\n";
                     if(f == "required")
                     {
                         param.f_flags |= PARAMETER_FLAG_REQUIRED;
@@ -303,7 +309,9 @@ std::cerr <<"--- loading msg def from [" << filename << "]\n";
                          && f != "allowed")
                     {
                         throw invalid_parameter(
-                              "message definition: parameter flag \""
+                              "message definition:"
+                            + command
+                            + ": parameter flag \""
                             + f
                             + "\" not supported.");
                     }
@@ -312,6 +320,19 @@ std::cerr <<"--- loading msg def from [" << filename << "]\n";
 
             def->f_parameters.push_back(param);
         }
+
+        // we only read one config file; other copies in the
+        // other folders are ignored
+        //
+        break;
+    }
+
+    if(!found)
+    {
+        throw invalid_parameter(
+              "message definition for \""
+            + command
+            + "\" not found.");
     }
 
     return def;

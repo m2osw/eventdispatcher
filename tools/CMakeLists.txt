@@ -73,4 +73,74 @@ install(
 )
 
 
+##
+## verify-message-definitions
+##
+project(verify-message-definitions)
+
+add_executable(${PROJECT_NAME}
+    verify_message_definitions.cpp
+)
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        ${ADVGETOPT_INCLUDE_DIRS}
+)
+
+target_link_libraries(${PROJECT_NAME}
+    eventdispatcher
+)
+
+install(
+    TARGETS
+        ${PROJECT_NAME}
+
+    RUNTIME DESTINATION
+        bin
+)
+
+
+##
+## Verify the message definitions defined in the eventdispatcher
+##
+#
+# Unfortunate, but the command used to verify the message definitions is
+# created in this project and the CMake macro is added by this project so
+# other projects can simply use a one liner which is not available to us
+# here. It's not that bad, though.
+#
+project(verify-eventdispatcher-message-definitions)
+
+set(VERIFIED_EVENTDISPATCHER_MESSAGE_DEFINITIONS ${PROJECT_BINARY_DIR}/verify-eventdispatcher-message-definitions)
+
+add_custom_command(
+    OUTPUT
+        ${VERIFIED_EVENTDISPATCHER_MESSAGE_DEFINITIONS}
+
+    COMMAND
+        echo "--- verifying message definitions ---"
+
+    COMMAND
+        "verify-message-definitions"
+            "--path-to-message-definitions"
+                "${CMAKE_SOURCE_DIR}/snaplogger/network/message-definitions:${CMAKE_SOURCE_DIR}/eventdispatcher/message-definitions"
+            "${CMAKE_SOURCE_DIR}/snaplogger/network/message-definitions/*.conf"
+            "${CMAKE_SOURCE_DIR}/eventdispatcher/message-definitions/*.conf"
+
+    COMMAND
+        "touch"
+            "${VERIFIED_EVENTDISPATCHER_MESSAGE_DEFINITIONS}"
+
+    DEPENDS
+        verify-message-definitions
+        "${CMAKE_SOURCE_DIR}/snaplogger/network/message-definitions/*.conf"
+        "${CMAKE_SOURCE_DIR}/eventdispatcher/message-definitions/*.conf"
+)
+
+add_custom_target(${PROJECT_NAME} ALL
+    DEPENDS
+        ${VERIFIED_EVENTDISPATCHER_MESSAGE_DEFINITIONS}
+)
+
+
 # vim: ts=4 sw=4 et

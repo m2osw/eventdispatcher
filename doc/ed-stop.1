@@ -1,0 +1,150 @@
+.TH ED\-STOP 1 "May 2024" "ed-stop 1.x" "User Commands"
+.SH NAME
+ed\-stop \- Stop an eventdispatcher service by sending a Unix signal to it
+.SH SYNOPSIS
+.B ed\-stop
+[\fIOPTION\fR]... \fI<service>\fR
+
+.SH DESCRIPTION
+This command uses systemctl to find the process identifier to send a Unix
+signal to. If the service cannot be found, the process does nothing. If
+found, then it sends it a `SIGINT'. If that fails to stop the process, then
+a `SIGTERM' is used. If that also fails, then the service is not stopped by
+us. However, systemctl is likely to send a `SIGKILL' as a result.
+.PP
+Our services often implement a callback capturing the SIGINT signal. This gives
+them a chance to cleanly stop. In most cases, it will simulate receipt of
+a `STOP' message.
+
+.SH "COMMAND LINE OPTIONS"
+.TP
+\fB\-\-build\-date\fR
+Display the date and time when the tool was last built.
+
+.TP
+\fB\-\-command\-help\fR
+List the commands understood by `ed-stop'.
+
+.TP
+\fB\-\-compiler\-version\fR
+Output the version information of the C++ compiler used to compile the
+`eventdispatcher' library. In most cases, this is the same as the compiler used
+to compile the `ed-stop' tool.
+
+.TP
+\fB\-\-configuration\-filenames\fR
+List the filename of each configuration file that `ed-stop' reads to get
+initialized. (Note that at the moment the `ed-stop' does not make
+use of a configuration file.)
+
+.TP
+\fB\-C\fR, \fB\-\-copyright\fR
+Print out the copyright notice of the `ed-stop' tool.
+
+.TP
+\fB\-\-environment\-variable\-name\fR
+Print the name of the variable to the console. This variable can be used
+to enter options instead of writing them on the command line or the
+setup file. Commands are not allowed in the environment variable.
+
+.TP
+\fB\-\-has\-sanitizer\fR
+Print whether this version was compiled with the C++ compiler sanitizer.
+
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print a brief document about the tool usage, then exit.
+
+.TP
+\fB\-L\fR, \fB\-\-license\fR
+Print out the license of `ed-stop' and exit.
+
+.TP
+\fB\-?\fR, \fB\-\-long\-help\fR
+Print all the available help about the tool usage, then exit.
+
+.TP
+\fB\-\-option\-help\fR
+Print the list of options supported by `ed-stop'.
+
+.TP
+\fB\-\-path\-to\-option\-definitions\fR
+Option definitions can be defined in a .ini file. If it exists, this is the
+path where it can be found.
+
+.TP
+\fB\-\-print\-option\fR \fI<name>\fR
+Print the value of the named option once all the options available were
+parsed (command line, environment variables, configuration files).
+
+.TP
+\fB\-\-show\-option\-sources\fR
+The `advgetopt' library has the ability to trace where each value is
+read from: which file, the command line, the environment variable.
+This option can be used to determine where a value is defined, which
+once in a while is particularly useful.
+
+.TP
+\fB\-s\fR, \fB\-\-service\fR \fI<name>\fR
+The name of the service to stop. If you have the service Process Identifier
+(pid), then you can also specify the pid.
+
+The tool distinguish the pid from a service name by the fact that a pid
+is only digits ([0-9]+). Note that the pid of 0 is considered invalid.
+You cannot enter a negative pid (the dash is viewed as a command line
+option introducer).
+
+When specifying a name instead of a pid, the tool attempts to determine
+the pid using systemctl like so:
+
+.IP "" 11
+systemctl show --property MainPID --value <name>
+
+.IP "" 7
+Where <name> is the same as specified with the \-\-service command line
+option of `ed-stop'.
+
+.TP
+\fB\-S\fR, \fB\-\-show\-system\-help\fR
+Print the list of system command line options.
+
+.TP
+\fB\-t\fR, \fB\-\-timeout\fR \fI<seconds>\fR
+The number of seconds to wait for the service to die after sending it
+a signal.
+
+There is a minimum of 10 seconds. If you try to use a smaller number,
+then the `ed-stop' process will still wait at least 10 seconds.
+
+Similarly, there is a maximum of 1h. If you try to use a larger number,
+the `ed-stop' process will wait for 3600 seconds and timeout then.
+
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print version number, then exit.
+
+.SH COMMENTS
+.PP
+The `ed-signal' is generally the preferred tool to stop a service as
+it softly sends a `STOP' message to the service. However, there are
+times when a service does not listen for messages or the communicator
+daemon is down (it may be required to send the message to the service).
+.PP
+A later version may implement both functionality in a single tool.
+
+.SH AUTHOR
+Written by Alexis Wilke <alexis@m2osw.com>.
+.SH "REPORTING BUGS"
+Report bugs to <https://github.com/m2osw/eventdispatcher/issues>.
+.br
+eventdispatcher home page: <https://snapwebsites.org/project/eventdispatcher>.
+.SH COPYRIGHT
+Copyright \(co 2011-2024  Made to Order Software Corp.  All Rights Reserved
+.br
+License: GPLv3
+.br
+This is free software: you are free to change and redistribute it.
+.br
+There is NO WARRANTY, to the extent permitted by law.
+.SH "SEE ALSO"
+.BR ed-signal(1)

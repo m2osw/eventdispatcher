@@ -66,3 +66,4 @@ usr/include/eventdispatcher/utils.h
 usr/include/eventdispatcher/version.h
 usr/lib/libeventdispatcher.so
 usr/share/cmake/EventDispatcher/*
+usr/bin/verify-message-definitions

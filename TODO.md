@@ -1,24 +1,37 @@
 
-* Replace the time/date with a timespec_ex and use `ppoll()` which matches
+* Replace the time/date with a `timespec_ex` and use `ppoll()` which matches
   one to one (instead of our manually handled `timeout` variable).
 
 * See to have clients and servers for HTTP/HTTPS/HTTP2/HTTP3
   (we already have HTTP/HTTPS in libsnapwebsites, only it uses
   `snapuri` which was moved to `edhttp`)
 
-* Config describing allowed messages with their parameters and values for
-  such and a way to track which message was ever sent (i.e. a form of
+* Track which message was ever sent & received (i.e. a form of
   message coverage) so we can verify that all messages were checked
-  (i.e. for debug purposes). [MOSTLY DONE!]
+  (i.e. for debug purposes).
 
-* Verify the message config definitions with a tool at compile time so we
-  are sure that we install valid files and don't break an entire system
-  by installing invalid files (i.e. we throw when we find errors).
+* Verify the message config definitions with the verify-message-definitions
+  tool at compile time so we are sure that we install valid files and don't
+  break an entire system by installing invalid files (i.e. we throw when we
+  find errors).
+
+  Services with messages:
+  - cluck
+  - communicatord
+  - eventdispatcher **[DONE]**
+    + snaploggerserver **[DONE]**
+  - fastjournal
+  - fluid-settings
+  - iplock
+    + ipwall
+  - prinbee
+  - snaprfs
+
 
 * When adding a dispatcher match, detect whether it was already added; when
   we add a message such as STATUS once, then trying to add it again will have
   no effect (the 2nd and further instances are ignored because we stop after
-  executing the first); the add_match() function should be capable of
+  executing the first); the `add_match()` function should be capable of
   deteting such (atl east in DEBUG mode) so we know we did that mistake;
   the execution method could also no return and see if it can match more than
   one entry (which is acceptable if using a regex... so we need to be careful
@@ -228,4 +241,4 @@
       };
 
 
-# vim: ts=4 sw=4 et
+vim: ts=4 sw=4 et

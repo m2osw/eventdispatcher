@@ -164,11 +164,7 @@ void base_network_appender::log_message_to_ed_message(
         , ed::message & log_message
         , snaplogger::component::pointer_t extra_component)
 {
-    // WARNING: the Snap! environment already uses the "LOG" message for
-    //          resetting the snaplogger so here we want to use something
-    //          else to clearly distinguish between both
-    //
-    log_message.set_command("LOGGER");
+    log_message.set_command("LOG");
 
     // severity
     //
@@ -180,7 +176,7 @@ void base_network_appender::log_message_to_ed_message(
 
     // for now, only sends seconds
     timespec const & timestamp(msg.get_timestamp());
-    log_message.add_parameter("timestamp", timestamp.tv_sec);
+    log_message.add_parameter("timestamp", timestamp);
 
     std::string const & filename(msg.get_filename());
     if(!filename.empty())

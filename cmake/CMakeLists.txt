@@ -58,4 +58,12 @@ install(
         share/cmake/SnapLoggerNetwork
 )
 
+install(
+    FILES
+        VerifyMessageDefinitionsConfig.cmake
+
+    DESTINATION
+        share/cmake/VerifyMessageDefinitions
+)
+
 # vim: ts=4 sw=4 et nocindent
