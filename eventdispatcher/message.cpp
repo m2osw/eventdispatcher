@@ -1789,6 +1789,8 @@ bool message::check_parameters(message_parameter::vector_t const & parameter_def
                     << p.f_name
                     << "\" from message \""
                     << f_command
+                    << "\" with value \""
+                    << it->second
                     << "\" must be a valid timespec: "
                     << e
                     << SNAP_LOG_SEND;

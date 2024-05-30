@@ -327,6 +327,7 @@ std::cerr << "--- flag: [" << f << "]\n";
         break;
     }
 
+#ifdef _DEBUG
     if(!found)
     {
         throw invalid_parameter(
@@ -334,6 +335,7 @@ std::cerr << "--- flag: [" << f << "]\n";
             + command
             + "\" not found.");
     }
+#endif
 
     return def;
 }
