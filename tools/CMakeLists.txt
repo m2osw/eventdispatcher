@@ -122,7 +122,7 @@ add_custom_command(
         echo "--- verifying message definitions ---"
 
     COMMAND
-        "verify-message-definitions"
+        "${CMAKE_BINARY_DIR}/tools/verify-message-definitions"
             "--path-to-message-definitions"
                 "${CMAKE_SOURCE_DIR}/snaplogger/network/message-definitions:${CMAKE_SOURCE_DIR}/eventdispatcher/message-definitions"
             "${CMAKE_SOURCE_DIR}/snaplogger/network/message-definitions/*.conf"
