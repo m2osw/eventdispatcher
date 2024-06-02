@@ -86,7 +86,24 @@ struct message_definition
 
 void                            add_message_definition_options(advgetopt::getopt & opts);
 void                            process_message_definition_options(advgetopt::getopt const & opts);
+void                            set_message_definition_paths(std::string const & paths);
 message_definition::pointer_t   get_message_definition(std::string const & command);
+
+
+// useful for tests, see set_message_definition_paths() for details
+class manage_message_definition_paths
+{
+public:
+    manage_message_definition_paths(std::string const & paths)
+    {
+        set_message_definition_paths(paths);
+    }
+
+    virtual ~manage_message_definition_paths()
+    {
+        set_message_definition_paths(std::string());
+    }
+};
 
 
 

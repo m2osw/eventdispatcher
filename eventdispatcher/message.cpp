@@ -1460,6 +1460,46 @@ void message::add_parameter(std::string const & name, std::string const & value)
  *
  * \sa verify_message_name()
  */
+void message::add_parameter(std::string const & name, std::int16_t value)
+{
+    add_parameter(name, std::to_string(value));
+}
+
+
+/** \brief Add an integer parameter to the message.
+ *
+ * Messages can include parameters (variables) such as a URI or a word.
+ *
+ * The value is not limited, although it probably should be limited to
+ * standard text as these messages are sent as text.
+ *
+ * The parameter name is verified by the verify_message_name() function.
+ *
+ * \param[in] name  The name of the parameter.
+ * \param[in] value  The value of this parameter.
+ *
+ * \sa verify_message_name()
+ */
+void message::add_parameter(std::string const & name, std::uint16_t value)
+{
+    add_parameter(name, std::to_string(static_cast<std::uint32_t>(value)));
+}
+
+
+/** \brief Add an integer parameter to the message.
+ *
+ * Messages can include parameters (variables) such as a URI or a word.
+ *
+ * The value is not limited, although it probably should be limited to
+ * standard text as these messages are sent as text.
+ *
+ * The parameter name is verified by the verify_message_name() function.
+ *
+ * \param[in] name  The name of the parameter.
+ * \param[in] value  The value of this parameter.
+ *
+ * \sa verify_message_name()
+ */
 void message::add_parameter(std::string const & name, std::int32_t value)
 {
     add_parameter(name, std::to_string(value));

@@ -80,12 +80,19 @@ namespace
 char const * const g_message_definition_suffix = ".conf";
 
 
-/** \brief The path to the list of message definitions.
+/** \brief The paths to the list of message definitions.
  *
  * This variable is dynamically set when you call the
  * process_message_definition_options() function.
+ *
+ * The variable supports any number of paths separated by
+ * a colon (:). In most cases, you don't need more than one
+ * path, but tests usually require at least two: the folder
+ * where the message definitions get installed
+ * (`BUILD/Debug/dist/eventdispatcher/messages`) and the location
+ * of the messages this very project defines.
  */
-std::string g_message_definition_path = std::string();
+std::string g_message_definition_paths = std::string();
 
 
 /** \brief The list of loaded message definitions.
@@ -158,7 +165,38 @@ void add_message_definition_options(advgetopt::getopt & opts)
  */
 void process_message_definition_options(advgetopt::getopt const & opts)
 {
-    g_message_definition_path = opts.get_string("path-to-message-definitions");
+    g_message_definition_paths = opts.get_string("path-to-message-definitions");
+}
+
+
+/** \brief Set the list of paths to message definitions.
+ *
+ * In most cases, you want to use the add_message_definition_options()
+ * and the process_message_definition_options() functions. Those handle
+ * command line options so the user can use the --path-to-message-definitions
+ * option on their command line.
+ *
+ * When working on tests, however, it happens that this is not a good
+ * option and having direct access to the variable is much easier.
+ * To make the test more robuts, it is better to call this function
+ * again once done in order to clear the paths:
+ *
+ * \code
+ *     ed::set_message_definition_paths("my:paths:here");
+ *     ... run test ...
+ *     ed::set_message_definition_paths(std::string());
+ * \endcode
+ *
+ * Or use the RAII clas proposed:
+ *
+ * \code
+ *     ed::manage_message_definition_paths mdp("my:paths:here");
+ *     ... run test ...
+ * \endcode
+ */
+void set_message_definition_paths(std::string const & paths)
+{
+    g_message_definition_paths = paths;
 }
 
 
@@ -187,7 +225,7 @@ void process_message_definition_options(advgetopt::getopt const & opts)
  */
 message_definition::pointer_t get_message_definition(std::string const & command)
 {
-    if(g_message_definition_path.empty())
+    if(g_message_definition_paths.empty())
     {
         throw invalid_parameter(
               "message definition:"
@@ -212,7 +250,7 @@ message_definition::pointer_t get_message_definition(std::string const & command
     std::list<std::string> paths;
     snapdev::tokenize_string(
           paths
-        , g_message_definition_path
+        , g_message_definition_paths
         , ":"
         , true);
 

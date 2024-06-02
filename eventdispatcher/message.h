@@ -98,6 +98,8 @@ public:
     bool                    check_version_parameter() const;
     void                    add_version_parameter();
     void                    add_parameter(std::string const & name, std::string const & value);
+    void                    add_parameter(std::string const & name, std::int16_t value);
+    void                    add_parameter(std::string const & name, std::uint16_t value);
     void                    add_parameter(std::string const & name, std::int32_t value);
     void                    add_parameter(std::string const & name, std::uint32_t value);
     void                    add_parameter(std::string const & name, long long value);
