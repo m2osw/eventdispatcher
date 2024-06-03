@@ -270,8 +270,6 @@ message_definition::pointer_t get_message_definition(std::string const & command
         }
         found = true;
 
-std::cerr <<"--- loading msg def from [" << filename << "]\n";
-
         advgetopt::conf_file_setup setup(filename);
         advgetopt::conf_file::pointer_t config(advgetopt::conf_file::get_conf_file(setup));
         advgetopt::conf_file::sections_t sections(config->get_sections());
@@ -283,7 +281,6 @@ std::cerr <<"--- loading msg def from [" << filename << "]\n";
             message_parameter param = {
                 .f_name = advgetopt::option_with_underscores(s),
             };
-std::cerr <<"--- defining param [" << param.f_name << "]\n";
 
             std::string param_name(s + "::type");
             if(config->has_parameter(param_name))
@@ -329,7 +326,6 @@ std::cerr <<"--- defining param [" << param.f_name << "]\n";
                 snapdev::tokenize_string(flag_names, flags, ",", true);
                 for(auto const & f : flag_names)
                 {
-std::cerr << "--- flag: [" << f << "]\n";
                     if(f == "required")
                     {
                         param.f_flags |= PARAMETER_FLAG_REQUIRED;
