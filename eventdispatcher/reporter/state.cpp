@@ -47,6 +47,12 @@ ip_t state::get_ip() const
 }
 
 
+int state::get_server_pid() const
+{
+    return f_server_pid;
+}
+
+
 void state::set_ip(ip_t ip)
 {
     if(ip > f_program.size())

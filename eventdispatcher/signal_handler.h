@@ -146,6 +146,8 @@ public:
     void                        remove_signals(signal_mask_t sigs);
     void                        remove_all_signals();
     static char const *         get_signal_name(int sig);
+    static int                  get_signal_number(char const * name);
+    static int                  get_signal_number(std::string const & name);
 
 private:
     struct signal_callback_t

@@ -78,6 +78,8 @@ public:
     typedef std::shared_ptr<state>  pointer_t;
     typedef std::function<void(state & s, callback_reason_t reason)> trace_callback_t;
 
+    pid_t                   get_server_pid() const;
+
     ip_t                    get_ip() const;
     void                    set_ip(ip_t ip);
     void                    push_ip();
@@ -127,6 +129,7 @@ private:
     typedef std::map<std::string, ip_t>     label_map_t;
     typedef std::vector<ip_t>               call_stack_t;
 
+    pid_t                   f_server_pid = getpid();
     ip_t                    f_ip = 0;                               // instruction pointer in f_program
     call_stack_t            f_stack = call_stack_t();
     statement::vector_t     f_program = statement::vector_t();      // instruction being executed with original parameters

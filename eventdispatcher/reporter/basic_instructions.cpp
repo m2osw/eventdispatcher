@@ -34,6 +34,7 @@
 //
 #include    <eventdispatcher/connection_with_send_message.h>
 #include    <eventdispatcher/signal.h>
+#include    <eventdispatcher/signal_handler.h>
 
 
 // advgetopt
@@ -55,6 +56,7 @@
 // C
 //
 #include    <poll.h>
+#include    <signal.h>
 
 
 // last include
@@ -74,7 +76,7 @@ namespace
 
 
 
-constexpr parameter_declaration const g_call_params[] = 
+constexpr parameter_declaration const g_call_params[] =
 {
     {
         .f_name = "label",
@@ -84,7 +86,7 @@ constexpr parameter_declaration const g_call_params[] =
 };
 
 
-constexpr parameter_declaration const g_compare_params[] = 
+constexpr parameter_declaration const g_compare_params[] =
 {
     {
         .f_name = "expression",
@@ -95,7 +97,7 @@ constexpr parameter_declaration const g_compare_params[] =
 };
 
 
-constexpr parameter_declaration const g_exit_params[] = 
+constexpr parameter_declaration const g_exit_params[] =
 {
     {
         .f_name = "error_message",
@@ -111,7 +113,7 @@ constexpr parameter_declaration const g_exit_params[] =
 };
 
 
-constexpr parameter_declaration const g_goto_params[] = 
+constexpr parameter_declaration const g_goto_params[] =
 {
     {
         .f_name = "label",
@@ -146,7 +148,7 @@ constexpr parameter_declaration const g_has_type_params[] =
 };
 
 
-constexpr parameter_declaration const g_if_params[] = 
+constexpr parameter_declaration const g_if_params[] =
 {
     {
         .f_name = "variable",
@@ -201,6 +203,17 @@ constexpr parameter_declaration const g_if_params[] =
     {
         .f_name = "true",
         .f_type = "identifier",
+        .f_required = false,
+    },
+    {}
+};
+
+
+constexpr parameter_declaration const g_kill_params[] =
+{
+    {
+        .f_name = "signal",
+        .f_type = "any",
         .f_required = false,
     },
     {}
@@ -301,7 +314,7 @@ constexpr parameter_declaration const g_send_message_params[] =
 };
 
 
-constexpr parameter_declaration const g_set_variable_params[] = 
+constexpr parameter_declaration const g_set_variable_params[] =
 {
     {
         .f_name = "name",
@@ -380,7 +393,7 @@ constexpr parameter_declaration const g_verify_message_params[] =
 };
 
 
-constexpr parameter_declaration const g_wait_params[] = 
+constexpr parameter_declaration const g_wait_params[] =
 {
     {
         .f_name = "timeout",
@@ -957,6 +970,51 @@ public:
     }
 };
 INSTRUCTION(if);
+
+
+// KILL
+//
+class inst_kill
+    : public instruction
+{
+public:
+    inst_kill()
+        : instruction("kill")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        int sig(SIGINT);
+        variable::pointer_t const signal_name(s.get_parameter("signal"));
+        if(signal_name != nullptr)
+        {
+            std::string const name(std::dynamic_pointer_cast<variable_string>(signal_name)->get_string());
+            sig = ed::signal_handler::get_signal_number(name);
+            if(sig == -1)
+            {
+                throw std::runtime_error("kill(signal: ...) unknown signal.");
+            }
+        }
+
+        if(kill(s.get_server_pid(), sig) != 0)
+        {
+            int const e(errno);
+            throw std::runtime_error(
+                  "kill(): signal could no tbe sent (errno: "
+                + std::to_string(e)
+                + ", "
+                + strerror(e)
+                + ").");
+        }
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_kill_params;
+    }
+};
+INSTRUCTION(kill);
 
 
 // LABEL

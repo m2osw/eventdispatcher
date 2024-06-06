@@ -130,6 +130,11 @@
 #include    <cppthread/guard.h>
 
 
+// advgetopt
+//
+#include    <advgetopt/validator_integer.h>
+
+
 // snapdev
 //
 #include    <snapdev/not_reached.h>
@@ -577,6 +582,82 @@ void signal_handler::remove_all_signals()
 char const * signal_handler::get_signal_name(int sig)
 {
     return sigabbrev_np(sig);
+}
+
+
+/** \brief Convert a signal name into a signal number.
+ *
+ * This function converts a signal name or an integer in a signal number.
+ * The name is checked using the sigabbrev_np() function repeatitively.
+ * If found there, then that number is returned.
+ *
+ * If the name starts with a digit, then the algorithm actually looks at
+ * converting the signal name in a decimal number.
+ *
+ * If \p cannot be converted thent the function returns -1.
+ *
+ * \param[in] name  The name of the signal to convert to a signal number.
+ *
+ * \return The signal number of -1 of error.
+ */
+int signal_handler::get_signal_number(char const * name)
+{
+    if(name[0] >= '0'
+    && name[1] <= '9')
+    {
+        // this is a number, convert that from a decimal number
+        //
+        std::int64_t sig(0);
+        if(!advgetopt::validator_integer::convert_string(name, sig))
+        {
+            return -1;
+        }
+        if(sig >= NSIG) // Note: NSIG is defined on Linux, but it's not an official Posix parameter
+        {
+            return -1;
+        }
+        return sig;
+    }
+
+    if(name[0] == 'S'
+    && name[1] == 'I'
+    && name[2] == 'G')
+    {
+        name += 3;
+    }
+
+    for(int sig(1); sig < 64; ++sig)
+    {
+        char const * n(sigabbrev_np(sig));
+        if(n == nullptr)
+        {
+            // ignore invalid entries
+            // (from what I've seen on Linux, this does not happen)
+            //
+            continue;
+        }
+        if(strcmp(name, n) == 0)
+        {
+            return sig;
+        }
+    }
+
+    return -1;
+}
+
+
+/** \brief Convert \p name in a signal number.
+ *
+ * This is the same as the get_signal_number(char const *) function,
+ * except that it accepts an std::string instead.
+ *
+ * \param[in] name  The name of the signal to convert to a signal number.
+ *
+ * \return The signal number of -1 of error.
+ */
+int signal_handler::get_signal_number(std::string const & name)
+{
+    return get_signal_number(name.c_str());
 }
 
 
