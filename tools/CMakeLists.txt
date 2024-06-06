@@ -122,12 +122,12 @@ add_custom_command(
         echo "--- verifying message definitions ---"
 
     COMMAND
-        "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/eventdispatcher"
-        "${CMAKE_BINARY_DIR}/tools/verify-message-definitions"
-            "--path-to-message-definitions"
-                "${CMAKE_SOURCE_DIR}/snaplogger/network/message-definitions:${CMAKE_SOURCE_DIR}/eventdispatcher/message-definitions"
-            "${CMAKE_SOURCE_DIR}/snaplogger/network/message-definitions/*.conf"
-            "${CMAKE_SOURCE_DIR}/eventdispatcher/message-definitions/*.conf"
+        ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/eventdispatcher"
+            "${CMAKE_BINARY_DIR}/tools/verify-message-definitions"
+                "--path-to-message-definitions"
+                    "${CMAKE_SOURCE_DIR}/snaplogger/network/message-definitions:${CMAKE_SOURCE_DIR}/eventdispatcher/message-definitions"
+                "${CMAKE_SOURCE_DIR}/snaplogger/network/message-definitions/*.conf"
+                "${CMAKE_SOURCE_DIR}/eventdispatcher/message-definitions/*.conf"
 
     COMMAND
         "touch"
