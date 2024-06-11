@@ -2,6 +2,11 @@
 * Replace the time/date with a `timespec_ex` and use `ppoll()` which matches
   one to one (instead of our manually handled `timeout` variable).
 
+* Add support for UDP, Unix stream, Unix UDP, etc. to the reporter language.
+  (i.e. the newer version of communicatord uses the Unix stream for all
+  local services so it would be best to be able to test that type of
+  connection in the tests to verify the class properly)
+
 * See to have clients and servers for HTTP/HTTPS/HTTP2/HTTP3
   (we already have HTTP/HTTPS in libsnapwebsites, only it uses
   `snapuri` which was moved to `edhttp`)
