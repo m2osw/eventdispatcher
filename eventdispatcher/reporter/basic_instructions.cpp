@@ -997,7 +997,9 @@ public:
             }
         }
 
-        if(kill(s.get_server_pid(), sig) != 0)
+        // send the signal to the main thread
+        //
+        if(pthread_kill(s.get_server_thread_id(), sig) != 0)
         {
             int const e(errno);
             throw std::runtime_error(

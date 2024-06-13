@@ -35,6 +35,11 @@
 #include    <functional>
 
 
+// C
+//
+#include    <pthread.h>
+
+
 
 // view these as an extension of the snapcatch2 library
 namespace SNAP_CATCH2_NAMESPACE
@@ -79,6 +84,7 @@ public:
     typedef std::function<void(state & s, callback_reason_t reason)> trace_callback_t;
 
     pid_t                   get_server_pid() const;
+    pthread_t               get_server_thread_id() const;
 
     ip_t                    get_ip() const;
     void                    set_ip(ip_t ip);
@@ -130,6 +136,7 @@ private:
     typedef std::vector<ip_t>               call_stack_t;
 
     pid_t                   f_server_pid = getpid();
+    pthread_t               f_server_thread_id = pthread_self();
     ip_t                    f_ip = 0;                               // instruction pointer in f_program
     call_stack_t            f_stack = call_stack_t();
     statement::vector_t     f_program = statement::vector_t();      // instruction being executed with original parameters

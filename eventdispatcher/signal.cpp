@@ -221,20 +221,30 @@ signal::signal(int posix_signal)
 
     // first we block the signal
     //
-    if(sigprocmask(SIG_BLOCK, &set, nullptr) != 0)
+    sigset_t save_set;
+    if(sigprocmask(SIG_BLOCK, &set, &save_set) != 0)
     {
         throw runtime_error("sigprocmask() failed to block signal.");
     }
+    if(sigismember(&g_signal_handlers, f_signal) != 0)
+    {
+        SNAP_LOG_CONFIGURATION_WARNING
+            << "signal::signal() detected an already blocked signal: "
+            << f_signal
+            << ". This may mean you have two handlers."
+            << SNAP_LOG_SEND;
+    }
 
     // second we create a "socket" for the signal (really it is a file
-    // descriptor manager by the kernel)
+    // descriptor managed by the kernel)
     //
     f_socket = signalfd(-1, &set, SFD_NONBLOCK | SFD_CLOEXEC);
     if(f_socket == -1)
     {
-        sigprocmask(SIG_UNBLOCK, &set, nullptr);
-
         int const e(errno);
+
+        snapdev::NOT_USED(sigprocmask(SIG_UNBLOCK, &set, nullptr));
+
         std::string err("signalfd() failed to create a signal listener for signal ");
         err += std::to_string(f_signal);
         err += " (errno: ";

@@ -53,6 +53,12 @@ int state::get_server_pid() const
 }
 
 
+pthread_t state::get_server_thread_id() const
+{
+    return f_server_thread_id;
+}
+
+
 void state::set_ip(ip_t ip)
 {
     if(ip > f_program.size())
