@@ -45,6 +45,7 @@
 
 // snapdev
 //
+#include    <snapdev/gethostname.h>
 #include    <snapdev/not_used.h>
 
 
@@ -142,6 +143,16 @@ constexpr parameter_declaration const g_has_type_params[] =
     },
     {
         .f_name = "type",
+        .f_type = "identifier",
+    },
+    {}
+};
+
+
+constexpr parameter_declaration const g_hostname_params[] =
+{
+    {
+        .f_name = "variable_name",
         .f_type = "identifier",
     },
     {}
@@ -794,6 +805,38 @@ public:
 private:
 };
 INSTRUCTION(has_type);
+
+
+// HOSTNAME
+//
+class inst_hostname
+    : public instruction
+{
+public:
+    inst_hostname()
+        : instruction("hostname")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        variable::pointer_t param(s.get_parameter("variable_name", true));
+        variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+        std::string const & variable_name(var->get_string());
+
+        variable_string::pointer_t new_var(std::make_shared<variable_string>(variable_name, "string"));
+        new_var->set_string(snapdev::gethostname());
+        s.set_variable(new_var);
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_hostname_params;
+    }
+
+private:
+};
+INSTRUCTION(hostname);
 
 
 // IF

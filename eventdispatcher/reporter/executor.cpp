@@ -88,6 +88,7 @@ public:
 
     step_t                  execute_instruction();
     variable::pointer_t     primary_to_variable(expression::pointer_t value, std::string const & name);
+    std::string             replace_variables(std::string const & original);
     expression::pointer_t   compute(expression::pointer_t expr);
     state::pointer_t        get_state() const;
 
@@ -332,7 +333,7 @@ variable::pointer_t background_executor::primary_to_variable(expression::pointer
 
     case token_t::TOKEN_REGEX:
         param = std::make_shared<variable_regex>(name);
-        std::static_pointer_cast<variable_regex>(param)->set_regex(t.get_string());
+        std::static_pointer_cast<variable_regex>(param)->set_regex(replace_variables(t.get_string()));
         break;
 
     case token_t::TOKEN_SINGLE_STRING:
@@ -343,106 +344,7 @@ variable::pointer_t background_executor::primary_to_variable(expression::pointer
     case token_t::TOKEN_DOUBLE_STRING:
         {
             param = std::make_shared<variable_string>(name, "string");
-            std::string original(t.get_string());
-            std::string replaced;
-            for(std::string::size_type pos(0); pos < original.length();)
-            {
-                std::string::size_type dollar(original.find('$', pos));
-                if(dollar == std::string::npos)
-                {
-                    replaced += original.substr(pos);
-                    break;
-                }
-                if(dollar > pos)
-                {
-                    replaced += original.substr(pos, dollar - pos);
-                }
-                if(dollar + 1 >= original.length())
-                {
-                    replaced += '$';
-                    break;
-                }
-                if(original[dollar + 1] == '{')
-                {
-                    // found start of variable declaration
-                    //
-                    dollar += 2;
-                    std::string::size_type end(original.find('}', dollar));
-                    if(end == std::string::npos)
-                    {
-                        throw std::runtime_error("found unclosed variable in \"" + original + "\".");
-                    }
-                    std::string const var_name(original.substr(dollar, end - dollar));;
-                    pos = end + 1;
-                    if(var_name.empty())
-                    {
-                        throw std::runtime_error("found variable without a name in \"" + original + "\".");
-                    }
-                    variable::pointer_t var(f_state->get_variable(var_name));
-                    if(var != nullptr)
-                    {
-                        if(var->get_type() == "string")
-                        {
-                            replaced += std::dynamic_pointer_cast<variable_string>(var)->get_string();
-                        }
-                        else if(var->get_type() == "integer")
-                        {
-                            replaced += std::to_string(std::dynamic_pointer_cast<variable_integer>(var)->get_integer());
-                        }
-                        else if(var->get_type() == "floating_point")
-                        {
-                            std::string floating_point_value(std::to_string(std::dynamic_pointer_cast<variable_floating_point>(var)->get_floating_point()));
-                            std::string::size_type const decimal_point_pos(floating_point_value.find('.'));
-                            if(decimal_point_pos != std::string::npos)
-                            {
-                                std::string::size_type zero_pos(floating_point_value.length());
-                                while(zero_pos > decimal_point_pos)
-                                {
-                                    --zero_pos;
-                                    if(floating_point_value[zero_pos] != '0')
-                                    {
-                                        break;
-                                    }
-                                }
-                                if(zero_pos != '.')
-                                {
-                                    ++zero_pos;
-                                }
-                                floating_point_value.resize(zero_pos);
-                            }
-                            replaced += floating_point_value;
-                        }
-                        else if(var->get_type() == "timestamp")
-                        {
-                            replaced += std::dynamic_pointer_cast<variable_timestamp>(var)->get_timestamp().to_timestamp();
-                        }
-                        else if(var->get_type() == "address")
-                        {
-                            addr::addr const a(std::dynamic_pointer_cast<variable_address>(var)->get_address());
-                            replaced += a.to_ipv4or6_string(
-                                              addr::STRING_IP_BRACKET_ADDRESS
-                                            | (a.get_port() != 0 ? addr::STRING_IP_PORT : 0)
-                                            | addr::STRING_IP_MASK_IF_NEEDED);
-                        }
-                        else
-                        {
-                            throw std::runtime_error(
-                                  "found variable of type \"" 
-                                + var->get_type()
-                                + "\" which is not yet supported in ${...}.");
-                        }
-                    }
-                }
-                else
-                {
-                    // a variable must be introduced with "${" if not then
-                    // it is just a stand alone dollar character
-                    //
-                    replaced += '$';
-                    ++pos;
-                }
-            }
-            std::static_pointer_cast<variable_string>(param)->set_string(replaced);
+            std::static_pointer_cast<variable_string>(param)->set_string(replace_variables(t.get_string()));
         }
         break;
 
@@ -479,6 +381,111 @@ variable::pointer_t background_executor::primary_to_variable(expression::pointer
     }
 
     return param;
+}
+
+
+std::string background_executor::replace_variables(std::string const & original)
+{
+    std::string replaced;
+    for(std::string::size_type pos(0); pos < original.length();)
+    {
+        std::string::size_type dollar(original.find('$', pos));
+        if(dollar == std::string::npos)
+        {
+            replaced += original.substr(pos);
+            break;
+        }
+        if(dollar > pos)
+        {
+            replaced += original.substr(pos, dollar - pos);
+        }
+        if(dollar + 1 >= original.length())
+        {
+            replaced += '$';
+            break;
+        }
+        if(original[dollar + 1] == '{')
+        {
+            // found start of variable declaration
+            //
+            dollar += 2;
+            std::string::size_type end(original.find('}', dollar));
+            if(end == std::string::npos)
+            {
+                throw std::runtime_error("found unclosed variable in \"" + original + "\".");
+            }
+            std::string const var_name(original.substr(dollar, end - dollar));;
+            pos = end + 1;
+            if(var_name.empty())
+            {
+                throw std::runtime_error("found variable without a name in \"" + original + "\".");
+            }
+            variable::pointer_t var(f_state->get_variable(var_name));
+            if(var != nullptr)
+            {
+                if(var->get_type() == "string")
+                {
+                    replaced += std::dynamic_pointer_cast<variable_string>(var)->get_string();
+                }
+                else if(var->get_type() == "integer")
+                {
+                    replaced += std::to_string(std::dynamic_pointer_cast<variable_integer>(var)->get_integer());
+                }
+                else if(var->get_type() == "floating_point")
+                {
+                    std::string floating_point_value(std::to_string(std::dynamic_pointer_cast<variable_floating_point>(var)->get_floating_point()));
+                    std::string::size_type const decimal_point_pos(floating_point_value.find('.'));
+                    if(decimal_point_pos != std::string::npos)
+                    {
+                        std::string::size_type zero_pos(floating_point_value.length());
+                        while(zero_pos > decimal_point_pos)
+                        {
+                            --zero_pos;
+                            if(floating_point_value[zero_pos] != '0')
+                            {
+                                break;
+                            }
+                        }
+                        if(zero_pos != '.')
+                        {
+                            ++zero_pos;
+                        }
+                        floating_point_value.resize(zero_pos);
+                    }
+                    replaced += floating_point_value;
+                }
+                else if(var->get_type() == "timestamp")
+                {
+                    replaced += std::dynamic_pointer_cast<variable_timestamp>(var)->get_timestamp().to_timestamp();
+                }
+                else if(var->get_type() == "address")
+                {
+                    addr::addr const a(std::dynamic_pointer_cast<variable_address>(var)->get_address());
+                    replaced += a.to_ipv4or6_string(
+                                      addr::STRING_IP_BRACKET_ADDRESS
+                                    | (a.get_port() != 0 ? addr::STRING_IP_PORT : 0)
+                                    | addr::STRING_IP_MASK_IF_NEEDED);
+                }
+                else
+                {
+                    throw std::runtime_error(
+                          "found variable of type \"" 
+                        + var->get_type()
+                        + "\" which is not yet supported in ${...}.");
+                }
+            }
+        }
+        else
+        {
+            // a variable must be introduced with "${" if not then
+            // it is just a stand alone dollar character
+            //
+            replaced += '$';
+            ++pos;
+        }
+    }
+
+    return replaced;
 }
 
 
