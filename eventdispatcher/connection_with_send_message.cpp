@@ -730,9 +730,9 @@ bool connection_with_send_message::register_service()
     if(!send_message(register_msg, false))
     {
         SNAP_LOG_FATAL
-            << "could not \""
+            << "could not send \""
             << g_name_ed_cmd_register
-            << "\" with communicatord."
+            << "\" to communicatord."
             << SNAP_LOG_SEND;
         return false;
     }

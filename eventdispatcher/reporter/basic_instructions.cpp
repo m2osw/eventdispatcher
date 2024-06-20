@@ -294,22 +294,22 @@ constexpr parameter_declaration const g_send_message_params[] =
 {
     {
         .f_name = "sent_server",
-        .f_type = "identifier",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "sent_service",
-        .f_type = "identifier",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "server",
-        .f_type = "identifier",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "service",
-        .f_type = "identifier",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
@@ -575,9 +575,13 @@ public:
 
             variable_string::pointer_t message(std::static_pointer_cast<variable_string>(error_message));
 
+            // TODO: look at making the color optional
+            //
             std::cerr
+                << "\x1B[31m"
                 << "error: "
                 << message->get_string()
+                << "\x1B[0m"
                 << std::endl;
 
             s.set_exit_code(1);
@@ -1700,15 +1704,38 @@ public:
             }
             else if(type == "string" || type == "identifier")
             {
-                std::string const value(msg.get_parameter(name));
+                std::string value(msg.get_parameter(name));
                 variable_string::pointer_t str_var(std::static_pointer_cast<variable_string>(var));
                 if(str_var->get_string() != value)
                 {
+                    // if the strings are really long, remove everything
+                    // that's considered equal so we can better see
+                    // what is not and quickly act on it
+                    //
+                    std::string expected(str_var->get_string());
+                    if(expected.length() > 100
+                    || value.length() > 100)
+                    {
+                        bool erased(false);
+                        while(!expected.empty()
+                           && !value.empty()
+                           && expected[0] == value[0])
+                        {
+                            expected.erase(0, 1);
+                            value.erase(0, 1);
+                            erased = true;
+                        }
+                        if(erased)
+                        {
+                            expected = "..." + expected;
+                            value = "..." + value;
+                        }
+                    }
                     throw std::runtime_error(
                           "message expected parameter \""
                         + name
                         + "\" to be a string set to \""
-                        + str_var->get_string()
+                        + expected
                         + "\" but found \""
                         + value
                         + "\" instead.");

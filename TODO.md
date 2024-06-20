@@ -21,26 +21,27 @@
   find errors).
 
   Services with messages:
-  - cluck
-  - communicatord
+  - cluck **[DONE]**
+  - communicatord **[DONE]**
   - eventdispatcher **[DONE]**
     + snaploggerserver **[DONE]**
   - fastjournal
-  - fluid-settings
+  - fluid-settings **[DONE]**
   - iplock
     + ipwall
   - prinbee
   - snaprfs
 
-
-* When adding a dispatcher match, detect whether it was already added; when
-  we add a message such as STATUS once, then trying to add it again will have
-  no effect (the 2nd and further instances are ignored because we stop after
-  executing the first); the `add_match()` function should be capable of
-  deteting such (atl east in DEBUG mode) so we know we did that mistake;
-  the execution method could also no return and see if it can match more than
-  one entry (which is acceptable if using a regex... so we need to be careful
-  here--in this case, it may just be a warning)
+* The message definitions currently verify that some parameters are present
+  (when marked as required); it can also verify the type of the data if
+  defined; however, it does not check whether a parameter is not defined
+  (i.e. if a parameter is defined in a message and not in its definition,
+  it is always accepted); there is a glitch here because the communicator
+  daemon tends to add all sorts of other parameters to manage its cache
+  and broadcasting and error reporting... those need to be acceptable
+  parameters no matter what; so it is a bit more complicated than what
+  we have now, but certainly doable. Maybe have a separate set of .conf
+  files that define extra parameters that can happen on any message
 
 * The inotify listens to either a specific file or a directory. It does not
   listen for events in sub-directories. We want to add a RECURSIVE flag to
