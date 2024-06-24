@@ -363,22 +363,22 @@ constexpr parameter_declaration const g_verify_message_params[] =
 {
     {
         .f_name = "sent_server",
-        .f_type = "string_or_identifier",
+        .f_type = "any",
         .f_required = false,
     },
     {
         .f_name = "sent_service",
-        .f_type = "string_or_identifier",
+        .f_type = "any",
         .f_required = false,
     },
     {
         .f_name = "server",
-        .f_type = "string_or_identifier",
+        .f_type = "any",
         .f_required = false,
     },
     {
         .f_name = "service",
-        .f_type = "string_or_identifier",
+        .f_type = "any",
         .f_required = false,
     },
     {
@@ -1050,7 +1050,7 @@ public:
         {
             int const e(errno);
             throw std::runtime_error(
-                  "kill(): signal could no tbe sent (errno: "
+                  "kill(): signal could not be sent (errno: "
                 + std::to_string(e)
                 + ", "
                 + strerror(e)
@@ -1563,85 +1563,67 @@ public:
     {
         ed::message const msg(s.get_message());
 
-        variable::pointer_t param(s.get_parameter("sent_server"));
-        if(param != nullptr)
-        {
-            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
-            if(var->get_string() != msg.get_sent_from_server())
-            {
-                throw std::runtime_error(
-                      "message expected sent from server name \""
-                    + var->get_string()
-                    + "\" did not match \""
-                    + msg.get_sent_from_server()
-                    + "\".");
-            }
-        }
-
-        param = s.get_parameter("sent_service");
-        if(param != nullptr)
-        {
-            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
-            if(var->get_string() != msg.get_sent_from_service())
-            {
-                throw std::runtime_error(
-                      "message expected sent from service name \""
-                    + var->get_string()
-                    + "\" did not match \""
-                    + msg.get_sent_from_service()
-                    + "\".");
-            }
-        }
-
-        param = s.get_parameter("server");
-        if(param != nullptr)
-        {
-            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
-            if(var->get_string() != msg.get_server())
-            {
-                throw std::runtime_error(
-                      "message expected server name \""
-                    + var->get_string()
-                    + "\" did not match \""
-                    + msg.get_server()
-                    + "\".");
-            }
-        }
-
-        param = s.get_parameter("service");
-        if(param != nullptr)
-        {
-            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
-            if(var->get_string() != msg.get_service())
-            {
-                throw std::runtime_error(
-                      "message expected service name \""
-                    + var->get_string()
-                    + "\" did not match \""
-                    + msg.get_service()
-                    + "\".");
-            }
-        }
-
-        param = s.get_parameter("command");
-        if(param != nullptr)
-        {
-            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
-//std::cerr << "--- verify message [" << msg.get_command() << "]\n";
-            if(var->get_string() != msg.get_command())
-            {
-                throw std::runtime_error(
-                      "message expected command \""
-                    + var->get_string()
-                    + "\" did not match \""
-                    + msg.get_command()
-                    + "\".");
-            }
-        }
+        check_value(s, "sent_server", msg.get_sent_from_server());
+        check_value(s, "sent_service", msg.get_sent_from_service());
+        check_value(s, "server", msg.get_server());
+        check_value(s, "service", msg.get_service());
+        check_value(s, "command", msg.get_command());
 
         check_parameters(s, msg, "required_parameters", false, false);
         check_parameters(s, msg, "optional_parameters", true, false);
         check_parameters(s, msg, "forbidden_parameters", false, true);
+    }
+
+    void check_value(
+              state & s
+            , std::string const name
+            , std::string const & value)
+    {
+        variable::pointer_t param(s.get_parameter(name));
+        if(param == nullptr)
+        {
+            return;
+        }
+
+        std::string const & type(param->get_type());
+        if(type == "string" || type == "identifier")
+        {
+            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+            if(var->get_string() != value)
+            {
+                throw std::runtime_error(
+                      "message expected \""
+                    + name
+                    + "\", set to \""
+                    + value
+                    + "\", to match \""
+                    + var->get_string()
+                    + "\".");
+            }
+        }
+        else if(type == "regex")
+        {
+            variable_regex::pointer_t regex_var(std::static_pointer_cast<variable_regex>(param));
+            std::regex const compiled_regex(regex_var->get_regex());
+            if(!std::regex_match(value, compiled_regex))
+            {
+                throw std::runtime_error(
+                      "message expected \""
+                    + name
+                    + "\", set to \""
+                    + value
+                    + "\", to match regex \""
+                    + regex_var->get_regex()
+                    + "\".");
+            }
+        }
+        else
+        {
+            throw std::runtime_error(
+                  "message sent_server type \""
+                + type
+                + "\" not supported.");
+        }
     }
 
     void check_parameters(
@@ -1915,17 +1897,27 @@ public:
             return 0;
         }
 
-        int const r(ppoll(&fds[0], fds.size(), &timeout_duration, nullptr));
-        if(r < 0)
+        for(;;)
         {
-            // LCOV_EXCL_START
-            int const e(errno);
-            throw std::runtime_error(
-                    "ppoll() returned an error: "
-                  + std::to_string(e)
-                  + ", "
-                  + strerror(e));
-            // LCOV_EXCL_STOP
+            int const r(ppoll(&fds[0], fds.size(), &timeout_duration, nullptr));
+            if(r < 0)
+            {
+                // LCOV_EXCL_START
+                int const e(errno);
+                if(e == EINTR)
+                {
+                    std::cerr
+                        << "error: got an interrupt while ppoll() in reporter. Trying again.\n";
+                    continue;
+                }
+                throw std::runtime_error(
+                        "ppoll() returned an error: "
+                      + std::to_string(e)
+                      + ", "
+                      + strerror(e));
+                // LCOV_EXCL_STOP
+            }
+            break;
         }
         bool timed_out(true);
         for(auto & c : connections)
