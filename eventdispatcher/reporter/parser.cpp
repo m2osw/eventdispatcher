@@ -130,6 +130,7 @@ void parser::parse_program()
 bool parser::next_token()
 {
     f_token = f_lexer->next_token();
+//std::cerr << "--- next token: " << static_cast<int>(f_token.get_token()) << "?\n";
     if(f_token.get_token() == token_t::TOKEN_ERROR)
     {
         throw std::runtime_error("invalid token.");

@@ -1918,7 +1918,7 @@ std::int64_t message::get_integer_parameter(std::string const & name) const
             throw invalid_message(
                       "message::get_integer_parameter(): command \""
                     + f_command
-                    + "\" expected integer for \""
+                    + "\" expected an integer for \""
                     + name
                     + "\" but \""
                     + it->second

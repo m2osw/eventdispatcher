@@ -24,8 +24,9 @@
 
 // snapdev
 //
-#include    <snapdev/not_reached.h>
 #include    <snapdev/file_contents.h>
+#include    <snapdev/hexadecimal_string.h>
+#include    <snapdev/not_reached.h>
 #include    <snapdev/timespec_ex.h>
 
 
@@ -412,6 +413,30 @@ token lexer::next_token()
         case U'9':
         case U'.':
             {
+                if(c == U'0')
+                {
+                    c = getc();
+                    if(c == 'x' || c == 'X')
+                    {
+                        std::int64_t value(0);
+                        for(;;)
+                        {
+                            c = getc();
+                            if(!snapdev::is_hexdigit(c))
+                            {
+                                break;
+                            }
+                            value <<= 4;
+                            value |= snapdev::hexdigit_to_number(c);
+                        }
+                        ungetc(c);
+                        t.set_token(token_t::TOKEN_INTEGER);
+                        t.set_integer(value);
+                        return t;
+                    }
+                    ungetc(c);
+                    c = U'0';
+                }
                 bool is_floating_point(false);
                 std::string s;
                 while((c >= U'0' && c <= U'9')

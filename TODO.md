@@ -137,11 +137,18 @@
   problems with this because I need two or three different timers then
   I have to create sub-objects, which are separate connection timers by
   themselves. We can have an identifier to recognize which timer times
-  out and pass that parameter to the process_timeout() function.
+  out and pass that parameter to the `process_timeout()` function.
   Another solution would be to have a way to quickly create a timer
   without having to create a sub-class, so that way we could keep it
   separate (clean) and have a callback instead of a virtual function
   (and we have a callback thingy to manage lists of callbacks in snapdev).
+
+* Consider removing the stop() and ready() functions because it would be
+  as easy to use a CALLBACK which means anyone receives a call whenever
+  those messages arrive without the lower level system having to do
+  anything special about it. This may be a good tweak when we build the
+  whole thing using templates (next entry). In that case, it's clearly
+  just callbacks instead of reimplementation of a virtual function.
 
 * Ideas on how to re-implement the whole thing using templates to avoid
   duplicating the buffering & message handling in each class (instead pass

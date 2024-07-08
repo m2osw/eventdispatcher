@@ -271,6 +271,21 @@ constexpr parameter_declaration const g_print_params[] =
 };
 
 
+constexpr parameter_declaration const g_random_params[] =
+{
+    {
+        .f_name = "variable_name",
+        .f_type = "identifier",
+    },
+    {
+        .f_name = "negative",
+        .f_type = "integer",
+        .f_required = false,
+    },
+    {}
+};
+
+
 constexpr parameter_declaration const g_save_parameter_value_params[] =
 {
     {
@@ -1173,6 +1188,58 @@ public:
     }
 };
 INSTRUCTION(print);
+
+
+// RANDOM
+//
+class inst_random
+    : public instruction
+{
+public:
+    inst_random()
+        : instruction("random")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        variable::pointer_t param(s.get_parameter("variable_name", true));
+        variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+        std::string const & variable_name(var->get_string());
+
+        bool negative(true);
+        param = s.get_parameter("negative", false);
+        if(param != nullptr)
+        {
+            variable_integer::pointer_t var_int = std::static_pointer_cast<variable_integer>(param);
+            std::int64_t const & boolean(var_int->get_integer());
+            negative = boolean != 0;
+        }
+
+        variable_integer::pointer_t new_var(std::make_shared<variable_integer>(variable_name));
+        std::int64_t result(
+               (static_cast<std::int64_t>(rand()) << 48)
+             ^ (static_cast<std::int64_t>(rand()) << 32)
+             ^ (static_cast<std::int64_t>(rand()) << 16)
+             ^ (static_cast<std::int64_t>(rand()) <<  0));
+        if(!negative)
+        {
+            // remove the sign bit
+            //
+            result &= 0x7FFFFFFFFFFFFFFFLL;
+        }
+        new_var->set_integer(result);
+        s.set_variable(new_var);
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_random_params;
+    }
+
+private:
+};
+INSTRUCTION(random);
 
 
 // RETURN
