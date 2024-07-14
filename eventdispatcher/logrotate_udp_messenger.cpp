@@ -51,20 +51,20 @@ namespace ed
  * The UDP server creates a new UDP server to listen on incoming
  * messages over a UDP connection.
  *
- * This UDP implementation is used to listen to the LOG message specifically.
- * It is often that you want to restart the snaplogger and this can be used
- * as the way to do it. The UDP message can be sent using the ed-signal
- * command line tool:
+ * This UDP implementation is used to listen to the `LOG_ROTATE` message
+ * specifically. It is often that you want to restart the snaplogger
+ * and this can be used as the way to do it. The UDP message can be
+ * sent using the ed-signal command line tool:
  *
  * \code
- *     ed-signal --server 127.0.0.1:1234 --message LOG --type udp
+ *     ed-signal --server 127.0.0.1:1234 --message LOG_ROTATE --type udp
  * \endcode
  *
  * The reaction of the server is to restart the snaplogger as implemented in
  * the default dispatcher messages (see the messages.cpp for details).
  *
  * If you already have a UDP service in your application, you can simply
- * add the default dispatcher messages and the LOG message will automatically
+ * add the default dispatcher messages and the `LOG_ROTATE` message will automatically
  * be handled for you. No need to create yet another network connection.
  * We do so in this constructor like so:
  *
@@ -125,7 +125,7 @@ advgetopt::option const g_options[] =
             , advgetopt::GETOPT_FLAG_ENVIRONMENT_VARIABLE
             , advgetopt::GETOPT_FLAG_CONFIGURATION_FILE
             , advgetopt::GETOPT_FLAG_REQUIRED>())
-        , advgetopt::Help("the host and port to listen on for `LOG` messages.")
+        , advgetopt::Help("the host and port to listen on for `LOG_ROTATE` messages.")
     ),
     advgetopt::define_option(
           advgetopt::Name("logrotate-secret")
@@ -207,14 +207,14 @@ void logrotate_extension::add_logrotate_options()
  *
  * This function acts on the logrotate various command line options.
  * Assuming the command line options were valid, this function will
- * open a UDP port which will listen for `LOG` messages . On such
+ * open a UDP port which will listen for `LOG_ROTATE` messages . On such
  * a message, it will trigger a reopening of any file the logger
  * is dealing with.
  *
  * Once you are ready to quit your process, make sure to call the
  * disconnect_logrotate_messenger() function to remove this logrotate
  * extension from the communicator. Not doing so would block the
- * communicator since it would continue to listen for `LOG` messages.
+ * communicator since it would continue to listen for `LOG_ROTATE` messages.
  */
 void logrotate_extension::process_logrotate_options()
 {

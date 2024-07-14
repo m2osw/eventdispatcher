@@ -30,6 +30,7 @@
 #include    "snaplogger/daemon/udp_logger_server.h"
 
 
+
 // eventdispatcher
 //
 #include    <eventdispatcher/logrotate_udp_messenger.h>

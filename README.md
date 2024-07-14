@@ -331,86 +331,51 @@ reply which is useless).
 
 ## `ed-stop`
 
-The `ed-stop` sends a SIGINT and then a SIGTERM (if required) to the specified
-service or PID.
+The `ed-stop` sends a `SIGINT` and then a `SIGTERM` (if required) to the
+specified service or PID.
 
     ed-stop --server <name>|<pid>
 
+This is similar to the `kill -<signal> <ipd>` command except that we
+also support names of our services.
+
 In most cases, it is preferable to use the `ed-signal` to do a _soft_
-termination of a service. The `ed-signal` can send a `STOP` or a `QUIT`
+termination of a service. The `ed-signal` can send a `STOP` or a `QUITTING`
 message instead.
 
 ## `ed-signal`
 
-The `ed-signal` sends a message to the specified _server_ (`--server`). The
+The `ed-signal` sends a message to the specified _server_ (`--host`). The
 default is to send a UDP message (a.k.a. a signal) to the service without
 having to wait for an answer.
 
-    ed-signal --server 127.0.0.1
+    ed-signal --host 127.0.0.1 STOP
 
-You may specify the message with the `--message <command>` option.
+The message must be specified. It can be introduced with the `--message`
+option name. The message may include a server and service name as in:
 
-The server can be specified as a filename and a variable name in which case
-the tool reads that file as a configuration file and looks for the named
-variable. It takes as as a IP address and an optional port to be used to
-send the message to that specific service. For example:
+    ed-signal snap:cluckd/STOP
 
-    ... --server /etc/fluid-settings/fluid-settings.conf@listen ...
+which sends the `STOP` command to the communicator running on the server
+named 'snap` asking it to forward the message to a service named `cluckd`.
+
+The --host can be specified as a filename and a variable name in which case
+ed-signal reads that file as a configuration file and looks for the named
+variable. It views the content of that variable as an IP address and an
+optional port to be used to send the message. For example:
+
+    ... --host /etc/fluid-settings/fluid-settings.conf@listen ...
 
 Note: It would be cool to gather the information from the service name,
       which the communicatord knows about (under `/usr/share/communicatord`).
-      Only the communicatord depends on the eventdispatcher.
+      Only the communicatord depends on the eventdispatcher. However, we
+      already support the service name in the message as shown above. The
+      server name is optional so one could write:
 
-# Missing Features
+          ed-signal snaprfs/LOG_ROTATE
 
-* Full IPv6 Support
-
-  We need to make sure that all our classes support IPv6 as expected.
-  It should already be in place, it's a matter of testing to make sure
-  it works 100% as expected.
-
-* Use of libaddr everywhere
-
-  The snapcommunicator version used a string for the address and an
-  integer for the port. At this time the library still accepts those
-  parameters.
-
-  The new version should accept an `addr::addr` instead leaving the
-  parsing work to the caller (so it can be specialized as per the
-  caller's need).
-
-  This will also help with the IPv6 support since the `addr::addr`
-  objects make all addresses an IPv6 address.
-
-* Attempt connecting with additional addresses
-
-  The `connect()` for a TCP or a UDP connection may have multiple
-  addresses (i.e. many web services offer a list of 5, 7, 10...
-  addresses). If the `connect()` fails with the first address, then
-  it should be re-attempted with the next one. This is not very
-  useful with our services at the moment.
-
-  **Note:** these addresses may also change with time. So if you requests
-  a domain to give you an IP address at some point, it may be necessary
-  to request for new IPs when you attempt to reconnect much later. This
-  is also not currently supported as input domain names are transformed to
-  IP addresses and they stay that way _forever_ (until you restart or
-  as a programmer, until you create a new object with that domain name).
-
-* Full multithread support
-
-  The library depends on our `cppthread` library so it has full access
-  to all the multithread features we have available. However, at the
-  moment, most of the functions are not multithread safe. We need to
-  add such support (i.e. mutex + guards).
-
-  Until this is complete you either have to protect your threads really
-  well or use your own layer to handle messages in one specific thread
-  through the `ed::communicator` and your other thread to do work. Our
-  current implementation, though, works really well with services that
-  use threads only to do _instant_ work or do not really need to use
-  threads at all. We've successfully use the library in all three types
-  of processes.
+      to send `LOG_ROTATE` to the snaprfs instance running on the local
+      server.
 
 
 

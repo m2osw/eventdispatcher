@@ -20,10 +20,10 @@
 #pragma once
 
 /** \file
- * \brief A UDP implementation to specifically handle LOG messages.
+ * \brief A UDP implementation to specifically handle `LOG_ROTATE` messages.
  *
- * This class is a UDP implementation which is capable of handling the LOG
- * message to restart the snaplogger in your application.
+ * This class is a UDP implementation which is capable of handling the
+ * `LOG_ROTATE` message to restart the snaplogger in your application.
  *
  * The idea is that this functionality is very often useful and used in
  * your logrotate script as in:
@@ -32,15 +32,15 @@
  *    /var/log/snapwebsites/\*.log {
  *        ...
  *        postrotate
- *            /usr/bin/ed-signal --server 127.0.0.1:1234 --message LOG --type udp
+ *            /usr/bin/ed-signal --host 127.0.0.1:1234 --message snapserver/LOG_ROTATE --type udp
  *        endscript
  *        ...
  *    }
  * \endcode
  *
- * The ed-signal tool is very useful in this case to send that LOG message.
- * The UDP channel is perfect because we do not expect a reply and can send
- * the message and exit right away.
+ * The ed-signal tool is very useful in this case to send that `LOG_ROTATE`
+ * message. The UDP channel is perfect because we do not expect a reply
+ * and can send the message and exit right away.
  *
  * To use this class, add it as a member of your class:
  *

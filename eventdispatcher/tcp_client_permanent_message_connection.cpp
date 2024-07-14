@@ -294,7 +294,7 @@ public:
                 << f_last_error
                 << " ("
                 << error_name
-                << ")"
+                << ")."
                 << SNAP_LOG_SEND;
         }
 

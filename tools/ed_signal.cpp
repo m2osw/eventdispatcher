@@ -18,10 +18,20 @@
 // 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 /** \file
- * \brief Implementation of the Connection with Send Message class.
+ * \brief Tool used to send a signal or command to a service.
  *
- * This is a base class which ease the implementation of a connection
- * which is able to send and receive messages.
+ * This tool is used to send a message from the command line or a script
+ * to any service using the eventdispatcher library.
+ *
+ * Basic usage example:
+ *
+ * \code
+ *     ed-signal ./LOG_ROTATE
+ * \endcode
+ *
+ * This sends the command LOG_ROTATE to all the services running on this
+ * host (assuming the communicatord is running and said services are
+ * registered with it).
  */
 
 
@@ -54,6 +64,7 @@
 
 // snapdev
 //
+#include    <snapdev/gethostname.h>
 #include    <snapdev/not_reached.h>
 #include    <snapdev/stringize.h>
 
@@ -76,7 +87,16 @@ const advgetopt::option g_options[] =
         , advgetopt::Flags(advgetopt::all_flags<
               advgetopt::GETOPT_FLAG_REQUIRED
             , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
-        , advgetopt::Help("use a secure connection if set to true, 1 or yes (TCP only)")
+        , advgetopt::Help("use a secure connection if set to true, 1 or yes (TCP only).")
+    ),
+    advgetopt::define_option(
+          advgetopt::Name("host")
+        , advgetopt::ShortName('H')
+        , advgetopt::Flags(advgetopt::all_flags<
+              advgetopt::GETOPT_FLAG_REQUIRED
+            , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
+        , advgetopt::Help("the IP address and port to connect to (IP:port; note that the port defaults to 4041) or a configuration filename and field name (<filename>@<field_name>).")
+        , advgetopt::DefaultValue("127.0.0.1:4041")
     ),
     advgetopt::define_option(
           advgetopt::Name("message")
@@ -84,8 +104,9 @@ const advgetopt::option g_options[] =
         , advgetopt::Flags(advgetopt::any_flags<
               advgetopt::GETOPT_FLAG_REQUIRED
             , advgetopt::GETOPT_FLAG_COMMAND_LINE
-            , advgetopt::GETOPT_FLAG_GROUP_COMMANDS>())
-        , advgetopt::Help("command to send to the specified server")
+            , advgetopt::GETOPT_FLAG_GROUP_COMMANDS
+            , advgetopt::GETOPT_FLAG_DEFAULT_OPTION>())
+        , advgetopt::Help("command to send to the specified server; the message may include the name of the destination server and service (`[[<server>:]<service>/]command`); the service can be set to \".\" or \"*\" to broadcast the command.")
     ),
     advgetopt::define_option(
           advgetopt::Name("param")
@@ -95,7 +116,7 @@ const advgetopt::option g_options[] =
             , advgetopt::GETOPT_FLAG_MULTIPLE
             , advgetopt::GETOPT_FLAG_COMMAND_LINE
             , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
-        , advgetopt::Help("a parameter to send along the command, can be repeated")
+        , advgetopt::Help("a parameter to send along the command, can be repeated any number of times; a parameter is defined as `<name>[=<value>]`.")
     ),
     advgetopt::define_option(
           advgetopt::Name("reply")
@@ -103,7 +124,7 @@ const advgetopt::option g_options[] =
         , advgetopt::Flags(advgetopt::standalone_command_flags<
               advgetopt::GETOPT_FLAG_COMMAND_LINE
             , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
-        , advgetopt::Help("use this option to see the reply, otherwise it waits for the reply but doesn't do anything with it (TCP only)")
+        , advgetopt::Help("use this option to see the reply, otherwise %p waits for the reply but doesn't do anything with it (TCP only).")
     ),
     advgetopt::define_option(
           advgetopt::Name("secret-code")
@@ -111,15 +132,25 @@ const advgetopt::option g_options[] =
         , advgetopt::Flags(advgetopt::all_flags<
               advgetopt::GETOPT_FLAG_REQUIRED
             , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
-        , advgetopt::Help("a simple password so we can make UDP packets very slightly more secure (uses parameter \"udp_secret\")")
+        , advgetopt::Help("a simple password so we can make UDP packets very slightly more secure (uses parameter \"secret_code\").")
     ),
     advgetopt::define_option(
           advgetopt::Name("server")
         , advgetopt::ShortName('s')
         , advgetopt::Flags(advgetopt::all_flags<
               advgetopt::GETOPT_FLAG_REQUIRED
+            , advgetopt::GETOPT_FLAG_COMMAND_LINE
             , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
-        , advgetopt::Help("the IP address and port to connect to (port defaults to 4041)")
+        , advgetopt::Help("the name of the destination server.")
+    ),
+    advgetopt::define_option(
+          advgetopt::Name("service")
+        , advgetopt::ShortName('S')
+        , advgetopt::Flags(advgetopt::all_flags<
+              advgetopt::GETOPT_FLAG_REQUIRED
+            , advgetopt::GETOPT_FLAG_COMMAND_LINE
+            , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
+        , advgetopt::Help("the name of the service to which this message gets sent, so you can send the message through the communicatord service.")
     ),
     advgetopt::define_option(
           advgetopt::Name("type")
@@ -127,7 +158,7 @@ const advgetopt::option g_options[] =
         , advgetopt::Flags(advgetopt::all_flags<
               advgetopt::GETOPT_FLAG_REQUIRED
             , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
-        , advgetopt::Help("defines the type of connection: \"tcp\" or \"udp\" (default) -- WARNING: the default can be changed in the configuration file")
+        , advgetopt::Help("defines the type of connection: \"tcp\" or \"udp\" (default) -- WARNING: the default can be changed in the configuration file.")
     ),
     advgetopt::end_options()
 };
@@ -274,7 +305,11 @@ ed_signal::ed_signal(int argc, char * argv[])
 {
     snaplogger::add_logger_options(f_opts);
     f_opts.finish_parsing(argc, argv);
-    if(!snaplogger::process_logger_options(f_opts, "/etc/eventdispatcher/logger"))
+    if(!snaplogger::process_logger_options(
+          f_opts
+        , "/etc/eventdispatcher/logger"
+        , std::cout
+        , !isatty(fileno(stdin))))
     {
         // exit on any error
         throw advgetopt::getopt_exit("logger options generated an error.", 1);
@@ -286,15 +321,71 @@ int ed_signal::run()
 {
     ed::message msg;
 
+    msg.set_sent_from_server(snapdev::gethostname());
+    msg.set_sent_from_service("ed_signal");
+
+    bool server_defined(false);
+    if(f_opts.is_defined("server"))
+    {
+        std::string const server(f_opts.get_string("server"));
+        if(!server.empty())
+        {
+            msg.set_server(server);
+            server_defined = true;
+        }
+    }
+
+    bool service_defined(false);
+    if(f_opts.is_defined("service"))
+    {
+        std::string const service(f_opts.get_string("service"));
+        if(!service.empty())
+        {
+            msg.set_service(service);
+            service_defined = true;
+        }
+    }
+
     {
         if(!f_opts.is_defined("message"))
         {
-            throw std::runtime_error("the --message parameter is required");
+            throw std::runtime_error("the --message parameter is mandatory.");
         }
-        std::string const cmd(f_opts.get_string("message"));
+        std::string cmd(f_opts.get_string("message"));
+        std::string::size_type const slash(cmd.find('/'));
+        if(slash != std::string::npos)
+        {
+            std::string server;
+            std::string service(cmd.substr(0, slash));
+            cmd = cmd.substr(slash + 1);
+            std::string::size_type const colon(service.find(':'));
+            if(colon != std::string::npos)
+            {
+                server = service.substr(0, colon);
+                service = service.substr(colon + 1);
+            }
+            if(!server.empty())
+            {
+                if(server_defined)
+                {
+                    throw std::runtime_error("the --message parameter cannot define a server if the --server command line option is also used.");
+                }
+                msg.set_server(server);
+                server_defined = true;
+            }
+            if(!service.empty())
+            {
+                if(service_defined)
+                {
+                    throw std::runtime_error("the --message parameter cannot define a server if the --service command line option is also used.");
+                }
+                msg.set_service(service);
+                service_defined = true;
+            }
+        }
         if(cmd.empty())
         {
-            throw std::runtime_error("the --message parameter cannot be an empty string");
+            throw std::runtime_error("the command defined in the --message parameter cannot be an empty string.");
         }
         msg.set_command(cmd);
     }
@@ -333,7 +424,7 @@ int ed_signal::run()
         }
     }
 
-    std::string s(f_opts.get_string("server"));
+    std::string s(f_opts.get_string("host"));
     std::string::size_type const pos(s.find('@'));
     if(pos != std::string::npos)
     {
@@ -440,7 +531,7 @@ int main(int argc, char * argv[])
     }
     catch(std::exception const & e)
     {
-        std::cerr << "error: an exception occurred (1): " << e.what() << std::endl;
+        //std::cerr << "error: an exception occurred (1): " << e.what() << std::endl;
         SNAP_LOG_FATAL
             << "an exception occurred (1): "
             << e.what()
@@ -449,7 +540,7 @@ int main(int argc, char * argv[])
     }
     catch(...)
     {
-        std::cerr << "error: an unknown exception occurred (2)." << std::endl;
+        //std::cerr << "error: an unknown exception occurred (2)." << std::endl;
         SNAP_LOG_FATAL
             << "an unknown exception occurred (2)."
             << SNAP_LOG_SEND;

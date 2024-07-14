@@ -1,4 +1,46 @@
 
+* Full IPv6 Support
+
+  We need to make sure that all our classes support IPv6 as expected.
+  It should already be in place, it's a matter of testing to make sure
+  it works 100% as expected.
+
+* Over time, update the address array of a permanent connection
+
+  The `tcp_client_permanent_message_connection` class supports any number
+  of addresses to attempt to connect to. The problem here is that most
+  often a DNS will return a set of addresses and not too long later,
+  a different set of IPs (i.e. if you deploy on a Google Cloud system
+  with kubernetes, your pods are assigned new IPs each time you do that;
+  this is because the old IP is kept while the old version keeps running
+  until the new version is available and in the DNS, then the old version
+  gets removed, so the new pod cannot be using the same IP as the old pod).
+
+  So we need a way to update those IP addresses after the TTL given to
+  us from the DNS says the old IP addresses are not valid anymore.
+
+  **Note:** these addresses may also change with time. So if you requests
+  a domain to give you an IP address at some point, it may be necessary
+  to request for new IPs when you attempt to reconnect much later. This
+  is also not currently supported as input domain names are transformed to
+  IP addresses and they stay that way _forever_ (until you restart or
+  as a programmer, until you create a new object with that domain name).
+
+* Full multithread support
+
+  The library depends on our `cppthread` library so it has full access
+  to all the multithread features we have available. However, at the
+  moment, most of the functions are not multithread safe. We need to
+  add such support (i.e. mutex + guards).
+
+  Until this is complete you either have to protect your threads really
+  well or use your own layer to handle messages in one specific thread
+  through the `ed::communicator` and your other thread to do work. Our
+  current implementation, though, works really well with services that
+  use threads only to do _instant_ work or do not really need to use
+  threads at all. We've successfully use the library in all three types
+  of processes.
+
 * Replace the time/date with a `timespec_ex` and use `ppoll()` which matches
   one to one (instead of our manually handled `timeout` variable).
 
@@ -6,10 +48,6 @@
   (i.e. the newer version of communicatord uses the Unix stream for all
   local services so it would be best to be able to test that type of
   connection in the tests to verify the class properly)
-
-* See to have clients and servers for HTTP/HTTPS/HTTP2/HTTP3
-  (we already have HTTP/HTTPS in libsnapwebsites, only it uses
-  `snapuri` which was moved to `edhttp`)
 
 * Track which message was ever sent & received (i.e. a form of
   message coverage) so we can verify that all messages were checked
@@ -68,17 +106,17 @@
       https://github.com/sivasankariit/iproute2/blob/master/misc/ss.c
       https://stackoverflow.com/questions/68425240/can-the-netlink-sock-diag-interface-be-used-to-listen-for-listen-and-close?noredirect=1#comment132999023_68425240
 
-  which may be useful to further out the existing code and make it work.
+  which may be useful to fix the existing code and make it work.
 
-  One way may be to list for file changes under /proc/... as it may have the
+  One way may be to listen for file changes under /proc/... as it may have the
   effect we want (i.e. whenever a new file is created there, such as a UDP
   connection, then we would receive a message and can tranform that in a
-  signal about new/removed TCP/UDP/... connections (however file_change--a.k.a.
-  inotify does not work there).
+  signal about new/removed TCP/UDP/... connections (however
+  `file_change`--a.k.a. inotify does not work on `/proc`).
 
 * Finish the snaplogger network appender extension (mainly testing now).
 
-* Consider moving the cppprocess tee_pipe to eventdispatcher.
+* Consider moving the cppprocess `tee_pipe` to eventdispatcher.
 
 * Update all the `\file documentation` to match the corresponding class.
   These were copied/pasted in all the files when I did the big break up
@@ -87,7 +125,7 @@
 * Update the dispatcher classes documentation to match the new scheme (the
   callback instead of a function offset in one class).
 
-* Consider using the SO_LINGER to not wait on a `close(socket)` (i.e. turn
+* Consider using the `SO_LINGER` to not wait on a `close(socket)` (i.e. turn
   off the lingering). This means the kernel closes the socket in the
   background and we can move on with other work.
 
@@ -104,7 +142,7 @@
   method would make it a form of Exclusive OR. But we probably want to use a
   different timestamp tracker which get reassigned a "now + N" whenever a
   write happened. But for the limit to work properly, we need to know the
-  amount of data sent and whether we should send more and how much more...
+  amount of data sent and whether we can send more and how much more...
 
 * Short `connect()` timeout is possible by making the socket non-blocking
   before calling the function; then we can `poll()` on the socket and get
@@ -142,17 +180,18 @@
   without having to create a sub-class, so that way we could keep it
   separate (clean) and have a callback instead of a virtual function
   (and we have a callback thingy to manage lists of callbacks in snapdev).
+  This is what version 2 would be about!
 
 * Consider removing the stop() and ready() functions because it would be
   as easy to use a CALLBACK which means anyone receives a call whenever
-  those messages arrive without the lower level system having to do
+  those messages arrive without the lower level systems having to do
   anything special about it. This may be a good tweak when we build the
   whole thing using templates (next entry). In that case, it's clearly
   just callbacks instead of reimplementation of a virtual function.
 
 * Ideas on how to re-implement the whole thing using templates to avoid
   duplicating the buffering & message handling in each class (instead pass
-  a "trait" or something of the sort)
+  a "trait" or something of the sort) a.k.a. version 2.
 
   See a compiling version in `connection_t.h/cpp`. This would allow me to
   have one class create "many" connections and handle all the events as it

@@ -51,9 +51,6 @@ public:
     static std::int64_t const   DEFAULT_PAUSE_BETWEEN_POLLS = 10LL;  // 10 seconds
 
                                 socket_events(addr::addr const & address);
-                                socket_events(
-                                          std::string const & address
-                                        , int port);
     virtual                     ~socket_events() override;
 
     // connection implementation

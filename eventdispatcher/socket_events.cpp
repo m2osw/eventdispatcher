@@ -771,33 +771,6 @@ socket_events::socket_events(addr::addr const & address)
 }
 
 
-/** \brief Initializes this socket events object.
- *
- * Initialize a socket_events object to listen to the specified address
- * and port for a new connection (i.e. for a process to call `listen()`
- * on that address:port combo).
- *
- * If this is the first socket_events created, then a new socket listener
- * is also created.
- *
- * Then this socket_events object gets added to that socket listener.
- *
- * \param[in] address  The address of the port to wait on.
- * \param[in] port  The port to poll for a `listen()`.
- */
-socket_events::socket_events(
-            std::string const & address
-          , int port)
-    : f_addr(addr::string_to_addr(
-          address
-        , "127.0.0.1"
-        , port
-        , "tcp"))     // we really only support TCP at the moment
-{
-    socket_listener::instance()->add_socket_events(this);
-}
-
-
 /** \brief Destroy instance.
  *
  * This function cleans up this socket event instance. This means the socket

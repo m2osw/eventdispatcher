@@ -11,12 +11,7 @@ WorkingDirectory=~
 ProtectHome=true
 NoNewPrivileges=true
 ExecStart=/usr/sbin/snaploggerd
-
-# TODO: we can't have an IP:port here, we need a way to give ed-signal
-#       the name of a config file and variable to read that info
-#
-ExecStop=/usr/bin/ed-signal --message STOP --server 127.0.0.1:4050
-
+ExecStop=/usr/bin/ed-signal snaploggerd/STOP
 Restart=on-failure
 RestartSec=10
 User=snaplogger

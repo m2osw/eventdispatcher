@@ -1807,6 +1807,22 @@ public:
                         + "\".");
                 }
             }
+            else if(type == "timestamp")
+            {
+                snapdev::timespec_ex const value(msg.get_timespec_parameter(name));
+                variable_timestamp::pointer_t timestamp_var(std::static_pointer_cast<variable_timestamp>(var));
+                if(timestamp_var->get_timestamp() != value)
+                {
+                    throw std::runtime_error(
+                          "message expected parameter \""
+                        + name
+                        + "\", set to \""
+                        + value.to_string()
+                        + "\", to match timestamp \""
+                        + timestamp_var->get_timestamp().to_string()
+                        + "\".");
+                }
+            }
             else if(type == "void")
             {
                 // we already checked that the parameter exists
