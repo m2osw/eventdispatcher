@@ -505,79 +505,103 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_PRIMARY:
         {
             token t(expr->get_token());
-            if(t.get_token() == token_t::TOKEN_VARIABLE)
+            switch(t.get_token())
             {
-                expr = std::make_shared<expression>();
-                expr->set_operator(operator_t::OPERATOR_PRIMARY);
-
-                token value;
-                variable::pointer_t param(f_state->get_variable(t.get_string()));
-                if(param != nullptr)
+            case token_t::TOKEN_VARIABLE:
                 {
-                    // we need to create a clone because the name is likely different
-                    //
-                    std::string const & type(param->get_type());
-                    if(type == "integer")
+                    expr = std::make_shared<expression>();
+                    expr->set_operator(operator_t::OPERATOR_PRIMARY);
+
+                    token value;
+                    variable::pointer_t param(f_state->get_variable(t.get_string()));
+                    if(param != nullptr)
                     {
-                        value.set_token(token_t::TOKEN_INTEGER);
-                        value.set_integer(std::static_pointer_cast<variable_integer>(param)->get_integer());
-                    }
-                    else if(type == "floating_point")
-                    {
-                        value.set_token(token_t::TOKEN_FLOATING_POINT);
-                        value.set_floating_point(std::static_pointer_cast<variable_floating_point>(param)->get_floating_point());
-                    }
-                    else if(type == "string")
-                    {
-                        // note: the string was already converted once by
-                        //       now so use TOKEN_SINGLE_STRING
-                        value.set_token(token_t::TOKEN_SINGLE_STRING);
-                        value.set_string(std::static_pointer_cast<variable_string>(param)->get_string());
-                    }
-                    else if(type == "identifier")
-                    {
-                        value.set_token(token_t::TOKEN_IDENTIFIER);
-                        value.set_string(std::static_pointer_cast<variable_string>(param)->get_string());
-                    }
-                    else if(type == "regex")
-                    {
-                        value.set_token(token_t::TOKEN_REGEX);
-                        value.set_string(std::static_pointer_cast<variable_regex>(param)->get_regex());
-                    }
-                    else if(type == "address")
-                    {
-                        value.set_token(token_t::TOKEN_ADDRESS);
-                        value.set_string(std::static_pointer_cast<variable_address>(param)->get_address()
-                                .to_ipv4or6_string(
-                                      addr::STRING_IP_BRACKET_ADDRESS
-                                    | addr::STRING_IP_PORT
-                                    | addr::STRING_IP_MASK_IF_NEEDED));
-                    }
-                    else if(type == "timestamp")
-                    {
-                        value.set_token(token_t::TOKEN_TIMESPEC);
-                        snapdev::timespec_ex const timestamp(std::static_pointer_cast<variable_timestamp>(param)->get_timestamp());
+                        // we need to create a clone because the name is likely different
+                        //
+                        std::string const & type(param->get_type());
+                        if(type == "integer")
+                        {
+                            value.set_token(token_t::TOKEN_INTEGER);
+                            value.set_integer(std::static_pointer_cast<variable_integer>(param)->get_integer());
+                        }
+                        else if(type == "floating_point")
+                        {
+                            value.set_token(token_t::TOKEN_FLOATING_POINT);
+                            value.set_floating_point(std::static_pointer_cast<variable_floating_point>(param)->get_floating_point());
+                        }
+                        else if(type == "string")
+                        {
+                            // note: the string was already converted once by
+                            //       now so use TOKEN_SINGLE_STRING
+                            value.set_token(token_t::TOKEN_SINGLE_STRING);
+                            value.set_string(std::static_pointer_cast<variable_string>(param)->get_string());
+std::cerr << "--- direct string [" << value.get_string() << "]\n";
+                        }
+                        else if(type == "identifier")
+                        {
+                            value.set_token(token_t::TOKEN_IDENTIFIER);
+                            value.set_string(std::static_pointer_cast<variable_string>(param)->get_string());
+                        }
+                        else if(type == "regex")
+                        {
+                            value.set_token(token_t::TOKEN_REGEX);
+                            value.set_string(std::static_pointer_cast<variable_regex>(param)->get_regex());
+                        }
+                        else if(type == "address")
+                        {
+                            value.set_token(token_t::TOKEN_ADDRESS);
+                            value.set_string(std::static_pointer_cast<variable_address>(param)->get_address()
+                                    .to_ipv4or6_string(
+                                          addr::STRING_IP_BRACKET_ADDRESS
+                                        | addr::STRING_IP_PORT
+                                        | addr::STRING_IP_MASK_IF_NEEDED));
+                        }
+                        else if(type == "timestamp")
+                        {
+                            value.set_token(token_t::TOKEN_TIMESPEC);
+                            snapdev::timespec_ex const timestamp(std::static_pointer_cast<variable_timestamp>(param)->get_timestamp());
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-                        value.set_integer((static_cast<__int128>(timestamp.tv_sec) << 64) | timestamp.tv_nsec);
+                            value.set_integer((static_cast<__int128>(timestamp.tv_sec) << 64) | timestamp.tv_nsec);
 #pragma GCC diagnostic pop
-                        value.set_string(timestamp.to_timestamp());
+                            value.set_string(timestamp.to_timestamp());
+                        }
+                        else
+                        {
+                            // LCOV_EXCL_START
+                            throw std::runtime_error(
+                                  "primary variable of type \""
+                                + type
+                                + "\" not yet supported.");
+                            // LCOV_EXCL_STOP
+                        }
                     }
                     else
                     {
-                        // LCOV_EXCL_START
-                        throw std::runtime_error(
-                              "primary variable of type \""
-                            + type
-                            + "\" not yet supported.");
-                        // LCOV_EXCL_STOP
+                        value.set_token(token_t::TOKEN_SINGLE_STRING);
                     }
+                    expr->set_token(value);
                 }
-                else
+                break;
+
+            //case token_t::TOKEN_REGEX: -- I'm not too sure whether we can convert this one?
+            case token_t::TOKEN_DOUBLE_STRING:
                 {
+                    expr = std::make_shared<expression>();
+                    expr->set_operator(operator_t::OPERATOR_PRIMARY);
+
+                    token value;
                     value.set_token(token_t::TOKEN_SINGLE_STRING);
+                    value.set_string(replace_variables(t.get_string()));
+
+                    expr->set_token(value);
                 }
-                expr->set_token(value);
+                break;
+
+            default:
+                // no need to change this expression, return as is
+                break;
+
             }
         }
         return expr;
