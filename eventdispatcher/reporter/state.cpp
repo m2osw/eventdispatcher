@@ -210,7 +210,9 @@ ip_t state::get_label_position(std::string const & name) const
     auto const it(f_labels.find(name));
     if(it == f_labels.end())
     {
-        throw std::runtime_error("label \"" + name + "\" not found.");
+        throw std::runtime_error(
+                  f_running_statement->get_location()
+                + "label \"" + name + "\" not found.");
     }
     return it->second;
 }

@@ -45,7 +45,45 @@ statement::statement(instruction::pointer_t inst)
 }
 
 
-instruction::pointer_t statement::get_instruction() const
+void statement::set_filename(std::string const & filename)
+{
+    f_filename = filename;
+}
+
+
+std::string const & statement::get_filename() const
+{
+    return f_filename;
+}
+
+
+void statement::set_line(std::uint32_t line)
+{
+    f_line = line;
+}
+
+
+std::uint32_t statement::get_line() const
+{
+    return f_line;
+}
+
+
+std::string const & statement::get_location() const
+{
+    if(f_location.empty())
+    {
+        f_location = f_filename;
+        f_location += ':';
+        f_location += std::to_string(f_line);
+        f_location += ": ";
+    }
+
+    return f_location;
+}
+
+
+instruction::pointer_t statement::statement::get_instruction() const
 {
     return f_instruction;
 }

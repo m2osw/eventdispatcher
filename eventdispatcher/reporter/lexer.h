@@ -50,6 +50,8 @@ public:
                                   std::string const & filename
                                 , std::string const & program);
 
+    std::string const &     get_filename() const;
+
     token                   next_token();
     void                    error(token & t, std::string const & msg);
 

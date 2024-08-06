@@ -39,6 +39,12 @@ public:
 
                         statement(instruction::pointer_t inst);
 
+    void                set_filename(std::string const & filename);
+    std::string const & get_filename() const;
+    void                set_line(std::uint32_t line);
+    std::uint32_t       get_line() const;
+    std::string const & get_location() const;
+
     instruction::pointer_t
                         get_instruction() const;
 
@@ -50,6 +56,9 @@ public:
 private:
     instruction::pointer_t
                         f_instruction = nullptr;
+    std::string         f_filename = std::string(); // TODO: look into a way to avoid repetition
+    std::uint32_t       f_line = 0;
+    mutable std::string f_location = std::string();
     expression::map_t   f_parameters = expression::map_t();
 };
 

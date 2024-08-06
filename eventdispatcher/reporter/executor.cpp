@@ -535,7 +535,6 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                             //       now so use TOKEN_SINGLE_STRING
                             value.set_token(token_t::TOKEN_SINGLE_STRING);
                             value.set_string(std::static_pointer_cast<variable_string>(param)->get_string());
-std::cerr << "--- direct string [" << value.get_string() << "]\n";
                         }
                         else if(type == "identifier")
                         {

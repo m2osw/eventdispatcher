@@ -64,6 +64,12 @@ lexer::lexer(
 }
 
 
+std::string const & lexer::get_filename() const
+{
+    return f_filename;
+}
+
+
 token lexer::next_token()
 {
     for(;;)

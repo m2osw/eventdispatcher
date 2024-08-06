@@ -156,6 +156,8 @@ void parser::one_statement()
     }
 
     f_statement = std::make_shared<statement>(inst);
+    f_statement->set_filename(f_lexer->get_filename());
+    f_statement->set_line(f_token.get_line());
 
     if(next_token())
     {

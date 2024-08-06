@@ -1659,7 +1659,8 @@ public:
             if(var->get_string() != value)
             {
                 throw std::runtime_error(
-                      "message expected \""
+                      s.get_running_statement()->get_location()
+                    + "message expected \""
                     + name
                     + "\", set to \""
                     + value
@@ -1675,7 +1676,8 @@ public:
             if(!std::regex_match(value, compiled_regex))
             {
                 throw std::runtime_error(
-                      "message expected \""
+                      s.get_running_statement()->get_location()
+                    + "message expected \""
                     + name
                     + "\", set to \""
                     + value
@@ -1687,7 +1689,8 @@ public:
         else
         {
             throw std::runtime_error(
-                  "message sent_server type \""
+                  s.get_running_statement()->get_location()
+                + "message sent_server type \""
                 + type
                 + "\" not supported.");
         }
@@ -1717,7 +1720,8 @@ public:
                 if(forbidden)
                 {
                     throw std::runtime_error(
-                          "message forbidden parameter \""
+                          s.get_running_statement()->get_location()
+                        + "message forbidden parameter \""
                         + name
                         + "\" was found in this message.");
                 }
@@ -1729,7 +1733,8 @@ public:
             else // if(required)
             {
                 throw std::runtime_error(
-                      "message required parameter \""
+                      s.get_running_statement()->get_location()
+                    + "message required parameter \""
                     + name
                     + "\" was not found in this message.");
             }
@@ -1742,7 +1747,8 @@ public:
                 if(int_var->get_integer() != value)
                 {
                     throw std::runtime_error(
-                          "message expected parameter \""
+                          s.get_running_statement()->get_location()
+                        + "message expected parameter \""
                         + name
                         + "\" to be an integer set to \""
                         + std::to_string(int_var->get_integer())
@@ -1781,7 +1787,8 @@ public:
                         }
                     }
                     throw std::runtime_error(
-                          "message expected parameter \""
+                          s.get_running_statement()->get_location()
+                        + "message expected parameter \""
                         + name
                         + "\" to be a string set to \""
                         + expected
@@ -1798,7 +1805,8 @@ public:
                 if(!std::regex_match(value, compiled_regex))
                 {
                     throw std::runtime_error(
-                          "message expected parameter \""
+                          s.get_running_statement()->get_location()
+                        + "message expected parameter \""
                         + name
                         + "\", set to \""
                         + value
@@ -1814,7 +1822,8 @@ public:
                 if(timestamp_var->get_timestamp() != value)
                 {
                     throw std::runtime_error(
-                          "message expected parameter \""
+                          s.get_running_statement()->get_location()
+                        + "message expected parameter \""
                         + name
                         + "\", set to \""
                         + value.to_string()
@@ -1833,7 +1842,8 @@ public:
             else
             {
                 throw std::runtime_error(
-                      "message parameter type \""
+                      s.get_running_statement()->get_location()
+                    + "message parameter type \""
                     + type
                     + "\" not supported yet.");
             }
@@ -1909,7 +1919,8 @@ public:
             else
             {
                 throw std::runtime_error(
-                      "unknown mode \""
+                      s.get_running_statement()->get_location()
+                    + "unknown mode \""
                     + m
                     + "\" in wait().");
             }
