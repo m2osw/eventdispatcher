@@ -37,6 +37,11 @@
 #include    <eventdispatcher/signal_handler.h>
 
 
+// cppthread
+//
+#include    <cppthread/thread.h>
+
+
 // advgetopt
 //
 #include    <advgetopt/validator_double.h>
@@ -246,6 +251,16 @@ constexpr parameter_declaration const g_listen_params[] =
     {
         .f_name = "address",
         .f_type = "address",
+    },
+    {}
+};
+
+
+constexpr parameter_declaration const g_max_pid_params[] =
+{
+    {
+        .f_name = "variable_name",
+        .f_type = "identifier",
     },
     {}
 };
@@ -1128,6 +1143,38 @@ public:
     }
 };
 INSTRUCTION(listen);
+
+
+// MAX_PID
+//
+class inst_max_pid
+    : public instruction
+{
+public:
+    inst_max_pid()
+        : instruction("max_pid")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        variable::pointer_t param(s.get_parameter("variable_name", true));
+        variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+        std::string const & variable_name(var->get_string());
+
+        variable_integer::pointer_t new_var(std::make_shared<variable_integer>(variable_name));
+        new_var->set_integer(cppthread::get_pid_max());
+        s.set_variable(new_var);
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_max_pid_params;
+    }
+
+private:
+};
+INSTRUCTION(max_pid);
 
 
 // NOW
