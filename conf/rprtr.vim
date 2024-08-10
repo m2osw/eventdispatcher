@@ -62,6 +62,7 @@ syn keyword	rprtrKeyword		label goto return call
 syn match	rprtrConstant		"\<0[xX][0-9A-Fa-f]\+n\?\>"
 syn match	rprtrConstant		"\<[1-9][0-9]*\.\=[0-9]*\([eE][+-]\=[0-9]\+\)\=\>"
 syn match	rprtrConstant		"\<0\=\.[0-9]\+\([eE][+-]\=[0-9]\+\)\=\>"
+syn match	rprtrConstant		"\<0\+\>"
 syn region	rprtrConstant		start=+"+ skip=+\\.+ end=+"+
 syn region	rprtrConstant		start=+'+ skip=+\\.+ end=+'+
 syn region	rprtrConstant		start=+`+ skip=+\\.+ end=+`+
