@@ -76,7 +76,7 @@ namespace
  *
  * \todo
  * We may actually want to use a sigset_t object and just set
- * bits and remove 
+ * and remove bits as required.
  *
  * \note
  * The pointer to the signal object is a bare pointer
@@ -122,7 +122,7 @@ sigset_t                            g_signal_handlers = sigset_t();
  * point which in many circumstances can create many problems unless
  * you make sure to mask signals while doing work. For example, you
  * could end up with a read() returning an error when the file you
- * are reading has absolutely no error but a dude decided to signal
+ * are reading has absolutely no error but someone decided to signal
  * you with a 'kill -HUP 123'...
  *
  * \code
@@ -158,7 +158,7 @@ sigset_t                            g_signal_handlers = sigset_t();
  * You should not use signal() and setup a handler for the same signal.
  * It will not play nice to have both types of signal handlers. That
  * being said, with my current testing (as of Ubuntu 16.04), it seems
- * to work just fine..
+ * to work just fine.
  *
  * \bug
  * At the moment you can't create a signal() object if you already
@@ -226,7 +226,7 @@ signal::signal(int posix_signal)
     {
         throw runtime_error("sigprocmask() failed to block signal.");
     }
-    if(sigismember(&g_signal_handlers, f_signal) != 0)
+    if(sigismember(&save_set, f_signal) != 0)
     {
         SNAP_LOG_CONFIGURATION_WARNING
             << "signal::signal() detected an already blocked signal: "

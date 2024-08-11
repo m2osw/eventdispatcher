@@ -19,11 +19,9 @@
 ##
 ## eventdispatcher unittest
 ##
-project(unittest)
-
 find_package(SnapCatch2)
-
 if(SnapCatch2_FOUND)
+    project(unittest)
 
     add_executable(${PROJECT_NAME}
         catch_main.cpp
@@ -67,6 +65,32 @@ if(SnapCatch2_FOUND)
     )
 
     add_test(unittests ${PROJECT_NAME})
+
+
+
+    project(check_signal_and_eint)
+
+    add_executable(${PROJECT_NAME}
+        check_signal_and_eint.cpp
+    )
+
+    target_include_directories(${PROJECT_NAME}
+        PUBLIC
+            ${CMAKE_SOURCE_DIR}/cppprocess
+            ${CMAKE_BINARY_DIR}/cppprocess
+            ${CMAKE_BINARY_DIR}
+            ${PROJECT_SOURCE_DIR}
+            ${SNAPCATCH2_INCLUDE_DIRS}
+            ${LIBEXCEPT_INCLUDE_DIRS}
+            ${LIBUTF8_INCLUDE_DIRS}
+    )
+
+    target_link_libraries(${PROJECT_NAME}
+        eventdispatcher
+        #reporter
+        cppprocess
+        #${SNAPCATCH2_LIBRARIES}
+    )
 
 else(SnapCatch2_FOUND)
 
