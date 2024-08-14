@@ -1765,7 +1765,7 @@ bool message::check_parameters(message_parameter::vector_t const & parameter_def
                     << p.f_name
                     << "\" from message \""
                     << f_command
-                    << "\" connot be empty."
+                    << "\" cannot be empty."
                     << SNAP_LOG_SEND;
                 result = false;
             }
