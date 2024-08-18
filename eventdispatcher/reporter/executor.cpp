@@ -42,6 +42,7 @@
 
 // snapdev
 //
+#include    <snapdev/escape_special_regex_characters.h>
 #include    <snapdev/not_reached.h>
 
 
@@ -865,6 +866,31 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
             case mix_token(token_t::TOKEN_DOUBLE_STRING, token_t::TOKEN_DOUBLE_STRING):
                 result.set_token(token_t::TOKEN_DOUBLE_STRING);
                 result.set_string(lt.get_string() + rt.get_string());
+                break;
+
+            case mix_token(token_t::TOKEN_DOUBLE_STRING, token_t::TOKEN_REGEX):
+                result.set_token(token_t::TOKEN_REGEX);
+                result.set_string(snapdev::escape_special_regex_characters(lt.get_string()) + rt.get_string());
+                break;
+
+            case mix_token(token_t::TOKEN_REGEX, token_t::TOKEN_DOUBLE_STRING):
+                result.set_token(token_t::TOKEN_REGEX);
+                result.set_string(lt.get_string() + snapdev::escape_special_regex_characters(rt.get_string()));
+                break;
+
+            case mix_token(token_t::TOKEN_REGEX, token_t::TOKEN_REGEX):
+                result.set_token(token_t::TOKEN_REGEX);
+                result.set_string(lt.get_string() + rt.get_string());
+                break;
+
+            case mix_token(token_t::TOKEN_SINGLE_STRING, token_t::TOKEN_REGEX):
+                result.set_token(token_t::TOKEN_REGEX);
+                result.set_string(snapdev::escape_special_regex_characters(lt.get_string()) + rt.get_string());
+                break;
+
+            case mix_token(token_t::TOKEN_REGEX, token_t::TOKEN_SINGLE_STRING):
+                result.set_token(token_t::TOKEN_REGEX);
+                result.set_string(lt.get_string() + snapdev::escape_special_regex_characters(rt.get_string()));
                 break;
 
             case mix_token(token_t::TOKEN_SINGLE_STRING, token_t::TOKEN_INTEGER):
