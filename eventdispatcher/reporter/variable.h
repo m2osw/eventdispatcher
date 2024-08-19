@@ -52,6 +52,7 @@ class variable
 public:
     typedef std::shared_ptr<variable>           pointer_t;
     typedef std::map<std::string, pointer_t>    map_t;
+    typedef std::vector<pointer_t>              vector_t;
 
                             variable(
                                   std::string const & name

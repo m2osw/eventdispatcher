@@ -379,6 +379,111 @@ constexpr parameter_declaration const g_sleep_params[] =
 };
 
 
+constexpr parameter_declaration const g_sort_params[] =
+{
+    {
+        .f_name = "var1",
+        .f_type = "any",
+    },
+    {
+        .f_name = "var2",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var3",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var4",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var5",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var6",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var7",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var8",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var9",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var10",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var11",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var12",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var13",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var14",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var15",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var16",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var17",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var18",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var19",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {
+        .f_name = "var20",
+        .f_type = "any",
+        .f_required = false,
+    },
+    {}
+};
+
+
 constexpr parameter_declaration const g_unset_variable_params[] =
 {
     {
@@ -1355,6 +1460,26 @@ public:
         {
             value = msg.get_parameter(parameter_name);
         }
+        else if(parameter_name == "sent_server")
+        {
+            value = msg.get_sent_from_server();
+        }
+        else if(parameter_name == "sent_service")
+        {
+            value = msg.get_sent_from_service();
+        }
+        else if(parameter_name == "server")
+        {
+            value = msg.get_server();
+        }
+        else if(parameter_name == "service")
+        {
+            value = msg.get_service();
+        }
+        else if(parameter_name == "command")
+        {
+            value = msg.get_command();
+        }
 
         param = s.get_parameter("variable_name", true);
         var = std::static_pointer_cast<variable_string>(param);
@@ -1632,6 +1757,144 @@ public:
 private:
 };
 INSTRUCTION(sleep);
+
+
+// SORT
+//
+class inst_sort
+    : public instruction
+{
+public:
+    inst_sort()
+        : instruction("sort")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        // check for variable names (var1: name1, var2: name2, ...)
+        //
+        variable::vector_t array;
+        std::string result_type;
+        for(int i(1);; ++i)
+        {
+            std::string var_number("var");
+            var_number += std::to_string(i);
+            variable::pointer_t param(s.get_parameter(var_number, false));
+            if(param == nullptr)
+            {
+                if(i == 1)
+                {
+                    throw std::runtime_error(
+                          s.get_running_statement()->get_location()
+                        + "expected at least \"var1\".");
+                }
+                break;
+            }
+            variable_string::pointer_t var_string(std::static_pointer_cast<variable_string>(param));
+            variable::pointer_t var(s.get_variable(var_string->get_string()));
+            std::string const & type(var->get_type());
+            if(result_type.empty())
+            {
+                if(type != "string"
+                && type != "integer"
+                && type != "floating_point")
+                {
+                    throw std::runtime_error(
+                          s.get_running_statement()->get_location()
+                        + "sort only supports strings, integers, or floating points.");
+                }
+                result_type = type;
+            }
+            else if(type != result_type)
+            {
+                throw std::runtime_error(
+                      s.get_running_statement()->get_location()
+                    + "sort only supports one type of data (\""
+                    + result_type
+                    + "\" in this case) for all the specified variables. \""
+                    + type
+                    + "\" is not compatible.");
+            }
+            array.push_back(var);
+        }
+
+        if(result_type == "string")
+        {
+            std::map<std::string, bool> values;
+            std::for_each(
+                  array.begin()
+                , array.end()
+                , [&values](variable::pointer_t a)
+                {
+                    variable_string::pointer_t sa(std::dynamic_pointer_cast<variable_string>(a));
+                    values[sa->get_string()] = true;
+                });
+            auto it(values.begin());
+            std::for_each(
+                  array.begin()
+                , array.end()
+                , [&values, &it](variable::pointer_t a)
+                {
+                    variable_string::pointer_t sa(std::dynamic_pointer_cast<variable_string>(a));
+                    sa->set_string(it->first);
+                    ++it;
+                });
+        }
+        else if(result_type == "integer")
+        {
+            std::map<std::int64_t, bool> values;
+            std::for_each(
+                  array.begin()
+                , array.end()
+                , [&values](variable::pointer_t a)
+                {
+                    variable_integer::pointer_t sa(std::dynamic_pointer_cast<variable_integer>(a));
+                    values[sa->get_integer()] = true;
+                });
+            auto it(values.begin());
+            std::for_each(
+                  array.begin()
+                , array.end()
+                , [&values, &it](variable::pointer_t a)
+                {
+                    variable_integer::pointer_t sa(std::dynamic_pointer_cast<variable_integer>(a));
+                    sa->set_integer(it->first);
+                    ++it;
+                });
+        }
+        else if(result_type == "floating_point")
+        {
+            std::map<double, bool> values;
+            std::for_each(
+                  array.begin()
+                , array.end()
+                , [&values](variable::pointer_t a)
+                {
+                    variable_floating_point::pointer_t sa(std::dynamic_pointer_cast<variable_floating_point>(a));
+                    values[sa->get_floating_point()] = true;
+                });
+            auto it(values.begin());
+            std::for_each(
+                  array.begin()
+                , array.end()
+                , [&values, &it](variable::pointer_t a)
+                {
+                    variable_floating_point::pointer_t sa(std::dynamic_pointer_cast<variable_floating_point>(a));
+                    sa->set_floating_point(it->first);
+                    ++it;
+                });
+        }
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_sort_params;
+    }
+
+private:
+};
+INSTRUCTION(sort);
 
 
 // UNSET VARIABLE
