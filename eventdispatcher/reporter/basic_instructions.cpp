@@ -365,6 +365,11 @@ constexpr parameter_declaration const g_set_variable_params[] =
         .f_name = "value",
         .f_type = "any",
     },
+    {
+        .f_name = "type",
+        .f_type = "identifier",
+        .f_required = false,
+    },
     {}
 };
 
@@ -1671,8 +1676,73 @@ public:
         variable::pointer_t name(s.get_parameter("name", true));
         variable::pointer_t value(s.get_parameter("value", true));
 
-        std::string var_name(std::static_pointer_cast<variable_string>(name)->get_string());
+        std::string cast;
+        variable::pointer_t type(s.get_parameter("type"));
+        if(type != nullptr)
+        {
+            cast = std::static_pointer_cast<variable_string>(type)->get_string();
+        }
+
+        std::string const var_name(std::static_pointer_cast<variable_string>(name)->get_string());
         variable::pointer_t var(value->clone(var_name));
+        if(!cast.empty())
+        {
+            bool converted(true);
+            std::string const & var_type(var->get_type());
+            if(var_type == "string")
+            {
+                variable_string::pointer_t var_string(std::static_pointer_cast<variable_string>(var));
+                if(cast == "string")
+                {
+                    ; // do nothing
+                }
+                else if(cast == "timestamp") // string -> timestamp
+                {
+                    // expect the variable value to represent a valid
+                    // floating point value
+                    //
+                    double timestamp(0.0);
+                    if(!advgetopt::validator_double::convert_string(var_string->get_string(), timestamp))
+                    {
+                        throw std::runtime_error(
+                              "invalid timestamp, a valid floating point was expected ("
+                            + var_string->get_string()
+                            + ").");
+                    }
+                    variable_timestamp::pointer_t timestamp_var(std::make_shared<variable_timestamp>(var_name));
+                    timestamp_var->set_timestamp(timestamp);
+                    var = timestamp_var;
+                }
+                else
+                {
+                    converted = false;
+                }
+            }
+            else if(var_type == "timestamp")
+            {
+                if(cast == "timestamp")
+                {
+                    ; // do nothing
+                }
+                else
+                {
+                    converted = false;
+                }
+            }
+            else
+            {
+                converted = false;
+            }
+            if(!converted)
+            {
+                throw std::runtime_error(
+                      "casting from \""
+                    + var_type
+                    + "\" to \""
+                    + cast
+                    + "\" is not yet implemented.");
+            }
+        }
         s.set_variable(var);
     }
 

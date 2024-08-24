@@ -496,7 +496,6 @@ token lexer::next_token()
             }
             snapdev::NOT_REACHED();
 
-
         default:
             if((c >= U'A' && c <= U'Z')
             || (c >= U'a' && c <= U'z')

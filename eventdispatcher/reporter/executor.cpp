@@ -731,7 +731,8 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
 
             default:
                 throw std::runtime_error(
-                      "unsupported compare (token types: "
+                      f_state->get_running_statement()->get_location()
+                    + "unsupported compare (token types: "
                     + std::to_string(static_cast<int>(lt.get_token()))
                     + " <=> "
                     + std::to_string(static_cast<int>(rt.get_token()))
