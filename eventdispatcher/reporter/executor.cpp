@@ -1318,7 +1318,11 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 break;
 
             default:
-                throw std::runtime_error("unsupported modulo.");
+                throw std::runtime_error("unsupported modulo (types: "
+                    + std::to_string(static_cast<int>(lt.get_token()))
+                    + " and "
+                    + std::to_string(static_cast<int>(rt.get_token()))
+                    + ").");
 
             }
             expression::pointer_t result_expr(std::make_shared<expression>());
