@@ -20,6 +20,7 @@
 //
 #include    "lexer.h"
 
+#include    "eventdispatcher/exception.h"
 
 
 // snapdev
@@ -392,7 +393,7 @@ token lexer::next_token()
                             break;
 
                         default:
-                            throw std::runtime_error(
+                            throw ed::runtime_error(
                                   "invalid escape character '"
                                 + libutf8::to_u8string(c)
                                 + "'");

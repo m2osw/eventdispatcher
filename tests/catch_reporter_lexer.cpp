@@ -31,6 +31,16 @@
 #include    <eventdispatcher/reporter/lexer.h>
 
 
+// eventdispatcher
+//
+#include    <eventdispatcher/exception.h>
+
+
+// libexcept
+//
+#include    <libexcept/exception.h>
+
+
 // snapdev
 //
 #include    <snapdev/int128_literal.h>
@@ -214,6 +224,32 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
+    CATCH_START_SECTION("compare and comments token")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer l("divide-and-comments.rprtr",
+                  white_spaces()
+                + "65.31 // this is a float\n"
+                + white_spaces()
+                + "<=> // we want to compare it\r\n"
+                + white_spaces()
+                + "-71.2 // by another float\n"
+                + white_spaces());
+
+        SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_FLOATING_POINT);
+        CATCH_REQUIRE(t.get_floating_point() == 65.31);
+        t = l.next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_COMPARE);
+        t = l.next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_MINUS);
+        t = l.next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_FLOATING_POINT);
+        CATCH_REQUIRE(t.get_floating_point() == 71.2);
+        t = l.next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
+    }
+    CATCH_END_SECTION()
+
     CATCH_START_SECTION("variable tokens")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("variables.rprtr",
@@ -363,6 +399,54 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
         CATCH_REQUIRE(t.get_string() == "others \\ \" ' `");
         t = l.next_token();
         CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("currently unsupported backslash tokens")
+    {
+        // at this point the following are not implemented
+        //
+        char unimplemented[] = {
+            'x', 'u', 'U',
+            '0', '1', '2', '3', '4',
+            '5', '6', '7', '8', '9',
+        };
+        for(auto const c : unimplemented)
+        {
+            SNAP_CATCH2_NAMESPACE::reporter::lexer l("backslashes.rprtr", std::string("test: \"\\") + c + "5\"");
+            SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
+            CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER);
+            CATCH_REQUIRE(t.get_string() == "test");
+            t = l.next_token();
+            CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_COLON);
+            CATCH_REQUIRE_THROWS_MATCHES(
+                  l.next_token()
+                , libexcept::fixme
+                , Catch::Matchers::ExceptionMessage("fixme: sorry, the \\... with a number to define a character are not yet supported."));
+        }
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("unsupported backslash tokens")
+    {
+        // at this point the following are not implemented
+        //
+        char unimplemented[] = {
+            'q', 'z',
+        };
+        for(auto const c : unimplemented)
+        {
+            SNAP_CATCH2_NAMESPACE::reporter::lexer l("backslashes.rprtr", std::string("test: \"\\") + c + "5\"");
+            SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
+            CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER);
+            CATCH_REQUIRE(t.get_string() == "test");
+            t = l.next_token();
+            CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_COLON);
+            CATCH_REQUIRE_THROWS_MATCHES(
+                  l.next_token()
+                , ed::runtime_error
+                , Catch::Matchers::ExceptionMessage(std::string("event_dispatcher_exception: invalid escape character '") + c + "'"));
+        }
     }
     CATCH_END_SECTION()
 

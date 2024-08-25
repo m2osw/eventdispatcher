@@ -61,9 +61,9 @@ char **         g_argv = nullptr;
 } // SNAP_CATCH2_NAMESPACE namespace
 
 
-void init_test()
+int setup_test(Catch::Session & session)
 {
-    libexcept::set_collect_stack(libexcept::collect_stack_t::COLLECT_STACK_NO);
+    snapdev::NOT_USED(session);
 
     // at this point, I setup all the paths in one place
     //
@@ -73,9 +73,11 @@ void init_test()
     //          (i.e. original) files first
     //
     ed::set_message_definition_paths(
-        SNAP_CATCH2_NAMESPACE::g_source_dir() + "tests/message-definitions:"
-            + SNAP_CATCH2_NAMESPACE::g_source_dir() + "eventdispatcher/message-definitions:"
+        SNAP_CATCH2_NAMESPACE::g_source_dir() + "/tests/message-definitions:"
+            + SNAP_CATCH2_NAMESPACE::g_source_dir() + "/eventdispatcher/message-definitions:"
             + SNAP_CATCH2_NAMESPACE::g_dist_dir() + "/share/eventdispatcher/messages");
+
+    return 0;
 }
 
 
@@ -92,7 +94,9 @@ int main(int argc, char * argv[])
             , EVENTDISPATCHER_VERSION_STRING
             , argc
             , argv
-            , &init_test
+            , []() { libexcept::set_collect_stack(libexcept::collect_stack_t::COLLECT_STACK_NO); }
+            , nullptr
+            , &setup_test
         );
 }
 
