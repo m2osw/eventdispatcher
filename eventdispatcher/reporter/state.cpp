@@ -40,6 +40,18 @@ namespace reporter
 {
 
 
+namespace
+{
+
+
+
+std::string const       g_no_location = std::string();
+
+
+
+} // no name namespace
+
+
 
 ip_t state::get_ip() const
 {
@@ -205,16 +217,29 @@ void state::unset_variable(std::string const & name)
 }
 
 
-ip_t state::get_label_position(std::string const & name) const
+std::uint32_t state::get_label_position(std::string const & name) const
 {
     auto const it(f_labels.find(name));
     if(it == f_labels.end())
     {
         throw std::runtime_error(
-                  f_running_statement->get_location()
+                  get_location()
                 + "label \"" + name + "\" not found.");
     }
     return it->second;
+}
+
+
+std::string const & state::get_location() const
+{
+    // if there is no running statement (yet) then we return an empty string
+    //
+    if(f_running_statement == nullptr)
+    {
+        return g_no_location;
+    }
+
+    return f_running_statement->get_location();
 }
 
 

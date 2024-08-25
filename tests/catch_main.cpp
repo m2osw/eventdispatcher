@@ -26,6 +26,7 @@
 
 // eventdispatcher
 //
+#include    <eventdispatcher/message_definition.h>
 #include    <eventdispatcher/version.h>
 
 
@@ -60,6 +61,23 @@ char **         g_argv = nullptr;
 } // SNAP_CATCH2_NAMESPACE namespace
 
 
+void init_test()
+{
+    libexcept::set_collect_stack(libexcept::collect_stack_t::COLLECT_STACK_NO);
+
+    // at this point, I setup all the paths in one place
+    //
+    // note that it is possible to change this list at any time
+    //
+    // WARNING: the order matters, we want to test with our source
+    //          (i.e. original) files first
+    //
+    ed::set_message_definition_paths(
+        SNAP_CATCH2_NAMESPACE::g_source_dir() + "tests/message-definitions:"
+            + SNAP_CATCH2_NAMESPACE::g_source_dir() + "eventdispatcher/message-definitions:"
+            + SNAP_CATCH2_NAMESPACE::g_dist_dir() + "/share/eventdispatcher/messages");
+}
+
 
 int main(int argc, char * argv[])
 {
@@ -74,7 +92,7 @@ int main(int argc, char * argv[])
             , EVENTDISPATCHER_VERSION_STRING
             , argc
             , argv
-            , []() { libexcept::set_collect_stack(libexcept::collect_stack_t::COLLECT_STACK_NO); }
+            , &init_test
         );
 }
 

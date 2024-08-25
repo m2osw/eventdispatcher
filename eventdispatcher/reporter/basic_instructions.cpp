@@ -1856,13 +1856,29 @@ public:
                 if(i == 1)
                 {
                     throw std::runtime_error(
-                          s.get_running_statement()->get_location()
+                          s.get_location()
                         + "expected at least \"var1\".");
                 }
                 break;
             }
             variable_string::pointer_t var_string(std::static_pointer_cast<variable_string>(param));
+            if(var_string == nullptr)
+            {
+                throw std::runtime_error(
+                      s.get_location()
+                    + "variable named \""
+                    + var_number
+                    + "\" must point to a string or an identifier.");
+            }
             variable::pointer_t var(s.get_variable(var_string->get_string()));
+            if(var == nullptr)
+            {
+                throw std::runtime_error(
+                      s.get_location()
+                    + "variable named \""
+                    + var_string->get_string()
+                    + "\" not found.");
+            }
             std::string const & type(var->get_type());
             if(result_type.empty())
             {
@@ -1871,7 +1887,7 @@ public:
                 && type != "floating_point")
                 {
                     throw std::runtime_error(
-                          s.get_running_statement()->get_location()
+                          s.get_location()
                         + "sort only supports strings, integers, or floating points.");
                 }
                 result_type = type;
@@ -1879,7 +1895,7 @@ public:
             else if(type != result_type)
             {
                 throw std::runtime_error(
-                      s.get_running_statement()->get_location()
+                      s.get_location()
                     + "sort only supports one type of data (\""
                     + result_type
                     + "\" in this case) for all the specified variables. \""
@@ -2039,7 +2055,7 @@ public:
             if(var->get_string() != value)
             {
                 throw std::runtime_error(
-                      s.get_running_statement()->get_location()
+                      s.get_location()
                     + "message expected \""
                     + name
                     + "\", set to \""
@@ -2056,7 +2072,7 @@ public:
             if(!std::regex_match(value, compiled_regex))
             {
                 throw std::runtime_error(
-                      s.get_running_statement()->get_location()
+                      s.get_location()
                     + "message expected \""
                     + name
                     + "\", set to \""
@@ -2069,7 +2085,7 @@ public:
         else
         {
             throw std::runtime_error(
-                  s.get_running_statement()->get_location()
+                  s.get_location()
                 + "message sent_server type \""
                 + type
                 + "\" not supported.");
@@ -2100,7 +2116,7 @@ public:
                 if(forbidden)
                 {
                     throw std::runtime_error(
-                          s.get_running_statement()->get_location()
+                          s.get_location()
                         + "message forbidden parameter \""
                         + name
                         + "\" was found in this message.");
@@ -2113,7 +2129,7 @@ public:
             else // if(required)
             {
                 throw std::runtime_error(
-                      s.get_running_statement()->get_location()
+                      s.get_location()
                     + "message required parameter \""
                     + name
                     + "\" was not found in this message.");
@@ -2127,7 +2143,7 @@ public:
                 if(int_var->get_integer() != value)
                 {
                     throw std::runtime_error(
-                          s.get_running_statement()->get_location()
+                          s.get_location()
                         + "message expected parameter \""
                         + name
                         + "\" to be an integer set to \""
@@ -2167,7 +2183,7 @@ public:
                         }
                     }
                     throw std::runtime_error(
-                          s.get_running_statement()->get_location()
+                          s.get_location()
                         + "message expected parameter \""
                         + name
                         + "\" to be a string set to \""
@@ -2185,7 +2201,7 @@ public:
                 if(!std::regex_match(value, compiled_regex))
                 {
                     throw std::runtime_error(
-                          s.get_running_statement()->get_location()
+                          s.get_location()
                         + "message expected parameter \""
                         + name
                         + "\", set to \""
@@ -2202,7 +2218,7 @@ public:
                 if(timestamp_var->get_timestamp() != value)
                 {
                     throw std::runtime_error(
-                          s.get_running_statement()->get_location()
+                          s.get_location()
                         + "message expected parameter \""
                         + name
                         + "\", set to \""
@@ -2222,7 +2238,7 @@ public:
             else
             {
                 throw std::runtime_error(
-                      s.get_running_statement()->get_location()
+                      s.get_location()
                     + "message parameter type \""
                     + type
                     + "\" not supported yet.");
@@ -2299,7 +2315,7 @@ public:
             else
             {
                 throw std::runtime_error(
-                      s.get_running_statement()->get_location()
+                      s.get_location()
                     + "unknown mode \""
                     + m
                     + "\" in wait().");

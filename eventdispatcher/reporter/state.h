@@ -105,7 +105,8 @@ public:
     void                    set_variable(variable::pointer_t variable);
     void                    unset_variable(std::string const & name);
 
-    ip_t                    get_label_position(std::string const & name) const;
+    std::uint32_t           get_label_position(std::string const & name) const;
+    std::string const &     get_location() const;
 
     compare_t               get_compare() const;
     void                    set_compare(compare_t c);

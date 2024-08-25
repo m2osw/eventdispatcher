@@ -675,11 +675,11 @@ constexpr char const * const g_program_unsupported_modulo_identifier_address =
 ;
 
 constexpr char const * const g_program_unsupported_modulo_identifier_string =
-    "set_variable(name: bad, value: 'invalid' % invalid)\n"
+    "set_variable(name: bad, value: invalid % \"invalid\")\n"
 ;
 
 constexpr char const * const g_program_unsupported_modulo_string_identifier =
-    "set_variable(name: bad, value: invalid % \"invalid\")\n"
+    "set_variable(name: bad, value: 'invalid' % invalid)\n"
 ;
 
 constexpr char const * const g_program_unsupported_modulo_string_string =
@@ -3134,23 +3134,65 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 
     CATCH_START_SECTION("<type> % <type> that are not valid")
     {
-        constexpr char const * const bad_modulos[] =
+        struct bad_modulo_t
         {
-            g_program_unsupported_modulo_address_address,
-            g_program_unsupported_modulo_address_string,
-            g_program_unsupported_modulo_string_address,
-            g_program_unsupported_modulo_address_identifier,
-            g_program_unsupported_modulo_identifier_address,
-            g_program_unsupported_modulo_identifier_string,
-            g_program_unsupported_modulo_string_identifier,
-            g_program_unsupported_modulo_string_string,
-            g_program_unsupported_modulo_identifier_identifier,
+            char const * const                          f_expr = nullptr;
+            SNAP_CATCH2_NAMESPACE::reporter::token_t    f_lhs_token = SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ERROR;
+            SNAP_CATCH2_NAMESPACE::reporter::token_t    f_rhs_token = SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ERROR;
+        };
+        constexpr bad_modulo_t const bad_modulos[] =
+        {
+            {
+                g_program_unsupported_modulo_address_address,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ADDRESS,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ADDRESS,
+            },
+            {
+                g_program_unsupported_modulo_address_string,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ADDRESS,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_SINGLE_STRING,
+            },
+            {
+                g_program_unsupported_modulo_string_address,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_SINGLE_STRING,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ADDRESS,
+            },
+            {
+                g_program_unsupported_modulo_address_identifier,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ADDRESS,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER,
+            },
+            {
+                g_program_unsupported_modulo_identifier_address,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_ADDRESS,
+            },
+            {
+                g_program_unsupported_modulo_identifier_string,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_SINGLE_STRING, // the type of string was already converted by this time
+            },
+            {
+                g_program_unsupported_modulo_string_identifier,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_SINGLE_STRING,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER,
+            },
+            {
+                g_program_unsupported_modulo_string_string,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_SINGLE_STRING,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_SINGLE_STRING, // the type of string was already converted by this time
+            },
+            {
+                g_program_unsupported_modulo_identifier_identifier,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER,
+                SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER,
+            },
         };
 
         for(auto const & program : bad_modulos)
         {
-//std::cerr << "testing [" << program << "]\n";
-            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_modulos.rprtr", program));
+//std::cerr << "testing [" << program.f_expr << "]\n";
+            SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("invalid_modulos.rprtr", program.f_expr));
             SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
             SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
             p->parse_program();
@@ -3162,7 +3204,11 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
                   e->start()
                 , std::runtime_error
                 , Catch::Matchers::ExceptionMessage(
-                          "unsupported modulo."));
+                          "unsupported modulo (types: "
+                        + std::to_string(static_cast<int>(program.f_lhs_token))
+                        + " and "
+                        + std::to_string(static_cast<int>(program.f_rhs_token))
+                        + ")."));
         }
     }
     CATCH_END_SECTION()
@@ -3435,7 +3481,7 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
         CATCH_REQUIRE_THROWS_MATCHES(
               e->stop()
             , std::runtime_error
-            , Catch::Matchers::ExceptionMessage("unknown mode \"not_this_one\" in wait()."));
+            , Catch::Matchers::ExceptionMessage("program_wait_invalid_mode.rprtr:2: unknown mode \"not_this_one\" in wait()."));
 
         // if we exited because of our timer, then the test did not pass
         //
@@ -3615,43 +3661,43 @@ CATCH_TEST_CASE("reporter_executor_error_message", "[executor][reporter][error]"
         {
             {
                 g_program_verify_message_fail_sent_server,
-                "message expected sent from server name \"not_this_one\" did not match \"\".",
+                "program_verify_message_fail.rprtr:9: message expected \"sent_server\", set to \"\", to match \"not_this_one\".",
             },
             {
                 g_program_verify_message_fail_sent_service,
-                "message expected sent from service name \"not_this_one\" did not match \"\".",
+                "program_verify_message_fail.rprtr:9: message expected \"sent_service\", set to \"\", to match \"not_this_one\".",
             },
             {
                 g_program_verify_message_fail_server,
-                "message expected server name \"not_this_one\" did not match \"\".",
+                "program_verify_message_fail.rprtr:9: message expected \"server\", set to \"\", to match \"not_this_one\".",
             },
             {
                 g_program_verify_message_fail_service,
-                "message expected service name \"not_this_one\" did not match \"\".",
+                "program_verify_message_fail.rprtr:9: message expected \"service\", set to \"\", to match \"not_this_one\".",
             },
             {
                 g_program_verify_message_fail_command,
-                "message expected command \"NOT_THIS_ONE\" did not match \"REGISTER\".",
+                "program_verify_message_fail.rprtr:9: message expected \"command\", set to \"REGISTER\", to match \"NOT_THIS_ONE\".",
             },
             {
                 g_program_verify_message_fail_forbidden,
-                "message forbidden parameter \"version\" was found in this message.",
+                "program_verify_message_fail.rprtr:9: message forbidden parameter \"version\" was found in this message.",
             },
             {
                 g_program_verify_message_fail_required,
-                "message required parameter \"not_this_one\" was not found in this message.",
+                "program_verify_message_fail.rprtr:9: message required parameter \"not_this_one\" was not found in this message.",
             },
             {
                 g_program_verify_message_fail_required_int_value,
-                "message expected parameter \"version\" to be an integer set to \"200\" but found \"1\" instead.",
+                "program_verify_message_fail.rprtr:9: message expected parameter \"version\" to be an integer set to \"200\" but found \"1\" instead.",
             },
             {
                 g_program_verify_message_fail_required_str_value,
-                "message expected parameter \"service\" to be a string set to \"not_this_one\" but found \"responder\" instead.",
+                "program_verify_message_fail.rprtr:9: message expected parameter \"service\" to be a string set to \"not_this_one\" but found \"responder\" instead.",
             },
             {
                 g_program_verify_message_fail_required_flt_value,
-                "message parameter type \"floating_point\" not supported yet.",
+                "program_verify_message_fail.rprtr:9: message parameter type \"floating_point\" not supported yet.",
             },
         };
         for(auto const & bv : bad_verifications)
@@ -3789,7 +3835,7 @@ CATCH_TEST_CASE("reporter_executor_error_message", "[executor][reporter][error]"
         CATCH_REQUIRE_THROWS_MATCHES(
               e->stop()
             , std::runtime_error
-            , Catch::Matchers::ExceptionMessage("message expected parameter \"version\", set to \"1\", to match regex \"_[a-z]+\"."));
+            , Catch::Matchers::ExceptionMessage("program_regex_parameter_no_match.rprtr:9: message expected parameter \"version\", set to \"1\", to match regex \"_[a-z]+\"."));
 
         // if we exited because of our timer, then the test did not pass
         //
