@@ -51,6 +51,7 @@
 // snapdev
 //
 #include    <snapdev/gethostname.h>
+#include    <snapdev/hexadecimal_string.h>
 #include    <snapdev/not_used.h>
 
 
@@ -149,6 +150,30 @@ constexpr parameter_declaration const g_has_type_params[] =
     {
         .f_name = "type",
         .f_type = "identifier",
+    },
+    {}
+};
+
+
+constexpr parameter_declaration const g_hex_params[] =
+{
+    {
+        .f_name = "variable_name",
+        .f_type = "identifier",
+    },
+    {
+        .f_name = "value",
+        .f_type = "integer",
+    },
+    {
+        .f_name = "uppercase",
+        .f_type = "integer",
+        .f_required = false,
+    },
+    {
+        .f_name = "width",
+        .f_type = "integer",
+        .f_required = false,
     },
     {}
 };
@@ -484,6 +509,20 @@ constexpr parameter_declaration const g_sort_params[] =
         .f_name = "var20",
         .f_type = "any",
         .f_required = false,
+    },
+    {}
+};
+
+
+constexpr parameter_declaration const g_strlen_params[] =
+{
+    {
+        .f_name = "variable_name",
+        .f_type = "string_or_identifier",
+    },
+    {
+        .f_name = "string",
+        .f_type = "string",
     },
     {}
 };
@@ -949,6 +988,58 @@ public:
 private:
 };
 INSTRUCTION(has_type);
+
+
+// HEX
+//
+class inst_hex
+    : public instruction
+{
+public:
+    inst_hex()
+        : instruction("hex")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        variable::pointer_t var_name(s.get_parameter("variable_name", true));
+        variable_string::pointer_t var(std::static_pointer_cast<variable_string>(var_name));
+        std::string const & variable_name(var->get_string());
+
+        variable::pointer_t i(s.get_parameter("value", true));
+        variable_integer::pointer_t integer(std::dynamic_pointer_cast<variable_integer>(i));
+        int const value(integer->get_integer());
+
+        bool uppercase_flag(false);
+        variable::pointer_t uppercase(s.get_parameter("uppercase"));
+        if(uppercase != nullptr)
+        {
+            variable_integer::pointer_t uc(std::dynamic_pointer_cast<variable_integer>(uppercase));
+            uppercase_flag = uc->get_integer() != 0;
+        }
+
+        int width_value(1);
+        variable::pointer_t w(s.get_parameter("width"));
+        variable_integer::pointer_t width(std::dynamic_pointer_cast<variable_integer>(w));
+        if(width != nullptr)
+        {
+            width_value = width->get_integer();
+        }
+
+        variable_string::pointer_t new_var(std::make_shared<variable_string>(variable_name));
+        new_var->set_string(snapdev::int_to_hex(value, uppercase_flag, width_value));
+        s.set_variable(new_var);
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_hex_params;
+    }
+
+private:
+};
+INSTRUCTION(hex);
 
 
 // HOSTNAME
@@ -1981,6 +2072,41 @@ public:
 private:
 };
 INSTRUCTION(sort);
+
+
+// STRLEN
+//
+class inst_strlen
+    : public instruction
+{
+public:
+    inst_strlen()
+        : instruction("strlen")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        variable::pointer_t st(s.get_parameter("string", true));
+        variable_string::pointer_t str(std::dynamic_pointer_cast<variable_string>(st));
+
+        variable::pointer_t var_name(s.get_parameter("variable_name", true));
+        variable_string::pointer_t var(std::static_pointer_cast<variable_string>(var_name));
+        std::string const & variable_name(var->get_string());
+
+        variable_integer::pointer_t new_var(std::make_shared<variable_integer>(variable_name));
+        new_var->set_integer(str->get_string().length());
+        s.set_variable(new_var);
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_strlen_params;
+    }
+
+private:
+};
+INSTRUCTION(strlen);
 
 
 // UNSET VARIABLE
