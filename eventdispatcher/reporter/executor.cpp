@@ -482,7 +482,7 @@ std::string background_executor::replace_variables(std::string const & original)
             // it is just a stand alone dollar character
             //
             replaced += '$';
-            ++pos;
+            pos = dollar + 1;
         }
     }
 
