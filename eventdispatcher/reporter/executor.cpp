@@ -44,6 +44,7 @@
 //
 #include    <snapdev/escape_special_regex_characters.h>
 #include    <snapdev/not_reached.h>
+#include    <snapdev/ostream_int128.h>
 
 
 // last include
@@ -413,13 +414,17 @@ std::string background_executor::replace_variables(std::string const & original)
             std::string::size_type end(original.find('}', dollar));
             if(end == std::string::npos)
             {
-                throw std::runtime_error("found unclosed variable in \"" + original + "\".");
+                throw std::runtime_error(
+                      f_state->get_running_statement()->get_location()
+                    + "found unclosed variable in \"" + original + "\".");
             }
             std::string const var_name(original.substr(dollar, end - dollar));;
             pos = end + 1;
             if(var_name.empty())
             {
-                throw std::runtime_error("found variable without a name in \"" + original + "\".");
+                throw std::runtime_error(
+                      f_state->get_running_statement()->get_location()
+                    + "found variable without a name in \"" + original + "\".");
             }
             variable::pointer_t var(f_state->get_variable(var_name));
             if(var != nullptr)
