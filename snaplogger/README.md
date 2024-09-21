@@ -17,7 +17,7 @@ used to redirect the logs to yet other locations. This very project
 can be used to send the data to a log server on another computer.
 
 _**Note:** if you use syslog already, you can also setup syslog to share
-the logs between multiple computers. This will not include all the
+the logs between multiple computers. This does not include all the
 capabilities offered by our server, but you'll get logs from all
 your services (not just Snap! based services)._
 
@@ -41,8 +41,7 @@ The appender supports the following options:
 The server IP address and port, where to send the log data, are defined
 as follow:
 
-    server_tcp=<ip-address>:<port>
-    server_udp=<ip-address>:<port>
+    server_address=<ip-address>:<port>
 
 As you can see, the service supports both, the TCP and UDP protocols.
 Since you can enter multiple definitions (with different names), it
@@ -66,11 +65,11 @@ message in `stdout`. This is done by setting the following parameter to
 
 ### Acknowledge UDP Messages
 
-This parameter defines whether the snaplogger appender should acknowledge
-arrival of UDP packets it sends. The messages will include the necessary
-information to send the acknowledgement. If you do not mind too much losing
-some packets, then turning off the acknowledgement signals will ease the
-load over your network.
+This parameter defines whether the snaplogger deamon should acknowledge
+arrival of UDP packets it receives. The messages include the necessary
+information about where to send the acknowledgement. If you do not mind
+too much losing some packets, then turning off the acknowledgement signals
+ease the load over your network.
 
     acknowledge=none|severity|all
     acknowledge_severity=<severity>
@@ -99,8 +98,8 @@ The actual server is a simple daemon which listen for log messages on a
 TCP and a UDP port.
 
 At this time there is no protection as the server is expected to be running
-in a local network environment. A later version will implement an OAuth2
-authentication system.
+in a local network environment. A later version may implement some form of
+authentication.
 
 It is expected that the server directly saves the data to a file. But it
 is a lot easier to have the server use the snaplogger library, so we do
