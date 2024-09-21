@@ -47,6 +47,11 @@
 #include    <snapdev/ostream_int128.h>
 
 
+// C++
+//
+#include    <cmath>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -125,16 +130,18 @@ std::string white_spaces(bool force = false, bool newlines = true)
 
 CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
 {
-    CATCH_START_SECTION("empty input")
+    CATCH_START_SECTION("reporter_lexer: empty input")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("empty.rprtr", "");
 
         SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
         CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
+
+        CATCH_REQUIRE(l.get_filename() == "empty.rprtr");
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("white spaces only input")
+    CATCH_START_SECTION("reporter_lexer: white spaces only input")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("white-spaces-only.rprtr", white_spaces(true));
 
@@ -143,7 +150,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("simple tokens")
+    CATCH_START_SECTION("reporter_lexer: simple tokens")
     {
         for(auto const c : g_simple_tokens)
         {
@@ -157,7 +164,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("divide token")
+    CATCH_START_SECTION("reporter_lexer: divide token")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("divide.rprtr",
                   white_spaces()
@@ -181,7 +188,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("simple comment")
+    CATCH_START_SECTION("reporter_lexer: simple comment")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("float-and-comment.rprtr",
                   white_spaces()
@@ -200,7 +207,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("divide and comments token")
+    CATCH_START_SECTION("reporter_lexer: divide and comments token")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("divide-and-comments.rprtr",
                   white_spaces()
@@ -224,7 +231,42 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("compare and comments token")
+    CATCH_START_SECTION("reporter_lexer: hexadecimal tokens")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer l("divide-and-comments.rprtr",
+                  "0x4511231232abcdef\n"
+                + white_spaces()
+                + "0XFFFabc // we want to divide it\r\n"
+                + white_spaces()
+                + "0x04d4b1a2 // by another float\n");
+
+        SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_INTEGER);
+        CATCH_REQUIRE(t.get_integer() == 0x4511231232abcdef);
+        t = l.next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_INTEGER);
+        CATCH_REQUIRE(t.get_integer() == 0xFFFABC);
+        t = l.next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_INTEGER);
+        CATCH_REQUIRE(t.get_integer() == 0x04d4b1a2);
+        t = l.next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_lexer: NaN token")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer l("divide-and-comments.rprtr", "NaN\n");
+
+        SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_FLOATING_POINT);
+        CATCH_REQUIRE(std::isnan(t.get_floating_point()));
+        t = l.next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_lexer: compare and comments token")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("divide-and-comments.rprtr",
                   white_spaces()
@@ -250,7 +292,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("variable tokens")
+    CATCH_START_SECTION("reporter_lexer: variable tokens")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("variables.rprtr",
                   white_spaces()
@@ -275,7 +317,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("date tokens")
+    CATCH_START_SECTION("reporter_lexer: date tokens")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("dates.rprtr",
                   white_spaces()
@@ -302,7 +344,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("IP tokens")
+    CATCH_START_SECTION("reporter_lexer: IP tokens")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("ips.rprtr",
                   white_spaces()
@@ -337,7 +379,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("double string tokens")
+    CATCH_START_SECTION("reporter_lexer: double string tokens")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("strings.rprtr",
                   white_spaces()
@@ -402,7 +444,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("currently unsupported backslash tokens")
+    CATCH_START_SECTION("reporter_lexer: currently unsupported backslash tokens")
     {
         // at this point the following are not implemented
         //
@@ -427,30 +469,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("unsupported backslash tokens")
-    {
-        // at this point the following are not implemented
-        //
-        char unimplemented[] = {
-            'q', 'z',
-        };
-        for(auto const c : unimplemented)
-        {
-            SNAP_CATCH2_NAMESPACE::reporter::lexer l("backslashes.rprtr", std::string("test: \"\\") + c + "5\"");
-            SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
-            CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER);
-            CATCH_REQUIRE(t.get_string() == "test");
-            t = l.next_token();
-            CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_COLON);
-            CATCH_REQUIRE_THROWS_MATCHES(
-                  l.next_token()
-                , ed::runtime_error
-                , Catch::Matchers::ExceptionMessage(std::string("event_dispatcher_exception: invalid escape character '") + c + "'"));
-        }
-    }
-    CATCH_END_SECTION()
-
-    CATCH_START_SECTION("single string tokens")
+    CATCH_START_SECTION("reporter_lexer: single string tokens")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("strings.rprtr",
                   white_spaces()
@@ -515,7 +534,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("integer tokens")
+    CATCH_START_SECTION("reporter_lexer: integer tokens")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("integers.rprtr",
                   white_spaces()
@@ -549,7 +568,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("floating point tokens")
+    CATCH_START_SECTION("reporter_lexer: floating point tokens")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("floating-points.rprtr",
                   white_spaces()
@@ -588,7 +607,7 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("identifier tokens")
+    CATCH_START_SECTION("reporter_lexer: identifier tokens")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("identifiers.rprtr",
                   white_spaces()
@@ -630,9 +649,76 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
 }
 
 
+CATCH_TEST_CASE("reporter_lexer_file", "[lexer][reporter][file]")
+{
+    CATCH_START_SECTION("reporter_lexer_file: file does not exist")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(SNAP_CATCH2_NAMESPACE::reporter::create_lexer("unknown.rprtr"));
+        CATCH_REQUIRE(l == nullptr);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_lexer_file: exact filename")
+    {
+        std::string const source_dir(SNAP_CATCH2_NAMESPACE::g_source_dir());
+        std::string const filename(source_dir + "/tests/rprtr/test_load_with_create_lexer.rprtr"); // include the extension
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(SNAP_CATCH2_NAMESPACE::reporter::create_lexer(filename));
+        CATCH_REQUIRE(l != nullptr);
+
+        // print(message: "it worked.")
+        SNAP_CATCH2_NAMESPACE::reporter::token t(l->next_token());
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER);
+        CATCH_REQUIRE(t.get_string() == "print");
+        t = l->next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_OPEN_PARENTHESIS);
+        t = l->next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER);
+        CATCH_REQUIRE(t.get_string() == "message");
+        t = l->next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_COLON);
+        t = l->next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_DOUBLE_STRING);
+        CATCH_REQUIRE(t.get_string() == "it worked.");
+        t = l->next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_CLOSE_PARENTHESIS);
+        t = l->next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_lexer_file: filename without extension")
+    {
+        std::string const source_dir(SNAP_CATCH2_NAMESPACE::g_source_dir());
+        std::string const filename(source_dir + "/tests/rprtr/test_load_with_create_lexer"); // exclude the extension
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(SNAP_CATCH2_NAMESPACE::reporter::create_lexer(filename));
+        CATCH_REQUIRE(l != nullptr);
+
+        // print(message: "it worked.")
+        SNAP_CATCH2_NAMESPACE::reporter::token t(l->next_token());
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER);
+        CATCH_REQUIRE(t.get_string() == "print");
+        t = l->next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_OPEN_PARENTHESIS);
+        t = l->next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER);
+        CATCH_REQUIRE(t.get_string() == "message");
+        t = l->next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_COLON);
+        t = l->next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_DOUBLE_STRING);
+        CATCH_REQUIRE(t.get_string() == "it worked.");
+        t = l->next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_CLOSE_PARENTHESIS);
+        t = l->next_token();
+        CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
+    }
+    CATCH_END_SECTION()
+}
+
+
 CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
 {
-    CATCH_START_SECTION("unterminated string")
+    CATCH_START_SECTION("reporter_lexer_error: unterminated string")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("unterminated-string.rprtr", "\"unterminated");
 
@@ -643,7 +729,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("multi-line string")
+    CATCH_START_SECTION("reporter_lexer_error: multi-line string")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("multi-line-string.rprtr", "\"multi\nline\"");
 
@@ -659,7 +745,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("unterminated string in backslash case")
+    CATCH_START_SECTION("reporter_lexer_error: unterminated string in backslash case")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("unterminated-backslash.rprtr",
             "\"string with \\");
@@ -671,7 +757,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("empty unquoted variable")
+    CATCH_START_SECTION("reporter_lexer_error: empty unquoted variable")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("empty-variable.rprtr", "empty $ variable name");
 
@@ -691,7 +777,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("empty quoted variable")
+    CATCH_START_SECTION("reporter_lexer_error: empty quoted variable")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("empty-quoted-variable.rprtr", "empty ${} quoted variable name");
 
@@ -714,7 +800,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("invalid quoted variable name")
+    CATCH_START_SECTION("reporter_lexer_error: invalid quoted variable name")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("invalid-variable-name.rprtr", "${bad name}");
 
@@ -730,7 +816,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("empty date (double quote)")
+    CATCH_START_SECTION("reporter_lexer_error: empty date (double quote)")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("unterminated-date.rprtr", "@\"\"");
 
@@ -741,7 +827,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("empty date (single quote)")
+    CATCH_START_SECTION("reporter_lexer_error: empty date (single quote)")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("unterminated-date.rprtr", "@''");
 
@@ -752,7 +838,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("unterminated date")
+    CATCH_START_SECTION("reporter_lexer_error: unterminated date")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("unterminated-date.rprtr", "@\"unterminated");
 
@@ -763,7 +849,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("unterminated IP")
+    CATCH_START_SECTION("reporter_lexer_error: unterminated IP")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("unterminated-ip.rprtr", "<128.71.3.227");
 
@@ -774,7 +860,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("bad IP (bad name)")
+    CATCH_START_SECTION("reporter_lexer_error: bad IP (bad name)")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("unterminated-ip.rprtr", "<some bad IP address>");
 
@@ -785,7 +871,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("empty IP")
+    CATCH_START_SECTION("reporter_lexer_error: empty IP")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("empty-ip.rprtr", "<>");
 
@@ -796,7 +882,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("IP range is not available")
+    CATCH_START_SECTION("reporter_lexer_error: IP range is not available")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("ip-range.rprtr", "<10.0.1.0-10.0.1.255>");
 
@@ -807,7 +893,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("no from IP")
+    CATCH_START_SECTION("reporter_lexer_error: no from IP")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("no-from-ip.rprtr", "<-10.0.1.255>");
 
@@ -818,7 +904,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("bad integer")
+    CATCH_START_SECTION("reporter_lexer_error: bad integer")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("bad-integers.rprtr",
             "10000000000000000000\n"
@@ -837,7 +923,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("bad floating points")
+    CATCH_START_SECTION("reporter_lexer_error: bad floating points")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("bad-floating-points.rprtr",
             "3.3e+\n"
@@ -876,7 +962,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("variable name cannot start with digit")
+    CATCH_START_SECTION("reporter_lexer_error: variable name cannot start with digit")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("unexpected-digit.rprtr",
             "$5var\n"
@@ -894,7 +980,7 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("unexpected character")
+    CATCH_START_SECTION("reporter_lexer_error: unexpected character")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer l("unexpected-character.rprtr",
             "\\\n"
@@ -909,6 +995,48 @@ CATCH_TEST_CASE("reporter_lexer_error", "[lexer][reporter][error]")
         }
         t = l.next_token();
         CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_lexer_error: unsupported backslash tokens")
+    {
+        // there are likely never going to ever be supported
+        //
+        char unimplemented[] = {
+            'q', 'z',
+        };
+        for(auto const c : unimplemented)
+        {
+            SNAP_CATCH2_NAMESPACE::reporter::lexer l("backslashes.rprtr", std::string("test: \"\\") + c + "5\"");
+            SNAP_CATCH2_NAMESPACE::reporter::token t(l.next_token());
+            CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_IDENTIFIER);
+            CATCH_REQUIRE(t.get_string() == "test");
+            t = l.next_token();
+            CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_COLON);
+            CATCH_REQUIRE_THROWS_MATCHES(
+                  l.next_token()
+                , ed::runtime_error
+                , Catch::Matchers::ExceptionMessage(std::string("event_dispatcher_exception: invalid escape character '") + c + "'."));
+        }
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_lexer_error: invalid hexadecimal number")
+    {
+        {
+            SNAP_CATCH2_NAMESPACE::reporter::lexer l("backslashes.rprtr", "0x");
+            CATCH_REQUIRE_THROWS_MATCHES(
+                  l.next_token()
+                , ed::runtime_error
+                , Catch::Matchers::ExceptionMessage("event_dispatcher_exception: invalid hexadecimal number, at least one digits was expected."));
+        }
+        {
+            SNAP_CATCH2_NAMESPACE::reporter::lexer l("backslashes.rprtr", "0X");
+            CATCH_REQUIRE_THROWS_MATCHES(
+                  l.next_token()
+                , ed::runtime_error
+                , Catch::Matchers::ExceptionMessage("event_dispatcher_exception: invalid hexadecimal number, at least one digits was expected."));
+        }
     }
     CATCH_END_SECTION()
 }

@@ -25,6 +25,7 @@
 
 // eventdispatcher
 //
+#include    <eventdispatcher/exception.h>
 #include    <eventdispatcher/tcp_server_connection.h>
 
 
@@ -75,7 +76,7 @@ void state::set_ip(ip_t ip)
 {
     if(ip > f_program.size())
     {
-        throw std::out_of_range("ip out of program not allowed.");
+        throw ed::out_of_range("ip out of program not allowed.");
     }
 
     f_ip = ip;
@@ -99,7 +100,7 @@ statement::pointer_t state::get_statement(ip_t ip) const
 {
     if(ip >= f_program.size())
     {
-        throw std::out_of_range("ip out of program not allowed.");
+        throw ed::out_of_range("ip out of program not allowed.");
     }
 
     return f_program[ip];
@@ -121,21 +122,21 @@ void state::add_statement(statement::pointer_t stmt)
         expression::pointer_t name(stmt->get_parameter("name"));
         if(name == nullptr)
         {
-            throw std::runtime_error("the \"name\" parameter of the \"label\" statement is mandatory.");
+            throw ed::runtime_error("the \"name\" parameter of the \"label\" statement is mandatory.");
         }
         if(name->get_operator() != operator_t::OPERATOR_PRIMARY)
         {
-            throw std::runtime_error("the value of the \"name\" parameter of the \"label\" statement cannot be dynamically computed.");
+            throw ed::runtime_error("the value of the \"name\" parameter of the \"label\" statement cannot be dynamically computed.");
         }
         token const & t(name->get_token());
         if(t.get_token() != token_t::TOKEN_IDENTIFIER)
         {
-            throw std::runtime_error("the value of the \"name\" parameter of the \"label\" statement must be an identifier.");
+            throw ed::runtime_error("the value of the \"name\" parameter of the \"label\" statement must be an identifier.");
         }
         auto const it(f_labels.find(t.get_string()));
         if(it != f_labels.end())
         {
-            throw std::runtime_error("label \""
+            throw ed::runtime_error("label \""
                 + t.get_string()
                 + "\" already defined at position "
                 + std::to_string(it->second)
@@ -181,7 +182,7 @@ variable::pointer_t state::get_parameter(std::string const & name, bool required
         {
             // TODO: add name of current instruction
             //
-            throw std::runtime_error("parameter \"" + name + "\" is required.");
+            throw ed::runtime_error("parameter \"" + name + "\" is required.");
         }
         return variable::pointer_t();
     }
@@ -222,7 +223,7 @@ std::uint32_t state::get_label_position(std::string const & name) const
     auto const it(f_labels.find(name));
     if(it == f_labels.end())
     {
-        throw std::runtime_error(
+        throw ed::runtime_error(
                   get_location()
                 + "label \"" + name + "\" not found.");
     }
@@ -247,7 +248,7 @@ compare_t state::get_compare() const
 {
     if(f_compare == compare_t::COMPARE_UNDEFINED)
     {
-        throw std::runtime_error("trying to use a 'compare' result when none are currently defined.");
+        throw ed::runtime_error("trying to use a 'compare' result when none are currently defined.");
     }
     return f_compare;
 }
@@ -257,7 +258,7 @@ void state::set_compare(compare_t c)
 {
     if(c == compare_t::COMPARE_UNDEFINED)
     {
-        throw std::runtime_error("'compare' cannot be set to \"undefined\".");
+        throw ed::runtime_error("'compare' cannot be set to \"undefined\".");
     }
     f_compare = c;
 }
@@ -334,7 +335,7 @@ void state::listen(addr::addr const & a)
 {
     if(f_listen != nullptr)
     {
-        throw std::runtime_error("the listen() instruction cannot be reused without an intermediate disconnect() instruction.");
+        throw ed::runtime_error("the listen() instruction cannot be reused without an intermediate disconnect() instruction.");
     }
 
     // WARNING: create an ed::connection to listen for client's connection
@@ -352,7 +353,7 @@ void state::listen(addr::addr const & a)
 
     // LCOV_EXCL_START
     default:
-        throw std::logic_error("unsupported connection type in connect().");
+        throw ed::implementation_error("unsupported connection type in connect().");
     // LCOV_EXCL_STOP
 
     }

@@ -42,6 +42,10 @@ verify_message(command: COMMANDS,
 	sent_server: reporter_test, sent_service: commands_message,
 	server: reporter_test_extension, service: test_processor,
 	required_parameters: { list: "HELP,READY,STOP" })
+save_parameter_value(parameter_name: server, variable_name: server, type: string)
+save_parameter_value(parameter_name: service, variable_name: service, type: string)
+save_parameter_value(parameter_name: sent_server, variable_name: sent_server, type: string)
+save_parameter_value(parameter_name: sent_service, variable_name: sent_service, type: string)
 if(variable: got_register, false: register_missing)
 unset_variable(name: got_register)
 send_message(command: STOP)

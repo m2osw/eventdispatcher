@@ -21,6 +21,18 @@
 //
 #pragma GCC diagnostic ignored "-Wfloat-equal"
 
+/** \file
+ * \brief This test manually checks a few core instructions.
+ *
+ * The main test to verify all the instructions is the executor one
+ * (catch_reportor_executor.cpp). This test only verifies that we
+ * can create a program and execute it step by step without using
+ * the executor.
+ *
+ * The executor has many programs that are used to make sure that
+ * all the instructions work as expected.
+ */
+
 // self
 //
 #include    "catch_main.h"
@@ -32,6 +44,11 @@
 
 #include    <eventdispatcher/reporter/state.h>
 #include    <eventdispatcher/reporter/variable_string.h>
+
+
+// eventdispatcher
+//
+#include    <eventdispatcher/exception.h>
 
 
 // last include
@@ -52,7 +69,7 @@ namespace
 
 CATCH_TEST_CASE("reporter_instruction", "[instruction][reporter]")
 {
-    CATCH_START_SECTION("check label")
+    CATCH_START_SECTION("reporter_instruction: check label")
     {
         SNAP_CATCH2_NAMESPACE::reporter::instruction::pointer_t label(SNAP_CATCH2_NAMESPACE::reporter::get_instruction("label"));
         CATCH_REQUIRE(label != nullptr);
@@ -64,7 +81,7 @@ CATCH_TEST_CASE("reporter_instruction", "[instruction][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("check goto")
+    CATCH_START_SECTION("reporter_instruction: check goto")
     {
         SNAP_CATCH2_NAMESPACE::reporter::state s;
         CATCH_REQUIRE(s.get_statement_size() == 0);
@@ -115,7 +132,7 @@ CATCH_TEST_CASE("reporter_instruction", "[instruction][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("global variable")
+    CATCH_START_SECTION("reporter_instruction: global variable")
     {
         SNAP_CATCH2_NAMESPACE::reporter::state s;
         CATCH_REQUIRE(s.get_variable("global") == nullptr);
@@ -128,7 +145,7 @@ CATCH_TEST_CASE("reporter_instruction", "[instruction][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("check call/return")
+    CATCH_START_SECTION("reporter_instruction: check call/return")
     {
         SNAP_CATCH2_NAMESPACE::reporter::state s;
 
@@ -198,38 +215,38 @@ CATCH_TEST_CASE("reporter_instruction", "[instruction][reporter]")
 
 CATCH_TEST_CASE("reporter_instruction_error", "[instruction][reporter][error]")
 {
-    CATCH_START_SECTION("get unknown instruction")
+    CATCH_START_SECTION("reporter_instruction_error: get unknown instruction")
     {
         SNAP_CATCH2_NAMESPACE::reporter::instruction::pointer_t unknown(SNAP_CATCH2_NAMESPACE::reporter::get_instruction("unknown_instruction"));
         CATCH_REQUIRE(unknown == nullptr);
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("search non-existant label")
+    CATCH_START_SECTION("reporter_instruction_error: search non-existant label")
     {
         SNAP_CATCH2_NAMESPACE::reporter::state s;
         CATCH_REQUIRE_THROWS_MATCHES(
               s.get_label_position("unknown")
-            , std::runtime_error
+            , ed::runtime_error
             , Catch::Matchers::ExceptionMessage(
-                      "label \"unknown\" not found."));
+                      "event_dispatcher_exception: label \"unknown\" not found."));
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("search non-existant parameter")
+    CATCH_START_SECTION("reporter_instruction_error: search non-existant parameter")
     {
         SNAP_CATCH2_NAMESPACE::reporter::state s;
         CATCH_REQUIRE(s.get_parameter("unknown") == nullptr);
         CATCH_REQUIRE(s.get_parameter("unknown", false) == nullptr);
         CATCH_REQUIRE_THROWS_MATCHES(
               s.get_parameter("unknown", true)
-            , std::runtime_error
+            , ed::runtime_error
             , Catch::Matchers::ExceptionMessage(
-                      "parameter \"unknown\" is required."));
+                      "event_dispatcher_exception: parameter \"unknown\" is required."));
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("label without a \"name\" parameter (missing)")
+    CATCH_START_SECTION("reporter_instruction_error: label without a \"name\" parameter (missing)")
     {
         SNAP_CATCH2_NAMESPACE::reporter::state s;
 
@@ -240,13 +257,13 @@ CATCH_TEST_CASE("reporter_instruction_error", "[instruction][reporter][error]")
 
         CATCH_REQUIRE_THROWS_MATCHES(
               s.add_statement(stmt)
-            , std::runtime_error
+            , ed::runtime_error
             , Catch::Matchers::ExceptionMessage(
-                      "the \"name\" parameter of the \"label\" statement is mandatory."));
+                      "event_dispatcher_exception: the \"name\" parameter of the \"label\" statement is mandatory."));
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("label without a \"name\" parameter (misspelled)")
+    CATCH_START_SECTION("reporter_instruction_error: label without a \"name\" parameter (misspelled)")
     {
         SNAP_CATCH2_NAMESPACE::reporter::state s;
 
@@ -263,13 +280,13 @@ CATCH_TEST_CASE("reporter_instruction_error", "[instruction][reporter][error]")
 
         CATCH_REQUIRE_THROWS_MATCHES(
               stmt->add_parameter("names", e) // misspelled ("names" instead of "name")
-            , std::runtime_error
+            , ed::runtime_error
             , Catch::Matchers::ExceptionMessage(
-                      "parameter \"names\" not accepted by \"label\"."));
+                      "event_dispatcher_exception: parameter \"names\" not accepted by \"label\"."));
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("label with name parameter not of type PRIMARY")
+    CATCH_START_SECTION("reporter_instruction_error: label with name parameter not of type PRIMARY")
     {
         SNAP_CATCH2_NAMESPACE::reporter::state s;
 
@@ -283,13 +300,13 @@ CATCH_TEST_CASE("reporter_instruction_error", "[instruction][reporter][error]")
 
         CATCH_REQUIRE_THROWS_MATCHES(
               s.add_statement(stmt)
-            , std::runtime_error
+            , ed::runtime_error
             , Catch::Matchers::ExceptionMessage(
-                      "the value of the \"name\" parameter of the \"label\" statement cannot be dynamically computed."));
+                      "event_dispatcher_exception: the value of the \"name\" parameter of the \"label\" statement cannot be dynamically computed."));
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("label with a name parameter of type INTEGER")
+    CATCH_START_SECTION("reporter_instruction_error: label with a name parameter of type INTEGER")
     {
         SNAP_CATCH2_NAMESPACE::reporter::state s;
 
@@ -307,13 +324,13 @@ CATCH_TEST_CASE("reporter_instruction_error", "[instruction][reporter][error]")
 
         CATCH_REQUIRE_THROWS_MATCHES(
               s.add_statement(stmt)
-            , std::runtime_error
+            , ed::runtime_error
             , Catch::Matchers::ExceptionMessage(
-                      "the value of the \"name\" parameter of the \"label\" statement must be an identifier."));
+                      "event_dispatcher_exception: the value of the \"name\" parameter of the \"label\" statement must be an identifier."));
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("label already defined")
+    CATCH_START_SECTION("reporter_instruction_error: label already defined")
     {
         SNAP_CATCH2_NAMESPACE::reporter::state s;
 
@@ -334,9 +351,9 @@ CATCH_TEST_CASE("reporter_instruction_error", "[instruction][reporter][error]")
             //
             CATCH_REQUIRE_THROWS_MATCHES(
                   stmt->add_parameter("name", e)
-                , std::runtime_error
+                , ed::runtime_error
                 , Catch::Matchers::ExceptionMessage(
-                          "parameter \"name\" defined more than once."));
+                          "event_dispatcher_exception: parameter \"name\" defined more than once."));
 
             s.add_statement(stmt);
 
@@ -360,17 +377,17 @@ CATCH_TEST_CASE("reporter_instruction_error", "[instruction][reporter][error]")
 
             CATCH_REQUIRE_THROWS_MATCHES(
                   s.add_statement(stmt)
-                , std::runtime_error
+                , ed::runtime_error
                 , Catch::Matchers::ExceptionMessage(
-                          "label \"duplicate\" already defined at position 0."));
+                          "event_dispatcher_exception: label \"duplicate\" already defined at position 0."));
 
             CATCH_REQUIRE(s.get_statement_size() == 1);
             CATCH_REQUIRE(s.get_statement(0) != stmt);
             CATCH_REQUIRE_THROWS_MATCHES(
                   s.get_statement(1)
-                , std::out_of_range
+                , ed::out_of_range
                 , Catch::Matchers::ExceptionMessage(
-                          "ip out of program not allowed."));
+                          "out_of_range: ip out of program not allowed."));
         }
 
         // make sure the second statement did not make it through
@@ -379,13 +396,13 @@ CATCH_TEST_CASE("reporter_instruction_error", "[instruction][reporter][error]")
         s.set_ip(1);    // exit() does this!
         CATCH_REQUIRE_THROWS_MATCHES(
               s.set_ip(2)       // this is a bug
-            , std::out_of_range
+            , ed::out_of_range
             , Catch::Matchers::ExceptionMessage(
-                      "ip out of program not allowed."));
+                      "out_of_range: ip out of program not allowed."));
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("\"return()\" does not accept any parameters")
+    CATCH_START_SECTION("reporter_instruction_error: \"return()\" does not accept any parameters")
     {
         SNAP_CATCH2_NAMESPACE::reporter::instruction::pointer_t inst(SNAP_CATCH2_NAMESPACE::reporter::get_instruction("return"));
         CATCH_REQUIRE(inst != nullptr);
@@ -402,13 +419,13 @@ CATCH_TEST_CASE("reporter_instruction_error", "[instruction][reporter][error]")
         SNAP_CATCH2_NAMESPACE::reporter::statement::pointer_t stmt(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::statement>(inst));
         CATCH_REQUIRE_THROWS_MATCHES(
               stmt->add_parameter("void", e)
-            , std::runtime_error
+            , ed::runtime_error
             , Catch::Matchers::ExceptionMessage(
-                      "parameter \"void\" not accepted by \"return\"."));
+                      "event_dispatcher_exception: parameter \"void\" not accepted by \"return\"."));
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("\"run()\" cannot be called")
+    CATCH_START_SECTION("reporter_instruction_error: \"run()\" cannot be called")
     {
         SNAP_CATCH2_NAMESPACE::reporter::instruction::pointer_t inst(SNAP_CATCH2_NAMESPACE::reporter::get_instruction("run"));
         CATCH_REQUIRE(inst != nullptr);
@@ -417,9 +434,9 @@ CATCH_TEST_CASE("reporter_instruction_error", "[instruction][reporter][error]")
         SNAP_CATCH2_NAMESPACE::reporter::state s;
         CATCH_REQUIRE_THROWS_MATCHES(
               inst->func(s)
-            , std::logic_error
+            , ed::implementation_error
             , Catch::Matchers::ExceptionMessage(
-                      "run::func() was called when it should be intercepted by the executor."));
+                      "implementation_error: run::func() was called when it should be intercepted by the executor."));
     }
     CATCH_END_SECTION()
 }

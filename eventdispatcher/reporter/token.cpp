@@ -22,6 +22,11 @@
 
 
 
+// eventdispatcher
+//
+#include    <eventdispatcher/exception.h>
+
+
 // C++
 //
 #include    <stdexcept>
@@ -51,7 +56,7 @@ void token::set_token(token_t t)
     if(f_token != token_t::TOKEN_EOF
     && t != token_t::TOKEN_ERROR)
     {
-        throw std::logic_error("trying to modify token type to something other than an error.");
+        throw ed::implementation_error("trying to modify token type to something other than an error.");
     }
 
     f_token = t;
@@ -68,7 +73,7 @@ void token::set_line(std::uint32_t line)
 {
     if(f_line != 0)
     {
-        throw std::logic_error("trying to modify line number, not allowed anymore.");
+        throw ed::implementation_error("trying to modify line number, not allowed anymore.");
     }
 
     f_line = line;
@@ -85,7 +90,7 @@ void token::set_column(std::uint32_t column)
 {
     if(f_column != 0)
     {
-        throw std::logic_error("trying to modify column number, not allowed anymore.");
+        throw ed::implementation_error("trying to modify column number, not allowed anymore.");
     }
 
     f_column = column;

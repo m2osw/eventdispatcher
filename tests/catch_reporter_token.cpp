@@ -31,6 +31,11 @@
 #include    <eventdispatcher/reporter/token.h>
 
 
+// eventdispatcher
+//
+#include    <eventdispatcher/exception.h>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -74,7 +79,7 @@ constexpr SNAP_CATCH2_NAMESPACE::reporter::token_t const g_all_tokens[] =
 
 CATCH_TEST_CASE("reporter_token", "[token][reporter]")
 {
-    CATCH_START_SECTION("set/get token")
+    CATCH_START_SECTION("reporter_token: set/get token")
     {
         for(auto const tok : g_all_tokens)
         {
@@ -86,7 +91,7 @@ CATCH_TEST_CASE("reporter_token", "[token][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("set/get line")
+    CATCH_START_SECTION("reporter_token: set/get line")
     {
         SNAP_CATCH2_NAMESPACE::reporter::token t;
         CATCH_REQUIRE(t.get_line() == 0);
@@ -100,7 +105,7 @@ CATCH_TEST_CASE("reporter_token", "[token][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("set/get column")
+    CATCH_START_SECTION("reporter_token: set/get column")
     {
         SNAP_CATCH2_NAMESPACE::reporter::token t;
         CATCH_REQUIRE(t.get_column() == 0);
@@ -114,7 +119,7 @@ CATCH_TEST_CASE("reporter_token", "[token][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("set/get integer")
+    CATCH_START_SECTION("reporter_token: set/get integer")
     {
         for(int count(0); count < 100; ++count)
         {
@@ -131,7 +136,7 @@ CATCH_TEST_CASE("reporter_token", "[token][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("set/get floating point")
+    CATCH_START_SECTION("reporter_token: set/get floating point")
     {
         for(int count(0); count < 100; ++count)
         {
@@ -156,7 +161,7 @@ CATCH_TEST_CASE("reporter_token", "[token][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("set/get string")
+    CATCH_START_SECTION("reporter_token: set/get string")
     {
         for(int count(0); count < 100; ++count)
         {
@@ -173,7 +178,7 @@ CATCH_TEST_CASE("reporter_token", "[token][reporter]")
 
 CATCH_TEST_CASE("reporter_token_error", "[token][reporter][error]")
 {
-    CATCH_START_SECTION("set token twice")
+    CATCH_START_SECTION("reporter_token_error: set token twice")
     {
         for(auto const tok : g_all_tokens)
         {
@@ -196,9 +201,9 @@ CATCH_TEST_CASE("reporter_token_error", "[token][reporter][error]")
                 //
                 CATCH_REQUIRE_THROWS_MATCHES(
                           t.set_token(tok)
-                        , std::logic_error
+                        , ed::implementation_error
                         , Catch::Matchers::ExceptionMessage(
-                                  "trying to modify token type to something other than an error."));
+                                  "implementation_error: trying to modify token type to something other than an error."));
             }
 
             // switching to an error is always allowed
@@ -209,29 +214,29 @@ CATCH_TEST_CASE("reporter_token_error", "[token][reporter][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("set line twice")
+    CATCH_START_SECTION("reporter_token_error: set line twice")
     {
         SNAP_CATCH2_NAMESPACE::reporter::token t;
         t.set_line(1);
         CATCH_REQUIRE(t.get_line() == 1);
         CATCH_REQUIRE_THROWS_MATCHES(
               t.set_line(2)
-            , std::logic_error
+            , ed::implementation_error
             , Catch::Matchers::ExceptionMessage(
-                      "trying to modify line number, not allowed anymore."));
+                      "implementation_error: trying to modify line number, not allowed anymore."));
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("set column twice")
+    CATCH_START_SECTION("reporter_token_error: set column twice")
     {
         SNAP_CATCH2_NAMESPACE::reporter::token t;
         t.set_column(1);
         CATCH_REQUIRE(t.get_column() == 1);
         CATCH_REQUIRE_THROWS_MATCHES(
               t.set_column(2)
-            , std::logic_error
+            , ed::implementation_error
             , Catch::Matchers::ExceptionMessage(
-                      "trying to modify column number, not allowed anymore."));
+                      "implementation_error: trying to modify column number, not allowed anymore."));
     }
     CATCH_END_SECTION()
 }

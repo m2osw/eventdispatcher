@@ -20,6 +20,7 @@
 //
 #include    "parser.h"
 
+#include    <eventdispatcher/exception.h>
 #include    <eventdispatcher/reporter/instruction_factory.h>
 
 
@@ -133,7 +134,7 @@ bool parser::next_token()
 //std::cerr << "--- next token: " << static_cast<int>(f_token.get_token()) << "?\n";
     if(f_token.get_token() == token_t::TOKEN_ERROR)
     {
-        throw std::runtime_error("invalid token.");
+        throw ed::runtime_error("invalid token.");
     }
     return f_token.get_token() == token_t::TOKEN_EOF;
 }
@@ -144,7 +145,7 @@ void parser::one_statement()
     if(f_token.get_token() != token_t::TOKEN_IDENTIFIER)
     {
         f_lexer->error(f_token, "a statement is expected to start with the name of an instruction (a.k.a. an identifier).");
-        throw std::runtime_error("expected identifier.");
+        throw ed::runtime_error("expected identifier.");
     }
 
     std::string const inst_name(f_token.get_string());
@@ -152,7 +153,7 @@ void parser::one_statement()
     if(inst == nullptr)
     {
         f_lexer->error(f_token, "unknown instruction \"" + inst_name + "\".");
-        throw std::runtime_error("unknown instruction.");
+        throw ed::runtime_error("unknown instruction.");
     }
 
     f_statement = std::make_shared<statement>(inst);
@@ -166,17 +167,17 @@ void parser::one_statement()
             , "an instruction (\""
             + inst_name
             + "\" here) must include parenthesis, end of file found.");
-        throw std::runtime_error("expected '(' parenthesis instead of EOF.");
+        throw ed::runtime_error("expected '(' parenthesis instead of EOF.");
     }
     if(f_token.get_token() != token_t::TOKEN_OPEN_PARENTHESIS)
     {
         f_lexer->error(f_token, "an instruction name must be followed by '('.");
-        throw std::runtime_error("expected '(' parenthesis.");
+        throw ed::runtime_error("expected '(' parenthesis.");
     }
     if(next_token())
     {
         f_lexer->error(f_token, "an instruction must end with a closing parenthesis, end of file found.");
-        throw std::runtime_error("expected ')' parenthesis instead of EOF.");
+        throw ed::runtime_error("expected ')' parenthesis instead of EOF.");
     }
     if(f_token.get_token() != token_t::TOKEN_CLOSE_PARENTHESIS)
     {
@@ -185,7 +186,7 @@ void parser::one_statement()
     if(f_token.get_token() != token_t::TOKEN_CLOSE_PARENTHESIS)
     {
         f_lexer->error(f_token, "an instruction parameter list must end with a closing parenthesis.");
-        throw std::runtime_error("expected ')' parenthesis to end parameter list.");
+        throw ed::runtime_error("expected ')' parenthesis to end parameter list.");
     }
 
     f_statement->verify_parameters();
@@ -214,23 +215,23 @@ void parser::one_parameter()
     if(f_token.get_token() != token_t::TOKEN_IDENTIFIER)
     {
         f_lexer->error(f_token, "an instruction parameter must be named using an identifier.");
-        throw std::runtime_error("expected identifier to name parameter.");
+        throw ed::runtime_error("expected identifier to name parameter.");
     }
     std::string const name(f_token.get_string());
     if(next_token())
     {
         f_lexer->error(f_token, "expected ':' after parameter name, not EOF.");
-        throw std::runtime_error("expected ':' after parameter name, not EOF.");
+        throw ed::runtime_error("expected ':' after parameter name, not EOF.");
     }
     if(f_token.get_token() != token_t::TOKEN_COLON)
     {
         f_lexer->error(f_token, "an instruction parameter must be followed by a ':'.");
-        throw std::runtime_error("expected ':' after parameter name.");
+        throw ed::runtime_error("expected ':' after parameter name.");
     }
     if(next_token())
     {
         f_lexer->error(f_token, "an instruction parameter must be followed by ':' and then an expression; expression missing.");
-        throw std::runtime_error("expected expression.");
+        throw ed::runtime_error("expected expression.");
     }
 
     expression::pointer_t expr;
@@ -270,7 +271,7 @@ expression::pointer_t parser::expression_list()
             if(f_token.get_token() != token_t::TOKEN_CLOSE_CURLY_BRACE)
             {
                 f_lexer->error(f_token, "a list of parameter values must end with '}'.");
-                throw std::runtime_error("a list of parameter values must end with '}'.");
+                throw ed::runtime_error("a list of parameter values must end with '}'.");
             }
             next_token();
             return list;
@@ -278,7 +279,7 @@ expression::pointer_t parser::expression_list()
         if(next_token())
         {
             f_lexer->error(f_token, "end of file found before end of list ('}' missing).");
-            throw std::runtime_error("end of file found before end of list ('}' missing).");
+            throw ed::runtime_error("end of file found before end of list ('}' missing).");
         }
     }
 }
@@ -289,7 +290,7 @@ expression::pointer_t parser::list_item()
     if(f_token.get_token() != token_t::TOKEN_IDENTIFIER)
     {
         f_lexer->error(f_token, "a list item must be named using an identifier.");
-        throw std::runtime_error("a list item must be named using an identifier.");
+        throw ed::runtime_error("a list item must be named using an identifier.");
     }
     token const name(f_token);
     //std::string const name(f_token.get_string());
@@ -298,7 +299,7 @@ expression::pointer_t parser::list_item()
     if(next_token())
     {
         f_lexer->error(f_token, "a list must end with a '}'.");
-        throw std::runtime_error("a list must end with a '}'.");
+        throw ed::runtime_error("a list must end with a '}'.");
     }
     expression::pointer_t item(std::make_shared<expression>());
     item->set_operator(operator_t::OPERATOR_NAMED);
@@ -313,7 +314,7 @@ expression::pointer_t parser::list_item()
         if(next_token())
         {
             f_lexer->error(f_token, "a list item with a colon (:) must be followed by an expression.");
-            throw std::runtime_error("a list item with a colon (:) must be followed by an expression.");
+            throw ed::runtime_error("a list item with a colon (:) must be followed by an expression.");
         }
         item->add_expression(comparative());
     }
@@ -347,7 +348,7 @@ expression::pointer_t parser::comparative()
     }
 
     snapdev::NOT_REACHED();
-}
+} // LCOV_EXCL_LINE
 
 
 expression::pointer_t parser::additive()
@@ -458,13 +459,13 @@ expression::pointer_t parser::primary()
             if(next_token())
             {
                 f_lexer->error(f_token, "an expression between parenthesis must include at least one primary expression.");
-                throw std::runtime_error("an expression between parenthesis must include at least one primary expression.");
+                throw ed::runtime_error("an expression between parenthesis must include at least one primary expression.");
             }
             expression::pointer_t expr(comparative());
             if(f_token.get_token() != token_t::TOKEN_CLOSE_PARENTHESIS)
             {
                 f_lexer->error(f_token, "an expression between parenthesis must include the ')' at the end.");
-                throw std::runtime_error("an expression between parenthesis must include the ')' at the end.");
+                throw ed::runtime_error("an expression between parenthesis must include the ')' at the end.");
             }
             next_token();
             return expr;
@@ -473,7 +474,7 @@ expression::pointer_t parser::primary()
 
     default:
         f_lexer->error(f_token, "expected a primary token for expression.");
-        throw std::runtime_error("expected a primary token for expression.");
+        throw ed::runtime_error("expected a primary token for expression.");
 
     }
 }

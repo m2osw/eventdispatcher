@@ -22,6 +22,12 @@
 
 
 
+// eventdispatcher
+//
+#include    <eventdispatcher/exception.h>
+
+
+
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter
@@ -71,7 +77,7 @@ void variable_list::add_item(variable::pointer_t v)
 {
     if(f_items.find(v->get_name()) != f_items.end())
     {
-        throw std::runtime_error(
+        throw ed::runtime_error(
               "variable_list::add_item() trying to re-add item named \""
             + v->get_name()
             + "\".");

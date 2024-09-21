@@ -1,14 +1,19 @@
 
 # Testing Services
 
-In order to test services, it is best to have a unit test mechanism allowing
-us to verify all the messages, especially when a chain of messages is expected
-and that chain can break at any moment. For full coverage unit tests, we need
-all the messages to be received by our services. It is very difficult to
-maintain tests that start the communicator and other daemons in order to run
-a service test. Instead, we want to have a simulator of all the other services
-and only test the current service being developed and maintained. To do so we
-use the **reporter** test class.
+In order to test services using the eventdispatcher library, it is best to
+have unit tests allowing verifying all the messages the service makes use
+of, especially when a chain of messages is expected and that chain can break
+at any moment (see cluck as a prime example).
+
+For full coverage of the service code, it is necessary for all the messages
+to be sent and received by the service being tested. It would be very
+difficult to maintain full integration tests that start the communicator
+and any other daemon in order to run a full coverage test.
+
+Instead, we want to have a simulator for all the other services and only
+test one service, the one being developed and maintained. To do so we
+use the **reporter** test classes.
 
 # Basics of Reporter Language (.rprtr files)
 

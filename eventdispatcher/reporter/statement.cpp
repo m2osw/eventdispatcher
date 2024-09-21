@@ -20,6 +20,7 @@
 //
 #include    "statement.h"
 
+#include    <eventdispatcher/exception.h>
 
 
 // last include
@@ -40,7 +41,7 @@ statement::statement(instruction::pointer_t inst)
 {
     if(f_instruction == nullptr)
     {
-        throw std::logic_error("an instruction must always be attached to a statement.");
+        throw ed::implementation_error("an instruction must always be attached to a statement.");
     }
 }
 
@@ -94,7 +95,7 @@ void statement::add_parameter(std::string const & name, expression::pointer_t ex
     auto const it(f_parameters.find(name));
     if(it != f_parameters.end())
     {
-        throw std::runtime_error("parameter \"" + name + "\" defined more than once.");
+        throw ed::runtime_error("parameter \"" + name + "\" defined more than once.");
     }
 
     for(parameter_declaration const * decl(f_instruction->parameter_declarations());
@@ -108,7 +109,7 @@ void statement::add_parameter(std::string const & name, expression::pointer_t ex
         }
     }
 
-    throw std::runtime_error(
+    throw ed::runtime_error(
               "parameter \""
             + name
             + "\" not accepted by \""
@@ -139,7 +140,7 @@ void statement::verify_parameters() const
             auto const it(f_parameters.find(decl->f_name));
             if(it == f_parameters.end())
             {
-                throw std::runtime_error(
+                throw ed::runtime_error(
                           "parameter \""
                         + std::string(decl->f_name)
                         + "\" is required by \""

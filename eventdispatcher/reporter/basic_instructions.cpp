@@ -33,6 +33,7 @@
 // eventdispatcher
 //
 #include    <eventdispatcher/connection_with_send_message.h>
+#include    <eventdispatcher/exception.h>
 #include    <eventdispatcher/signal.h>
 #include    <eventdispatcher/signal_handler.h>
 
@@ -53,6 +54,7 @@
 #include    <snapdev/gethostname.h>
 #include    <snapdev/hexadecimal_string.h>
 #include    <snapdev/not_used.h>
+#include    <snapdev/to_upper.h>
 
 
 // C++
@@ -413,101 +415,101 @@ constexpr parameter_declaration const g_sort_params[] =
 {
     {
         .f_name = "var1",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
     },
     {
         .f_name = "var2",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var3",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var4",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var5",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var6",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var7",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var8",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var9",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var10",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var11",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var12",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var13",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var14",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var15",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var16",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var17",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var18",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var19",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {
         .f_name = "var20",
-        .f_type = "any",
+        .f_type = "string_or_identifier",
         .f_required = false,
     },
     {}
@@ -562,7 +564,7 @@ constexpr parameter_declaration const g_verify_message_params[] =
     },
     {
         .f_name = "command",
-        .f_type = "identifier",
+        .f_type = "any",
     },
     {
         .f_name = "required_parameters",
@@ -618,15 +620,7 @@ public:
         s.push_ip();
 
         variable::pointer_t label_name(s.get_parameter("label", true));
-        if(label_name == nullptr)
-        {
-            throw std::logic_error("label_name not available in call()."); // LCOV_EXCL_LINE
-        }
         variable_string::pointer_t name(std::static_pointer_cast<variable_string>(label_name));
-        if(name == nullptr)
-        {
-            throw std::logic_error("label_name -> name not available in call()."); // LCOV_EXCL_LINE
-        }
         ip_t const ip(s.get_label_position(name->get_string()));
         s.set_ip(ip);
     }
@@ -676,18 +670,14 @@ public:
     virtual void func(state & s) override
     {
         variable::pointer_t expr(s.get_parameter("expression", true));
-        if(expr->get_type() != "integer")
-        {
-            throw std::runtime_error("compare() expected an integer type of expression");
-        }
         variable_integer::pointer_t integer(std::static_pointer_cast<variable_integer>(expr));
         int const value(integer->get_integer());
 
-        // TBD: should we instead say <0 is less, >0 is greater and 0 is equal
-        //
         if(value < -2 || value > 1)
         {
-            throw std::runtime_error("unsupported integer in compare(), values are limited to -2 to 1.");
+            throw ed::runtime_error(
+                  s.get_location()
+                + "unsupported integer in compare(), values are limited to -2 to 1.");
         }
 
         s.set_compare(static_cast<compare_t>(value));
@@ -749,7 +739,9 @@ public:
         {
             if(timeout != nullptr)
             {
-                throw std::runtime_error("\"timeout\" and \"error_message\" from the exit() instruction are mutually exclusive.");
+                throw ed::runtime_error(
+                      s.get_location()
+                    + "\"timeout\" and \"error_message\" from the exit() instruction are mutually exclusive.");
             }
 
             variable_string::pointer_t message(std::static_pointer_cast<variable_string>(error_message));
@@ -839,8 +831,9 @@ public:
         {
             // LCOV_EXCL_START
             int const e(errno);
-            throw std::runtime_error(
-                    "ppoll() returned an error: "
+            throw ed::runtime_error(
+                    s.get_location()
+                  + "ppoll() returned an error: "
                   + std::to_string(e)
                   + ", "
                   + strerror(e));
@@ -1144,7 +1137,7 @@ public:
                 }
                 else
                 {
-                    throw std::runtime_error("if(variable: ...) only supports variables of type integer or floating point.");
+                    throw ed::runtime_error("if(variable: ...) only supports variables of type integer or floating point.");
                 }
             }
             else
@@ -1163,7 +1156,7 @@ public:
             // this cannot happen since we already throw in get_compare()
             // and in case of a variable, we throw if we get an invalid type
             //
-            throw std::logic_error("got undefined compare in inst_if::func"); // LCOV_EXCL_LINE
+            throw ed::implementation_error("got undefined compare in inst_if::func"); // LCOV_EXCL_LINE
         // LCOV_EXCL_STOP
 
         case compare_t::COMPARE_UNORDERED:
@@ -1267,11 +1260,27 @@ public:
         variable::pointer_t const signal_name(s.get_parameter("signal"));
         if(signal_name != nullptr)
         {
-            std::string const name(std::dynamic_pointer_cast<variable_string>(signal_name)->get_string());
-            sig = ed::signal_handler::get_signal_number(name);
-            if(sig == -1)
+            std::string const & type(signal_name->get_type());
+            if(type == "integer")
             {
-                throw std::runtime_error("kill(signal: ...) unknown signal.");
+                sig = std::static_pointer_cast<variable_integer>(signal_name)->get_integer();
+            }
+            else if(type == "string" || type == "identifier")
+            {
+                std::string const name(std::dynamic_pointer_cast<variable_string>(signal_name)->get_string());
+                sig = ed::signal_handler::get_signal_number(snapdev::to_upper(name));
+            }
+            else
+            {
+                throw ed::runtime_error(
+                      s.get_location()
+                    + "kill(signal: ...) unsupported parameter type.");
+            }
+            if(sig < SIGHUP || sig >= NSIG)
+            {
+                throw ed::runtime_error(
+                      s.get_location()
+                    + "kill(signal: ...) unknown signal.");
             }
         }
 
@@ -1279,13 +1288,16 @@ public:
         //
         if(pthread_kill(s.get_server_thread_id(), sig) != 0)
         {
+            // LCOV_EXCL_START
             int const e(errno);
-            throw std::runtime_error(
-                  "kill(): signal could not be sent (errno: "
+            throw ed::runtime_error(
+                  s.get_location()
+                + "kill(): signal could not be sent (errno: "
                 + std::to_string(e)
                 + ", "
                 + strerror(e)
                 + ").");
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -1525,7 +1537,7 @@ public:
     virtual void func(state & s) override
     {
         snapdev::NOT_USED(s);
-        throw std::logic_error("run::func() was called when it should be intercepted by the executor.");
+        throw ed::implementation_error("run::func() was called when it should be intercepted by the executor.");
     }
 
 private:
@@ -1602,7 +1614,7 @@ public:
             if(!value.empty()
             && !advgetopt::validator_integer::convert_string(value, int_value))
             {
-                throw std::runtime_error(
+                throw ed::runtime_error(
                       "value \""
                     + value
                     + "\" not recognized as a valid integer.");
@@ -1621,7 +1633,7 @@ public:
         }
         else
         {
-            throw std::runtime_error(
+            throw ed::runtime_error(
                   "unsupported type \""
                 + type
                 + "\" for save_parameter_value().");
@@ -1654,7 +1666,7 @@ public:
         ed::connection::vector_t v(s.get_connections());
         if(v.empty())
         {
-            throw std::runtime_error("send_message() has no connection to send a message to.");
+            throw ed::runtime_error("send_message() has no connection to send a message to.");
         }
         // TODO: fix the connection selection, if we have more than one,
         //       how do we know which one to select? (i.e. have a connection
@@ -1663,7 +1675,7 @@ public:
         ed::connection_with_send_message::pointer_t c(std::dynamic_pointer_cast<ed::connection_with_send_message>(v[0]));
         if(c == nullptr)
         {
-            throw std::runtime_error("send_message() called without a valid listener connection."); // LCOV_EXCL_LINE
+            throw ed::runtime_error("send_message() called without a valid listener connection."); // LCOV_EXCL_LINE
         }
 
         ed::message msg;
@@ -1730,7 +1742,7 @@ public:
                 }
                 else
                 {
-                    throw std::runtime_error(
+                    throw ed::runtime_error(
                           "message parameter type \""
                         + type
                         + "\" not supported yet.");
@@ -1795,7 +1807,7 @@ public:
                     double timestamp(0.0);
                     if(!advgetopt::validator_double::convert_string(var_string->get_string(), timestamp))
                     {
-                        throw std::runtime_error(
+                        throw ed::runtime_error(
                               "invalid timestamp, a valid floating point was expected ("
                             + var_string->get_string()
                             + ").");
@@ -1826,7 +1838,7 @@ public:
             }
             if(!converted)
             {
-                throw std::runtime_error(
+                throw ed::runtime_error(
                       "casting from \""
                     + var_type
                     + "\" to \""
@@ -1905,7 +1917,7 @@ public:
                 << "error: nanosleep() failed with "
                 << strerror(e)
                 << ".\n";
-            throw std::runtime_error("nanosleep failed.");
+            throw ed::runtime_error("nanosleep failed.");
             // LCOV_EXCL_STOP
         }
     }
@@ -1944,27 +1956,13 @@ public:
             variable::pointer_t param(s.get_parameter(var_number, false));
             if(param == nullptr)
             {
-                if(i == 1)
-                {
-                    throw std::runtime_error(
-                          s.get_location()
-                        + "expected at least \"var1\".");
-                }
                 break;
             }
             variable_string::pointer_t var_string(std::static_pointer_cast<variable_string>(param));
-            if(var_string == nullptr)
-            {
-                throw std::runtime_error(
-                      s.get_location()
-                    + "variable named \""
-                    + var_number
-                    + "\" must point to a string or an identifier.");
-            }
             variable::pointer_t var(s.get_variable(var_string->get_string()));
             if(var == nullptr)
             {
-                throw std::runtime_error(
+                throw ed::runtime_error(
                       s.get_location()
                     + "variable named \""
                     + var_string->get_string()
@@ -1977,7 +1975,7 @@ public:
                 && type != "integer"
                 && type != "floating_point")
                 {
-                    throw std::runtime_error(
+                    throw ed::runtime_error(
                           s.get_location()
                         + "sort only supports strings, integers, or floating points.");
                 }
@@ -1985,7 +1983,7 @@ public:
             }
             else if(type != result_type)
             {
-                throw std::runtime_error(
+                throw ed::runtime_error(
                       s.get_location()
                     + "sort only supports one type of data (\""
                     + result_type
@@ -2180,7 +2178,7 @@ public:
             variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
             if(var->get_string() != value)
             {
-                throw std::runtime_error(
+                throw ed::runtime_error(
                       s.get_location()
                     + "message expected \""
                     + name
@@ -2197,7 +2195,7 @@ public:
             std::regex const compiled_regex(regex_var->get_regex());
             if(!std::regex_match(value, compiled_regex))
             {
-                throw std::runtime_error(
+                throw ed::runtime_error(
                       s.get_location()
                     + "message expected \""
                     + name
@@ -2210,11 +2208,13 @@ public:
         }
         else
         {
-            throw std::runtime_error(
+            throw ed::runtime_error(
                   s.get_location()
-                + "message sent_server type \""
+                + "message value \""
+                + name
+                + "\" does not support type \""
                 + type
-                + "\" not supported.");
+                + "\".");
         }
     }
 
@@ -2241,7 +2241,7 @@ public:
             {
                 if(forbidden)
                 {
-                    throw std::runtime_error(
+                    throw ed::runtime_error(
                           s.get_location()
                         + "message forbidden parameter \""
                         + name
@@ -2254,7 +2254,7 @@ public:
             }
             else // if(required)
             {
-                throw std::runtime_error(
+                throw ed::runtime_error(
                       s.get_location()
                     + "message required parameter \""
                     + name
@@ -2268,7 +2268,7 @@ public:
                 variable_integer::pointer_t int_var(std::static_pointer_cast<variable_integer>(var));
                 if(int_var->get_integer() != value)
                 {
-                    throw std::runtime_error(
+                    throw ed::runtime_error(
                           s.get_location()
                         + "message expected parameter \""
                         + name
@@ -2308,7 +2308,7 @@ public:
                             value = "..." + value;
                         }
                     }
-                    throw std::runtime_error(
+                    throw ed::runtime_error(
                           s.get_location()
                         + "message expected parameter \""
                         + name
@@ -2326,7 +2326,7 @@ public:
                 std::regex const compiled_regex(regex_var->get_regex());
                 if(!std::regex_match(value, compiled_regex))
                 {
-                    throw std::runtime_error(
+                    throw ed::runtime_error(
                           s.get_location()
                         + "message expected parameter \""
                         + name
@@ -2343,7 +2343,7 @@ public:
                 variable_timestamp::pointer_t timestamp_var(std::static_pointer_cast<variable_timestamp>(var));
                 if(timestamp_var->get_timestamp() != value)
                 {
-                    throw std::runtime_error(
+                    throw ed::runtime_error(
                           s.get_location()
                         + "message expected parameter \""
                         + name
@@ -2363,7 +2363,7 @@ public:
             }
             else
             {
-                throw std::runtime_error(
+                throw ed::runtime_error(
                       s.get_location()
                     + "message parameter type \""
                     + type
@@ -2404,7 +2404,7 @@ public:
     {
         if(!s.get_in_thread())
         {
-            throw std::runtime_error("wait() used before run().");
+            throw ed::runtime_error("wait() used before run().");
         }
 
         snapdev::timespec_ex timeout_duration;
@@ -2440,7 +2440,7 @@ public:
             }
             else
             {
-                throw std::runtime_error(
+                throw ed::runtime_error(
                       s.get_location()
                     + "unknown mode \""
                     + m
@@ -2457,7 +2457,7 @@ public:
                 {
                     break;
                 }
-                throw std::runtime_error("no connections to wait() on.");
+                throw ed::runtime_error("no connections to wait() on.");
             }
             if(mode != mode_t::MODE_DRAIN)
             {
@@ -2526,7 +2526,7 @@ public:
                         << "error: got an interrupt while ppoll() in reporter. Trying again.\n";
                     continue;
                 }
-                throw std::runtime_error(
+                throw ed::runtime_error(
                         "ppoll() returned an error: "
                       + std::to_string(e)
                       + ", "
@@ -2534,7 +2534,7 @@ public:
                 // LCOV_EXCL_STOP
             }
             break;
-        }
+        } // LCOV_EXCL_LINE
         bool timed_out(true);
         for(auto & c : connections)
         {
@@ -2598,7 +2598,7 @@ public:
             //      connections? At this point I don't see why the
             //      server side would need such...
             //
-            throw std::runtime_error("ppoll() timed out.");
+            throw ed::runtime_error("ppoll() timed out.");
         }
 
         return fds.size();

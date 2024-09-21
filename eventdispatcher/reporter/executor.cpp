@@ -33,6 +33,7 @@
 // eventdispatcher
 //
 #include    <eventdispatcher/communicator.h>
+#include    <eventdispatcher/exception.h>
 
 
 // libaddr
@@ -143,7 +144,7 @@ void background_executor::leave(cppthread::leave_status_t status)
         break;
 
     default:
-        throw std::runtime_error("thread failed with leave status: " + std::to_string(static_cast<int>(status)));
+        throw ed::runtime_error("thread failed with leave status: " + std::to_string(static_cast<int>(status)));
 
     }
 }
@@ -169,7 +170,7 @@ step_t background_executor::execute_instruction()
     {
         if(f_state->get_in_thread())
         {
-            throw std::runtime_error("run() instruction found when already running in the background.");
+            throw ed::runtime_error("run() instruction found when already running in the background.");
         }
         return step_t::STEP_START;
     }
@@ -187,7 +188,7 @@ step_t background_executor::execute_instruction()
             if(decls->f_required)
             {
                 // LCOV_EXCL_START
-                throw std::runtime_error(
+                throw ed::runtime_error(
                       "parameter \""
                     + std::string(decls->f_name)
                     + "\" was expected for instruction \""
@@ -214,7 +215,7 @@ step_t background_executor::execute_instruction()
                 expression::pointer_t item(value->get_expression(idx));
                 if(item->get_operator() != operator_t::OPERATOR_NAMED)
                 {
-                    throw std::logic_error("list item was not an OPERATOR_NAMED expression."); // LCOV_EXCL_LINE
+                    throw ed::implementation_error("list item was not an OPERATOR_NAMED expression."); // LCOV_EXCL_LINE
                 }
                 std::size_t const count(item->get_expression_size());
                 switch(count)
@@ -225,7 +226,7 @@ step_t background_executor::execute_instruction()
 
                 // LCOV_EXCL_START
                 default:
-                    throw std::logic_error("OPERATOR_NAMED list item expression does not have one or two items.");
+                    throw ed::implementation_error("OPERATOR_NAMED list item expression does not have one or two items.");
                 // LCOV_EXCL_STOP
 
                 }
@@ -233,7 +234,7 @@ step_t background_executor::execute_instruction()
                 token t(name_expr->get_token());
                 if(t.get_token() != token_t::TOKEN_IDENTIFIER)
                 {
-                    throw std::logic_error("OPERATOR_NAMED first item is not an identifier."); // LCOV_EXCL_LINE
+                    throw ed::implementation_error("OPERATOR_NAMED first item is not an identifier."); // LCOV_EXCL_LINE
                 }
                 std::string const & name(t.get_string());
                 variable::pointer_t p;
@@ -251,7 +252,7 @@ step_t background_executor::execute_instruction()
 
         // LCOV_EXCL_START
         default:
-            throw std::runtime_error("operator type not supported to convert expression to variable.");
+            throw ed::runtime_error("operator type not supported to convert expression to variable.");
         // LCOV_EXCL_STOP
 
         }
@@ -265,8 +266,9 @@ step_t background_executor::execute_instruction()
                 || (param->get_type() != "identifier"
                     && param->get_type() != "string")))
             {
-                throw std::runtime_error(
-                      std::string("parameter type mismatch for ")
+                throw ed::runtime_error(
+                      f_state->get_location()
+                    + std::string("parameter type mismatch for ")
                     + decls->f_name
                     + ", expected \""
                     + decls->f_type
@@ -343,12 +345,14 @@ variable::pointer_t background_executor::primary_to_variable(expression::pointer
         std::static_pointer_cast<variable_string>(param)->set_string(t.get_string());
         break;
 
-    case token_t::TOKEN_DOUBLE_STRING:
-        {
-            param = std::make_shared<variable_string>(name, "string");
-            std::static_pointer_cast<variable_string>(param)->set_string(replace_variables(t.get_string()));
-        }
-        break;
+// when we get here, this case is not possible as the double strings should
+// have already been converted to single strings
+//    case token_t::TOKEN_DOUBLE_STRING:
+//        {
+//            param = std::make_shared<variable_string>(name, "string");
+//            std::static_pointer_cast<variable_string>(param)->set_string(replace_variables(t.get_string()));
+//        }
+//        break;
 
     case token_t::TOKEN_ADDRESS:
         {
@@ -374,7 +378,7 @@ variable::pointer_t background_executor::primary_to_variable(expression::pointer
 
     // LCOV_EXCL_START
     default:
-        throw std::runtime_error(
+        throw ed::runtime_error(
               "support for primary \""
             + std::to_string(static_cast<int>(t.get_token()))
             + "\" not yet implemented.");
@@ -414,7 +418,7 @@ std::string background_executor::replace_variables(std::string const & original)
             std::string::size_type end(original.find('}', dollar));
             if(end == std::string::npos)
             {
-                throw std::runtime_error(
+                throw ed::runtime_error(
                       f_state->get_running_statement()->get_location()
                     + "found unclosed variable in \"" + original + "\".");
             }
@@ -422,7 +426,7 @@ std::string background_executor::replace_variables(std::string const & original)
             pos = end + 1;
             if(var_name.empty())
             {
-                throw std::runtime_error(
+                throw ed::runtime_error(
                       f_state->get_running_statement()->get_location()
                     + "found variable without a name in \"" + original + "\".");
             }
@@ -474,7 +478,7 @@ std::string background_executor::replace_variables(std::string const & original)
                 }
                 else
                 {
-                    throw std::runtime_error(
+                    throw ed::runtime_error(
                           "found variable of type \"" 
                         + var->get_type()
                         + "\" which is not yet supported in ${...}.");
@@ -499,7 +503,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
 {
     if(expr == nullptr)
     {
-        throw std::logic_error("compute() called with a nullptr."); // LCOV_EXCL_LINE
+        throw ed::implementation_error("compute() called with a nullptr."); // LCOV_EXCL_LINE
     }
 
     constexpr auto mix_token = [](token_t l, token_t r)
@@ -574,7 +578,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                         else
                         {
                             // LCOV_EXCL_START
-                            throw std::runtime_error(
+                            throw ed::runtime_error(
                                   "primary variable of type \""
                                 + type
                                 + "\" not yet supported.");
@@ -614,7 +618,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_COMPARE:
         if(expr->get_expression_size() != 2)
         {
-            throw std::logic_error("<=> operator (compare) did not receive exactly two parameters."); // LCOV_EXCL_LINE
+            throw ed::implementation_error("<=> operator (compare) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
@@ -717,7 +721,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                     addr::addr_parser rp;
                     rp.set_protocol("tcp");
                     rp.set_allow(addr::allow_t::ALLOW_MASK, true);
-                    addr::addr_range::vector_t const ra(rp.parse(lt.get_string()));
+                    addr::addr_range::vector_t const ra(rp.parse(rt.get_string()));
 
                     if(la < ra)
                     {
@@ -735,7 +739,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 break;
 
             default:
-                throw std::runtime_error(
+                throw ed::runtime_error(
                       f_state->get_running_statement()->get_location()
                     + "unsupported compare (token types: "
                     + std::to_string(static_cast<int>(lt.get_token()))
@@ -754,7 +758,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_ADD:
         if(expr->get_expression_size() != 2)
         {
-            throw std::logic_error("+ operator (add) did not receive exactly two parameters."); // LCOV_EXCL_LINE
+            throw ed::implementation_error("+ operator (add) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
@@ -863,23 +867,25 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 break;
 
             case mix_token(token_t::TOKEN_SINGLE_STRING, token_t::TOKEN_SINGLE_STRING):
-            case mix_token(token_t::TOKEN_SINGLE_STRING, token_t::TOKEN_DOUBLE_STRING):
-            case mix_token(token_t::TOKEN_DOUBLE_STRING, token_t::TOKEN_SINGLE_STRING):
+            //case mix_token(token_t::TOKEN_SINGLE_STRING, token_t::TOKEN_DOUBLE_STRING):
+            //case mix_token(token_t::TOKEN_DOUBLE_STRING, token_t::TOKEN_SINGLE_STRING):
                 result.set_token(token_t::TOKEN_SINGLE_STRING);
                 result.set_string(lt.get_string() + rt.get_string());
                 break;
 
-            case mix_token(token_t::TOKEN_DOUBLE_STRING, token_t::TOKEN_DOUBLE_STRING):
-                result.set_token(token_t::TOKEN_DOUBLE_STRING);
-                result.set_string(lt.get_string() + rt.get_string());
-                break;
+            //case mix_token(token_t::TOKEN_DOUBLE_STRING, token_t::TOKEN_DOUBLE_STRING):
+            //    result.set_token(token_t::TOKEN_DOUBLE_STRING);
+            //    result.set_string(lt.get_string() + rt.get_string());
+            //    break;
 
-            case mix_token(token_t::TOKEN_DOUBLE_STRING, token_t::TOKEN_REGEX):
+            //case mix_token(token_t::TOKEN_DOUBLE_STRING, token_t::TOKEN_REGEX):
+            case mix_token(token_t::TOKEN_SINGLE_STRING, token_t::TOKEN_REGEX):
                 result.set_token(token_t::TOKEN_REGEX);
                 result.set_string(snapdev::escape_special_regex_characters(lt.get_string()) + rt.get_string());
                 break;
 
-            case mix_token(token_t::TOKEN_REGEX, token_t::TOKEN_DOUBLE_STRING):
+            case mix_token(token_t::TOKEN_REGEX, token_t::TOKEN_SINGLE_STRING):
+            //case mix_token(token_t::TOKEN_REGEX, token_t::TOKEN_DOUBLE_STRING):
                 result.set_token(token_t::TOKEN_REGEX);
                 result.set_string(lt.get_string() + snapdev::escape_special_regex_characters(rt.get_string()));
                 break;
@@ -887,16 +893,6 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
             case mix_token(token_t::TOKEN_REGEX, token_t::TOKEN_REGEX):
                 result.set_token(token_t::TOKEN_REGEX);
                 result.set_string(lt.get_string() + rt.get_string());
-                break;
-
-            case mix_token(token_t::TOKEN_SINGLE_STRING, token_t::TOKEN_REGEX):
-                result.set_token(token_t::TOKEN_REGEX);
-                result.set_string(snapdev::escape_special_regex_characters(lt.get_string()) + rt.get_string());
-                break;
-
-            case mix_token(token_t::TOKEN_REGEX, token_t::TOKEN_SINGLE_STRING):
-                result.set_token(token_t::TOKEN_REGEX);
-                result.set_string(lt.get_string() + snapdev::escape_special_regex_characters(rt.get_string()));
                 break;
 
             case mix_token(token_t::TOKEN_SINGLE_STRING, token_t::TOKEN_INTEGER):
@@ -909,15 +905,15 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 result.set_string(std::to_string(static_cast<std::int64_t>(lt.get_integer())) + rt.get_string());
                 break;
 
-            case mix_token(token_t::TOKEN_DOUBLE_STRING, token_t::TOKEN_INTEGER):
-                result.set_token(token_t::TOKEN_DOUBLE_STRING);
-                result.set_string(lt.get_string() + std::to_string(static_cast<std::int64_t>(rt.get_integer())));
-                break;
+            //case mix_token(token_t::TOKEN_DOUBLE_STRING, token_t::TOKEN_INTEGER):
+            //    result.set_token(token_t::TOKEN_DOUBLE_STRING);
+            //    result.set_string(lt.get_string() + std::to_string(static_cast<std::int64_t>(rt.get_integer())));
+            //    break;
 
-            case mix_token(token_t::TOKEN_INTEGER, token_t::TOKEN_DOUBLE_STRING):
-                result.set_token(token_t::TOKEN_DOUBLE_STRING);
-                result.set_string(std::to_string(static_cast<std::int64_t>(lt.get_integer())) + rt.get_string());
-                break;
+            //case mix_token(token_t::TOKEN_INTEGER, token_t::TOKEN_DOUBLE_STRING):
+            //    result.set_token(token_t::TOKEN_DOUBLE_STRING);
+            //    result.set_string(std::to_string(static_cast<std::int64_t>(lt.get_integer())) + rt.get_string());
+            //    break;
 
             case mix_token(token_t::TOKEN_ADDRESS, token_t::TOKEN_INTEGER):
                 {
@@ -952,7 +948,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 break;
 
             default:
-                throw std::runtime_error(
+                throw ed::runtime_error(
                       "unsupported addition (token types: "
                     + std::to_string(static_cast<int>(lt.get_token()))
                     + " + "
@@ -970,7 +966,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_SUBTRACT:
         if(expr->get_expression_size() != 2)
         {
-            throw std::logic_error("- operator (subtract) did not receive exactly two parameters."); // LCOV_EXCL_LINE
+            throw ed::implementation_error("- operator (subtract) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
@@ -1103,7 +1099,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 break;
 
             default:
-                throw std::runtime_error("unsupported subtraction.");
+                throw ed::runtime_error("unsupported subtraction.");
 
             }
             expression::pointer_t result_expr(std::make_shared<expression>());
@@ -1116,7 +1112,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_IDENTITY:
         if(expr->get_expression_size() != 1)
         {
-            throw std::logic_error("+ operator (identity) did not receive exactly two parameters."); // LCOV_EXCL_LINE
+            throw ed::implementation_error("+ operator (identity) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
@@ -1127,7 +1123,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_NEGATE:
         if(expr->get_expression_size() != 1)
         {
-            throw std::logic_error("+ operator (identity) did not receive exactly two parameters."); // LCOV_EXCL_LINE
+            throw ed::implementation_error("+ operator (identity) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
@@ -1162,7 +1158,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 break;
 
             default:
-                throw std::runtime_error("unsupported negation.");
+                throw ed::runtime_error("unsupported negation.");
 
             }
             expression::pointer_t result_expr(std::make_shared<expression>());
@@ -1175,7 +1171,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_MULTIPLY:
         if(expr->get_expression_size() != 2)
         {
-            throw std::logic_error("* operator (multiply) did not receive exactly two parameters."); // LCOV_EXCL_LINE
+            throw ed::implementation_error("* operator (multiply) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
@@ -1216,7 +1212,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                     int const count(rt.get_integer());
                     if(count < 0 || count > 1000)
                     {
-                        throw std::runtime_error("string repeat needs to be positive and under 1001.");
+                        throw ed::runtime_error("string repeat needs to be positive and under 1001.");
                     }
                     std::size_t const size(len * count);
                     str.resize(size);
@@ -1232,7 +1228,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 break;
 
             default:
-                throw std::runtime_error("unsupported multiplication.");
+                throw ed::runtime_error("unsupported multiplication.");
 
             }
             expression::pointer_t result_expr(std::make_shared<expression>());
@@ -1245,7 +1241,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_DIVIDE:
         if(expr->get_expression_size() != 2)
         {
-            throw std::logic_error("/ operator (divide) did not receive exactly two parameters."); // LCOV_EXCL_LINE
+            throw ed::implementation_error("/ operator (divide) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
@@ -1278,7 +1274,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 break;
 
             default:
-                throw std::runtime_error("unsupported division.");
+                throw ed::runtime_error("unsupported division.");
 
             }
             expression::pointer_t result_expr(std::make_shared<expression>());
@@ -1291,7 +1287,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
     case operator_t::OPERATOR_MODULO:
         if(expr->get_expression_size() != 2)
         {
-            throw std::logic_error("% operator (modulo) did not receive exactly two parameters."); // LCOV_EXCL_LINE
+            throw ed::implementation_error("% operator (modulo) did not receive exactly two parameters."); // LCOV_EXCL_LINE
         }
         else
         {
@@ -1324,7 +1320,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 break;
 
             default:
-                throw std::runtime_error("unsupported modulo (types: "
+                throw ed::runtime_error("unsupported modulo (types: "
                     + std::to_string(static_cast<int>(lt.get_token()))
                     + " and "
                     + std::to_string(static_cast<int>(rt.get_token()))
@@ -1348,7 +1344,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
                 expression::pointer_t named_expr(expr->get_expression(idx));
                 if(named_expr->get_operator() != operator_t::OPERATOR_NAMED)
                 {
-                    throw std::logic_error("only named expressions are allowed in a list."); // LCOV_EXCL_LINE
+                    throw ed::implementation_error("only named expressions are allowed in a list."); // LCOV_EXCL_LINE
                 }
                 expression::pointer_t new_named_expr(std::make_shared<expression>());
                 new_named_expr->set_operator(operator_t::OPERATOR_NAMED);
@@ -1368,7 +1364,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
 
                 // LCOV_EXCL_START
                 default:
-                    throw std::logic_error("named expressions must have a name and an optional expression.");
+                    throw ed::implementation_error("named expressions must have a name and an optional expression.");
                 // LCOV_EXCL_STOP
 
                 }
@@ -1380,7 +1376,7 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
 
     // LCOV_EXCL_START
     default:
-        throw std::logic_error("unsupported expression type in compute().");
+        throw ed::implementation_error("unsupported expression type in compute().");
     // LCOV_EXCL_STOP
 
     }
@@ -1581,7 +1577,7 @@ void executor::set_thread_done_callback(thread_done_callback_t callback)
     executor_thread_done::pointer_t thread_done(dynamic_pointer_cast<executor_thread_done>(f_done_signal));
     if(thread_done == nullptr)
     {
-        throw std::logic_error("f_done_signal is not an executor_thread_done object?"); // LCOV_EXCL_LINE
+        throw ed::implementation_error("f_done_signal is not an executor_thread_done object?"); // LCOV_EXCL_LINE
     }
     thread_done->set_thread_done_callback(callback);
 }

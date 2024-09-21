@@ -60,9 +60,9 @@ constexpr SNAP_CATCH2_NAMESPACE::reporter::operator_t const g_all_operators[] =
 
 
 
-CATCH_TEST_CASE("reporter_token", "[operator][reporter]")
+CATCH_TEST_CASE("reporter_expression", "[expression][reporter]")
 {
-    CATCH_START_SECTION("set/get operator")
+    CATCH_START_SECTION("reporter_expression: set/get operator")
     {
         for(auto const op : g_all_operators)
         {
@@ -74,7 +74,7 @@ CATCH_TEST_CASE("reporter_token", "[operator][reporter]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("ADD of two integers")
+    CATCH_START_SECTION("reporter_expression: ADD of two integers")
     {
         SNAP_CATCH2_NAMESPACE::reporter::expression::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::expression>());
         SNAP_CATCH2_NAMESPACE::reporter::expression::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::expression>());
@@ -102,9 +102,9 @@ CATCH_TEST_CASE("reporter_token", "[operator][reporter]")
 }
 
 
-CATCH_TEST_CASE("reporter_expression_error", "[operator][reporter][error]")
+CATCH_TEST_CASE("reporter_expression_error", "[expression][reporter][error]")
 {
-    CATCH_START_SECTION("get expression out of bounds")
+    CATCH_START_SECTION("reporter_expression_error: get expression out of bounds")
     {
         SNAP_CATCH2_NAMESPACE::reporter::expression e;
         CATCH_REQUIRE_THROWS_MATCHES(

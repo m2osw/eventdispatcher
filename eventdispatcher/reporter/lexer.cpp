@@ -396,7 +396,7 @@ token lexer::next_token()
                             throw ed::runtime_error(
                                   "invalid escape character '"
                                 + libutf8::to_u8string(c)
-                                + "'");
+                                + "'.");
 
                         }
                     }
@@ -426,6 +426,7 @@ token lexer::next_token()
                     if(c == 'x' || c == 'X')
                     {
                         std::int64_t value(0);
+                        int count(0);
                         for(;;)
                         {
                             c = getc();
@@ -433,8 +434,13 @@ token lexer::next_token()
                             {
                                 break;
                             }
+                            ++count;
                             value <<= 4;
                             value |= snapdev::hexdigit_to_number(c);
+                        }
+                        if(count == 0)
+                        {
+                            throw ed::runtime_error("invalid hexadecimal number, at least one digits was expected.");
                         }
                         ungetc(c);
                         t.set_token(token_t::TOKEN_INTEGER);

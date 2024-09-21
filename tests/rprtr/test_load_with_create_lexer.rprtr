@@ -1,0 +1,5 @@
+// This file gets loaded by a test to verify the create_lexer() function
+//
+
+print(message: "it worked.")
+

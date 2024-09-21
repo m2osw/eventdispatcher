@@ -33,6 +33,11 @@
 #include    <eventdispatcher/reporter/instruction_factory.h>
 
 
+// eventdispatcher
+//
+#include    <eventdispatcher/exception.h>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -51,11 +56,19 @@ namespace
 
 CATCH_TEST_CASE("reporter_statement", "[statement][reporter]")
 {
-    CATCH_START_SECTION("verify basic program")
+    CATCH_START_SECTION("reporter_statement: verify basic program")
     {
         SNAP_CATCH2_NAMESPACE::reporter::instruction::pointer_t if_inst(SNAP_CATCH2_NAMESPACE::reporter::get_instruction("if"));
         SNAP_CATCH2_NAMESPACE::reporter::statement::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::statement>(if_inst));
         CATCH_REQUIRE(s->get_instruction() == if_inst);
+
+        s->set_filename("this-filename.rprtr");
+        CATCH_REQUIRE(s->get_filename() == "this-filename.rprtr");
+
+        s->set_line(1041);
+        CATCH_REQUIRE(s->get_line() == 1041);
+
+        CATCH_REQUIRE(s->get_location() == "this-filename.rprtr:1041: ");
 
         // create an expression with 3.1 + 2.9
         //
@@ -103,13 +116,79 @@ CATCH_TEST_CASE("reporter_statement", "[statement][reporter]")
 
 CATCH_TEST_CASE("reporter_statement_error", "[statement][reporter][error]")
 {
-    CATCH_START_SECTION("statement without instruction")
+    CATCH_START_SECTION("reporter_statement_error: statement without instruction")
     {
         CATCH_REQUIRE_THROWS_MATCHES(
               SNAP_CATCH2_NAMESPACE::reporter::statement(nullptr)
-            , std::logic_error
+            , ed::implementation_error
             , Catch::Matchers::ExceptionMessage(
-                      "an instruction must always be attached to a statement."));
+                      "implementation_error: an instruction must always be attached to a statement."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_statement_error: parameter already defined")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::instruction::pointer_t print_inst(SNAP_CATCH2_NAMESPACE::reporter::get_instruction("print"));
+        SNAP_CATCH2_NAMESPACE::reporter::statement::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::statement>(print_inst));
+        CATCH_REQUIRE(s->get_instruction() == print_inst);
+
+        SNAP_CATCH2_NAMESPACE::reporter::token t1;
+        t1.set_token(SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_DOUBLE_STRING);
+        t1.set_string("this is our message");
+        SNAP_CATCH2_NAMESPACE::reporter::expression::pointer_t c1(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::expression>());
+        c1->set_operator(SNAP_CATCH2_NAMESPACE::reporter::operator_t::OPERATOR_PRIMARY);
+        c1->set_token(t1);
+        s->add_parameter("message", c1);
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              s->add_parameter("message", c1)
+            , ed::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "event_dispatcher_exception: parameter \"message\" defined more than once."));
+
+        s->verify_parameters();
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_statement_error: unknown parameter")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::instruction::pointer_t print_inst(SNAP_CATCH2_NAMESPACE::reporter::get_instruction("print"));
+        SNAP_CATCH2_NAMESPACE::reporter::statement::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::statement>(print_inst));
+        CATCH_REQUIRE(s->get_instruction() == print_inst);
+
+        SNAP_CATCH2_NAMESPACE::reporter::token t1;
+        t1.set_token(SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_DOUBLE_STRING);
+        t1.set_string("this could be anything really");
+        SNAP_CATCH2_NAMESPACE::reporter::expression::pointer_t c1(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::expression>());
+        c1->set_operator(SNAP_CATCH2_NAMESPACE::reporter::operator_t::OPERATOR_PRIMARY);
+        c1->set_token(t1);
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              s->add_parameter("unknown", c1)
+            , ed::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "event_dispatcher_exception: parameter \"unknown\" not accepted by \"print\"."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_statement_error: missing parameter")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::instruction::pointer_t print_inst(SNAP_CATCH2_NAMESPACE::reporter::get_instruction("print"));
+        SNAP_CATCH2_NAMESPACE::reporter::statement::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::statement>(print_inst));
+        CATCH_REQUIRE(s->get_instruction() == print_inst);
+
+        //SNAP_CATCH2_NAMESPACE::reporter::token t1;
+        //t1.set_token(SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_DOUBLE_STRING);
+        //t1.set_string("this could be anything really");
+        //SNAP_CATCH2_NAMESPACE::reporter::expression::pointer_t c1(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::expression>());
+        //c1->set_operator(SNAP_CATCH2_NAMESPACE::reporter::operator_t::OPERATOR_PRIMARY);
+        //c1->set_token(t1);
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              s->verify_parameters()
+            , ed::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "event_dispatcher_exception: parameter \"message\" is required by \"print\"."));
     }
     CATCH_END_SECTION()
 }

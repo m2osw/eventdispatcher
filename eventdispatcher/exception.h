@@ -40,6 +40,8 @@ namespace ed
 DECLARE_LOGIC_ERROR(parameter_error);
 DECLARE_LOGIC_ERROR(implementation_error);
 
+DECLARE_OUT_OF_RANGE(out_of_range);
+
 DECLARE_MAIN_EXCEPTION(event_dispatcher_exception);
 
 DECLARE_EXCEPTION(event_dispatcher_exception, count_mismatch);
