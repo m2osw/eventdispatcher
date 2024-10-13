@@ -103,7 +103,7 @@ udp_client::~udp_client()
  * are larger will be broken up in multiple packets and that increases the
  * chance that the packet never arrives. Also over a certain size (probably
  * around 64K in IPv4) the ENOBUFS automatically happens. Note that IPv6
- * allows for much buffer packets. This is not automatically a good idea
+ * allows for much larger packets. This is not automatically a good idea
  * unless the number of packets is quite small because when it fails, you
  * have to resend a very large packet...
  *
