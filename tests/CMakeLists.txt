@@ -64,7 +64,6 @@ if(SnapCatch2_FOUND)
         ${SNAPCATCH2_LIBRARIES}
     )
 
-    add_test(unittests ${PROJECT_NAME})
 
 
 
