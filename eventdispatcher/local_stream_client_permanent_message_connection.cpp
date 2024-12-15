@@ -417,10 +417,10 @@ public:
         {
             f_thread.stop();
         }
-        catch(cppthread::cppthread_mutex_failed_error const &)
+        catch(cppthread::mutex_failed_error const &)
         {
         }
-        catch(cppthread::cppthread_invalid_error const &)
+        catch(cppthread::invalid_error const &)
         {
         }
 
