@@ -22,6 +22,12 @@
 //
 #include    <catch2/snapcatch2.hpp>
 
+
+// snapdev
+//
+#include    <snapdev/mkdir_p.h>
+
+
 // C++
 //
 #include    <string>
@@ -59,6 +65,17 @@ inline char32_t rand_char(bool full_range = false)
 
     return wc;
 }
+
+
+inline std::string get_tmp_dir(std::string const & subdir)
+{
+    std::string const & tmp_dir(SNAP_CATCH2_NAMESPACE::g_tmp_dir() + "/" + subdir);
+
+    CATCH_REQUIRE(snapdev::mkdir_p(tmp_dir, false, 0700) == 0);
+
+    return tmp_dir;
+}
+
 
 
 

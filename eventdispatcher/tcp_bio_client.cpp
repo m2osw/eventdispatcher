@@ -400,7 +400,7 @@ tcp_bio_client::tcp_bio_client(
             //
             std::shared_ptr<BIO> bio;
             bio.reset(BIO_new_ssl_connect(ssl_ctx.get()), detail::bio_deleter);
-            if(!bio)
+            if(bio == nullptr)
             {
                 detail::bio_log_errors();
                 throw initialization_error("failed initializing a BIO object");

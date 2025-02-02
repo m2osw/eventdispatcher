@@ -119,6 +119,7 @@ add_library(${PROJECT_NAME} SHARED
     udp_server.cpp
 
     # various
+    certificate.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/names.cpp
     utils.cpp
     version.cpp
@@ -176,6 +177,7 @@ install(
 install(
     FILES
         broadcast_message.h
+        certificate.h
         communicator.h
         connection.h
         connection_with_send_message.h

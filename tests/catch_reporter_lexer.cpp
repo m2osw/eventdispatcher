@@ -334,11 +334,11 @@ CATCH_TEST_CASE("reporter_lexer", "[lexer][reporter]")
         t = l.next_token();
         CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_TIMESPEC);
 //std::cerr << "2024 time: " << std::hex << t.get_integer() << "\n";
-        CATCH_REQUIRE(t.get_integer() == 0x65F7702A0000000000000000_int128); // TODO: support summer/winter time differences
+        CATCH_REQUIRE(t.get_integer() == 0x65F6FFAA0000000000000000_int128);
         t = l.next_token();
         CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_TIMESPEC);
 //std::cerr << "2023 time: " << std::hex << t.get_integer() << "\n";
-        CATCH_REQUIRE(t.get_integer() == 0x6474B9930000000000000000_int128); // TODO: support summer/winter time differences
+        CATCH_REQUIRE(t.get_integer() == 0x647457230000000000000000_int128);
         t = l.next_token();
         CATCH_REQUIRE(t.get_token() == SNAP_CATCH2_NAMESPACE::reporter::token_t::TOKEN_EOF);
     }

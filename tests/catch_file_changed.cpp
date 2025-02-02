@@ -37,11 +37,6 @@
 #include    <cppthread/thread.h>
 
 
-// snapdev
-//
-#include    <snapdev/mkdir_p.h>
-
-
 // C
 //
 #include    <unistd.h>
@@ -203,23 +198,6 @@ void file_listener::run_test(
 
 
 
-
-
-
-
-
-
-std::string get_tmp_dir(std::string const & subdir)
-{
-    std::string const & tmp_dir(SNAP_CATCH2_NAMESPACE::g_tmp_dir() + "/" + subdir);
-
-    CATCH_REQUIRE(snapdev::mkdir_p(tmp_dir, false, 0700) == 0);
-
-    return tmp_dir;
-}
-
-
-
 } // no name namespace
 
 
@@ -230,7 +208,7 @@ CATCH_TEST_CASE("file_changed_events", "[file_changed]")
     {
         ed::communicator::pointer_t communicator(ed::communicator::instance());
 
-        std::string const dir(get_tmp_dir("attributes"));
+        std::string const dir(SNAP_CATCH2_NAMESPACE::get_tmp_dir("attributes"));
 
         {
             file_listener::pointer_t listener(std::make_shared<file_listener>());
@@ -263,7 +241,7 @@ CATCH_TEST_CASE("file_changed_events", "[file_changed]")
     {
         ed::communicator::pointer_t communicator(ed::communicator::instance());
 
-        std::string const dir(get_tmp_dir("file-changed"));
+        std::string const dir(SNAP_CATCH2_NAMESPACE::get_tmp_dir("file-changed"));
         std::string const filename(dir + "/test.txt");
 
         {

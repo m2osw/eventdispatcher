@@ -43,7 +43,7 @@
 
 // OpenSSL
 //
-// TODO: create our own set of flags to avoid  this header in the .h
+// TODO: create our own set of flags to avoid this header in the .h
 #include    <openssl/ssl.h>
 
 

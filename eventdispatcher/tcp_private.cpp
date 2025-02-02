@@ -93,11 +93,14 @@ cppthread::mutex::direct_vector_t  *   g_locks = nullptr;
  * This function is used by the OpenSSL library to attach an internal thread
  * identifier (\p tid) to a system thread identifier.
  *
+ * \note
+ * Since Ubuntu 19.04, the \p tid parameter is ignored.
+ *
  * \param[in] tid  The crypto internal thread identifier.
  */
 void pthreads_thread_id(CRYPTO_THREADID * tid)
 {
-    // on 19.04 the macro does not use tid
+    // since 19.04 the macro does not use tid
     //
     snapdev::NOT_USED(tid);
 
@@ -449,19 +452,9 @@ void ssl_ctx_deleter(SSL_CTX * ssl_ctx)
 }
 
 
+
 }
 // namespace detail
-
-
-
-
-
-
-
-
-
-
-
 
 
 

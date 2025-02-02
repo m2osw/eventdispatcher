@@ -19,9 +19,9 @@
 #pragma once
 
 /** \file
- * \brief Event dispatch class.
+ * \brief TCP BIO client implementation.
  *
- * Class used to handle events.
+ * Class used to manage a BIO client.
  */
 
 // make sure we use OpenSSL with multi-thread support

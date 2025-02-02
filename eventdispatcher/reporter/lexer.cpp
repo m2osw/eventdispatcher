@@ -207,7 +207,7 @@ token lexer::next_token()
                         s += libutf8::to_u8string(c);
                     }
                     snapdev::timespec_ex timestamp;
-                    timestamp.from_string(s, "%m/%d/%Y %T"); // fixed US date, no tv_nsec support
+                    timestamp.from_string(s, "%m/%d/%Y %T"); // fixed US date viewed in UTC, no tv_nsec support
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
                     t.set_integer((static_cast<__int128>(timestamp.tv_sec) << 64) | timestamp.tv_nsec);
