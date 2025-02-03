@@ -69,6 +69,8 @@
 #error "OPENSSL_THREADS is not defined. Event Dispatcher requires OpenSSL to support multi-threading."
 #endif
 
+
+
 namespace ed
 {
 
@@ -281,6 +283,11 @@ void bio_initialize()
  *
  * This function cleans up the BIO environment.
  *
+ * In our coverage tests, we verify that memory is not leaking. You have
+ * to make sure this function gets called before exit(3) happens in that
+ * specific situation. In general, we do so using the RAII class which
+ * in the main() function of the test.
+ *
  * \note
  * This function is here mainly for documentation rather than to get called.
  * Whenever you exit a process that uses the BIO calls it will leak
@@ -297,6 +304,7 @@ void bio_cleanup()
     ERR_remove_state(0);
 #endif
 
+    CONF_modules_unload(1);
     EVP_cleanup();
     CRYPTO_cleanup_all_ex_data();
     ERR_free_strings();
@@ -403,38 +411,47 @@ int bio_log_errors()
 }
 
 
+/** \brief Delete a GENERAL_NAMES object.
+ *
+ * This function deletes a GENERAL_NAMES object. It is useful with a
+ * shared pointer in order to get rid of a GENERAL_NAMES object at
+ * any point in time (i.e. when done with it or when an exception
+ * occurs).
+ *
+ * \note
+ * Apparently the function safely accepts NULL as input.
+ *
+ * \param[in] general_names  The GENERAL_NAMES to delete.
+ */
+void general_names_deleter(GENERAL_NAMES * general_names)
+{
+    GENERAL_NAMES_free(general_names);
+}
+
+
 /** \brief Free a BIO object.
  *
  * This deleter is used to make sure that the BIO object gets freed
  * whenever the object holding it gets destroyed.
  *
- * Note that deleting a BIO connection calls shutdown() and close()
- * on the socket. In other words, it hangs up.
+ * Note that by default deleting a BIO connection calls shutdown()
+ * and close() on the socket. In other words, it hangs up. To prevent
+ * that issue, we re-implement the shutdown() function.
+ *
+ * If you created a child via a fork() with the intend of using the
+ * socket further, then this wouldn't work properly without that
+ * redefinition.
+ *
+ * \note
+ * In older versions of the bio_deleter(), I would close the file
+ * descriptor before calling the BIO_free_all() function, This
+ * failed by leaking really badly by not releasing many of the
+ * resources used by the BIO interface.
  *
  * \param[in] bio  The BIO object to be freed.
  */
 void bio_deleter(BIO * bio)
 {
-    // IMPORTANT NOTE:
-    //
-    //   The BIO_free_all() calls shutdown() on the socket. This is not
-    //   acceptable in a normal Unix application that makes use of fork().
-    //   So... instead we ask the BIO interface to not close the socket,
-    //   and instead we close it ourselves. This means the shutdown()
-    //   never gets called.
-    //
-    BIO_set_close(bio, BIO_NOCLOSE);
-
-    int c;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-    BIO_get_fd(bio, &c);
-#pragma GCC diagnostic pop
-    if(c != -1)
-    {
-        close(c);
-    }
-
     BIO_free_all(bio);
 }
 
@@ -453,10 +470,75 @@ void ssl_ctx_deleter(SSL_CTX * ssl_ctx)
 
 
 
-}
-// namespace detail
-
-
-
+} // namespace detail
 } // namespace ed
+
+
+
+/** \brief Prevent the shutdown(2) function from being called.
+ *
+ * This re-implementation of the shutdown() function is useful in processes
+ * that create a BIO based object and then share it with a child process
+ * via a fork() call. The result is two folds:
+ *
+ * 1. The parent does not actually shutdown the socket so the child can
+ *    use it as expected
+ * 2. The child cannot shutdown the socket either since at that point
+ *    we do not know whether to call the C library function or not.
+ *
+ * For this to work, make sure the eventdispatcher library is loaded before
+ * the openssl library. You can see the list and order by looking at the
+ * final executable with:
+ *
+ * \code
+ * objdump -x executable | less
+ * \endcode
+ *
+ * The libssl and libcrypto are expected to appear after the
+ * libeventdispatcher. Here is an example from the unittest of this
+ * project:
+ *
+ * \code
+ * [...snip...]
+ * Dynamic Section:
+ *   NEEDED               libasan.so.6
+ *   NEEDED               libreporter.so.1
+ *   NEEDED               libcppprocess.so.1
+ *   NEEDED               libeventdispatcher.so.1
+ *   NEEDED               libadvgetopt.so.2
+ *   NEEDED               libcppthread.so.1
+ *   NEEDED               libaddr.so.1
+ *   NEEDED               libutf8.so.1
+ *   NEEDED               libssl.so.3
+ *   NEEDED               libcrypto.so.3
+ *   NEEDED               libsnaplogger.so.1
+ * [...snip...]
+ * \endcode
+ *
+ * \todo
+ * For now, this works as expected (I think). If we need to fix the issue
+ * (i.e. need to properly shutdown(2) in the child processes), then we
+ * should look into either not using the BIO layer, go directly to the
+ * SSL layer (which apparently does not call shutdown(2), which means
+ * it would work as it does with this hack) or save the parent PID and
+ * check in the function below whether we are hitting the parent or
+ * not. If not, allow the call to the C library function. Note that the
+ * parent may not always fork(), so there is the possibility that
+ * this won't work 100% as expected either way.
+ *
+ * \return This implementation always return 0.
+ */
+extern "C" int shutdown(int, int)
+{
+//SNAP_LOG_WARNING
+//<< "---------------------------- shutdown() intercepted!!! -----------------------------------"
+//<< SNAP_LOG_SEND;
+
+    // do nothing
+    //
+    return 0;
+}
+
+
+
 // vim: ts=4 sw=4 et

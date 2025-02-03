@@ -21,7 +21,11 @@
  * \brief Implementation of the certificate class.
  *
  * This file is the implementation of the certificate class. It is used
- * to load an X509 certificate and query various fields.
+ * to load an X509 certificate and query various fields (names, not
+ * before/after dates).
+ *
+ * The class allows loading the certificate either from a local .pem file
+ * or from an HTTPS server from a domain name.
  */
 
 // make sure we use OpenSSL with multi-thread support
@@ -86,6 +90,7 @@ namespace ed
  * before we start using it in the other functions.
  */
 certificate::certificate()
+    : f_impl(std::make_shared<detail::tcp_bio_client_impl>())
 {
     detail::bio_initialize();
 }
@@ -106,6 +111,9 @@ void certificate::clear()
 {
     if(!empty())
     {
+        f_impl->f_ssl_ctx.reset();
+        f_impl->f_bio.reset();
+
         X509_free(f_certificate);
         f_certificate = nullptr;
 
@@ -114,13 +122,6 @@ void certificate::clear()
         f_defined_names = false;
 
         f_cert_parameters.clear();
-        //f_common_name.clear();
-        //f_country_name.clear();
-        //f_locality_name.clear();
-        //f_state_or_province_name.clear();
-        //f_organization_name.clear();
-        //f_organizational_unit.clear();
-        //f_email_address.clear();
     }
 }
 
@@ -268,6 +269,12 @@ bool certificate::load_from_domain(std::string const & domain)
         detail::bio_log_errors();
         return false;
     }
+
+    // since the certificate is part of the BIO, we need to keep it all
+    // around until we're done
+    //
+    f_impl->f_ssl_ctx.swap(ssl_ctx);
+    f_impl->f_bio.swap(bio);
 
     return !empty();
 }
@@ -584,15 +591,17 @@ void certificate::get_additional_common_names(int nid, cert_param_t param) const
     for(;;)
     {
         int crit(0);
-        GENERAL_NAMES * gens(static_cast<GENERAL_NAMES *>(X509_get_ext_d2i(f_certificate, nid, &crit, &pos)));
-        if(gens == nullptr
+        std::shared_ptr<GENERAL_NAMES> general_names;
+        general_names.reset(static_cast<GENERAL_NAMES *>(X509_get_ext_d2i(f_certificate, nid, &crit, &pos)), detail::general_names_deleter);
+        if(general_names == nullptr
         || crit < 0)
         {
             return;
         }
-        for(int i(0); i < sk_GENERAL_NAME_num(gens); ++i)
+        int const max(sk_GENERAL_NAME_num(general_names.get()));
+        for(int i(0); i < max; ++i)
         {
-            GENERAL_NAME * gen(sk_GENERAL_NAME_value(gens, i));
+            GENERAL_NAME * gen(sk_GENERAL_NAME_value(general_names.get(), i));
             int type(-1);
             ASN1_IA5STRING * dns(static_cast<ASN1_IA5STRING *>(GENERAL_NAME_get0_value(gen, &type)));
             if(dns != nullptr

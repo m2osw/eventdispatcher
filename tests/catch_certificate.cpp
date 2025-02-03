@@ -71,6 +71,12 @@ CATCH_TEST_CASE("certificate", "[certificate]")
         CATCH_REQUIRE(cert.get_subject_organization_name() == "Made to Order Software Corporation");
         CATCH_REQUIRE(cert.get_subject_organizational_unit() == "Software Development");
         CATCH_REQUIRE(cert.get_subject_email_address() == "contact@example.net");
+
+        CATCH_REQUIRE(cert.get_cert_param_size(ed::CERT_PARAM_SUBJECT_COMMON_NAME) == 1);
+        CATCH_REQUIRE(cert.get_cert_param(ed::CERT_PARAM_SUBJECT_COMMON_NAME, 0) == "example.net");
+
+        CATCH_REQUIRE(cert.get_cert_param_size(ed::CERT_PARAM_ISSUER_COMMON_NAME) == 1);
+        CATCH_REQUIRE(cert.get_cert_param(ed::CERT_PARAM_ISSUER_COMMON_NAME, 0) == "example.net");
     }
     CATCH_END_SECTION()
 

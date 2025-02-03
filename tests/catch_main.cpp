@@ -27,6 +27,7 @@
 // eventdispatcher
 //
 #include    <eventdispatcher/message_definition.h>
+#include    <eventdispatcher/tcp_bio_options.h>
 #include    <eventdispatcher/version.h>
 
 
@@ -88,6 +89,8 @@ int main(int argc, char * argv[])
     snaplogger::logger::pointer_t l(snaplogger::logger::get_instance());
     l->add_console_appender();
     l->set_severity(snaplogger::severity_t::SEVERITY_ALL);
+
+    ed::bio_auto_cleanup auto_bio_cleanup;
 
     return SNAP_CATCH2_NAMESPACE::snap_catch2_main(
               "eventdispatcher"

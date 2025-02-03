@@ -31,6 +31,7 @@
 //
 #include    "eventdispatcher/tcp_bio_options.h"
 
+#include    "eventdispatcher/tcp_private.h"
 #include    "eventdispatcher/exception.h"
 
 
@@ -359,6 +360,39 @@ void tcp_bio_options::set_host(std::string const & host)
 std::string const & tcp_bio_options::get_host() const
 {
     return f_host;
+}
+
+
+
+/** \brief Call the bio_cleanup() function.
+ *
+ * This can be used in the main() function of your tests so that way the
+ * coverage tests do not detect any memory leaks from the OpenSSL libraries.
+ *
+ * It automatically calls the bio_cleanup() function.
+ *
+ * Note that this is not necessary in your standard tools and services
+ * since those can have memory still allocated at the time you leave your
+ * application. For tests, though, we verify memory leaks (through the
+ * sanitizer) and if such are discovered, the test fails.
+ *
+ * Here is an example one can use to implement such. Note that the order
+ * is probably not important (i.e. it just needs to get initialized
+ * at some point before you quit). The tests/catch_main.cpp of this
+ * very project (eventdispatcher) makes use of this feature.
+ *
+ * \code
+ * int main(...)
+ * {
+ *     ...
+ *     bio_auto_cleanup bio_cleanup;
+ *     ...
+ * }
+ * \endcode
+ */
+bio_auto_cleanup::~bio_auto_cleanup()
+{
+    detail::bio_cleanup();
 }
 
 

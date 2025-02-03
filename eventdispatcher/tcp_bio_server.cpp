@@ -242,7 +242,7 @@ tcp_bio_server::tcp_bio_server(
             //
             std::shared_ptr<BIO> socket;  // use reset(), see SNAP-507
             socket.reset(BIO_new_accept(address.to_ipv4or6_string(addr::STRING_IP_BRACKET_ADDRESS | addr::STRING_IP_PORT).c_str()), detail::bio_deleter);
-            if(!socket)
+            if(socket == nullptr)
             {
                 detail::bio_log_errors();
                 throw initialization_error("failed initializing a BIO server object");

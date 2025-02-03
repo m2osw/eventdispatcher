@@ -41,13 +41,11 @@
 
 namespace ed
 {
-
-
 namespace detail
 {
 
 
-// shared with the tcp_biod_server
+// shared with the tcp_bio_server
 class tcp_bio_client_impl
 {
 public:
@@ -60,14 +58,13 @@ void        bio_cleanup();
 void        bio_deleter(BIO * bio);
 void        bio_initialize();
 int         bio_log_errors();
+void        general_names_deleter(GENERAL_NAMES * general_names);
 void        per_thread_cleanup();
 void        ssl_ctx_deleter(SSL_CTX * ssl_ctx);
 void        thread_cleanup();
 
 
-}
-// namespace detail
 
-
+} // namespace detail
 } // namespace ed
 // vim: ts=4 sw=4 et

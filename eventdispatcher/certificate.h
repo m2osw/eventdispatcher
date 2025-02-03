@@ -55,9 +55,16 @@ struct x509_st;
 struct X509_name_st;
 
 
+
 namespace ed
 {
 
+
+
+namespace detail
+{
+class tcp_bio_client_impl;
+}
 
 
 typedef int cert_param_t;
@@ -143,6 +150,9 @@ private:
     void                            get_each_name(X509_name_st * name, cert_param_t base) const;
     void                            get_additional_common_names(int nid, cert_param_t param) const;
 
+    std::shared_ptr<detail::tcp_bio_client_impl>
+                                    f_impl = std::shared_ptr<detail::tcp_bio_client_impl>();
+
     std::uint32_t                   f_timeout = 5; // used by load_from_domain()
     x509_st *                       f_certificate = nullptr; // the X509 structure
 
@@ -154,13 +164,6 @@ private:
     mutable snapdev::timespec_ex    f_not_after = snapdev::timespec_ex();
 
     mutable cert_parameters_t       f_cert_parameters = cert_parameters_t();
-    //mutable std::string             f_common_name = std::string();                  // NID_commonName (13)
-    //mutable std::string             f_country_name = std::string();                 // NID_countryName (14)
-    //mutable std::string             f_locality_name = std::string();                // NID_localityName (15)
-    //mutable std::string             f_state_or_province_name = std::string();       // NID_stateOrProvinceName (16)
-    //mutable std::string             f_organization_name = std::string();            // NID_organizationName (17)
-    //mutable std::string             f_organizational_unit = std::string();          // NID_organizationalUnitName (18)
-    //mutable std::string             f_email_address = std::string();                // NID_pkcs9_emailAddress (48)
 };
 
 

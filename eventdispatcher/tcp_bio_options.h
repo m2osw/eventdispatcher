@@ -95,5 +95,13 @@ private:
 
 
 
+class bio_auto_cleanup
+{
+public:
+    ~bio_auto_cleanup();
+};
+
+
+
 } // namespace ed
 // vim: ts=4 sw=4 et
