@@ -91,9 +91,33 @@ timer::timer(std::int64_t timeout_us)
 }
 
 
+/** \brief Retrieve a reference to the timer callback manager.
+ *
+ * This function returns a reference to the timer callback manager.
+ * It can be used to manage the functions being called by the timer.
+ *
+ * For additional information about the callback manager, see the snapdev
+ * project. See also the timer::process_timer() reimplementation as it
+ * gives an example on how to use this functionality.
+ *
+ * \note
+ * It is expected to be used only if you create a standalone timer
+ * opposed to creating a class that derives from a timer and re-implements
+ * the process_timer() function.
+ *
+ * \return A reference to the timer callback manager.
+ *
+ * \sa process_timer()
+ */
+timer::callback_manager_t & timer::get_callback_manager()
+{
+    return f_callback_manager;
+}
+
+
 /** \brief Retrieve the socket of the timer object.
-*
-* Timer objects are never attached to a socket so this function always
+ *
+ * Timer objects are never attached to a socket so this function always
  * returns -1.
  *
  * \note
@@ -117,6 +141,63 @@ int timer::get_socket() const
 bool timer::valid_socket() const
 {
     return true;
+}
+
+
+/** \brief Implementation of the process_timeout() function.
+ *
+ * By default, the process_timeout() is expected to be implemented by your
+ * own derived version of the timer class. However, many times more than one
+ * timer is required and having to create a new class each time is a lot
+ * of work. By default, a timer object will call one or more functions you
+ * setup using the get_callback_manager().add_callback() function.
+ *
+ * Here is a simple example also showing how to remove a callback once you
+ * are done with the timer.
+ *
+ * \code
+ * in the .cpp:
+ *
+ *     void my_class::init()
+ *     {
+ *         f_timer = std::shared_ptr<ed::timer>(1000);
+ *         f_id = f_timer->get_callback_manager().add_callback(sdtd::bind(&my_class::tick, std::placeholders::_1, "caller one"));
+ *     }
+ *
+ *     // the function receives a pointer to the timer which can be useful
+ *     // if the function is not part of the object that owns the timer
+ *     //
+ *     bool my_class::tick(ed::timer::pointer_t t, std::string const & caller)
+ *     {
+ *         if(<some condition>)
+ *         {
+ *             // this means we are done
+ *             //
+ *             f_timer->get_callback_manager().remove_callback(f_id);
+ *             f_id = ed::timer::callback_manager_t::NULL_CALLBACK_ID;
+ *             f_timer.clear();
+ *             return;
+ *         }
+ *
+ *         // do some other work with the tick event
+ *     }
+ *
+ * in the .h:
+ *
+ * private:
+ *     ed::timer::pointer_t                            f_timer = ed::timer::pointer_t();
+ *     ed::timer::callback_manager_t::callback_id_t    f_timer_id = ed::timer::callback_manager_t::NULL_CALLBACK_ID;
+ * \endcode
+ *
+ * \note
+ * If no functions are added to the callback manager, then this function
+ * does nothing.
+ *
+ * \sa get_callback_manager()
+ */
+void timer::process_timeout()
+{
+    snapdev::NOT_USED(f_callback_manager.call(std::dynamic_pointer_cast<timer>(shared_from_this())));
 }
 
 

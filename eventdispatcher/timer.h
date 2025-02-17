@@ -22,11 +22,22 @@
  * \brief Timer connection.
  *
  * Class used to get a signal at a given date or every N seconds.
+ *
+ * The precision will depend on your hardware and kernel. The functions
+ * support microseconds.
+ *
+ * The newer version supports adding callbacks meaning that you do not
+ * need to create a new class to implement the process_timeout() function.
  */
 
 // self
 //
 #include    <eventdispatcher/connection.h>
+
+
+// snapdev
+//
+#include    <snapdev/callback_manager.h>
 
 
 
@@ -45,13 +56,21 @@ public:
     // limited to a date timeout, although an interval would
     // work too but require a little bit of work.)
     //
-    typedef std::shared_ptr<timer>      pointer_t;
+    typedef std::shared_ptr<timer>                          pointer_t;
+    typedef std::function<bool(pointer_t)>                  timeout_callback_t;
+    typedef snapdev::callback_manager<timeout_callback_t>   callback_manager_t;
 
                                 timer(std::int64_t timeout_us);
+
+    callback_manager_t &        get_callback_manager();
 
     // connection implementation
     virtual int                 get_socket() const override;
     virtual bool                valid_socket() const override;
+    virtual void                process_timeout() override;
+
+private:
+    callback_manager_t          f_callback_manager = callback_manager_t();
 };
 
 

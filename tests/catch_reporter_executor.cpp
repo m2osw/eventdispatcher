@@ -4771,7 +4771,7 @@ CATCH_TEST_CASE("reporter_executor_error_message", "[executor][reporter][error]"
             },
             {
                 g_program_verify_message_fail_required_timestamp_value,
-                "event_dispatcher_exception: program_verify_message_fail.rprtr:9: message expected parameter \"version\", set to \"Wed Dec 31 16:00:01.000000000 1969\", to match timestamp \"Wed Dec 31 16:02:03.000000000 1969\".",
+                "event_dispatcher_exception: program_verify_message_fail.rprtr:9: message expected parameter \"version\", set to \"Thu Jan  1 00:00:01.000000000 1970\", to match timestamp \"Thu Jan  1 00:02:03.000000000 1970\".",
             },
             {
                 g_program_verify_message_fail_timestamp_command,

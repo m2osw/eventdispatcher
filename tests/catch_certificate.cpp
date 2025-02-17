@@ -52,11 +52,11 @@ CATCH_TEST_CASE("certificate", "[certificate]")
         snapdev::timespec_ex date(cert.get_not_before());
 //SNAP_LOG_WARNING << "--- BEFORE " << date << " [" << date.to_string("%Y/%m/%d %H:%M:%S.%N") << "]" << SNAP_LOG_SEND;
         CATCH_REQUIRE(date.tv_sec == 1738371918);
-        CATCH_REQUIRE(date.to_string("%Y/%m/%d %H:%M:%S.%N") == "2025/01/31 17:05:18.000000000");
+        CATCH_REQUIRE(date.to_string("%Y/%m/%d %H:%M:%S.%N") == "2025/02/01 01:05:18.000000000");
         date = cert.get_not_after();
 //SNAP_LOG_WARNING << "--- AFTER " << date << " [" << date.to_string("%Y/%m/%d %H:%M:%S.%N") << "]" << SNAP_LOG_SEND;
         CATCH_REQUIRE(date.tv_sec == 1769907918);
-        CATCH_REQUIRE(date.to_string("%Y/%m/%d %H:%M:%S.%N") == "2026/01/31 17:05:18.000000000");
+        CATCH_REQUIRE(date.to_string("%Y/%m/%d %H:%M:%S.%N") == "2026/02/01 01:05:18.000000000");
         CATCH_REQUIRE(cert.get_issuer_common_name() == "example.net");
         CATCH_REQUIRE(cert.get_issuer_country_name() == "US");
         CATCH_REQUIRE(cert.get_issuer_locality_name() == "Los Angeles");

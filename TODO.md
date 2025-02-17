@@ -5,6 +5,19 @@
   It should already be in place, it's a matter of testing to make sure
   it works 100% as expected.
 
+* A permanent connection makes use of the connection timer
+
+  I have had many problems with that one, I am actually thinking that
+  maybe having a timer in each connection is not a good idea at all
+  (i.e. that functionality should probably be 100% separate).
+
+  Now that we have the ability to create a standalone timer and setup
+  a callback using std::bind(), we should switch the permanent connection
+  timer to an internal timer which doesn't make use of the permanent
+  connection timer itself so the users of that connection could now
+  make use of said timer (although from the statement above, we probably
+  should 100% stop such uses).
+
 * Over time, update the address array of a permanent connection
 
   The `tcp_client_permanent_message_connection` class supports any number
@@ -12,12 +25,12 @@
   often a DNS will return a set of addresses and not too long later,
   a different set of IPs (i.e. if you deploy on a Google Cloud system
   with kubernetes, your pods are assigned new IPs each time you do that;
-  this is because the old IP is kept while the old version keeps running
-  until the new version is available and in the DNS, then the old version
+  this is because the old IP is kept while the old instance keeps running
+  until the new instance is available and in the DNS, then the old instance
   gets removed, so the new pod cannot be using the same IP as the old pod).
 
   So we need a way to update those IP addresses after the TTL given to
-  us from the DNS says the old IP addresses are not valid anymore.
+  us by the DNS, which says the old IP addresses are not valid anymore.
 
   **Note:** these addresses may also change with time. So if you requests
   a domain to give you an IP address at some point, it may be necessary
