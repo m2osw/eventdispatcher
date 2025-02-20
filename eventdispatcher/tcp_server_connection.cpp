@@ -54,8 +54,8 @@ namespace ed
  *
  * This connection supports secure SSL communication using a certificate
  * and a private key. These have to be specified as filenames. The
- * `snapcommunicator` daemon makes use of files defined under
- * "/etc/snapwebsites/ssl/..." by default.
+ * `communicatord` daemon makes use of files defined under
+ * "/etc/communicator/ssl/..." by default.
  *
  * These files are created using this command line:
  *
@@ -69,15 +69,16 @@ namespace ed
  * as the private key.
  *
  * \todo
- * Add support for DH connections. Since our snapcommunicator connections
+ * Add support for DH connections. Since our communicatord connections
  * are mostly private, it should not be a huge need at this point, though.
  *
  * \todo
  * Add support for verified certificates. Right now we do not create
  * signed certificates. This does not prevent fully secure transactions,
- * it just cannot verify that the computer on the other side is correct.
+ * it just cannot verify that the computer on the other side is the
+ * correct one.
  *
- * \param[in] address  The address and port to listen on. It may be set to "0.0.0.0".
+ * \param[in] address  The address and port to listen on. It may be set to "0.0.0.0" or "::".
  * \param[in] certificate  The filename to a .pem file.
  * \param[in] private_key  The filename to a .pem file.
  * \param[in] mode  The mode to use to open the connection (PLAIN or SECURE.)
