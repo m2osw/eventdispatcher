@@ -51,7 +51,8 @@ public:
     virtual                     ~tcp_server_client_connection() override;
 
     void                        close();
-    addr::addr                  get_client_address();
+    addr::addr const &          get_client_address();
+    addr::addr const &          get_remote_address();
 
     // connection implementation
     virtual bool                is_reader() const override;
@@ -63,7 +64,8 @@ public:
 
 private:
     tcp_bio_client::pointer_t   f_client = tcp_bio_client::pointer_t();
-    addr::addr                  f_address = addr::addr();
+    addr::addr                  f_client_address = addr::addr();
+    addr::addr                  f_remote_address = addr::addr();
 };
 
 

@@ -205,20 +205,63 @@ bool tcp_server_client_connection::is_reader() const
  *
  * \return A reference to the client's address.
  */
-addr::addr tcp_server_client_connection::get_client_address() 
+addr::addr const & tcp_server_client_connection::get_client_address() 
 {
-    if(f_address.is_default())
+    if(f_client_address.is_default())
     {
         int const s(get_socket());
         if(s >= 0)
         {
-            f_address.set_from_socket(s, false);
+            f_client_address.set_from_socket(s, false);
         }
     }
 
-    return f_address;
+    return f_client_address;
 }
 
+
+/** \brief Retrieve the remote address information.
+ *
+ * This function can be used to retrieve the remove address and port
+ * information as was specified on the constructor. These can be used
+ * to find this specific connection at a later time or create another
+ * connection.
+ *
+ * For example, you may get 192.168.2.17:4040.
+ *
+ * The function works even after the socket gets closed as we save
+ * the remote address and port in a string just after the connection
+ * was established.
+ *
+ * \warning
+ * This function returns BOTH: the address and the port.
+ *
+ * \note
+ * These parameters are the same as what was passed to the constructor,
+ * only both will have been converted to numbers. So for example when
+ * you used "localhost", here you get "::1" or "127.0.0.1" for the
+ * address.
+ *
+ * \return The remote host address and connection port.
+ */
+addr::addr const & tcp_server_client_connection::get_remote_address()
+{
+    // TODO: somehow the port seems wrong (i.e. all connections return the same port)
+    //       I changed this to do the getpeername() at the time you call the
+    //       get_remote_address() and I use the addr::addr get_from_socket()
+    //       so now it may work? I need to test it again
+    //
+    if(f_remote_address.is_default())
+    {
+        int const s(get_socket());
+        if(s >= 0)
+        {
+            f_remote_address.set_from_socket(s, true);
+        }
+    }
+
+    return f_remote_address;
+}
 
 
 } // namespace ed

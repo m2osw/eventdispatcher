@@ -76,8 +76,8 @@ public:
     void                close();
 
     int                 get_socket() const;
-    addr::addr          get_address() const;
-    addr::addr          get_client_address();
+    addr::addr const &  get_remote_address() const;
+    addr::addr const &  get_client_address();
     std::size_t         get_sent_bytes() const;
     std::size_t         get_received_bytes() const;
 

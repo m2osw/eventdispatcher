@@ -688,7 +688,7 @@ int tcp_bio_client::get_socket() const
  *
  * \return The address as specified in the constructor.
  */
-addr::addr tcp_bio_client::get_address() const
+addr::addr const & tcp_bio_client::get_remote_address() const
 {
     return f_address;
 }
@@ -710,7 +710,7 @@ addr::addr tcp_bio_client::get_address() const
  *
  * \return The remote computer address.
  */
-addr::addr tcp_bio_client::get_client_address()
+addr::addr const & tcp_bio_client::get_client_address()
 {
     if(f_client_address.is_default())
     {
