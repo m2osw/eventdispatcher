@@ -51,7 +51,7 @@ public:
     bool                        has_output() const;
 
     // ed::tcp_client_connection implementation
-    virtual ssize_t             write(void const * data, size_t length) override;
+    virtual ssize_t             write(void const * data, std::size_t length) override;
     virtual bool                is_writer() const override;
     virtual void                process_read() override;
     virtual void                process_write() override;

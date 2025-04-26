@@ -123,7 +123,7 @@
 
   One way may be to listen for file changes under /proc/... as it may have the
   effect we want (i.e. whenever a new file is created there, such as a UDP
-  connection, then we would receive a message and can tranform that in a
+  connection, then we would receive a message and can transform that in a
   signal about new/removed TCP/UDP/... connections (however
   `file_change`--a.k.a. inotify does not work on `/proc`).
 
@@ -141,6 +141,13 @@
 * Consider using the `SO_LINGER` to not wait on a `close(socket)` (i.e. turn
   off the lingering). This means the kernel closes the socket in the
   background and we can move on with other work.
+
+* Consider opening all the connections with `O_CLOEXEC` (or equivalent) to
+  avoid leaking sockets between processes. There are a few cases where we
+  do want to keep a file descriptor open, so we need to allow such. We could
+  use the `O_CLOEXEC` by default and have a function that turns it off if
+  we need to pass that socket to a sub-process (i.e. as its stdin or stdout
+  for example).
 
 * Rate limit transfers by sending X bytes every N milliseconds on that given
   connection (i.e. as long as there is something to write and it can be written

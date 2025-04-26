@@ -59,6 +59,7 @@ class tcp_bio_server;
 
 // Create/manage certificates details:
 // https://help.ubuntu.com/lts/serverguide/certificates-and-security.html
+//
 class tcp_bio_client
 {
 public:
@@ -81,9 +82,9 @@ public:
     std::size_t         get_sent_bytes() const;
     std::size_t         get_received_bytes() const;
 
-    int                 read(char * buf, size_t size);
+    int                 read(char * buf, std::size_t size);
     int                 read_line(std::string & line);
-    int                 write(char const * buf, size_t size);
+    int                 write(char const * buf, std::size_t size);
 
 private:
     friend class tcp_bio_server;

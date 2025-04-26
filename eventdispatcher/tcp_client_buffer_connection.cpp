@@ -136,29 +136,30 @@ bool tcp_client_buffer_connection::has_output() const
  * we cannot just sleep and wait for an answer. The transfer will
  * be asynchronous.
  *
- * \todo
- * Optimization: look into writing the \p data buffer directly in
- * the socket if the f_output cache is empty. If that works then
- * we can completely bypass our intermediate cache. This works only
- * if we make sure that the socket is non-blocking, though.
+ * \note
+ * On success, the function returns \p length whether part or all
+ * of the data was sent through the socket or saved to the cached.
+ *
+ * \note
+ * Note that the cache is always used if the socket was not marked
+ * non-blocking. You can ensure so by calling the connection::non_blocking()
+ * function once.
  *
  * \todo
  * Determine whether we may end up with really large buffers that
  * grow for a long time. This function only inserts and the
- * process_signal() function only reads some of the bytes but it
+ * process_write() function only reads some of the bytes but it
  * does not reduce the size of the buffer until all the data was
  * sent.
  *
  * \param[in] data  The pointer to the buffer of data to be sent.
  * \param[out] length  The number of bytes to send.
  *
- * \return The number of bytes that were saved in our buffer, 0 if
- *         no data was written to the buffer (i.e. length is zero or data
- *         is a null pointer). Or -1 on an error (i.e. the socket is closed).
+ * \return The number of bytes that were written or -1 on an error.
  */
-ssize_t tcp_client_buffer_connection::write(void const * data, size_t length)
+ssize_t tcp_client_buffer_connection::write(void const * data, std::size_t length)
 {
-    if(get_socket() == -1)
+    if(!valid_socket())
     {
         errno = EBADF;
         return -1;
@@ -167,7 +168,36 @@ ssize_t tcp_client_buffer_connection::write(void const * data, size_t length)
     if(data != nullptr && length > 0)
     {
         char const * d(reinterpret_cast<char const *>(data));
-        f_output.insert(f_output.end(), d, d + length);
+        std::size_t l(length);
+
+        if(f_output.empty()
+        && is_non_blocking())
+        {
+            // it is non-blocking so we can attempt an immediate write()
+            // to the socket, this way we may be able to avoid caching
+            // anything
+            //
+            errno = 0;
+            ssize_t const r(tcp_client_connection::write(d, l));
+            if(r > 0)
+            {
+                l -= r;
+                if(l == 0)
+                {
+                    // no buffer needed!
+                    //
+                    return length;
+                }
+
+                // could not write the entire buffer, cache the rest
+                //
+                d += r;
+            }
+            // TODO: handle error cases -- the process_write() will do that
+            //       but we're going to cache the data, etc. which is a waste
+        }
+
+        f_output.insert(f_output.end(), d, d + l);
         return length;
     }
 
@@ -184,7 +214,7 @@ ssize_t tcp_client_buffer_connection::write(void const * data, size_t length)
  */
 bool tcp_client_buffer_connection::is_writer() const
 {
-    return get_socket() != -1 && !f_output.empty();
+    return valid_socket() && has_output();
 }
 
 
@@ -210,7 +240,7 @@ void tcp_client_buffer_connection::process_read()
     // much as possible and then check for a '\n' and keep
     // any extra data in a cache.
     //
-    if(get_socket() != -1)
+    if(valid_socket())
     {
         int count_lines(0);
         std::int64_t const date_limit(get_current_date() + get_processing_time_limit());
@@ -307,7 +337,7 @@ void tcp_client_buffer_connection::process_read()
  */
 void tcp_client_buffer_connection::process_write()
 {
-    if(get_socket() != -1)
+    if(valid_socket())
     {
         errno = 0;
         ssize_t const r(tcp_client_connection::write(&f_output[f_position], f_output.size() - f_position));
@@ -342,6 +372,7 @@ void tcp_client_buffer_connection::process_write()
     }
 
     // process next level too
+    //
     tcp_client_connection::process_write();
 }
 

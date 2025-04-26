@@ -49,6 +49,7 @@
 
 // C
 //
+#include    <fcntl.h>
 #include    <sys/ioctl.h>
 #include    <sys/socket.h>
 
@@ -337,7 +338,7 @@ bool connection::compare(pointer_t const & lhs, pointer_t const & rhs)
  *
  * \sa set_event_limit()
  */
-uint16_t connection::get_event_limit() const
+connection::event_limit_t connection::get_event_limit() const
 {
     return f_event_limit;
 }
@@ -361,7 +362,7 @@ uint16_t connection::get_event_limit() const
  *
  * \sa get_event_limit()
  */
-void connection::set_event_limit(uint16_t event_limit)
+void connection::set_event_limit(event_limit_t event_limit)
 {
     f_event_limit = event_limit;
 }
@@ -760,13 +761,27 @@ std::int64_t connection::get_saved_timeout_timestamp() const
  * block on you. It is important to not setup a socket you
  * listen on as non-blocking if you do not want to risk having the
  * accepted sockets non-blocking.
+ *
+ * \bug
+ * Several times, I tested sockets going from non-blocking to blocking
+ * and it never worked properly for me (actually, I first used the Qt
+ * interface which forcibly sets the socket as non-blocking and I could
+ * not restore that value). This is why there is no function to remove
+ * the non-blocking flag once it is set.
  */
-void connection::non_blocking() const
+void connection::non_blocking()
 {
-    if(valid_socket()
-    && get_socket() >= 0)
+    if(f_non_blocking_state != non_blocking_state_t::NON_BLOCKING_STATE_NON_BLOCKING
+    && valid_socket())
     {
-        int optval(1);
+        // note: the proper way to do this is to use the get+set of the
+        //       flags, although under Linux it works 100% the same way
+        //       and the ioctl() is a single syscall.
+        //
+        //           int const flags(fcntl(fd, F_GETFL, 0));
+        //           fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+        //
+        int const optval(1);
         if(ioctl(get_socket(), FIONBIO, &optval) == -1)
         {
             // LCOV_EXCL_START
@@ -778,9 +793,45 @@ void connection::non_blocking() const
                 << strerror(e)
                 << ") occurred trying to mark socket as non-blocking."
                 << SNAP_LOG_SEND;
+
+            f_non_blocking_state = non_blocking_state_t::NON_BLOCKING_STATE_UNKNOWN;
             // LCOV_EXCL_STOP
         }
+        else
+        {
+            f_non_blocking_state = non_blocking_state_t::NON_BLOCKING_STATE_NON_BLOCKING;
+        }
     }
+}
+
+
+/** \brief Check whether the socket is blocking or not.
+ *
+ * This function checks the current socket state and if non-blocking,
+ * returns true.
+ *
+ * If the connection does not currently have a valid socket, then it
+ * returns false.
+ *
+ * \note
+ * The function caches the results. If the socket is blocking and you call
+ * the non_blocking() function later, the cache is updated appropriately.
+ * This way, the call is likely always really fast.
+ *
+ * \return true if the socket is valid and marked as non-blocking.
+ */
+bool connection::is_non_blocking() const
+{
+    if(f_non_blocking_state == non_blocking_state_t::NON_BLOCKING_STATE_UNKNOWN
+    && valid_socket())
+    {
+        int const flags(fcntl(get_socket(), F_GETFL, 0));
+        f_non_blocking_state = flags == -1 || (flags & O_NONBLOCK) == 0
+                ? non_blocking_state_t::NON_BLOCKING_STATE_BLOCKING
+                : non_blocking_state_t::NON_BLOCKING_STATE_NON_BLOCKING;
+    }
+
+    return f_non_blocking_state == non_blocking_state_t::NON_BLOCKING_STATE_NON_BLOCKING;
 }
 
 
@@ -793,11 +844,11 @@ void connection::non_blocking() const
  * The function returns whether the function works or not. If the function
  * fails, it logs a warning and returns.
  */
-void connection::keep_alive() const
+void connection::keep_alive()
 {
-    if(get_socket() != -1)
+    if(valid_socket())
     {
-        int optval(1);
+        int const optval(1);
         socklen_t const optlen(sizeof(optval));
         if(setsockopt(get_socket(), SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) != 0)
         {
@@ -813,6 +864,48 @@ void connection::keep_alive() const
             // LCOV_EXCL_STOP
         }
     }
+}
+
+
+/** \brief Check whether the keep alive flag is set on this socket.
+ *
+ * This function checks whether the KEEP ALIVE flag is set on this socket.
+ *
+ * \warning
+ * The keep alive flag is not cached. Calling this function makes a
+ * syscall() each time.
+ *
+ * \return if the connection has a valid socket and its KEEP ALIVE flag
+ * is turned on.
+ */
+bool connection::is_keep_alive() const
+{
+    if(valid_socket())
+    {
+        int optval(0);
+        socklen_t optlen(sizeof(optval));
+        if(getsockopt(get_socket(), SOL_SOCKET, SO_KEEPALIVE, &optval, &optlen) != 0)
+        {
+            // LCOV_EXCL_START
+            int const e(errno);
+            SNAP_LOG_WARNING
+                << "connection::is_keep_alive(): error "
+                << e
+                << " ("
+                << strerror(e)
+                << ") occurred trying to check the socket SO_KEEPALIVE flag."
+                << SNAP_LOG_SEND;
+            return false;
+            // LCOV_EXCL_STOP
+        }
+        if(optlen == sizeof(optval)
+        && optval != 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 
@@ -1033,12 +1126,10 @@ void connection::process_error()
     //      case? because the get_socket() function will not return
     //      -1 after such errors...
 
-    if(get_socket() == -1)
+    if(!valid_socket())
     {
-        SNAP_LOG_DEBUG
-            << "socket "
-            << get_socket()
-            << " of connection \""
+        SNAP_LOG_UNIMPORTANT
+            << "socket of connection \""
             << f_name
             << "\" was marked as erroneous by the kernel or was closed (-1)."
             << SNAP_LOG_SEND;
@@ -1151,7 +1242,7 @@ void connection::connection_removed()
  * This function returns the socket of the connection which is a file
  * descriptor.
  *
- * A connection is expected to create a socket at the time it gets created.
+ * A connection is expected to open a socket at the time it gets created.
  * It can use that socket until it gets closed. After it gets closed, the
  * function returns -1.
  *

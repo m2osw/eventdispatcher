@@ -67,6 +67,7 @@ public:
     typedef std::shared_ptr<connection> pointer_t;
     typedef std::weak_ptr<connection>   weak_pointer_t;
     typedef std::vector<pointer_t>      vector_t;
+    typedef std::uint8_t                event_limit_t;
 
                                 connection();
                                 connection(connection const &) = delete;
@@ -93,8 +94,8 @@ public:
     void                        set_priority(priority_t priority);
     static bool                 compare(pointer_t const & lhs, pointer_t const & rhs);
 
-    std::uint16_t               get_event_limit() const;
-    void                        set_event_limit(std::uint16_t event_limit);
+    event_limit_t               get_event_limit() const;
+    void                        set_event_limit(event_limit_t event_limit);
     std::int32_t                get_processing_time_limit() const;
     void                        set_processing_time_limit(std::int32_t processing_time_limit);
 
@@ -107,8 +108,10 @@ public:
     void                        set_timeout_date(snapdev::timespec_ex const & date);
     std::int64_t                get_timeout_timestamp() const;
 
-    void                        non_blocking() const;
-    void                        keep_alive() const;
+    void                        non_blocking();
+    bool                        is_non_blocking() const;
+    void                        keep_alive();
+    bool                        is_keep_alive() const;
 
     bool                        is_done() const;
     void                        mark_done();
@@ -131,6 +134,13 @@ protected:
     std::int64_t                save_timeout_timestamp();
 
 private:
+    enum class non_blocking_state_t : std::uint8_t
+    {
+        NON_BLOCKING_STATE_UNKNOWN,
+        NON_BLOCKING_STATE_BLOCKING,
+        NON_BLOCKING_STATE_NON_BLOCKING,
+    };
+
     friend communicator;
 
     std::int64_t                get_saved_timeout_timestamp() const;
@@ -138,7 +148,9 @@ private:
     std::string                 f_name = std::string();
     bool                        f_enabled = true;
     bool                        f_done = false;
-    std::uint16_t               f_event_limit = 5;                  // limit before giving other events a chance
+    mutable non_blocking_state_t
+                                f_non_blocking_state = non_blocking_state_t::NON_BLOCKING_STATE_UNKNOWN;
+    event_limit_t               f_event_limit = 5;                  // limit before giving other events a chance
     priority_t                  f_priority = EVENT_DEFAULT_PRIORITY;
     std::int64_t                f_timeout_delay_start_date = 0;     // in microseconds
     std::int64_t                f_timeout_delay = -1;               // in microseconds

@@ -19,9 +19,10 @@
 #pragma once
 
 /** \file
- * \brief Event dispatch class.
+ * \brief A TCP connection, client side.
  *
- * Class used to handle events.
+ * This class implements a connection using TCP. This is the client side.
+ * This connection connects to the server listening on a TCP port.
  */
 
 // self

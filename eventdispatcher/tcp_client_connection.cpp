@@ -125,7 +125,7 @@ addr::addr const & tcp_client_connection::get_remote_address() const
  */
 ssize_t tcp_client_connection::read(void * buf, size_t count)
 {
-    if(get_socket() == -1)
+    if(!valid_socket())
     {
         errno = EBADF;
         return -1;
@@ -150,7 +150,7 @@ ssize_t tcp_client_connection::read(void * buf, size_t count)
  */
 ssize_t tcp_client_connection::write(void const * buf, size_t count)
 {
-    if(get_socket() == -1)
+    if(!valid_socket())
     {
         errno = EBADF;
         return -1;

@@ -569,7 +569,7 @@ bool communicator::run()
             // may have been closed or we may be handling a timer or
             // signal object)
             //
-            if(c->get_socket() < 0)
+            if(!c->valid_socket())
             {
                 continue;
             }

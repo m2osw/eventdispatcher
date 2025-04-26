@@ -649,7 +649,7 @@ void tcp_bio_client::close()
  *
  * This function returns the TCP client socket descriptor. This can be
  * used to change the descriptor behavior (i.e. make it non-blocking for
- * example.)
+ * example).
  *
  * \note
  * If the socket was closed, then the function returns -1.
@@ -715,7 +715,7 @@ addr::addr const & tcp_bio_client::get_client_address()
     if(f_client_address.is_default())
     {
         int const s(get_socket());
-        if(s > 0)
+        if(s >= 0)
         {
             f_client_address.set_from_socket(s, true);
         }
@@ -801,7 +801,7 @@ std::size_t tcp_bio_client::get_received_bytes() const
  * \sa read_line()
  * \sa write()
  */
-int tcp_bio_client::read(char * buf, size_t size)
+int tcp_bio_client::read(char * buf, std::size_t size)
 {
     if(f_impl->f_bio == nullptr)
     {
@@ -931,7 +931,7 @@ int tcp_bio_client::read_line(std::string & line)
  *
  * \sa read()
  */
-int tcp_bio_client::write(char const * buf, size_t size)
+int tcp_bio_client::write(char const * buf, std::size_t size)
 {
 #ifdef _DEBUG
     // This log is useful when developing APIs against 3rd party

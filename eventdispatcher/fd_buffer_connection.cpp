@@ -171,7 +171,7 @@ ssize_t fd_buffer_connection::write(void const * data, size_t const length)
     //          because the fd_buffer_connection::is_writer() also checks
     //          the f_output buffer which has unwanted side effects
     //
-    if(get_socket() == -1
+    if(!valid_socket()
     || !fd_connection::is_writer()) // WARNING: see above
     {
         errno = EBADF;
@@ -212,7 +212,7 @@ void fd_buffer_connection::process_read()
     // much as possible and then check for a '\n' and keep
     // any extra data in a cache.
     //
-    if(get_socket() != -1)
+    if(valid_socket())
     {
         int count_lines(0);
         std::int64_t const date_limit(get_current_date() + get_processing_time_limit());
@@ -302,7 +302,7 @@ void fd_buffer_connection::process_read()
  */
 void fd_buffer_connection::process_write()
 {
-    if(get_socket() != -1)
+    if(valid_socket())
     {
         errno = 0;
         ssize_t const r(fd_connection::write(&f_output[f_position], f_output.size() - f_position));
