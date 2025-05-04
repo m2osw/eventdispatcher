@@ -107,7 +107,7 @@ tcp_server_client_connection::~tcp_server_client_connection()
  *
  * \return The number of bytes read or -1 if an error occurred.
  */
-ssize_t tcp_server_client_connection::read(void * buf, size_t count)
+ssize_t tcp_server_client_connection::read(void * buf, std::size_t count)
 {
     if(f_client == nullptr)
     {
@@ -140,7 +140,7 @@ ssize_t tcp_server_client_connection::read(void * buf, size_t count)
  *
  * \return The number of bytes written to the socket or -1 if an error occurred.
  */
-ssize_t tcp_server_client_connection::write(void const * buf, size_t count)
+ssize_t tcp_server_client_connection::write(void const * buf, std::size_t count)
 {
     if(f_client == nullptr)
     {

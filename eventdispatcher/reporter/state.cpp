@@ -289,6 +289,60 @@ void state::clear_message()
 }
 
 
+ssize_t state::data_size() const
+{
+    ssize_t size(0);
+    for(auto const & d : f_connection_data)
+    {
+        size += d->size();
+    }
+    return size;
+}
+
+
+ssize_t state::read_data(connection_data_t & buf, std::size_t size)
+{
+    if(f_connection_data.empty())
+    {
+        errno = ENODATA;
+        return -1;
+    }
+    errno = 0;
+
+    buf.resize(size);
+    std::size_t offset(0);
+    while(!f_connection_data.empty() && offset < size)
+    {
+        std::size_t const copy_max_size(size - offset);
+        std::size_t const copy_size(std::min(f_connection_data.front()->size() - f_data_position, copy_max_size));
+        memcpy(buf.data() + offset, f_connection_data.front()->data() + f_data_position, copy_size);
+        f_data_position += copy_size;
+        if(f_data_position >= f_connection_data.front()->size())
+        {
+            f_connection_data.pop_front();
+            f_data_position = 0;
+        }
+        offset += copy_size;
+    }
+
+    buf.resize(offset);
+    return offset;
+}
+
+
+void state::add_data(connection_data_pointer_t data)
+{
+    f_connection_data.push_back(data);
+}
+
+
+void state::clear_data()
+{
+    f_connection_data.clear();
+    f_data_position = 0;
+}
+
+
 bool state::get_in_thread() const
 {
     return f_in_thread;

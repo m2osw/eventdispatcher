@@ -18,7 +18,7 @@
 
 // self
 //
-#include    "messenger_tcp_client.h"
+#include    "messenger_tcp_server_client.h"
 
 #include    "state.h"
 
@@ -36,17 +36,17 @@ namespace reporter
 
 
 
-messenger_tcp_client::messenger_tcp_client(
+messenger_tcp_server_client::messenger_tcp_server_client(
           state * s
         , ed::tcp_bio_client::pointer_t client)
     : tcp_server_client_message_connection(client)
     , f_state(s)
 {
-    set_name("tcp_client");
+    set_name("msg_tcp_client");
 }
 
 
-void messenger_tcp_client::process_message(ed::message & msg)
+void messenger_tcp_server_client::process_message(ed::message & msg)
 {
     f_state->add_message(msg);
 }

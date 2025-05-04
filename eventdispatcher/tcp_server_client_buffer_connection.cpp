@@ -133,7 +133,7 @@ bool tcp_server_client_buffer_connection::has_output() const
  */
 bool tcp_server_client_buffer_connection::is_writer() const
 {
-    return get_socket() != -1 && !f_output.empty();
+    return valid_socket() && !f_output.empty();
 }
 
 
@@ -159,7 +159,7 @@ bool tcp_server_client_buffer_connection::is_writer() const
  */
 ssize_t tcp_server_client_buffer_connection::write(void const * data, size_t const length)
 {
-    if(get_socket() == -1)
+    if(!valid_socket())
     {
         errno = EBADF;
         return -1;
@@ -199,7 +199,7 @@ void tcp_server_client_buffer_connection::process_read()
     // much as possible and then check for a '\n' in our
     // buffer and keep any extra data in a cache.
     //
-    if(get_socket() != -1)
+    if(valid_socket())
     {
         int count_lines(0);
         std::int64_t const date_limit(get_current_date() + get_processing_time_limit());
@@ -292,7 +292,7 @@ void tcp_server_client_buffer_connection::process_read()
  */
 void tcp_server_client_buffer_connection::process_write()
 {
-    if(get_socket() != -1)
+    if(valid_socket())
     {
         errno = 0;
         ssize_t const r(tcp_server_client_connection::write(&f_output[f_position], f_output.size() - f_position));

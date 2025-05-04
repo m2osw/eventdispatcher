@@ -15,20 +15,21 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#pragma once
 
-// eventdispatcher
+// self
 //
-#include    <eventdispatcher/tcp_server_client_message_connection.h>
+#include    "direct_tcp_server.h"
+
+#include    "direct_tcp_server_client.h"
+#include    "state.h"
 
 
-// snapcatch2
+// last include
 //
-#include    <catch2/snapcatch2.hpp>
+#include    <snapdev/poison.h>
 
 
 
-// view these as an extension of the snapcatch2 library
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter
@@ -36,28 +37,32 @@ namespace reporter
 
 
 
-class state;
-
-
-class messenger_tcp_client
-    : public ed::tcp_server_client_message_connection
+direct_tcp_server::direct_tcp_server(
+          state * s
+        , addr::addr const & a)
+    : tcp_server_connection(a, std::string(), std::string())
+    , f_state(s)
 {
-public:
-    typedef std::shared_ptr<messenger_tcp_client>        pointer_t;
+    set_name("drct_tcp_server");
+    keep_alive();
+}
 
-                            messenger_tcp_client(
-                                  state * s
-                                , ed::tcp_bio_client::pointer_t client);
-                            messenger_tcp_client(messenger_tcp_client const &) = delete;
 
-    messenger_tcp_client &  operator = (messenger_tcp_client const &) = delete;
+void direct_tcp_server::process_accept()
+{
+    // make sure lower level has a chance to capture the event
+    //
+    tcp_server_connection::process_accept();
 
-    // ed::connection implementation
-    virtual void            process_message(ed::message & msg) override;
+    ed::tcp_bio_client::pointer_t client(accept());
+    if(client == nullptr)
+    {
+        throw std::runtime_error("accept() failed to return a pointer."); // LCOV_EXCL_LINE
+    }
 
-private:
-    state *                 f_state = nullptr;
-};
+    direct_tcp_server_client::pointer_t service(std::make_shared<direct_tcp_server_client>(f_state, client));
+    f_state->add_connection(service);
+}
 
 
 

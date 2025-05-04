@@ -77,6 +77,11 @@ enum class connection_type_t
 };
 
 
+typedef std::vector<std::uint8_t>                   connection_data_t;
+typedef std::shared_ptr<connection_data_t>          connection_data_pointer_t;
+typedef std::list<connection_data_pointer_t>        connection_data_list_t;
+
+
 class state
 {
 public:
@@ -115,6 +120,11 @@ public:
     void                    add_message(ed::message const & msg);
     void                    clear_message();
 
+    ssize_t                 data_size() const;
+    ssize_t                 read_data(connection_data_t & buf, std::size_t size);
+    void                    add_data(connection_data_pointer_t data);
+    void                    clear_data();
+
     bool                    get_in_thread() const;
     void                    set_in_thread(bool in_thread);
 
@@ -149,6 +159,8 @@ private:
     bool                    f_in_thread = false;
     int                     f_exit_code = -1;
     ed::message::list_t     f_message = ed::message::list_t();
+    connection_data_list_t  f_connection_data = connection_data_list_t();
+    std::size_t             f_data_position = 0;
     trace_callback_t        f_trace_callback = nullptr;
     connection_type_t       f_connection_type = connection_type_t::CONNECTION_TYPE_TCP;
     ed::connection::pointer_t

@@ -15,21 +15,20 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
-// self
+// eventdispatcher
 //
-#include    "messenger_tcp_server.h"
-
-#include    "messenger_tcp_server_client.h"
-#include    "state.h"
+#include    <eventdispatcher/tcp_server_client_message_connection.h>
 
 
-// last include
+// snapcatch2
 //
-#include    <snapdev/poison.h>
+#include    <catch2/snapcatch2.hpp>
 
 
 
+// view these as an extension of the snapcatch2 library
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter
@@ -37,32 +36,29 @@ namespace reporter
 
 
 
-messenger_tcp_server::messenger_tcp_server(
-          state * s
-        , addr::addr const & a)
-    : tcp_server_connection(a, std::string(), std::string())
-    , f_state(s)
+class state;
+
+
+class messenger_tcp_server_client
+    : public ed::tcp_server_client_message_connection
 {
-    set_name("tcp_server");
-    keep_alive();
-}
+public:
+    typedef std::shared_ptr<messenger_tcp_server_client>        pointer_t;
 
+                            messenger_tcp_server_client(
+                                  state * s
+                                , ed::tcp_bio_client::pointer_t client);
+                            messenger_tcp_server_client(messenger_tcp_server_client const &) = delete;
 
-void messenger_tcp_server::process_accept()
-{
-    // make sure lower level has a chance to capture the event
-    //
-    tcp_server_connection::process_accept();
+    messenger_tcp_server_client &
+                            operator = (messenger_tcp_server_client const &) = delete;
 
-    ed::tcp_bio_client::pointer_t client(accept());
-    if(client == nullptr)
-    {
-        throw std::runtime_error("accept() failed to return a pointer."); // LCOV_EXCL_LINE
-    }
+    // ed::connection implementation
+    virtual void            process_message(ed::message & msg) override;
 
-    messenger_tcp_server_client::pointer_t service(std::make_shared<messenger_tcp_server_client>(f_state, client));
-    f_state->add_connection(service);
-}
+private:
+    state *                 f_state = nullptr;
+};
 
 
 

@@ -1564,16 +1564,18 @@ public:
     messenger_responder(
               addr::addr const & a
             , ed::mode_t mode
-            , sequence_t sequence)
+            , sequence_t sequence
+            , int timeout = 500'000) // or ed::DEFAULT_PAUSE_BEFORE_RECONNECTING
         : tcp_client_permanent_message_connection(
               a
             , mode
-            , ed::DEFAULT_PAUSE_BEFORE_RECONNECTING
+            , timeout
             , true
             , "responder")  // service name
         , f_sequence(sequence)
     {
         set_name("messenger_responder");    // connection name
+        set_timeout_delay(500'000);         // 0.5 seconds
     }
 
     virtual void process_connected() override
@@ -3572,6 +3574,77 @@ CATCH_TEST_CASE("reporter_executor_variables", "[executor][reporter][variable]")
 }
 
 
+CATCH_TEST_CASE("reporter_executor_state", "[executor][reporter][error]")
+{
+    CATCH_START_SECTION("reporter_executor_state: add and read data from the state")
+    {
+        for(int count(0); count < 10; ++count)
+        {
+            SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+
+            CATCH_REQUIRE(s->get_server_pid() == getpid());
+            CATCH_REQUIRE(s->data_size() == 0);
+
+            SNAP_CATCH2_NAMESPACE::reporter::connection_data_t buf;
+            CATCH_REQUIRE(s->read_data(buf, 1024) == -1);
+
+            // clear has no effect here
+            //
+            s->clear_data();
+
+            CATCH_REQUIRE(s->get_server_pid() == getpid());
+            CATCH_REQUIRE(s->data_size() == 0);
+
+            CATCH_REQUIRE(s->read_data(buf, 1024) == -1);
+
+            std::size_t total(0);
+            std::vector<std::size_t> sizes(10);
+            for(int i(0); i < 10; ++i)
+            {
+                sizes[i] = rand() % (1024 * 4) + 1;
+                total += sizes[i];
+            }
+
+            SNAP_CATCH2_NAMESPACE::reporter::connection_data_t data(total);
+            for(std::size_t i(0); i < total; ++i)
+            {
+                data[i] = rand();
+            }
+
+            std::size_t offset(0);
+            for(int i(0); i < 10; ++i)
+            {
+                SNAP_CATCH2_NAMESPACE::reporter::connection_data_pointer_t d(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::connection_data_t>(data.data() + offset, data.data() + offset + sizes[i]));
+                s->add_data(d);
+                offset += sizes[i];
+                CATCH_REQUIRE(s->data_size() == static_cast<ssize_t>(offset));
+            }
+            CATCH_REQUIRE(s->data_size() == static_cast<ssize_t>(total));
+
+            offset = 0;
+            while(offset < total)
+            {
+                std::size_t const expected_size(std::min(64UL, total - offset));
+                CATCH_REQUIRE(s->read_data(buf, 64) == static_cast<int>(expected_size));
+                CATCH_REQUIRE(buf.size() == expected_size);
+                for(std::size_t i(0); i < expected_size; ++i)
+                {
+                    CATCH_REQUIRE(buf[i] == data[offset + i]);
+                }
+                offset += expected_size;
+            }
+
+            // here the clear has an effect
+            //
+            s->clear_data();
+            CATCH_REQUIRE(s->data_size() == 0);
+            CATCH_REQUIRE(s->read_data(buf, 1024) == -1);
+        }
+    }
+    CATCH_END_SECTION()
+}
+
+
 CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
 {
     CATCH_START_SECTION("reporter_executor_error: if() before any condition")
@@ -4421,7 +4494,8 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
         messenger_responder::pointer_t messenger(std::make_shared<messenger_responder>(
                   a
                 , ed::mode_t::MODE_PLAIN
-                , messenger_responder::sequence_t::SEQUENCE_READY_THROW));
+                , messenger_responder::sequence_t::SEQUENCE_READY_THROW
+                , ed::DEFAULT_PAUSE_BEFORE_RECONNECTING));
         ed::communicator::instance()->add_connection(messenger);
         messenger_timer::pointer_t timer(std::make_shared<messenger_timer>(messenger));
         ed::communicator::instance()->add_connection(timer);

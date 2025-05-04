@@ -162,6 +162,7 @@ step_t background_executor::execute_instruction()
     statement::pointer_t stmt(f_state->get_statement(ip));
     f_state->set_running_statement(stmt);
     f_state->set_ip(ip + 1);
+//SNAP_LOG_ERROR << "---------------------- TRACE: executing [" << stmt->get_instruction()->get_name() << "] -----------------" << SNAP_LOG_SEND;
 
     f_state->clear_parameters();
 

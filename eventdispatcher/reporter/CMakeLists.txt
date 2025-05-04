@@ -25,6 +25,8 @@ project(reporter)
 
 add_library(${PROJECT_NAME} SHARED
     basic_instructions.cpp
+    direct_tcp_server_client.cpp
+    direct_tcp_server.cpp
     executor.cpp
     expression.cpp
     instruction.cpp
@@ -33,7 +35,7 @@ add_library(${PROJECT_NAME} SHARED
     parser.cpp
     state.cpp
     statement.cpp
-    messenger_tcp_client.cpp
+    messenger_tcp_server_client.cpp
     messenger_tcp_server.cpp
     token.cpp
     variable.cpp
