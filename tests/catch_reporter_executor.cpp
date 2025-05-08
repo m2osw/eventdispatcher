@@ -349,7 +349,7 @@ constexpr char const * const g_program_verify_variable_in_string =
 
 constexpr char const * const g_program_accept_one_message =
     "run()\n"
-    "listen(address: <127.0.0.1:20002>)\n"
+    "listen(address: <127.0.0.1:20002>, connection_type: messenger)\n"
     "label(name: wait_message)\n"
     "clear_message()\n"
     "wait(timeout: 10.0, mode: wait)\n" // first wait reacts on connect(), second wait receives the REGISTER message
@@ -414,7 +414,7 @@ constexpr char const * const g_program_send_invalid_parameter_value_type =
 
 constexpr char const * const g_program_save_parameter_of_type_timestamp =
     "run()\n"
-    "listen(address: <127.0.0.1:20002>)\n"
+    "listen(address: <127.0.0.1:20002>, connection_type: messenger)\n"
     "label(name: wait_message)\n"
     "wait(timeout: 10.0, mode: wait)\n"
     "has_message()\n"
@@ -1115,6 +1115,11 @@ constexpr char const * const g_program_sort_mixed_types =
     "set_variable(name: s3, value: 'more')\n"
     "sort(var1: s1, var2: s2, var3: s3)\n"
 ;
+
+constexpr char const * const g_program_listen_with_unknown_connection_type =
+    "listen(address: <127.0.0.1:20002>, connection_type: unknown)\n"
+;
+
 
 constexpr char const * const g_program_verify_message_fail_sent_server =
     "run()\n"
@@ -4783,6 +4788,24 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
                 " sort only supports one type of data (\"string\" in this case) for all the specified variables. \"integer\" is not compatible."));
 
         CATCH_REQUIRE(s->get_exit_code() == -1);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_executor_error: listen() with unknown connection type")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("listen_with_unknown_connection_type.rprtr", g_program_listen_with_unknown_connection_type));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 1);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->start()
+            , ed::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "event_dispatcher_exception: unknown type \"unknown\" for listen()."));
     }
     CATCH_END_SECTION()
 }

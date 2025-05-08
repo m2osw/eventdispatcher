@@ -279,6 +279,11 @@ constexpr parameter_declaration const g_listen_params[] =
         .f_name = "address",
         .f_type = "address",
     },
+    {
+        .f_name = "connection_type",
+        .f_type = "identifier",
+        .f_required = false,
+    },
     {}
 };
 
@@ -1346,6 +1351,28 @@ public:
 
     virtual void func(state & s) override
     {
+        variable::pointer_t param(s.get_parameter("connection_type", false));
+        if(param != nullptr)
+        {
+            variable_string::pointer_t var(std::static_pointer_cast<variable_string>(param));
+            std::string const & connection_type(var->get_string());
+            if(connection_type == "tcp")
+            {
+                s.set_connection_type(connection_type_t::CONNECTION_TYPE_TCP);
+            }
+            else if(connection_type == "messenger")
+            {
+                s.set_connection_type(connection_type_t::CONNECTION_TYPE_MESSENGER);
+            }
+            else
+            {
+                throw ed::runtime_error(
+                      "unknown type \""
+                    + connection_type
+                    + "\" for listen().");
+            }
+        }
+
         variable::pointer_t address(s.get_parameter("address", true));
         s.listen(std::static_pointer_cast<variable_address>(address)->get_address());
     }

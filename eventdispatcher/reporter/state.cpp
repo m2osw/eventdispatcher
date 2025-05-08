@@ -20,6 +20,7 @@
 //
 #include    "state.h"
 
+#include    "direct_tcp_server.h"
 #include    "messenger_tcp_server.h"
 
 
@@ -379,6 +380,12 @@ void state::set_trace_callback(trace_callback_t callback)
 }
 
 
+void state::set_connection_type(connection_type_t type)
+{
+    f_connection_type = type;
+}
+
+
 ed::connection::pointer_t state::get_listen_connection() const
 {
     return f_listen;
@@ -400,8 +407,10 @@ void state::listen(addr::addr const & a)
     switch(f_connection_type)
     {
     case connection_type_t::CONNECTION_TYPE_TCP:
-        // add support for encryption
-        //
+        f_listen = std::make_shared<direct_tcp_server>(this, a);
+        break;
+
+    case connection_type_t::CONNECTION_TYPE_MESSENGER:
         f_listen = std::make_shared<messenger_tcp_server>(this, a);
         break;
 

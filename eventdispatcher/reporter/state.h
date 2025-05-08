@@ -73,7 +73,8 @@ enum class callback_reason_t
 
 enum class connection_type_t
 {
-    CONNECTION_TYPE_TCP,        // tcp:... (tcp_server_connection)
+    CONNECTION_TYPE_MESSENGER,          // msg:... (messenger_tcp_server)
+    CONNECTION_TYPE_TCP,                // tcp:... (direct_tcp_server)
 };
 
 
@@ -134,6 +135,7 @@ public:
     trace_callback_t        get_trace_callback() const;
     void                    set_trace_callback(trace_callback_t callback);
 
+    void                    set_connection_type(connection_type_t type);
     ed::connection::pointer_t
                             get_listen_connection() const;
     void                    listen(addr::addr const & a);
@@ -162,7 +164,7 @@ private:
     connection_data_list_t  f_connection_data = connection_data_list_t();
     std::size_t             f_data_position = 0;
     trace_callback_t        f_trace_callback = nullptr;
-    connection_type_t       f_connection_type = connection_type_t::CONNECTION_TYPE_TCP;
+    connection_type_t       f_connection_type = connection_type_t::CONNECTION_TYPE_MESSENGER;
     ed::connection::pointer_t
                             f_listen = ed::connection::pointer_t();
     ed::connection::vector_t
