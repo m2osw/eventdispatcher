@@ -40,6 +40,7 @@ add_library(${PROJECT_NAME} SHARED
     token.cpp
     variable.cpp
     variable_address.cpp
+    variable_array.cpp
     variable_floating_point.cpp
     variable_integer.cpp
     variable_list.cpp

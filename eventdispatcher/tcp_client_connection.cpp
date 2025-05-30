@@ -123,7 +123,7 @@ addr::addr const & tcp_client_connection::get_remote_address() const
  * \return -1 if an error occurs, zero if no data gets read, a positive
  *         number representing the number of bytes read otherwise.
  */
-ssize_t tcp_client_connection::read(void * buf, size_t count)
+ssize_t tcp_client_connection::read(void * buf, std::size_t count)
 {
     if(!valid_socket())
     {
@@ -148,7 +148,7 @@ ssize_t tcp_client_connection::read(void * buf, size_t count)
  * \return -1 if an error occurs, zero if nothing was written, a positive
  *         number representing the number of bytes successfully written.
  */
-ssize_t tcp_client_connection::write(void const * buf, size_t count)
+ssize_t tcp_client_connection::write(void const * buf, std::size_t count)
 {
     if(!valid_socket())
     {

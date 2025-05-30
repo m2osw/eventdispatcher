@@ -19,7 +19,7 @@
 
 // self
 //
-#include    "token.h"
+#include    <eventdispatcher/reporter/token.h>
 
 
 // libutf8

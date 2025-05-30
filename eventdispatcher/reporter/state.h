@@ -123,6 +123,7 @@ public:
 
     ssize_t                 data_size() const;
     ssize_t                 read_data(connection_data_t & buf, std::size_t size);
+    ssize_t                 peek_data(connection_data_t & buf, std::size_t size);
     void                    add_data(connection_data_pointer_t data);
     void                    clear_data();
 

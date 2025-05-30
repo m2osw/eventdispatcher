@@ -301,6 +301,35 @@ ssize_t state::data_size() const
 }
 
 
+ssize_t state::peek_data(connection_data_t & buf, std::size_t size)
+{
+    if(f_connection_data.empty())
+    {
+        buf.clear();
+        return 0;
+    }
+
+    buf.resize(size);
+
+    std::size_t offset(0);
+    std::size_t data_position(f_data_position);
+    auto it(f_connection_data.begin());
+    while(it != f_connection_data.end() && offset < size)
+    {
+        std::size_t const copy_max_size(size - offset);
+        std::size_t const copy_size(std::min((*it)->size() - data_position, copy_max_size));
+        memcpy(buf.data() + offset, (*it)->data() + data_position, copy_size);
+        data_position += copy_size;
+        ++it;
+        data_position = 0;
+        offset += copy_size;
+    }
+
+    buf.resize(offset);
+    return offset;
+}
+
+
 ssize_t state::read_data(connection_data_t & buf, std::size_t size)
 {
     if(f_connection_data.empty())

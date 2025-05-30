@@ -297,11 +297,13 @@ void tcp_client_buffer_connection::process_read()
             else if(r == 0 || errno == 0 || errno == EAGAIN || errno == EWOULDBLOCK)
             {
                 // no more data available at this time
+                //
                 break;
             }
             else //if(r < 0)
             {
                 // TODO: do something about the error
+                //
                 int const e(errno);
                 SNAP_LOG_ERROR
                     << "an error occurred while reading from socket (errno: "
@@ -317,6 +319,7 @@ void tcp_client_buffer_connection::process_read()
     }
 
     // process next level too
+    //
     tcp_client_connection::process_read();
 }
 
@@ -344,6 +347,7 @@ void tcp_client_buffer_connection::process_write()
         if(r > 0)
         {
             // some data was written
+            //
             f_position += r;
             if(f_position >= f_output.size())
             {

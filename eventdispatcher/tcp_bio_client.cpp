@@ -548,7 +548,7 @@ tcp_bio_client::tcp_bio_client(
             //
             std::shared_ptr<BIO> bio;  // use reset(), see SNAP-507
             bio.reset(BIO_new(BIO_s_connect()), detail::bio_deleter);
-            if(!bio)
+            if(bio == nullptr)
             {
                 detail::bio_log_errors();
                 throw initialization_error("failed initializing a BIO object");
@@ -935,10 +935,11 @@ int tcp_bio_client::write(char const * buf, std::size_t size)
 {
 #ifdef _DEBUG
     // This log is useful when developing APIs against 3rd party
-    // servers, otherwise, it's just too much debug
+    // servers, otherwise, it's just too much debug and buf could
+    // be binary data...
     //SNAP_LOG_TRACE
     //    << "tcp_bio_client::write(): buf="
-    //    << buf
+    //    << std::string(buf, size)
     //    << ", size="
     //    << size
     //    << SNAP_LOG_SEND;

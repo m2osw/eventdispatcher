@@ -21,6 +21,7 @@
 #include    "executor.h"
 
 #include    "variable_address.h"
+#include    "variable_array.h"
 #include    "variable_floating_point.h"
 #include    "variable_integer.h"
 #include    "variable_list.h"
@@ -248,6 +249,18 @@ step_t background_executor::execute_instruction()
                     p = primary_to_variable(item->get_expression(1), name);
                 }
                 std::static_pointer_cast<variable_list>(param)->add_item(p);
+            }
+            break;
+
+        case operator_t::OPERATOR_ARRAY:
+            // go through each element and convert them
+            //
+            param = std::make_shared<variable_array>(decls->f_name);
+            for(std::size_t idx(0); idx < value->get_expression_size(); ++idx)
+            {
+                std::string const name("index" + std::to_string(idx));
+                variable::pointer_t p(primary_to_variable(value->get_expression(idx), name));
+                std::static_pointer_cast<variable_array>(param)->add_item(p);
             }
             break;
 
@@ -1370,6 +1383,20 @@ expression::pointer_t background_executor::compute(expression::pointer_t expr)
 
                 }
                 result_expr->add_expression(new_named_expr);
+            }
+            return result_expr;
+        }
+        break;
+
+    case operator_t::OPERATOR_ARRAY:
+        {
+            expression::pointer_t result_expr(std::make_shared<expression>());
+            result_expr->set_operator(operator_t::OPERATOR_ARRAY);
+            std::size_t const max(expr->get_expression_size());
+            for(std::size_t idx(0); idx < max; ++idx)
+            {
+                expression::pointer_t item(compute(expr->get_expression(idx)));
+                result_expr->add_expression(item);
             }
             return result_expr;
         }

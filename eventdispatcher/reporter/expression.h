@@ -41,6 +41,7 @@ namespace reporter
 enum class operator_t
 {
     OPERATOR_NULL,
+    OPERATOR_ARRAY,                 // [ ..., ..., ... ]
     OPERATOR_NAMED,                 // IDENTIFIER [ ':' expression ] (for lists of values)
     OPERATOR_LIST,                  // { ..., ..., ... }
     OPERATOR_PRIMARY,               // a primary value in f_token

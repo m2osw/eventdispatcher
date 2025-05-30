@@ -15,19 +15,15 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
 // self
 //
-#include    "expression.h"
+#include    <eventdispatcher/reporter/variable.h>
 
 
 
-// last include
-//
-#include    <snapdev/poison.h>
-
-
-
+// view these as an extension of the snapcatch2 library
 namespace SNAP_CATCH2_NAMESPACE
 {
 namespace reporter
@@ -35,55 +31,26 @@ namespace reporter
 
 
 
-operator_t expression::get_operator() const
+class variable_array
+    : public variable
 {
-    return f_operator;
-}
+public:
+    typedef std::shared_ptr<variable_array>     pointer_t;
 
+                            variable_array(std::string const & name);
 
-void expression::set_operator(operator_t op)
-{
-    f_operator = op;
-}
+    std::size_t             get_item_size() const;
+    variable::pointer_t     get_item(int idx) const;
+    void                    add_item(variable::pointer_t v);
 
+    // variable implementation
+    //
+    virtual variable::pointer_t
+                            clone(std::string const & name) const override;
 
-std::size_t expression::get_expression_size() const
-{
-    return f_expressions.size();
-}
-
-
-expression::pointer_t expression::get_expression(int idx) const
-{
-    if(static_cast<std::size_t>(idx) >= f_expressions.size())
-    {
-        throw std::overflow_error(
-                "index too large ("
-              + std::to_string(idx)
-              + ") to get sub-expression (max: "
-              + std::to_string(f_expressions.size())
-              + ").");
-    }
-    return f_expressions[idx];
-}
-
-
-void expression::add_expression(pointer_t expr)
-{
-    f_expressions.push_back(expr);
-}
-
-
-token const & expression::get_token() const
-{
-    return f_token;
-}
-
-
-void expression::set_token(token const & t)
-{
-    f_token = t;
-}
+private:
+    variable::vector_t      f_items = variable::vector_t();
+};
 
 
 

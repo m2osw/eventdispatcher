@@ -21,6 +21,7 @@
 #include    "instruction_factory.h"
 #include    "state.h"
 #include    "variable_address.h"
+#include    "variable_array.h"
 #include    "variable_floating_point.h"
 #include    "variable_integer.h"
 #include    "variable_list.h"
@@ -36,6 +37,7 @@
 #include    <eventdispatcher/exception.h>
 #include    <eventdispatcher/signal.h>
 #include    <eventdispatcher/signal_handler.h>
+#include    <eventdispatcher/tcp_server_client_connection.h>
 
 
 // cppthread
@@ -54,6 +56,7 @@
 #include    <snapdev/gethostname.h>
 #include    <snapdev/hexadecimal_string.h>
 #include    <snapdev/not_used.h>
+#include    <snapdev/safe_stream.h>
 #include    <snapdev/to_upper.h>
 
 
@@ -127,6 +130,17 @@ constexpr parameter_declaration const g_goto_params[] =
     {
         .f_name = "label",
         .f_type = "identifier",
+    },
+    {}
+};
+
+
+constexpr parameter_declaration const g_has_data_params[] =
+{
+    {
+        .f_name = "min_size",
+        .f_type = "integer",
+        .f_required = false,
     },
     {}
 };
@@ -352,6 +366,16 @@ constexpr parameter_declaration const g_save_parameter_value_params[] =
 };
 
 
+constexpr parameter_declaration const g_send_data_params[] =
+{
+    {
+        .f_name = "values",
+        .f_type = "array",
+    },
+    {}
+};
+
+
 constexpr parameter_declaration const g_send_message_params[] =
 {
     {
@@ -401,6 +425,16 @@ constexpr parameter_declaration const g_set_variable_params[] =
         .f_name = "type",
         .f_type = "identifier",
         .f_required = false,
+    },
+    {}
+};
+
+
+constexpr parameter_declaration const g_show_data_params[] =
+{
+    {
+        .f_name = "size",
+        .f_type = "integer",
     },
     {}
 };
@@ -545,6 +579,16 @@ constexpr parameter_declaration const g_unset_variable_params[] =
 };
 
 
+constexpr parameter_declaration const g_verify_data_params[] =
+{
+    {
+        .f_name = "values",
+        .f_type = "array",
+    },
+    {}
+};
+
+
 constexpr parameter_declaration const g_verify_message_params[] =
 {
     {
@@ -638,6 +682,27 @@ public:
 private:
 };
 INSTRUCTION(call);
+
+
+// CLEAR DATA
+//
+class inst_clear_data
+    : public instruction
+{
+public:
+    inst_clear_data()
+        : instruction("clear_data")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        s.clear_data();
+    }
+
+private:
+};
+INSTRUCTION(clear_data);
 
 
 // CLEAR MESSAGE
@@ -904,6 +969,47 @@ public:
 private:
 };
 INSTRUCTION(goto);
+
+
+// HAS DATA
+//
+class inst_has_data
+    : public instruction
+{
+public:
+    inst_has_data()
+        : instruction("has_data")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        ssize_t const size(s.data_size());
+        bool has_data(size > 0);
+
+        if(has_data)
+        {
+            variable::pointer_t min_size_var(s.get_parameter("min_size"));
+            if(min_size_var != nullptr)
+            {
+                variable_integer::pointer_t min_size_int(std::static_pointer_cast<variable_integer>(min_size_var));
+                has_data = size >= min_size_int->get_integer();
+            }
+        }
+
+        s.set_compare(has_data
+            ? compare_t::COMPARE_TRUE
+            : compare_t::COMPARE_FALSE);
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_has_data_params;
+    }
+
+private:
+};
+INSTRUCTION(has_data);
 
 
 // HAS MESSAGE
@@ -1351,6 +1457,12 @@ public:
 
     virtual void func(state & s) override
     {
+        // reset to default type
+        //
+        s.set_connection_type(connection_type_t::CONNECTION_TYPE_MESSENGER);
+
+        // get user defined type (optional)
+        //
         variable::pointer_t param(s.get_parameter("connection_type", false));
         if(param != nullptr)
         {
@@ -1677,6 +1789,76 @@ private:
 INSTRUCTION(save_parameter_value);
 
 
+// SEND DATA
+//
+class inst_send_data
+    : public instruction
+{
+public:
+    inst_send_data()
+        : instruction("send_data")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        ed::connection::vector_t v(s.get_connections());
+        if(v.empty())
+        {
+            throw ed::runtime_error("send_data() has no connection to send data.");
+        }
+        // TODO: fix the connection selection, if we have more than one,
+        //       how do we know which one to select? (i.e. have a connection
+        //       name included in the parameters)
+        //
+        ed::tcp_server_client_connection::pointer_t c(std::dynamic_pointer_cast<ed::tcp_server_client_connection>(v[0]));
+        if(c == nullptr)
+        {
+            throw ed::runtime_error("send_data() called without a valid listener connection."); // LCOV_EXCL_LINE
+        }
+
+        variable::pointer_t param(s.get_parameter("values", true));
+        variable_array::pointer_t var(std::static_pointer_cast<variable_array>(param));
+        std::size_t const size(var->get_item_size());
+        if(size == 0)
+        {
+            // at this point, there is no reason for us to "send" an empty buffer
+            // since that would do absolutely nothing
+            //
+            throw ed::runtime_error(
+                  s.get_location()
+                + "array cannot be empty.");
+        }
+        connection_data_t buf;
+        for(std::size_t i(0); i < size; ++i)
+        {
+            variable_integer::pointer_t value(std::static_pointer_cast<variable_integer>(var->get_item(i)));
+            std::int64_t const byte(value->get_integer());
+            if(byte < -128 || byte > 255)
+            {
+                throw ed::runtime_error(
+                      s.get_location()
+                    + "byte values must be between -128 and +255 (position "
+                    + std::to_string(i)
+                    + " has out of range value "
+                    + std::to_string(byte)
+                    + ").");
+            }
+            buf.push_back(static_cast<char>(byte));
+        }
+        c->write(buf.data(), buf.size());
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_send_data_params;
+    }
+
+private:
+};
+INSTRUCTION(send_data);
+
+
 // SEND MESSAGE
 //
 class inst_send_message
@@ -1886,6 +2068,88 @@ private:
 INSTRUCTION(set_variable);
 
 
+// SHOW DATA
+//
+class inst_show_data
+    : public instruction
+{
+public:
+    inst_show_data()
+        : instruction("show_data")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        variable::pointer_t size_var(s.get_parameter("size", true));
+        variable_integer::pointer_t int_size(std::dynamic_pointer_cast<variable_integer>(size_var));
+        std::size_t const size(int_size->get_integer());
+        connection_data_t buffer;
+        ssize_t const r(s.peek_data(buffer, size));
+        if(r < 0)
+        {
+            // LCOV_EXCL_START
+            int const e(errno);
+            std::cerr
+                << "error: show_data() failed with "
+                << strerror(e)
+                << ".\n";
+            throw ed::runtime_error("show_data() failed.");
+            // LCOV_EXCL_STOP
+        }
+        if(r == 0)
+        {
+            std::cout << "--- data: <empty>" << std::endl;
+        }
+        else
+        {
+            snapdev::safe_stream save_stdout(std::cout);
+
+            std::cout << "--- data:\n" << std::hex << std::setfill('0');
+            for(std::size_t i(0); i < static_cast<std::size_t>(r); i += 16)
+            {
+                std::cout
+                    << "  "
+                    << std::setw(4) << i
+                    << ": ";
+                std::size_t bytes(std::min(static_cast<int>(r - i), 16));
+                std::size_t j(0);
+                for(; j < bytes; ++j)
+                {
+                    std::cout << ' ' << std::setw(2) << static_cast<int>(buffer[i + j]);
+                }
+                if(j < 16)
+                {
+                    std::cout << std::string((16 - j) * 3, ' ');
+                }
+                std::cout << "   ";
+                for(j = 0; j < bytes; ++j)
+                {
+                    if(buffer[i + j] >= ' '
+                    && buffer[i + j] <= '~')
+                    {
+                        std::cout << static_cast<char>(buffer[i + j]);
+                    }
+                    else
+                    {
+                        std::cout << '.';
+                    }
+                }
+                std::cout << '\n';
+            }
+        }
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_show_data_params;
+    }
+
+private:
+};
+INSTRUCTION(show_data);
+
+
 // SHOW MESSAGE
 //
 class inst_show_message
@@ -1901,7 +2165,7 @@ public:
     {
         ed::message const msg(s.get_message());
         std::cout
-            << "--- script message: "
+            << "--- message: "
             << msg
             << std::endl;
     }
@@ -2160,6 +2424,76 @@ public:
 private:
 };
 INSTRUCTION(unset_variable);
+
+
+// VERIFY DATA
+//
+class inst_verify_data
+    : public instruction
+{
+public:
+    inst_verify_data()
+        : instruction("verify_data")
+    {
+    }
+
+    virtual void func(state & s) override
+    {
+        variable::pointer_t param(s.get_parameter("values", true));
+        variable_array::pointer_t var(std::static_pointer_cast<variable_array>(param));
+        std::size_t const size(var->get_item_size());
+        if(size == 0)
+        {
+            // at this point, there is no reason for us to "send" an empty buffer
+            // since that would do absolutely nothing
+            //
+            throw ed::runtime_error(
+                  s.get_location()
+                + "array cannot be empty.");
+        }
+
+        // now that we have a size, we can read that many bytes from the
+        // data buffer
+        //
+        connection_data_t buf;
+        ssize_t const r(s.read_data(buf, size));
+        if(r != static_cast<ssize_t>(size))
+        {
+            throw ed::runtime_error(
+                  s.get_location()
+                + "could not read "
+                + std::to_string(size)
+                + " bytes from the data buffer, got "
+                + std::to_string(r)
+                + " instead.");
+        }
+
+        for(std::size_t i(0); i < size; ++i)
+        {
+            variable_integer::pointer_t value(std::static_pointer_cast<variable_integer>(var->get_item(i)));
+            if(buf[i] != value->get_integer())
+            {
+                throw ed::runtime_error(
+                      s.get_location()
+                    + "values at offset "
+                    + std::to_string(i)
+                    + " do not match ("
+                    + std::to_string(static_cast<int>(buf[i]))
+                    + " != "
+                    + std::to_string(value->get_integer())
+                    + ").");
+            }
+        }
+    }
+
+    virtual parameter_declaration const * parameter_declarations() const override
+    {
+        return g_verify_data_params;
+    }
+
+private:
+};
+INSTRUCTION(verify_data);
 
 
 // VERIFY MESSAGE

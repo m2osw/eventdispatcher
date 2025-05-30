@@ -55,8 +55,8 @@ public:
     virtual int                 get_socket() const override;
 
     // new callbacks
-    virtual ssize_t             read(void * buf, size_t count);
-    virtual ssize_t             write(void const * buf, size_t count);
+    virtual ssize_t             read(void * buf, std::size_t count);
+    virtual ssize_t             write(void const * buf, std::size_t count);
 
 private:
     addr::addr const            f_remote_address = addr::addr();

@@ -43,6 +43,7 @@ direct_tcp_server_client::direct_tcp_server_client(
     , f_state(s)
 {
     set_name("drct_tcp_client");
+    non_blocking();
 }
 
 
@@ -70,6 +71,7 @@ void direct_tcp_server_client::process_read()
             }
             else //if(r < 0)
             {
+                // LCOV_EXCL_START
                 // TODO: do something about the error
                 //
                 int const e(errno);
@@ -82,11 +84,13 @@ void direct_tcp_server_client::process_read()
                     << SNAP_LOG_SEND;
                 process_error();
                 return;
+                // LCOV_EXCL_STOP
             }
         }
     }
 
     // process next level too
+    //
     tcp_server_client_connection::process_read();
 }
 

@@ -111,7 +111,7 @@ CATCH_TEST_CASE("reporter_expression_error", "[expression][reporter][error]")
                   e.get_expression(0)
                 , std::overflow_error
                 , Catch::Matchers::ExceptionMessage(
-                          "index too large to get sub-expression."));
+                          "index too large (0) to get sub-expression (max: 0)."));
     }
     CATCH_END_SECTION()
 }

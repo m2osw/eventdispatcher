@@ -94,6 +94,8 @@ token lexer::next_token()
 
         case U'(':
         case U')':
+        case U'[':
+        case U']':
         case U'{':
         case U'}':
         case U',':

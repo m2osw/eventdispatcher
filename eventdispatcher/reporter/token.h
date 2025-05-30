@@ -49,21 +49,23 @@ enum class token_t : char32_t
 
     TOKEN_COMPARE,              // "<=>" operator
 
-    TOKEN_OPEN_PARENTHESIS  = '(',
-    TOKEN_CLOSE_PARENTHESIS = ')',
-    TOKEN_OPEN_CURLY_BRACE  = '{',
-    TOKEN_CLOSE_CURLY_BRACE = '}',
-    TOKEN_COMMA             = ',',
-    TOKEN_COLON             = ':',
-    //TOKEN_EQUAL             = '=',  // not currently used
-    TOKEN_DOUBLE_STRING     = '"',
-    TOKEN_SINGLE_STRING     = '\'',
-    TOKEN_REGEX             = '`',
-    TOKEN_PLUS              = '+',
-    TOKEN_MINUS             = '-',
-    TOKEN_MULTIPLY          = '*',
-    TOKEN_DIVIDE            = '/',
-    TOKEN_MODULO            = '%',
+    TOKEN_OPEN_PARENTHESIS   = '(',
+    TOKEN_CLOSE_PARENTHESIS  = ')',
+    TOKEN_OPEN_CURLY_BRACE   = '{',
+    TOKEN_CLOSE_CURLY_BRACE  = '}',
+    TOKEN_OPEN_SQUARE_BRACE  = '[',
+    TOKEN_CLOSE_SQUARE_BRACE = ']',
+    TOKEN_COMMA              = ',',
+    TOKEN_COLON              = ':',
+    //TOKEN_EQUAL              = '=',  // not currently used
+    TOKEN_DOUBLE_STRING      = '"',
+    TOKEN_SINGLE_STRING      = '\'',
+    TOKEN_REGEX              = '`',
+    TOKEN_PLUS               = '+',
+    TOKEN_MINUS              = '-',
+    TOKEN_MULTIPLY           = '*',
+    TOKEN_DIVIDE             = '/',
+    TOKEN_MODULO             = '%',
 };
 
 

@@ -34,6 +34,7 @@
 #include    <eventdispatcher/reporter/instruction_factory.h>
 #include    <eventdispatcher/reporter/parser.h>
 #include    <eventdispatcher/reporter/variable_address.h>
+#include    <eventdispatcher/reporter/variable_array.h>
 #include    <eventdispatcher/reporter/variable_floating_point.h>
 #include    <eventdispatcher/reporter/variable_integer.h>
 #include    <eventdispatcher/reporter/variable_list.h>
@@ -52,6 +53,7 @@
 //
 #include    <eventdispatcher/communicator.h>
 #include    <eventdispatcher/exception.h>
+#include    <eventdispatcher/tcp_client_connection.h>
 #include    <eventdispatcher/tcp_client_permanent_message_connection.h>
 
 
@@ -284,19 +286,19 @@ constexpr char const * const g_program_verify_kill_string =
 constexpr char const * const g_program_verify_kill_unsupported_timestamp =
     "kill(signal: @123.3342)\n"
 
-    "exit(error_message: \"test is expected to fail before reaching this staement.\")\n"
+    "exit(error_message: \"test is expected to fail before reaching this statement.\")\n"
 ;
 
 constexpr char const * const g_program_verify_kill_integer_too_large =
     "kill(signal: 100)\n"
 
-    "exit(error_message: \"test is expected to fail before reaching this staement.\")\n"
+    "exit(error_message: \"test is expected to fail before reaching this statement.\")\n"
 ;
 
 constexpr char const * const g_program_verify_kill_unknown_signal_name =
     "kill(signal: \"unknown\")\n"
 
-    "exit(error_message: \"test is expected to fail before reaching this staement.\")\n"
+    "exit(error_message: \"test is expected to fail before reaching this statement.\")\n"
 ;
 
 constexpr char const * const g_program_verify_computation_address =
@@ -766,28 +768,28 @@ constexpr char const * const g_program_compare_with_incompatible_types =
     "set_variable(name: b, value: 'a string')\n"
     "compare(expression: ${a} <=> ${b})\n"
 
-    "exit(error_message: \"test is expected to fail before reaching this staement.\")\n"
+    "exit(error_message: \"test is expected to fail before reaching this statement.\")\n"
 ;
 
 constexpr char const * const g_program_compare_with_non_integer =
     // compare expression must be an integer
     "compare(expression: 'string')\n"
 
-    "exit(error_message: \"test is expected to fail before reaching this staement.\")\n"
+    "exit(error_message: \"test is expected to fail before reaching this statement.\")\n"
 ;
 
 constexpr char const * const g_program_compare_with_bad_positive_integer =
     // compare expression must be between -2 and +1
     "compare(expression: 5)\n"
 
-    "exit(error_message: \"test is expected to fail before reaching this staement.\")\n"
+    "exit(error_message: \"test is expected to fail before reaching this statement.\")\n"
 ;
 
 constexpr char const * const g_program_compare_with_bad_negative_integer =
     // compare expression must be between -2 and +1
     "compare(expression: -10)\n"
 
-    "exit(error_message: \"test is expected to fail before reaching this staement.\")\n"
+    "exit(error_message: \"test is expected to fail before reaching this statement.\")\n"
 ;
 
 constexpr char const * const g_program_print_message =
@@ -1016,6 +1018,148 @@ constexpr char const * const g_program_primary_variable_references =
     "set_variable(name: longer_timestamp_var, value: ${my_timestamp_var})\n"
 ;
 
+constexpr char const * const g_program_raw_tcp_connection =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>, connection_type: tcp)\n"
+    "label(name: wait_next_message)\n"
+    "clear_data()\n"
+    "label(name: wait_data)\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_data(min_size: 4)\n"
+    "if(false: wait_data)\n"
+    "show_data(size: 4)\n"
+    "verify_data(values: [ 0x50, 0x49, 0x4E, 0x47 ])\n"     // PING
+    "show_data(size: 4)\n" // this will display <empty>
+    "has_data(min_size: 1)\n"
+    "if(true: unexpected_data)\n"
+    "send_data(values: [ 0x50, 0x4F, 0x4E, 0x47 ])\n"       // PONG
+    "wait(timeout: 10, mode: drain)\n"
+    "disconnect()\n"
+    "exit()\n"
+    "label(name: unexpected_data)\n"
+    "exit(error_message: \"found data when there should be none after the verify_data()\")\n"
+;
+
+constexpr char const * const g_program_prinbee_binary_message =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>, connection_type: tcp)\n"
+    "label(name: wait_next_message)\n"
+    "clear_data()\n"
+    "label(name: wait_data)\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_data(min_size: 4)\n"
+    "if(false: wait_data)\n"
+    "show_data(size: 24)\n"
+    //                     magic (bm)   version  flags  name (PING)              size                     CRC16 x 2 (fake here)   data
+    "verify_data(values: [ 0x62, 0x6D,  0x01,    0x00,  0x50, 0x49, 0x4E, 0x47,  0x08, 0x00, 0x00, 0x00,  0xAA, 0x55, 0xEE, 0x77, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F, 0xFF ])\n"
+    "show_data(size: 24)\n" // this will display <empty>
+    "has_data(min_size: 1)\n"
+    "if(true: unexpected_data)\n"
+    // reply with a PONG and no data (size = 0)
+    "send_data(values: [ 0x62, 0x6D,  0x01,  0x00,  0x50, 0x4F, 0x4E, 0x47,  0x00, 0x00, 0x00, 0x00,  0x55, 0xAA, 0x33, 0xCC ])\n"
+    "wait(timeout: 10, mode: drain)\n"
+    "disconnect()\n"
+    "exit()\n"
+    "label(name: unexpected_data)\n"
+    "exit(error_message: \"found data when there should be none after the verify_data()\")\n"
+;
+
+constexpr char const * const g_program_raw_tcp_connection_read_too_large =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>, connection_type: tcp)\n"
+    "label(name: wait_next_message)\n"
+    "clear_data()\n"
+    "label(name: wait_data)\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_data(min_size: 4)\n"
+    "if(false: wait_data)\n"
+    "show_data(size: 4)\n"
+    "verify_data(values: [ 0x50, 0x49, 0x4E, 0x47, 0x53 ])\n" // try to compare 5 bytes instead of 4
+    "exit(error_message: \"verify_data() did not fail\")\n"
+;
+
+constexpr char const * const g_program_raw_tcp_connection_verify_fails =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>, connection_type: tcp)\n"
+    "label(name: wait_next_message)\n"
+    "clear_data()\n"
+    "label(name: wait_data)\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_data(min_size: 4)\n"
+    "if(false: wait_data)\n"
+    "show_data(size: 4)\n"
+    "verify_data(values: [ 0x49, 0x50, 0x4E, 0x47 ])\n" // IPNG instead of PING
+    "exit(error_message: \"verify_data() did not fail\")\n"
+;
+
+constexpr char const * const g_program_raw_tcp_connection_send_invalid_value_too_large =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>, connection_type: tcp)\n"
+    "label(name: wait_next_message)\n"
+    "clear_data()\n"
+    "label(name: wait_data)\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_data(min_size: 4)\n"
+    "if(false: wait_data)\n"
+    "show_data(size: 4)\n"
+    "verify_data(values: [ 0x50, 0x49, 0x4E, 0x47 ])\n"     // PING
+    "show_data(size: 4)\n" // this will display <empty>
+    "has_data(min_size: 1)\n"
+    "if(true: unexpected_data)\n"
+    "send_data(values: [ 0x50, 0x4F, 0x100, 0x47 ])\n"      // PO?G
+    "exit(error_message: \"send_data() did not fail\")\n"
+;
+
+constexpr char const * const g_program_raw_tcp_connection_send_invalid_value_too_small =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>, connection_type: tcp)\n"
+    "label(name: wait_next_message)\n"
+    "clear_data()\n"
+    "label(name: wait_data)\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_data(min_size: 4)\n"
+    "if(false: wait_data)\n"
+    "show_data(size: 4)\n"
+    "verify_data(values: [ 0x50, 0x49, 0x4E, 0x47 ])\n"     // PING
+    "show_data(size: 4)\n" // this will display <empty>
+    "has_data(min_size: 1)\n"
+    "if(true: unexpected_data)\n"
+    "send_data(values: [ 0x50, 0x4F, -129, 0x47 ])\n"      // PO?G
+    "exit(error_message: \"send_data() did not fail\")\n"
+;
+
+constexpr char const * const g_program_raw_tcp_connection_send_empty_array =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>, connection_type: tcp)\n"
+    "label(name: wait_next_message)\n"
+    "clear_data()\n"
+    "label(name: wait_data)\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_data(min_size: 4)\n"
+    "if(false: wait_data)\n"
+    "show_data(size: 4)\n"
+    "verify_data(values: [ 0x50, 0x49, 0x4E, 0x47 ])\n"     // PING
+    "show_data(size: 4)\n" // this will display <empty>
+    "has_data(min_size: 1)\n"
+    "if(true: unexpected_data)\n"
+    "send_data(values: [])\n"      // empty is not valid
+    "exit(error_message: \"send_data() did not fail\")\n"
+;
+
+constexpr char const * const g_program_raw_tcp_connection_verify_empty_array =
+    "run()\n"
+    "listen(address: <127.0.0.1:20002>, connection_type: tcp)\n"
+    "label(name: wait_next_message)\n"
+    "clear_data()\n"
+    "label(name: wait_data)\n"
+    "wait(timeout: 12, mode: wait)\n"
+    "has_data(min_size: 4)\n"
+    "if(false: wait_data)\n"
+    "show_data(size: 4)\n"
+    "verify_data(values: [])\n"     // empty is not valid
+    "exit(error_message: \"verify_data() did not fail\")\n"
+;
+
 constexpr char const * const g_program_wrong_primary_variable_reference =
     "set_variable(name: my_var, value: foo)\n"
     "set_variable(name: longer_var, value: ${wrong_name})\n"
@@ -1047,6 +1191,10 @@ constexpr char const * const g_program_bad_print_message =
 
 constexpr char const * const g_program_send_message_without_connection =
     "send_message(server: \"world\", service: cluckd, command: WITHOUT_CONNECTION)\n"
+;
+
+constexpr char const * const g_program_send_data_without_connection =
+    "send_data(values: [ 1, 2, 3 ])\n"
 ;
 
 constexpr char const * const g_program_if_invalid_type =
@@ -1379,106 +1527,78 @@ struct expected_trace_t
                         f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL;
     char const * const  f_name = nullptr;
 };
+#define TRACE_EXPECT(reason, name)  { .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_##reason##_CALL, .f_name = #name }
 
 
 constexpr expected_trace_t const g_verify_starting_thread[] =
 {
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
-        .f_name = "run",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
-        .f_name = "run",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
-        .f_name = "set_variable",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_BEFORE_CALL,
-        .f_name = "strlen",
-    },
-    {
-        .f_reason = SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t::CALLBACK_REASON_AFTER_CALL,
-        .f_name = "strlen",
-    },
+    TRACE_EXPECT(BEFORE, set_variable),
+    TRACE_EXPECT(AFTER, set_variable),
+    TRACE_EXPECT(BEFORE, set_variable),
+    TRACE_EXPECT(AFTER, set_variable),
+    TRACE_EXPECT(BEFORE, run),
+    TRACE_EXPECT(AFTER, run),
+    TRACE_EXPECT(BEFORE, set_variable),
+    TRACE_EXPECT(AFTER, set_variable),
+    TRACE_EXPECT(BEFORE, set_variable),
+    TRACE_EXPECT(AFTER, set_variable),
+    TRACE_EXPECT(BEFORE, set_variable),
+    TRACE_EXPECT(AFTER, set_variable),
+    TRACE_EXPECT(BEFORE, set_variable),
+    TRACE_EXPECT(AFTER, set_variable),
+    TRACE_EXPECT(BEFORE, set_variable),
+    TRACE_EXPECT(AFTER, set_variable),
+    TRACE_EXPECT(BEFORE, set_variable),
+    TRACE_EXPECT(AFTER, set_variable),
+    TRACE_EXPECT(BEFORE, set_variable),
+    TRACE_EXPECT(AFTER, set_variable),
+    TRACE_EXPECT(BEFORE, set_variable),
+    TRACE_EXPECT(AFTER, set_variable),
+    TRACE_EXPECT(BEFORE, strlen),
+    TRACE_EXPECT(AFTER, strlen),
+    {}
+};
+
+
+constexpr expected_trace_t const g_verify_raw_tcp_connection[] =
+{
+    TRACE_EXPECT(BEFORE, run),
+    TRACE_EXPECT(AFTER, run),
+    TRACE_EXPECT(BEFORE, listen),
+    TRACE_EXPECT(AFTER, listen),
+    TRACE_EXPECT(BEFORE, label),
+    TRACE_EXPECT(AFTER, label),
+    TRACE_EXPECT(BEFORE, clear_data),
+    TRACE_EXPECT(AFTER, clear_data),
+    TRACE_EXPECT(BEFORE, label),
+    TRACE_EXPECT(AFTER, label),
+    TRACE_EXPECT(BEFORE, wait),
+    TRACE_EXPECT(AFTER, wait),
+    TRACE_EXPECT(BEFORE, has_data),
+    TRACE_EXPECT(AFTER, has_data),
+    TRACE_EXPECT(BEFORE, if),
+    TRACE_EXPECT(AFTER, if),
+    TRACE_EXPECT(BEFORE, label),
+    TRACE_EXPECT(AFTER, label),
+    TRACE_EXPECT(BEFORE, wait),
+    TRACE_EXPECT(AFTER, wait),
+    TRACE_EXPECT(BEFORE, has_data),
+    TRACE_EXPECT(AFTER, has_data),
+    TRACE_EXPECT(BEFORE, if),
+    TRACE_EXPECT(AFTER, if),
+    TRACE_EXPECT(BEFORE, show_data),
+    TRACE_EXPECT(AFTER, show_data),
+    TRACE_EXPECT(BEFORE, verify_data),
+    TRACE_EXPECT(AFTER, verify_data),
+    TRACE_EXPECT(BEFORE, send_data),
+    TRACE_EXPECT(AFTER, send_data),
+    TRACE_EXPECT(BEFORE, wait),
+    TRACE_EXPECT(AFTER, wait),
+    TRACE_EXPECT(BEFORE, disconnect),
+    TRACE_EXPECT(AFTER, disconnect),
+    TRACE_EXPECT(BEFORE, exit),
+    TRACE_EXPECT(AFTER, exit),
+    TRACE_EXPECT(BEFORE, end), // generate an error
     {}
 };
 
@@ -1504,10 +1624,25 @@ public:
 
     void callback(SNAP_CATCH2_NAMESPACE::reporter::state & s, SNAP_CATCH2_NAMESPACE::reporter::callback_reason_t reason)
     {
+        SNAP_CATCH2_NAMESPACE::reporter::statement::pointer_t stmt(s.get_running_statement());
+        std::string const & name(stmt->get_instruction()->get_name());
+        std::cerr
+            << "--------------------- TRACE: pos: "
+            << f_pos
+            << " reason: "
+            << static_cast<int>(reason)
+            << " name: \""
+            << name
+            << "\"\n";
+
         // here we can be in the thread so DO NOT USE CATCH_... macros
         //
         if(f_expected_trace[f_pos].f_name == nullptr)
         {
+            std::cerr
+                << "tracer error: got more calls ("
+                << f_pos + 1
+                << ") to tracer than expected.\n";
             throw std::runtime_error(
                   "got more calls ("
                 + std::to_string(f_pos + 1)
@@ -1516,6 +1651,14 @@ public:
 
         if(f_expected_trace[f_pos].f_reason != reason)
         {
+            std::cerr
+                << "tracer error: unexpected reason at position "
+                << f_pos
+                << " (got "
+                << static_cast<int>(reason)
+                << ", expected "
+                << static_cast<int>(f_expected_trace[f_pos].f_reason)
+                << ").\n";
             throw std::runtime_error(
                   "unexpected reason at position "
                 + std::to_string(f_pos)
@@ -1526,11 +1669,16 @@ public:
                 + ").");
         }
 
-        SNAP_CATCH2_NAMESPACE::reporter::statement::pointer_t stmt(s.get_running_statement());
-        std::string const & name(stmt->get_instruction()->get_name());
-//std::cerr << "--------------------- at pos " << f_pos << " found reason " << static_cast<int>(reason) << " + name " << name << "\n";
         if(f_expected_trace[f_pos].f_name != name)
         {
+            std::cerr
+                << "tracer error: unexpected instruction at position "
+                << f_pos
+                << " (got \""
+                << name
+                << "\", expected \""
+                << f_expected_trace[f_pos].f_name
+                << "\").\n";
             throw std::runtime_error(
                   "unexpected instruction at position "
                 + std::to_string(f_pos)
@@ -1838,6 +1986,278 @@ public:
 private:
     messenger_responder::pointer_t      f_messenger = messenger_responder::pointer_t();
     bool                                f_timed_out = false;
+};
+
+
+
+
+class permanent_binary_responder // an equivalent to a client
+    : public ed::timer
+{
+public:
+    typedef std::shared_ptr<permanent_binary_responder> pointer_t;
+
+    enum class sequence_t
+    {
+        SEQUENCE_PING_PONG,
+        SEQUENCE_PRINBEE_MESSAGE
+    };
+
+    class binary_responder
+        : public ed::tcp_client_connection
+    {
+    public:
+        typedef std::shared_ptr<binary_responder> pointer_t;
+
+        binary_responder(
+                  permanent_binary_responder * parent
+                , addr::addr const & a
+                , ed::mode_t mode)
+            : tcp_client_connection(
+                  a
+                , mode)
+            , f_parent(parent)
+        {
+            set_name("binary_responder");       // connection name
+        }
+
+        binary_responder(binary_responder const &) = delete;
+        binary_responder & operator = (binary_responder const &) = delete;
+
+        virtual void process_read() override
+        {
+            f_parent->process_read();
+        }
+
+    private:
+        permanent_binary_responder *    f_parent = nullptr;
+    };
+
+    permanent_binary_responder(
+              addr::addr const & a
+            , ed::mode_t mode
+            , sequence_t sequence
+            , int timeout = 500'000) // or ed::DEFAULT_PAUSE_BEFORE_RECONNECTING
+        : timer(timeout)
+        , f_address(a)
+        , f_mode(mode)
+        , f_sequence(sequence)
+        , f_timeout(timeout)
+    {
+        set_name("permanent_binary_responder");     // connection name
+        set_timeout_delay(f_timeout);               // 0.5 seconds
+        set_enable(true);                           // be explicit that we want the timer to ping us
+    }
+
+    virtual int get_socket() const override
+    {
+        if(f_responder != nullptr)
+        {
+            return f_responder->get_socket();
+        }
+        return -1;
+    }
+
+    virtual void process_timeout() override
+    {
+        try
+        {
+            f_responder = std::make_shared<binary_responder>(
+                  this
+                , f_address
+                , f_mode);
+        }
+        catch(ed::failed_connecting const & e)
+        {
+            // try again later (keep timer enabled)
+            //
+            return;
+        }
+        // other errors are not legally expected
+
+        ed::communicator::instance()->add_connection(f_responder);
+
+        // we're connected, disable the timer
+        //
+        set_enable(false);
+
+        // send a PING and expect a PONG as a reply
+        //
+        switch(f_sequence)
+        {
+        case sequence_t::SEQUENCE_PING_PONG:
+            {
+                constexpr char const ping[] = { 'P', 'I', 'N', 'G' };
+                ssize_t const written(f_responder->write(ping, sizeof(ping)));
+                if(written != sizeof(ping))
+                {
+                    throw std::runtime_error("could not send PING message");
+                }
+            }
+            break;
+
+        case sequence_t::SEQUENCE_PRINBEE_MESSAGE:
+            {
+                constexpr char const msg[] = {
+                    'b', 'm',                           // magic ([b]inary [m]essage)
+                    1,                                  // version
+                    0,                                  // flags (none)
+                    'P', 'I', 'N', 'G',                 // message name
+                    8, 0, 0, 0,                         // size (little endian)
+                    static_cast<char>(0xaa), 0x55,      // CRC16 of data (fake)
+                    static_cast<char>(0xee), 0x77,      // CRC16 of message header
+                    0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F, static_cast<char>(0xFF)  // the data
+                };
+                ssize_t const written(f_responder->write(msg, sizeof(msg)));
+                if(written != sizeof(msg))
+                {
+                    throw std::runtime_error("could not send the Prinbee message");
+                }
+            }
+            break;
+
+        }
+    }
+
+    // this is called from the f_responder object (since this very object
+    // is just a connection with a timer, no actual socket)
+    //
+    virtual void process_read() override
+    {
+        // first we want the size
+        //
+        std::size_t size(0);
+        switch(f_sequence)
+        {
+        case sequence_t::SEQUENCE_PING_PONG:
+            size = 4UL;
+            break;
+
+        case sequence_t::SEQUENCE_PRINBEE_MESSAGE:
+            size = 16UL;
+            break;
+
+        }
+        if(size > sizeof(f_buffer))
+        {
+            throw std::runtime_error("size not supported (f_buffer too small)");
+        }
+
+        // second we load `size` bytes, if possible, if not, just return early
+        //
+        while(f_buffer_size < size)
+        {
+            ssize_t const r(f_responder->read(f_buffer, size - f_buffer_size));
+            if(r < 0)
+            {
+                throw std::runtime_error("unexpected I/O error reading data from binary socket");
+            }
+            if(r == 0)
+            {
+                // EAGAIN or EOF, but for socket(), we don't really get EOF
+                //
+                return;
+            }
+            f_buffer_size += r;
+        }
+
+        // we have a complete buffer, verify that it has the value we expect
+        //
+        ++f_step;
+        std::cout
+            << "--- "
+            << f_step
+            << ". binary client message ---"
+            << std::endl;
+
+        switch(f_sequence)
+        {
+        case sequence_t::SEQUENCE_PING_PONG:
+            if(f_buffer[0] != 'P'
+            || f_buffer[1] != 'O'
+            || f_buffer[2] != 'N'
+            || f_buffer[3] != 'G')
+            {
+                throw std::runtime_error("expected PONG binary message.");
+            }
+            f_complete = true;
+            break;
+
+        case sequence_t::SEQUENCE_PRINBEE_MESSAGE:
+            if(f_buffer[ 0] != 'b'
+            || f_buffer[ 1] != 'm'
+            || f_buffer[ 2] != 1
+            || f_buffer[ 3] != 0
+            || f_buffer[ 4] != 'P'
+            || f_buffer[ 5] != 'O'
+            || f_buffer[ 6] != 'N'
+            || f_buffer[ 7] != 'G'
+            || f_buffer[ 8] != 0
+            || f_buffer[ 9] != 0
+            || f_buffer[10] != 0
+            || f_buffer[11] != 0
+            || f_buffer[12] != 0x55
+            || f_buffer[13] != static_cast<char>(0xaa)
+            || f_buffer[14] != 0x33
+            || f_buffer[15] != static_cast<char>(0xcc))
+            {
+                throw std::runtime_error("expected PONG prinbee message.");
+            }
+            f_complete = true;
+            break;
+
+        }
+
+        // done with that buffer, reset the position/size
+        //
+        f_buffer_size = 0;
+
+        //if(disconnect_all)
+        //{
+        //    remove_from_communicator();
+        //
+        //    ed::connection::pointer_t timer_ptr(f_timer.lock());
+        //    if(timer_ptr != nullptr)
+        //    {
+        //        timer_ptr->remove_from_communicator();
+        //    }
+        //}
+    }
+
+    virtual void connection_removed() override
+    {
+        if(!f_complete)
+        {
+            throw std::runtime_error("binary responder not marked as complete.");
+        }
+
+        if(f_responder != nullptr)
+        {
+            f_responder->remove_from_communicator();
+            f_responder.reset();
+        }
+    }
+
+    void mark_complete()
+    {
+        f_complete = true;
+    }
+
+    //void set_timer(ed::connection::pointer_t done_timer)
+    //{
+    //    f_timer = done_timer;
+    //}
+
+private:
+    addr::addr                  f_address = addr::addr();
+    ed::mode_t                  f_mode = ed::mode_t::MODE_PLAIN;
+    sequence_t                  f_sequence = sequence_t::SEQUENCE_PING_PONG;
+    int                         f_step = 0;
+    int                         f_timeout = 500'000;
+    char                        f_buffer[4096] = {};
+    std::size_t                 f_buffer_size = 0; // number of bytes read so far
+    binary_responder::pointer_t f_responder = binary_responder::pointer_t();
+    bool                        f_complete = false;
 };
 
 
@@ -3576,6 +3996,62 @@ CATCH_TEST_CASE("reporter_executor_variables", "[executor][reporter][variable]")
         CATCH_REQUIRE(s->get_exit_code() == -1);
     }
     CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_executor_variables: array variable cloning")
+    {
+        // Note: at the moment there is no call to the clone() function
+        //       inside the library, so make sure it works as expected
+        //       within the test
+        //
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t var(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::variable_array>("array_var"));
+        CATCH_REQUIRE(var != nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable_array::pointer_t v(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_array>(var));
+        CATCH_REQUIRE(v != nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t i1(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>("int_a"));
+        std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(i1)->set_integer(123);
+        v->add_item(i1);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t i2(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>("int_b"));
+        std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(i2)->set_integer(456);
+        v->add_item(i2);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t i3(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>("int_c"));
+        std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(i3)->set_integer(789);
+        v->add_item(i3);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t t1(v->get_item(0));
+        CATCH_REQUIRE(t1 != nullptr);
+        SNAP_CATCH2_NAMESPACE::reporter::variable_integer::pointer_t p1(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(t1));
+        CATCH_REQUIRE(p1->get_integer() == 123);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t t2(v->get_item(1));
+        CATCH_REQUIRE(t2 != nullptr);
+        SNAP_CATCH2_NAMESPACE::reporter::variable_integer::pointer_t p2(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(t2));
+        CATCH_REQUIRE(p2->get_integer() == 456);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t t3(v->get_item(2));
+        CATCH_REQUIRE(t3 != nullptr);
+        SNAP_CATCH2_NAMESPACE::reporter::variable_integer::pointer_t p3(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_integer>(t3));
+        CATCH_REQUIRE(p3->get_integer() == 789);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t t4(v->get_item(3));
+        CATCH_REQUIRE(t4 == nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t clone(v->clone("clone"));
+        CATCH_REQUIRE(clone != nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable_array::pointer_t c(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_array>(clone));
+        CATCH_REQUIRE(c != nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable::pointer_t clone2(var->clone("clone2"));
+        CATCH_REQUIRE(clone2 != nullptr);
+
+        SNAP_CATCH2_NAMESPACE::reporter::variable_array::pointer_t c2(std::dynamic_pointer_cast<SNAP_CATCH2_NAMESPACE::reporter::variable_array>(clone2));
+        CATCH_REQUIRE(c2 != nullptr);
+    }
+    CATCH_END_SECTION()
 }
 
 
@@ -3645,6 +4121,91 @@ CATCH_TEST_CASE("reporter_executor_state", "[executor][reporter][error]")
             CATCH_REQUIRE(s->data_size() == 0);
             CATCH_REQUIRE(s->read_data(buf, 1024) == -1);
         }
+    }
+    CATCH_END_SECTION()
+}
+
+CATCH_TEST_CASE("reporter_tcp_connection", "[executor][reporter][error]")
+{
+    CATCH_START_SECTION("reporter_tcp_connection: test raw TCP connection")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("raw_tcp_connection.rprtr", g_program_raw_tcp_connection));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+
+        // the tracer is really practical to debug, but the possible double wait()
+        // can make it break; so I keep it commented by default
+        //trace tracer(g_verify_raw_tcp_connection);
+        //s->set_trace_callback(std::bind(&trace::callback, &tracer, std::placeholders::_1, std::placeholders::_2));
+
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 19);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        permanent_binary_responder::pointer_t binary_responder(std::make_shared<permanent_binary_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , permanent_binary_responder::sequence_t::SEQUENCE_PING_PONG));
+        ed::communicator::instance()->add_connection(binary_responder);
+
+        e->set_thread_done_callback([binary_responder]()
+            {
+                ed::communicator::instance()->remove_connection(binary_responder);
+            });
+
+        CATCH_REQUIRE(e->run());
+
+        CATCH_REQUIRE(s->get_exit_code() == 0);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_tcp_connection: test prinbee like message")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("prinbee_binary_message.rprtr", g_program_prinbee_binary_message));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 19);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        permanent_binary_responder::pointer_t binary_responder(std::make_shared<permanent_binary_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , permanent_binary_responder::sequence_t::SEQUENCE_PRINBEE_MESSAGE));
+        ed::communicator::instance()->add_connection(binary_responder);
+
+        e->set_thread_done_callback([binary_responder]()
+            {
+                ed::communicator::instance()->remove_connection(binary_responder);
+            });
+
+        CATCH_REQUIRE(e->run());
+
+        CATCH_REQUIRE(s->get_exit_code() == 0);
     }
     CATCH_END_SECTION()
 }
@@ -4353,6 +4914,24 @@ CATCH_TEST_CASE("reporter_executor_error", "[executor][reporter][error]")
     }
     CATCH_END_SECTION()
 
+    CATCH_START_SECTION("reporter_executor_error: send_data() when not connected")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("bad_send_data.rprtr", g_program_send_data_without_connection));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 1);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->start()
+            , ed::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "event_dispatcher_exception: send_data() has no connection to send data."));
+    }
+    CATCH_END_SECTION()
+
     CATCH_START_SECTION("reporter_executor_error: if(variable) with invalid type")
     {
         SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("if_invalid_type.rprtr", g_program_if_invalid_type));
@@ -5021,6 +5600,262 @@ CATCH_TEST_CASE("reporter_executor_error_message", "[executor][reporter][error]"
         CATCH_REQUIRE_FALSE(timer->timed_out_prima());
 
         CATCH_REQUIRE(s->get_exit_code() == -1);
+    }
+    CATCH_END_SECTION()
+}
+
+
+CATCH_TEST_CASE("reporter_executor_error_data", "[executor][reporter][error]")
+{
+    CATCH_START_SECTION("reporter_executor_error_data: read too large")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("raw_tcp_connection.rprtr", g_program_raw_tcp_connection_read_too_large));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 11);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        permanent_binary_responder::pointer_t binary_responder(std::make_shared<permanent_binary_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , permanent_binary_responder::sequence_t::SEQUENCE_PING_PONG));
+        ed::communicator::instance()->add_connection(binary_responder);
+        binary_responder->mark_complete();
+
+        e->set_thread_done_callback([binary_responder]()
+            {
+                ed::communicator::instance()->remove_connection(binary_responder);
+            });
+
+        CATCH_REQUIRE(e->run());
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->stop()
+            , ed::runtime_error
+            , Catch::Matchers::ExceptionMessage("event_dispatcher_exception: raw_tcp_connection.rprtr:10: could not read 5 bytes from the data buffer, got 4 instead."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_executor_error_data: verify fails")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("raw_tcp_connection.rprtr", g_program_raw_tcp_connection_verify_fails));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 11);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        permanent_binary_responder::pointer_t binary_responder(std::make_shared<permanent_binary_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , permanent_binary_responder::sequence_t::SEQUENCE_PING_PONG));
+        ed::communicator::instance()->add_connection(binary_responder);
+        binary_responder->mark_complete();
+
+        e->set_thread_done_callback([binary_responder]()
+            {
+                ed::communicator::instance()->remove_connection(binary_responder);
+            });
+
+        CATCH_REQUIRE(e->run());
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->stop()
+            , ed::runtime_error
+            , Catch::Matchers::ExceptionMessage("event_dispatcher_exception: raw_tcp_connection.rprtr:10: values at offset 0 do not match (80 != 73)."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_executor_error_data: verify fails")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("raw_tcp_connection.rprtr", g_program_raw_tcp_connection_send_invalid_value_too_large));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 15);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        permanent_binary_responder::pointer_t binary_responder(std::make_shared<permanent_binary_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , permanent_binary_responder::sequence_t::SEQUENCE_PING_PONG));
+        ed::communicator::instance()->add_connection(binary_responder);
+        binary_responder->mark_complete();
+
+        e->set_thread_done_callback([binary_responder]()
+            {
+                ed::communicator::instance()->remove_connection(binary_responder);
+            });
+
+        CATCH_REQUIRE(e->run());
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->stop()
+            , ed::runtime_error
+            , Catch::Matchers::ExceptionMessage("event_dispatcher_exception: raw_tcp_connection.rprtr:14: byte values must be between -128 and +255 (position 2 has out of range value 256)."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_executor_error_data: verify fails")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("raw_tcp_connection.rprtr", g_program_raw_tcp_connection_send_invalid_value_too_small));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 15);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        permanent_binary_responder::pointer_t binary_responder(std::make_shared<permanent_binary_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , permanent_binary_responder::sequence_t::SEQUENCE_PING_PONG));
+        ed::communicator::instance()->add_connection(binary_responder);
+        binary_responder->mark_complete();
+
+        e->set_thread_done_callback([binary_responder]()
+            {
+                ed::communicator::instance()->remove_connection(binary_responder);
+            });
+
+        CATCH_REQUIRE(e->run());
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->stop()
+            , ed::runtime_error
+            , Catch::Matchers::ExceptionMessage("event_dispatcher_exception: raw_tcp_connection.rprtr:14: byte values must be between -128 and +255 (position 2 has out of range value -129)."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_executor_error_data: empty array sending data")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("raw_tcp_connection.rprtr", g_program_raw_tcp_connection_send_empty_array));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 15);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        permanent_binary_responder::pointer_t binary_responder(std::make_shared<permanent_binary_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , permanent_binary_responder::sequence_t::SEQUENCE_PING_PONG));
+        ed::communicator::instance()->add_connection(binary_responder);
+        binary_responder->mark_complete();
+
+        e->set_thread_done_callback([binary_responder]()
+            {
+                ed::communicator::instance()->remove_connection(binary_responder);
+            });
+
+        CATCH_REQUIRE(e->run());
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->stop()
+            , ed::runtime_error
+            , Catch::Matchers::ExceptionMessage("event_dispatcher_exception: raw_tcp_connection.rprtr:14: array cannot be empty."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_executor_error_data: empty array verifying data")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("raw_tcp_connection.rprtr", g_program_raw_tcp_connection_verify_empty_array));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        p->parse_program();
+
+        CATCH_REQUIRE(s->get_statement_size() == 11);
+
+        SNAP_CATCH2_NAMESPACE::reporter::executor::pointer_t e(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::executor>(s));
+        e->start();
+        addr::addr a;
+        sockaddr_in ip = {
+            .sin_family = AF_INET,
+            .sin_port = htons(20002),
+            .sin_addr = {
+                .s_addr = htonl(0x7f000001),
+            },
+            .sin_zero = {},
+        };
+        a.set_ipv4(ip);
+        permanent_binary_responder::pointer_t binary_responder(std::make_shared<permanent_binary_responder>(
+                  a
+                , ed::mode_t::MODE_PLAIN
+                , permanent_binary_responder::sequence_t::SEQUENCE_PING_PONG));
+        ed::communicator::instance()->add_connection(binary_responder);
+        binary_responder->mark_complete();
+
+        e->set_thread_done_callback([binary_responder]()
+            {
+                ed::communicator::instance()->remove_connection(binary_responder);
+            });
+
+        CATCH_REQUIRE(e->run());
+
+        CATCH_REQUIRE_THROWS_MATCHES(
+              e->stop()
+            , ed::runtime_error
+            , Catch::Matchers::ExceptionMessage("event_dispatcher_exception: raw_tcp_connection.rprtr:10: array cannot be empty."));
     }
     CATCH_END_SECTION()
 }

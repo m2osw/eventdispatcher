@@ -134,6 +134,7 @@ bool parser::next_token()
 //std::cerr << "--- next token: " << static_cast<int>(f_token.get_token()) << "?\n";
     if(f_token.get_token() == token_t::TOKEN_ERROR)
     {
+        f_lexer->error(f_token, "a statement includes an unexpected token.");
         throw ed::runtime_error("invalid token.");
     }
     return f_token.get_token() == token_t::TOKEN_EOF;
@@ -235,14 +236,22 @@ void parser::one_parameter()
     }
 
     expression::pointer_t expr;
-    if(f_token.get_token() == token_t::TOKEN_OPEN_CURLY_BRACE)
+    switch(f_token.get_token())
     {
+    case token_t::TOKEN_OPEN_CURLY_BRACE:
         next_token();
         expr = expression_list();
-    }
-    else
-    {
+        break;
+
+    case token_t::TOKEN_OPEN_SQUARE_BRACE:
+        next_token();
+        expr = expression_array();
+        break;
+
+    default:
         expr = comparative();
+        break;
+
     }
 
     f_statement->add_parameter(name, expr);
@@ -320,6 +329,42 @@ expression::pointer_t parser::list_item()
     }
 
     return item;
+}
+
+
+expression::pointer_t parser::expression_array()
+{
+    expression::pointer_t array(std::make_shared<expression>());
+    array->set_operator(operator_t::OPERATOR_ARRAY);
+
+    // empty array?
+    //
+    if(f_token.get_token() == token_t::TOKEN_CLOSE_SQUARE_BRACE)
+    {
+        next_token();
+        return array;
+    }
+
+    for(;;)
+    {
+        array->add_expression(comparative());
+
+        if(f_token.get_token() != token_t::TOKEN_COMMA)
+        {
+            if(f_token.get_token() != token_t::TOKEN_CLOSE_SQUARE_BRACE)
+            {
+                f_lexer->error(f_token, "an array of values must end with ']'.");
+                throw ed::runtime_error("an array of values must end with ']'.");
+            }
+            next_token();
+            return array;
+        }
+        if(next_token())
+        {
+            f_lexer->error(f_token, "end of file found before end of array (']' missing).");
+            throw ed::runtime_error("end of file found before end of array (']' missing).");
+        }
+    }
 }
 
 

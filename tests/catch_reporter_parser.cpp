@@ -343,6 +343,45 @@ CATCH_TEST_CASE("reporter_parser_error", "[parser][reporter][error]")
                       "event_dispatcher_exception: parameter \"command\" is required by \"verify_message\"."));
     }
     CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_parser_error: array parameter missing comma")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("missing_comma_in_array.rptr", "send_data(values: [1, 2, 3 4])"));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              p->parse_program()
+            , ed::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "event_dispatcher_exception: an array of values must end with ']'."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_parser_error: array parameter missing ']'")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("missing_comma_in_array.rptr", "send_data(values: [1, 2, 3, 4"));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              p->parse_program()
+            , ed::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "event_dispatcher_exception: an array of values must end with ']'."));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("reporter_parser_error: EOF too soon defining array")
+    {
+        SNAP_CATCH2_NAMESPACE::reporter::lexer::pointer_t l(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::lexer>("missing_comma_in_array.rptr", "send_data(values: [1, 2, 3,"));
+        SNAP_CATCH2_NAMESPACE::reporter::state::pointer_t s(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::state>());
+        SNAP_CATCH2_NAMESPACE::reporter::parser::pointer_t p(std::make_shared<SNAP_CATCH2_NAMESPACE::reporter::parser>(l, s));
+        CATCH_REQUIRE_THROWS_MATCHES(
+              p->parse_program()
+            , ed::runtime_error
+            , Catch::Matchers::ExceptionMessage(
+                      "event_dispatcher_exception: end of file found before end of array (']' missing)."));
+    }
+    CATCH_END_SECTION()
 }
 
 

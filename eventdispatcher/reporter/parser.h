@@ -46,6 +46,7 @@ private:
     void                    parameters();
     void                    one_parameter();
     expression::pointer_t   expression_list();
+    expression::pointer_t   expression_array();
     expression::pointer_t   list_item();
     expression::pointer_t   comparative();
     expression::pointer_t   additive();
