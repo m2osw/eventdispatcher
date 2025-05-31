@@ -130,15 +130,15 @@ bool tcp_client_buffer_connection::has_output() const
 
 /** \brief Write data to the connection.
  *
- * This function can be used to send data to this TCP/IP connection.
- * The data is bufferized and as soon as the connection can WRITE
- * to the socket, it will wake up and send the data. In other words,
- * we cannot just sleep and wait for an answer. The transfer will
- * be asynchronous.
+ * This function is used to send data through this TCP/IP connection.
+ * The functions tries to send the data, but if it can't, the data is
+ * buffered and as soon as the connection can again WRITE to the socket,
+ * it wakes up and send more data. In other words, we cannot just sleep
+ * and wait for an answer because the transfer can be asynchronous.
  *
  * \note
- * On success, the function returns \p length whether part or all
- * of the data was sent through the socket or saved to the cached.
+ * On success, the function returns \p count whether part or all
+ * of the data was sent through the socket or saved to the cache.
  *
  * \note
  * Note that the cache is always used if the socket was not marked
@@ -152,12 +152,13 @@ bool tcp_client_buffer_connection::has_output() const
  * does not reduce the size of the buffer until all the data was
  * sent.
  *
- * \param[in] data  The pointer to the buffer of data to be sent.
- * \param[out] length  The number of bytes to send.
+ * \param[in] buf  The pointer to the buffer of data to be sent.
+ * \param[out] count  The number of bytes to send.
  *
- * \return The number of bytes that were written or -1 on an error.
+ * \return The number of bytes that were written or -1 on an error and
+ * errno set to the error.
  */
-ssize_t tcp_client_buffer_connection::write(void const * data, std::size_t length)
+ssize_t tcp_client_buffer_connection::write(void const * buf, std::size_t count)
 {
     if(!valid_socket())
     {
@@ -165,10 +166,10 @@ ssize_t tcp_client_buffer_connection::write(void const * data, std::size_t lengt
         return -1;
     }
 
-    if(data != nullptr && length > 0)
+    if(buf != nullptr && count > 0)
     {
-        char const * d(reinterpret_cast<char const *>(data));
-        std::size_t l(length);
+        char const * d(reinterpret_cast<char const *>(buf));
+        std::size_t l(count);
 
         if(f_output.empty()
         && is_non_blocking())
@@ -186,7 +187,7 @@ ssize_t tcp_client_buffer_connection::write(void const * data, std::size_t lengt
                 {
                     // no buffer needed!
                     //
-                    return length;
+                    return count;
                 }
 
                 // could not write the entire buffer, cache the rest
@@ -198,7 +199,7 @@ ssize_t tcp_client_buffer_connection::write(void const * data, std::size_t lengt
         }
 
         f_output.insert(f_output.end(), d, d + l);
-        return length;
+        return count;
     }
 
     return 0;
