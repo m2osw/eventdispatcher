@@ -17,7 +17,7 @@
 " than .rprtr.
 "
 "
-" Copyright (c) 2016-2024  Made to Order Software Corp.  All Rights Reserved
+" Copyright (c) 2016-2025  Made to Order Software Corp.  All Rights Reserved
 "
 " This program is free software: you can redistribute it and/or modify
 " it under the terms of the GNU General Public License as published by

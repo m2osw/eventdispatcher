@@ -1,4 +1,4 @@
-# Copyright (c) 2024  Made to Order Software Corp.  All Rights Reserved
+# Copyright (c) 2024-2025  Made to Order Software Corp.  All Rights Reserved
 #
 # http://snapwebsites.org/project/eventdispatcher
 # contact@m2osw.com
