@@ -395,6 +395,7 @@ void tcp_client_buffer_connection::process_hup()
     close();
 
     // process next level too
+    //
     tcp_client_connection::process_hup();
 }
 
