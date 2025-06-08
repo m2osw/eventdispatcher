@@ -228,9 +228,13 @@ bool communicator::add_connection(connection::pointer_t connection)
     SNAP_LOG_TRACE
         << "added 1 connection, \""
         << connection->get_name()
-        << "\", there is now "
+        << "\", there "
+        << (f_connections.size() == 1 ? "is" : "are")
+        << " now "
         << f_connections.size()
-        << " connections (including this one)."
+        << " connection"
+        << (f_connections.size() == 1 ? "" : "s")
+        << " (including this one)."
         << SNAP_LOG_SEND;
 
     return true;
@@ -259,7 +263,9 @@ bool communicator::remove_connection(connection::pointer_t connection)
         << connection->get_name()
         << "\", of "
         << f_connections.size()
-        << " connections (including this one)."
+        << " connection"
+        << (f_connections.size() == 1 ? "" : "s")
+        << " (including this one)."
         << SNAP_LOG_SEND;
 
     f_connections.erase(it);
