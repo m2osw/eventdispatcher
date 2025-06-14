@@ -251,17 +251,17 @@ public:
             }
             catch(failed_connecting const & e)
             {
-                error_name = "failed_connecting";
+                error_name = "ed::failed_connecting";
                 f_last_error = e.what();
             }
             catch(initialization_error const & e)
             {
-                error_name = "initialization_error";
+                error_name = "ed::initialization_error";
                 f_last_error = e.what();
             }
             catch(runtime_error const & e)
             {
-                error_name = "runtime_error";
+                error_name = "ed::runtime_error";
                 f_last_error = e.what();
             }
             catch(std::exception const & e)
@@ -1247,7 +1247,7 @@ void tcp_client_permanent_message_connection::process_connection_failed(std::str
  *
  * You should implement this virtual function if you have to initiate
  * the communication. For example, the snapserver has to send a
- * REGISTER to the snapcommunicator system and thus implements this
+ * REGISTER to the communicator system and thus implements this
  * function.
  *
  * The default implementation makes sure that the timer gets turned off
