@@ -1,4 +1,4 @@
-eventdispatcher (1.1.58.0~noble) jammy; urgency=high
+eventdispatcher (1.1.58.0~noble) noble; urgency=high
 
   * Fixed the BIO_free_all() leak. Bad advice created the situation.
     - this uses a reimplementation of the shutdown() C library function.
