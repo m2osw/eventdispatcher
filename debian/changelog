@@ -1,6 +1,30 @@
 eventdispatcher (1.1.58.0~jammy) jammy; urgency=high
 
+  * Fixed the BIO_free_all() leak. Bad advice created the situation.
+    - this uses a reimplementation of the shutdown() C library function.
+    - there was one other link in link with certificates.
+  * Finally added a system to test our services in unit tests (reporter).
+  * Implemented a certificate class to retrieve certificates from a website.
+  * Enhance the TCP connection by directly writing to the socket if possible
+    and avoid the cache as a result.
+  * Fixed socket validity tests.
+  * Moved the get_remote_address() in the right class (i.e. base class).
+  * Renamed the get_address() as get_client_address().
   * Adding library to run tests against network clients.
+  * Added support for callbacks in the timer class.
+  * Fixed the ed-signal command line syntax ([[<server>:]service/]<command>).
+  * Enhanced the logrotate implementation.
+    - changed the LOG message in LOG_ROTATE which is cleaner.
+    - and reuse the LOG message to send snaplogger messages.
+  * Added functions to convert a string to a Unix signal number.
+  * Added support for int16 and uint16 in add_parameter().
+  * Added cmake definition to allow for message definition verification.
+    - includes support for multiple path to find definition files.
+    - support parameter verification.
+  * A message can now be marked as "processed".
+  * Added support for a priority in the dispatcher match loop.
+  * Allow for match all to be added at any time.
+  * Many clean ups and documentation enhancements.
 
  -- Alexis Wilke <alexis@m2osw.com>  Sun, 17 Mar 2024 12:41:06 -0700
 

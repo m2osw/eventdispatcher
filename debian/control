@@ -3,7 +3,7 @@ Priority: extra
 Maintainer: Alexis Wilke <alexis@m2osw.com>
 Build-Depends: cmake,
     cppthread-dev (>= 1.0.0.0~jammy),
-    debhelper,
+    debhelper-compat (= 13),
     doxygen,
     graphviz,
     libaddr-dev (>= 1.0.17.0~jammy),
