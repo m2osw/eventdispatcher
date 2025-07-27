@@ -1,3 +1,9 @@
+eventdispatcher (1.1.59.0~noble) noble; urgency=high
+
+  * Added the check-certificate tool to verify our certificate not-after date.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sat, 26 Jul 2025 20:36:07 -0700
+
 eventdispatcher (1.1.58.0~noble) noble; urgency=high
 
   * Fixed the BIO_free_all() leak. Bad advice created the situation.

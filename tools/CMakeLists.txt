@@ -18,6 +18,33 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 ##
+## check-certificate
+##
+project(check-certificate)
+
+add_executable(${PROJECT_NAME}
+    check_certificate.cpp
+)
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        ${ADVGETOPT_INCLUDE_DIRS}
+)
+
+target_link_libraries(${PROJECT_NAME}
+    eventdispatcher
+)
+
+install(
+    TARGETS
+        ${PROJECT_NAME}
+
+    RUNTIME DESTINATION
+        bin
+)
+
+
+##
 ## ed-signal
 ##
 project(ed-signal)

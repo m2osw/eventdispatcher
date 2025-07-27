@@ -28,12 +28,6 @@
  * certificate such as the expiration date.
  */
 
-// self
-//
-//#include    <eventdispatcher/tcp_bio_options.h>
-//#include    <eventdispatcher/utils.h>
-
-
 // libaddr
 //
 #include    <libaddr/addr.h>
