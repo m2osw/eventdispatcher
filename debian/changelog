@@ -1,3 +1,10 @@
+eventdispatcher (1.1.61.0~noble) noble; urgency=high
+
+  * Updated the license to GPL v3.
+  * Small clean ups.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 27 Jul 2025 10:36:08 -0700
+
 eventdispatcher (1.1.60.0~noble) noble; urgency=high
 
   * Actually install the check-certificate tool.
