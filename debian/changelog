@@ -1,3 +1,9 @@
+eventdispatcher (1.1.60.0~noble) noble; urgency=high
+
+  * Actually install the check-certificate tool.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sat, 26 Jul 2025 21:24:42 -0700
+
 eventdispatcher (1.1.59.0~noble) noble; urgency=high
 
   * Added the check-certificate tool to verify our certificate not-after date.
