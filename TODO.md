@@ -79,7 +79,7 @@
   - fastjournal
   - fluid-settings **[DONE]**
   - iplock
-    + ipwall
+    + ipwall **[DONE]**
   - prinbee
   - snaprfs
 
