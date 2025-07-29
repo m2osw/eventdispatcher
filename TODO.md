@@ -54,7 +54,7 @@
   threads at all. We've successfully use the library in all three types
   of processes.
 
-* Replace the time/date with a `timespec_ex` and use `ppoll()` which matches
+* Replace all time/date with a `timespec_ex` and use `ppoll()` which matches
   one to one (instead of our manually handled `timeout` variable).
 
 * Add support for UDP, Unix stream, Unix UDP, etc. to the reporter language.
@@ -82,6 +82,10 @@
     + ipwall
   - prinbee
   - snaprfs
+
+* We need to re-write the type handling because at the moment we can only
+  test things that the eventdispatcher and dependencies can handle; i.e.
+  the URI test requires edhttp which is higher in the dependency tree...
 
 * The message definitions currently verify that some parameters are present
   (when marked as required); it can also verify the type of the data if
