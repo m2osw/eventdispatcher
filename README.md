@@ -377,7 +377,26 @@ Note: It would be cool to gather the information from the service name,
       to send `LOG_ROTATE` to the snaprfs instance running on the local
       server.
 
+## Check the End Date of a Certifcate
 
+The `check-certificate` is used to see whether a certificate is about to
+expire. This can be used to get an alert about it. By default, it checks
+whether the number of days left is 14 or less. You can change the number
+of days with the `--limit` command line option.
+
+The command also has the ability to print out a list of fields from
+the certificate.
+
+    check-certificate [--info] [--limit 60] <domain name>
+
+The command exits with 0 if the limit is not yet reached and 1 otherwise.
+So it can be used in a script, such as:
+
+    if ! check-certificate <domain name>
+    then
+        # For example, you could send an email
+        sendmail ...
+    fi
 
 
 
