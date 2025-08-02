@@ -703,7 +703,7 @@ void signal_handler::signal_handler_func(
  *
  * \param[in] sig  The signal being processed.
  * \param[in] info  Information about the signal handler.
- * \param[in] context  The context from when the interrupt was generated.
+ * \param[in] ucontext  The context from when the interrupt was generated.
  */
 void signal_handler::process_signal(
           int sig

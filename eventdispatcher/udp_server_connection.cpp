@@ -61,10 +61,10 @@ namespace ed
  * listener which wakes up whenever a send() is sent to this listener
  * address and port.
  *
- * \param[in] address  The address and port to listen on. The address can be
- * the default address.
- * \param[in] multicast_addr  A multicast address (224.x.x.x) or the default
- * address.
+ * \param[in] address  The address and port to listen on. The address
+ * can be the default address.
+ * \param[in] multicast_address  A multicast address (224.x.x.x) or the
+ * default address.
  */
 udp_server_connection::udp_server_connection(
               addr::addr const & address

@@ -116,8 +116,6 @@ parser::parser(lexer::pointer_t l, state::pointer_t s)
  *
  * \todo
  * Update the grammar to match the actual implementation.
- *
- * \return A vector of statements.
  */
 void parser::parse_program()
 {

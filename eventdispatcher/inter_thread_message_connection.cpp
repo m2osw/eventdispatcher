@@ -354,8 +354,6 @@ int inter_thread_message_connection::get_socket() const
  * \warning
  * At the moment this class does not support the dispatcher
  * extension.
- *
- * \return The number of bytes written to this pipe socket, or -1 on errors.
  */
 void inter_thread_message_connection::process_read()
 {
@@ -370,13 +368,10 @@ void inter_thread_message_connection::process_read()
     // "remove" that one object from the semaphore counter
     //
     uint64_t value(1);
-//#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Wunused-result"
     if(read(is_thread_a ? f_thread_a.get() : f_thread_b.get(), &value, sizeof(value)) != sizeof(value))
     {
         throw runtime_error("an error occurred while reading from inter-thread eventfd description.");
     }
-//#pragma GCC diagnostic pop
 
     // send the message for processing
     // got_message should always be true, but just in case...

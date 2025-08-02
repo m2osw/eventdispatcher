@@ -103,6 +103,7 @@ namespace ed
  * \param[in] address  The address to connect/listen to.
  * \param[in] sequential  Whether the packets have to be 100% sequential.
  * \param[in] close_on_exec  Whether the socket has to be closed on execve().
+ * \param[in] force_reuse_addr  Allow for the immediate reuse of the address.
  */
 local_dgram_server::local_dgram_server(
               addr::addr_unix const & address

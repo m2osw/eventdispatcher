@@ -84,7 +84,7 @@ std::string const & statement::get_location() const
 }
 
 
-instruction::pointer_t statement::statement::get_instruction() const
+instruction::pointer_t statement::get_instruction() const
 {
     return f_instruction;
 }

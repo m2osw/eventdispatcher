@@ -1125,9 +1125,11 @@ private:
      * \note
      * I use a bare pointer because it is a one to one relationship
      * like a parent (`cui_connection`) and a child (`ncurses_impl`).
-     * If that goes wrong, then we've got a much better problem.
+     * If that goes wrong, then we've got a much worse problem.
      *
      * \param[in] ce  The `cui_connection` pointer.
+     * \param[in] history_filename  Name of a file where ncurses saves the
+     * history. Can be empty for not history saving.
      */
     ncurses_impl(cui_connection * ce, std::string const & history_filename)
     {

@@ -143,11 +143,10 @@ namespace ed
  * To finish up the initialization of the dispatcher, you want to call
  * the add_matches() function with a vector of matches.
  *
- * You may also call the add_communicater_commands() if you want to handle
+ * You may also call the add_communicator_commands() if you want to handle
  * communicator daemon messages automatically.
  *
- * \param[in] connection  The connection for which this dispatcher is
- *                        created.
+ * \param[in] c  The connection for which this dispatcher is created.
  */
 dispatcher::dispatcher(ed::connection_with_send_message * c)
     : f_connection(c)
@@ -218,7 +217,7 @@ dispatcher::dispatcher(ed::connection_with_send_message * c)
  * fails to process a message).
  *
  * \todo
- * Look at whether it would be possible to move the add_communicater_commands()
+ * Look at whether it would be possible to move the add_communicator_commands()
  * to the communicatord library. At the moment, this comes with a set of
  * messages defined in the connection_with_send_message so it would be strange
  * to break that in half. If we can move both there, then we would be ready
@@ -530,7 +529,7 @@ void dispatcher::set_show_matches(bool show_matches)
  * As a result, we can end up processing multiple functions each of which
  * would understand the exact same command. You may want to make sure that
  * you use the callback priority on those match definitions.
- * \node
+ * \note
  * \code
  *     ed::define_match(
  *           ed::Expression(communicatord::g_name_communicatord_cmd_status)
@@ -654,7 +653,7 @@ dispatcher_match dispatcher::define_catch_all() const
  */
 
 
-/** \var dispatcher::f_ended
+/** \var dispatcher::f_end
  * \brief Whether the "always match" was added to the list.
  *
  * The list of matches can be ended with a match which uses the

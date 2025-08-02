@@ -87,6 +87,7 @@ namespace ed
  *
  * \param[in] server_address  The address and port to listen on.
  * \param[in] client_address  The address for the client side.
+ * \param[in] service_name  The name of this connection.
  */
 udp_server_message_connection::udp_server_message_connection(
           addr::addr const & server_address
