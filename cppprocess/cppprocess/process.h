@@ -102,6 +102,7 @@ public:
     int                             exit_code() const;
     int                             kill(int sig);
     void                            set_process_done(process_done_t callback);
+    int                             get_result(ed::child_status const & status, bool err = true);
 
 private:
     int                             start_process(

@@ -98,8 +98,8 @@ class signal_child
     : public signal
 {
 public:
-    typedef std::shared_ptr<signal_child>     pointer_t;
-    typedef std::function<void(child_status status)> func_t;
+    typedef std::shared_ptr<signal_child>                       pointer_t;
+    typedef std::function<void(child_status const & status)>    func_t;
 
     virtual                     ~signal_child() override;
 

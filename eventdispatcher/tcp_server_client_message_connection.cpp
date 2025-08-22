@@ -154,8 +154,9 @@ bool tcp_server_client_message_connection::send_message(
     snapdev::NOT_USED(cache);
 
     // transform the message to a string and write to the socket
-    // the writing is asynchronous so the message is saved in a cache
-    // and transferred only later when the run() loop is hit again
+    // may be asynchronous if the socket buffer is full, in that case the
+    // message is saved in a cache and transferred only later when the
+    // run() loop is hit again
     //
     std::string buf(msg.to_message());
     buf += '\n';

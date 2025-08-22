@@ -18,9 +18,9 @@
 #pragma once
 
 /** \file
- * \brief Event dispatch class.
+ * \brief Handle a pipe connection.
  *
- * Class used to handle events.
+ * Class used to handle messages sent over a Unix pipe.
  */
 
 // self

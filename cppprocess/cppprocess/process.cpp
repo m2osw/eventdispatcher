@@ -22,6 +22,7 @@
 #include    "cppprocess/process.h"
 
 #include    "cppprocess/exception.h"
+#include    "cppprocess/io_capture_pipe.h"
 
 
 // eventdispatcher
@@ -1841,6 +1842,90 @@ void process::output_pipe_done(ed::pipe_connection * p)
             n->f_intermediate_output_pipe.reset();
         }
     }
+}
+
+
+/** \brief Check the result of executing your process.
+ *
+ * This helper function checks the specified \p status to determine
+ * what to do next.
+ *
+ * The returned value is a simple integer like so:
+ *
+ * \li 0 -- the process worked and exited with exit code 0
+ * \li positive number -- the process exited normally, but with that exit
+ * code (most often 1)
+ * \li -1 -- the process exited abnormally, it was sent (or sent itself) a
+ * signal (i.e. it called abort() or someone sent a SIGTERM to the process)
+ * \li -2 -- the status is not valid
+ *
+ * \note
+ * The \p err parameter does not prevent logs from being generated on
+ * signaled or unknown statuses.
+ *
+ * \param[in] status  The status of the process.
+ * \param[in] err  Generate an error log if the process did not exit with
+ *                 a code of 0.
+ *
+ * \return 0 on success, 1 to 255 on error, -1 if the process was signaled
+ *         (i.e. SIGTERM), -2 if the status could not be determined.
+ */
+int process::get_result(ed::child_status const & status, bool err)
+{
+    // the user may not have defined either of those, so be careful
+    //
+    cppprocess::io_capture_pipe::pointer_t output_pipe(std::dynamic_pointer_cast<cppprocess::io_capture_pipe>(get_output_io()));
+    cppprocess::io_capture_pipe::pointer_t error_pipe(std::dynamic_pointer_cast<cppprocess::io_capture_pipe>(get_error_io()));
+    if(status.is_signaled())
+    {
+        SNAP_LOG_ERROR
+            << "\""
+            << get_command_line()
+            << "\" received a signal and died: "
+            << status.terminate_signal()
+            << "\n -- Console Output:\n"
+            << (output_pipe == nullptr ? "<no standard output available>" : output_pipe->get_output())
+            << " -- Console Errors:\n"
+            << (error_pipe == nullptr ? "<no error output available>" : error_pipe->get_output())
+            << SNAP_LOG_SEND;
+
+        return -1;
+    }
+    else if(status.is_exited())
+    {
+        if(status.exit_code() == 0)
+        {
+            return 0;
+        }
+
+        if(err)
+        {
+            SNAP_LOG_RECOVERABLE_ERROR
+                << "an error occurred running \""
+                << get_command_line()
+                << "\": "
+                << status.exit_code()
+                << "\n -- Console Output:\n"
+                << (output_pipe == nullptr ? "<no standard output available>" : output_pipe->get_output())
+                << " -- Console Errors:\n"
+                << (error_pipe == nullptr ? "<no error output available>" : error_pipe->get_output())
+                << SNAP_LOG_SEND;
+        }
+
+        return status.exit_code();
+    }
+
+    SNAP_LOG_SEVERE
+        << "unknown status returned running \""
+        << get_command_line()
+        << "\":\n"
+        << " -- Console Output:\n"
+        << (output_pipe == nullptr ? "<no standard output available>" : output_pipe->get_output())
+        << " -- Console Errors:\n"
+        << (error_pipe == nullptr ? "<no error output available>" : error_pipe->get_output())
+        << SNAP_LOG_SEND;
+
+    return -2;
 }
 
 

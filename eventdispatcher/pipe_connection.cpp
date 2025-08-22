@@ -17,25 +17,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /** \file
- * \brief Implementation of the Snap Communicator class.
+ * \brief Implementation of the Unix pipe connection.
  *
- * This class wraps the C poll() interface in a C++ object with many types
- * of objects:
- *
- * \li Server Connections; for software that want to offer a port to
- *     which clients can connect to; the server will call accept()
- *     once a new client connection is ready; this results in a
- *     Server/Client connection object
- * \li Client Connections; for software that want to connect to
- *     a server; these expect the IP address and port to connect to
- * \li Server/Client Connections; for the server when it accepts a new
- *     connection; in this case the server gets a socket from accept()
- *     and creates one of these objects to handle the connection
- *
- * Using the poll() function is the easiest and allows us to listen
- * on pretty much any number of sockets (on my server it is limited
- * at 16,768 and frankly over 1,000 we probably will start to have
- * real slowness issues on small VPN servers.)
+ * This class implements the support of a Unix pipe.
  */
 
 // self
@@ -106,7 +90,7 @@ namespace ed
  *
  * \warning
  * You need to create a new pipe_connection each time you want to create
- * a new child with fork(). If you want to create a a new process with
+ * a new child with fork(). If you want to create a new process with
  * fork() + execve(), you want to create three pipe_connection, one per
  * stream (stdin, stdout, stderr). You can always create more if necessary
  * in your situation.
@@ -171,7 +155,7 @@ pipe_connection::~pipe_connection()
 /** \brief Get the type of pipe connections.
  *
  * This function returns the type of this connection, as specified
- * on the contructor.
+ * on the constructor.
  *
  * \return The type of the pipe.
  */
