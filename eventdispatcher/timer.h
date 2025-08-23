@@ -56,7 +56,7 @@ public:
     // work too but require a little bit of work.)
     //
     typedef std::shared_ptr<timer>                          pointer_t;
-    typedef std::function<bool(pointer_t)>                  timeout_callback_t;
+    typedef std::function<bool(pointer_t timer_ptr)>        timeout_callback_t;
     typedef snapdev::callback_manager<timeout_callback_t>   callback_manager_t;
 
                                 timer(std::int64_t timeout_us);
