@@ -20,8 +20,11 @@
 ##
 ## Documentation
 ##
+project(eventdispatcher-documentation)
+
 find_package(SnapDoxygen)
-AddDoxygenTarget(eventdispatcher
+AddDoxygenTarget(
+    eventdispatcher
     ${EVENTDISPATCHER_VERSION_MAJOR}
     ${EVENTDISPATCHER_VERSION_MINOR}
     ${EVENTDISPATCHER_VERSION_PATCH}

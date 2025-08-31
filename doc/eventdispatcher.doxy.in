@@ -42,7 +42,7 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = eventdispatcher
+PROJECT_NAME           = @TARGET_NAME@
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
@@ -934,8 +934,8 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = @CMAKE_BINARY_DIR@/eventdispatcher/version.h \
-                         @CMAKE_SOURCE_DIR@/eventdispatcher \
+INPUT                  = @CMAKE_BINARY_DIR@/@TARGET_NAME@/version.h \
+                         @CMAKE_SOURCE_DIR@/@TARGET_NAME@ \
                          @CMAKE_SOURCE_DIR@/eventdispatcher_qt \
                          @CMAKE_SOURCE_DIR@/tools
 
