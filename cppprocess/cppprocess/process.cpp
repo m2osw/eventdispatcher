@@ -1314,6 +1314,10 @@ int process::start_process(
         //
         // we want to run the execvpe() command
         //
+        // TODO: verify that exceptions are properly handled, which I think
+        //       aren't because the try/catch in main() is probably not
+        //       effective anymore at this point (after the fork() call...)
+        //
         execute_command(output_fifo, output_index, input_fifo);
 
         // the child can't safely return so just exit now
@@ -1425,9 +1429,16 @@ void process::execute_command(
                 {
                     if(*s == '=')
                     {
+                        if(s == n)
+                        {
+                            throw cppprocess_initialization_failed(
+                                  "found an '=' sign without a name before it in your environment variable list: \""
+                                + std::string(*env)
+                                + "\".");
+                        }
                         std::string const name(n, s - n);
 
-                        // do not overwrite user overridden values
+                        // do not overwrite user defined values
                         //
                         if(src_envs.find(name) == src_envs.end())
                         {
@@ -1438,6 +1449,13 @@ void process::execute_command(
                         break;
                     }
                     ++s;
+                }
+                if(*s == '\0')
+                {
+                    throw cppprocess_initialization_failed(
+                          "found a variable without an '=' sign in your environment variable list: \""
+                        + std::string(*env)
+                        + "\".");
                 }
             }
         }
