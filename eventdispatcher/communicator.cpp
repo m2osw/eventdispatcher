@@ -435,6 +435,20 @@ void communicator::debug_connections(snaplogger::severity_t severity)
 }
 
 
+/** \brief Get the amount of time the poll() function was idle.
+ *
+ * The communicator is often going to be idle since it is rather unlikely
+ * that you would receive data 100% of the time. This function returns
+ * the total amount of time the communicator has been idle so far.
+ *
+ * \return The amount of time the poll() function has been idle.
+ */
+snapdev::timespec_ex const & communicator::get_idle() const
+{
+    return f_idle;
+}
+
+
 /** \brief Run until all connections are removed.
  *
  * This function "blocks" until all the connections added to this
@@ -663,7 +677,10 @@ bool communicator::run()
         //       with nearly no additional work from us
         //
         errno = 0;
+        snapdev::timespec_ex start_on(snapdev::now());
         int const r(poll(fds.empty() ? nullptr : &fds[0], fds.size(), timeout));
+        snapdev::timespec_ex end_on(snapdev::now());
+        f_idle += end_on - start_on;
         if(r >= 0)
         {
             // quick sanity check

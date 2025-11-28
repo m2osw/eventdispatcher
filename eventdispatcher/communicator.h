@@ -36,6 +36,11 @@
 #include    <snaplogger/severity.h>
 
 
+// snapdev
+//
+#include    <snapdev/timespec_ex.h>
+
+
 
 namespace ed
 {
@@ -62,6 +67,7 @@ public:
     void                                log_connections(snaplogger::severity_t severity = snaplogger::severity_t::SEVERITY_DEBUG);
     bool                                get_show_connections() const;
     void                                set_show_connections(bool status);
+    snapdev::timespec_ex const &        get_idle() const;
 
     virtual bool                        run();
 
@@ -76,6 +82,7 @@ private:
     bool                                f_running = false;
     bool                                f_show_connections = false;
     snaplogger::severity_t              f_debug_connections = snaplogger::severity_t::SEVERITY_OFF;
+    snapdev::timespec_ex                f_idle = snapdev::timespec_ex();
 };
 #pragma GCC diagnostic pop
 

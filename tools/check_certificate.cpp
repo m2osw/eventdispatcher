@@ -105,7 +105,7 @@ const advgetopt::option g_options[] =
               advgetopt::GETOPT_FLAG_REQUIRED
             , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
         , advgetopt::DefaultValue("14")
-        , advgetopt::Help("number of days under which the certificate is considered in need to renewal.")
+        , advgetopt::Help("number of days under which the certificate is considered in need of renewal.")
     ),
 
     // DEFAULT
