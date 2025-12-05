@@ -185,6 +185,11 @@ ssize_t fd_buffer_connection::write(void const * data, size_t const length)
         return length;
     }
 
+    if(f_output.empty())
+    {
+        process_empty_buffer();
+    }
+
     return 0;
 }
 

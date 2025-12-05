@@ -171,6 +171,11 @@ ssize_t local_stream_server_client_buffer_connection::write(void const * data, s
         return length;
     }
 
+    if(f_output.empty())
+    {
+        process_empty_buffer();
+    }
+
     return 0;
 }
 

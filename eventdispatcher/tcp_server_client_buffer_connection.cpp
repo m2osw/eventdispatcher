@@ -167,8 +167,43 @@ ssize_t tcp_server_client_buffer_connection::write(void const * data, size_t con
     if(data != nullptr && length > 0)
     {
         char const * d(reinterpret_cast<char const *>(data));
-        f_output.insert(f_output.end(), d, d + length);
+        std::size_t l(length);
+
+        if(f_output.empty()
+        && is_non_blocking())
+        {
+            // it is non-blocking so we can attempt an immediate write()
+            // to the socket, this way we may be able to avoid caching
+            // anything
+            //
+            errno = 0;
+            ssize_t const r(tcp_server_client_connection::write(d, l));
+            if(r > 0)
+            {
+                l -= r;
+                if(l == 0)
+                {
+                    // no buffer needed!
+                    //
+                    process_empty_buffer();
+                    return length;
+                }
+
+                // could not write the entire buffer, cache the rest
+                //
+                d += r;
+            }
+            // TODO: handle error cases -- the process_write() will do that
+            //       but we're going to cache the data, etc. which is a waste
+        }
+
+        f_output.insert(f_output.end(), d, d + l);
         return length;
+    }
+
+    if(f_output.empty())
+    {
+        process_empty_buffer();
     }
 
     return 0;
