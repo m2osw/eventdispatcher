@@ -136,7 +136,7 @@ void alert_appender::set_config(advgetopt::getopt const & opts)
 }
 
 
-void alert_appender::process_message(
+bool alert_appender::process_message(
           snaplogger::message const & msg
         , std::string const & formatted_message)
 {
@@ -185,19 +185,21 @@ void alert_appender::process_message(
             // so instead we have a special process_message() which accepts
             // an extra component
             //
-            tcp_appender::process_message(
+            return tcp_appender::process_message(
                       msg
                     , formatted_message
                     , g_alert_component);
         }
         else
         {
-            tcp_appender::process_message(msg, formatted_message);
+            return tcp_appender::process_message(msg, formatted_message);
         }
     }
+
+    return true;
 }
 
 
 
-} // snaplogger_network namespace
+} // namespace snaplogger_network
 // vim: ts=4 sw=4 et

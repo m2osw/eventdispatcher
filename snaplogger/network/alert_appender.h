@@ -67,7 +67,7 @@ public:
 protected:
     // implement appender
     //
-    virtual void                process_message(
+    virtual bool                process_message(
                                           snaplogger::message const & msg
                                         , std::string const & formatted_message) override;
 
@@ -80,5 +80,5 @@ private:
 };
 
 
-} // snaplogger_network namespace
+} // namespace snaplogger_network
 // vim: ts=4 sw=4 et

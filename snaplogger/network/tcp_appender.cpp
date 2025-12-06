@@ -184,11 +184,11 @@ void tcp_appender::server_address_changed()
 }
 
 
-void tcp_appender::process_message(
+bool tcp_appender::process_message(
           snaplogger::message const & msg
         , std::string const & formatted_message)
 {
-    process_message(
+    return process_message(
               msg
             , formatted_message
             , snaplogger::component::pointer_t());
@@ -213,7 +213,7 @@ void tcp_appender::process_message(
  * sending to the other side fails.
  * \param[in] extra_component  The "alter" component or nullptr.
  */
-void tcp_appender::process_message(
+bool tcp_appender::process_message(
           snaplogger::message const & msg
         , std::string const & formatted_message
         , snaplogger::component::pointer_t extra_component)
@@ -257,7 +257,7 @@ void tcp_appender::process_message(
     if(f_connection != nullptr
     && std::static_pointer_cast<appender_connection>(f_connection)->is_paused())
     {
-        return;
+        return true;
     }
 
     // send message via TCP
@@ -271,13 +271,17 @@ void tcp_appender::process_message(
         && isatty(fileno(stdout)))
         {
             std::cout << formatted_message.c_str();
+            return true;
         }
+        return false;
     }
+
+    return true;
 }
 
 
 
 
 
-} // snaplogger_network namespace
+} // namespace snaplogger_network
 // vim: ts=4 sw=4 et

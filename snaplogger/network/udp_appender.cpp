@@ -90,7 +90,7 @@ void udp_appender::set_config(advgetopt::getopt const & opts)
 }
 
 
-void udp_appender::process_message(snaplogger::message const & msg, std::string const & formatted_message)
+bool udp_appender::process_message(snaplogger::message const & msg, std::string const & formatted_message)
 {
     snaplogger::guard g;
 
@@ -122,17 +122,20 @@ void udp_appender::process_message(snaplogger::message const & msg, std::string 
     if(!success)
     {
         // how could we report that? we are the logger...
+        //
         if(f_fallback_to_console
         && isatty(fileno(stdout)))
         {
             std::cout << formatted_message.c_str();
+            return true;
         }
+        return false;
     }
+
+    return true;
 }
 
 
 
-
-
-} // snaplogger namespace
+} // namespace snaplogger_network
 // vim: ts=4 sw=4 et
