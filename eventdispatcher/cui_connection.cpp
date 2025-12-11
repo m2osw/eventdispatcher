@@ -139,11 +139,11 @@ public:
 
     static pointer_t ptr()
     {
-        if(f_cui_connection->f_impl == nullptr)
+        if(g_cui_connection->f_impl == nullptr)
         {
-            ncurses_impl::fatal_error("ptr() called with f_cui_connection->f_impl set to nullptr");
+            ncurses_impl::fatal_error("ptr() called with g_cui_connection->f_impl set to nullptr");
         }
-        return f_cui_connection->f_impl;
+        return g_cui_connection->f_impl;
     }
 
     static ncurses_impl::pointer_t create_ncurses(cui_connection * ce, std::string const & history_filename)
@@ -157,7 +157,7 @@ public:
             pointer_t p(ptr());
 
             // we call the open from here instead of the constructor
-            // because we need f_cui_connection->f_impl to be defined for
+            // because we need g_cui_connection->f_impl to be defined for
             // fatal_error() to work properly
             //
             p->open_ncurse();
@@ -175,7 +175,7 @@ public:
         close_readline();
         close_ncurse();
 
-        f_cui_connection = nullptr; // let the user create a new console later
+        g_cui_connection = nullptr; // let the user create a new console later
     }
 
     bool process_read()
@@ -676,7 +676,7 @@ private:
     {
         snapdev::NOT_USED(count, c);
 
-        f_cui_connection->process_help();
+        g_cui_connection->process_help();
 
         // it worked, return 0
         return 0;
@@ -807,7 +807,7 @@ private:
             //
             p->f_should_exit = true;
 
-            f_cui_connection->process_quit();
+            g_cui_connection->process_quit();
         }
         else
         {
@@ -821,7 +821,7 @@ private:
 
                 p->output(l);
 
-                f_cui_connection->process_command(l);
+                g_cui_connection->process_command(l);
             }
             free(line);
 
@@ -1025,10 +1025,10 @@ private:
         // don't use ptr() since it calls fatal_error() if the
         // pointer is nullptr
         //
-        if(f_cui_connection->f_impl != nullptr)
+        if(g_cui_connection->f_impl != nullptr)
         {
-            f_cui_connection->f_impl->close_ncurse();
-            f_cui_connection->f_impl.reset();
+            g_cui_connection->f_impl->close_ncurse();
+            g_cui_connection->f_impl.reset();
         }
         SNAP_LOG_FATAL
             << msg
@@ -1133,7 +1133,7 @@ private:
      */
     ncurses_impl(cui_connection * ce, std::string const & history_filename)
     {
-        f_cui_connection = ce;
+        g_cui_connection = ce;
 
         // keep the default is not specified
         //
@@ -1158,13 +1158,13 @@ private:
             }
         }
 
-        // WARNING: our initialization required f_cui_connection to be defined
+        // WARNING: our initialization required g_cui_connection to be defined
         //          so better not have anything in the constructor
         //          at this point...
     }
 
-    //static ncurses_impl::pointer_t  f_nc;
-    static cui_connection *         f_cui_connection; // initialized below (because it is static)
+    static cui_connection *         g_cui_connection; // initialized below (because it is static)
+
     FILE *                          f_ncurses_stdout = nullptr;
     FILE *                          f_ncurses_stderr = nullptr;
     io_pipe_connection::pointer_t   f_stdout_pipe = io_pipe_connection::pointer_t();
@@ -1187,8 +1187,7 @@ private:
 };
 
 
-//ncurses_impl::pointer_t   ncurses_impl::f_nc;
-cui_connection *     ncurses_impl::f_cui_connection = nullptr;
+cui_connection *     ncurses_impl::g_cui_connection = nullptr;
 
 
 
@@ -1196,41 +1195,78 @@ cui_connection *     ncurses_impl::f_cui_connection = nullptr;
 
 
 
+/** \brief Initialize a CUI connection.
+ *
+ * A CUI connection allows you to setup a console input connection that
+ * works along all the other eventdispatcher connections.
+ *
+ * By default, the history filename is set to:
+ *
+ * \code
+ * "~/.snap_history"
+ * \endcode
+ *
+ * If you pass an empty string, then the default is used. The tilde (~)
+ * is replaced with the value found in `$HOME`.
+ *
+ * \note
+ * The connection uses stdin. If stdin is not a TTY, then the initialize
+ * is likely to fail in various odd ways.
+ *
+ * \note
+ * The connection creates one ncurses object. If you create multiple
+ * cui_connection objects, they all point to the same ncurses object
+ * and it is likely that it won't work properly. You should only
+ * create a single cui_connection.
+ * \note
+ * It is, however, possible to create a console connection, delete
+ * it, and then re-create a new console connection later.
+ *
+ * \param[in] history_filename  The name of the history file used to
+ * save each command.
+ */
 cui_connection::cui_connection(std::string const & history_filename)
     : fd_connection(fileno(stdin), mode_t::FD_MODE_READ)
 {
     f_impl = detail::ncurses_impl::create_ncurses(this, history_filename);
 }
 
+
 cui_connection::~cui_connection()
 {
     f_impl.reset();
 }
+
 
 void cui_connection::output(std::string const & line)
 {
     f_impl->output(line);
 }
 
+
 void cui_connection::output(std::string const & line, cui_connection::color_t f, cui_connection::color_t b)
 {
     f_impl->output(line, f, b);
 }
+
 
 void cui_connection::clear_output()
 {
     f_impl->clear_output();
 }
 
+
 void cui_connection::refresh()
 {
     f_impl->refresh();
 }
 
+
 void cui_connection::set_prompt(std::string const & prompt)
 {
     f_impl->set_prompt(prompt);
 }
+
 
 void cui_connection::process_read()
 {
@@ -1249,11 +1285,11 @@ void cui_connection::process_read()
  *
  * Whenever you create a console, it redirects the stdout and stderr
  * to a couple of connections (using pipes). This is used to send
- * the output to out output console instead of wherever on the screen.
+ * the output to our output console instead of wherever on the screen.
  *
  * The quit must be called if you want to get rid of those two
- * connections and thus have the snap_communicator::run() function
- * returns as expected.
+ * connections and thus have the communicator::run() function
+ * return as expected.
  */
 void cui_connection::process_quit()
 {
@@ -1265,7 +1301,13 @@ void cui_connection::process_quit()
  *
  * This callback gives you the opportunity to implement a function
  * whenever the help key is hit. You may ignore that key entirely
- * by not implementing this callback.
+ * by not implementing this callback. By default the help key is
+ * the F1 key.
+ *
+ * It is customary to print out a very basic help screen that
+ * tells the user how to get more help (if necessary) such as
+ * using a command to get help about the available commands
+ * available in your interface (i.e. HELP QUIT).
  */
 void cui_connection::process_help()
 {
