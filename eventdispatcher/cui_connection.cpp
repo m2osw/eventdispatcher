@@ -30,6 +30,11 @@
 #include    <snaplogger/message.h>
 
 
+// advgetopt
+//
+#include    <advgetopt/exception.h>
+
+
 // snapdev
 //
 #include    <snapdev/not_reached.h>
@@ -142,6 +147,7 @@ public:
         if(g_cui_connection->f_impl == nullptr)
         {
             ncurses_impl::fatal_error("ptr() called with g_cui_connection->f_impl set to nullptr");
+            snapdev::NOT_REACHED();
         }
         return g_cui_connection->f_impl;
     }
@@ -317,6 +323,7 @@ public:
         if(wrefresh(f_win_input) != OK)
         {
             fatal_error("wrefresh() failed");
+            snapdev::NOT_REACHED();
         }
     }
 
@@ -388,6 +395,7 @@ private:
         if(d == -1)
         {
             fatal_error("Could not duplicate file descriptor");
+            snapdev::NOT_REACHED();
         }
 
         // create a new FILE object with that fd
@@ -396,7 +404,9 @@ private:
         n = fdopen(d, "a");
         if(n == nullptr)
         {
+            close(d);
             fatal_error("Could not create FILE from new descriptor");
+            snapdev::NOT_REACHED();
         }
 
         // create a pipe for the old stdout/stderr
@@ -405,7 +415,10 @@ private:
         int const r(pipe2(p, O_NONBLOCK));
         if(r != 0)
         {
+            fclose(n);
+            n = nullptr;
             fatal_error("Could not create a pipe to replace stdout or stderr");
+            snapdev::NOT_REACHED();
         }
 
         // replace the stdout/stderr fd here
@@ -415,7 +428,12 @@ private:
         int const fd(dup2(p[1], fileno(f))); // replace stdout or stderr here
         if(fd == -1)
         {
+            close(p[0]);
+            close(p[1]);
+            fclose(n);
+            n = nullptr;
             fatal_error("Could not replace stdout or stderr with new fd from pipe");
+            snapdev::NOT_REACHED();
         }
         if(::close(p[1]) == -1)
         {
@@ -435,7 +453,12 @@ private:
         c = std::make_shared<io_pipe_connection>(p[0], this);
         if(!ed::communicator::instance()->add_connection(c))
         {
+            c.reset();
+            close(p[0]);
+            fclose(n);
+            n = nullptr;
             fatal_error("could not add stdout/stderr stream replacement");
+            snapdev::NOT_REACHED();
         }
     }
 
@@ -446,6 +469,7 @@ private:
         if(setlocale(LC_ALL, "") == nullptr)
         {
             fatal_error("Failed to set locale attributes from environment");
+            snapdev::NOT_REACHED();
         }
 
         // transform the I/O organization so we can capture stdout and
@@ -608,6 +632,7 @@ private:
         //if(scrollok(f_win_input, TRUE) != OK) -- TBD
         //{
         //    fatal_error("scrollok() failed; could not setup input window to scoll on large lines");
+        //    snapdev::NOT_REACHED();
         //}
 
         // we want to make the wgetch() function non-blocking so that way
@@ -1030,11 +1055,13 @@ private:
             g_cui_connection->f_impl->close_ncurse();
             g_cui_connection->f_impl.reset();
         }
-        SNAP_LOG_FATAL
-            << msg
-            << SNAP_LOG_SEND;
-        std::cerr << msg << std::endl;
-        exit(1);
+        // outputting the error message should happen in the catch() of
+        // the getopt_exit() exception
+        //SNAP_LOG_FATAL
+        //    << msg
+        //    << SNAP_LOG_SEND;
+        //std::cerr << msg << std::endl;
+        throw advgetopt::getopt_exit(msg, 1);
     }
 
     /** \brief Calculate the width of a string.
