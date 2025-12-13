@@ -39,6 +39,7 @@
 //
 #include    <snapdev/not_reached.h>
 #include    <snapdev/not_used.h>
+#include    <snapdev/tokenize_string.h>
 
 
 // C++
@@ -168,7 +169,6 @@ public:
             //
             p->open_ncurse();
             p->open_readline();
-            p->ready();
         }
         return ce->f_impl;
     }
@@ -264,30 +264,21 @@ public:
     {
     }
 
-    void output(std::string const & line,
+    void ready()
+    {
+        output("Ready.\nType /help or F1 for help screen.");
+    }
+
+    void output(std::string const & content,
                 cui_connection::color_t f = cui_connection::color_t::NORMAL,
                 cui_connection::color_t b = cui_connection::color_t::NORMAL)
     {
         pointer_t p(ptr());
 
-        if(!f_first_line)
-        {
-            wprintw(f_win_output, "\n");
-        }
-
-        // save all the lines in f_output vector so we can redraw it in
-        // case of a resize
-        //
-        // one day we may work on Page Up/Down to scroll through
-        // this buffer too!
-        //
-        p->f_output.push_back(line);
-        while(p->f_output.size() > 1000)
-        {
-            p->f_output.pop_front();
-        }
-
         // TODO: make this work when one of the colors is not set to NORMAL
+        //
+        // TODO: win_output_redisplay() will redraw these lines but
+        //       totally ignore the color settings
         //
         if(f != cui_connection::color_t::NORMAL
         || b != cui_connection::color_t::NORMAL)
@@ -296,23 +287,47 @@ public:
             wattron(f_win_output, COLOR_PAIR(pair));
         }
 
-        if(wprintw(f_win_output, "%s", line.c_str()) != OK)
-        {
-            fatal_error("wprintw() to output window failed");
-            snapdev::NOT_REACHED();
-        }
-        if(wrefresh(p->f_win_output) != OK)
-        {
-            fatal_error("wrefresh() to output window failed");
-            snapdev::NOT_REACHED();
-        }
+        // save all the lines in f_output vector so we can redraw it in
+        // case of a resize
+        //
+        // one day we may work on Page Up/Down to scroll through
+        // this buffer too!
+        //
+        const char * newline(f_first_line ? "" : "\n");
         f_first_line = false;
+
+        // tokenize keeping all the spaces (no trimming)
+        //
+        std::list<std::string> lines;
+        snapdev::tokenize_string(lines, content, "\n");
+        for(auto const & l : lines)
+        {
+            p->f_output.push_back(l);
+            while(p->f_output.size() > 1000) // TODO: make history size a variable
+            {
+                p->f_output.pop_front();
+            }
+
+            if(wprintw(f_win_output, "%s%s", newline, l.c_str()) != OK)
+            {
+                fatal_error("wprintw() to output window failed");
+                snapdev::NOT_REACHED();
+            }
+
+            newline = "\n";
+        }
 
         if(f != cui_connection::color_t::NORMAL
         || b != cui_connection::color_t::NORMAL)
         {
             int const pair((static_cast<NCURSES_COLOR_T>(f) | (static_cast<NCURSES_COLOR_T>(b) << 4)) + 1);
             wattroff(f_win_output, COLOR_PAIR(pair));
+        }
+
+        if(wrefresh(p->f_win_output) != OK)
+        {
+            fatal_error("wrefresh() to output window failed");
+            snapdev::NOT_REACHED();
         }
 
         // TODO: we could use a timer on this object that will
@@ -768,11 +783,6 @@ private:
         }
     }
 
-    void ready()
-    {
-        output("Ready.\nType /help or F1 for help screen.");
-    }
-
     void draw_borders()
     {
         // setup the background window with borders and names
@@ -870,7 +880,7 @@ private:
         //
         //   1. it will call wrefresh() on each call (argh!)
         //   2. it will re-add the buffer to itself
-        //   3. the change of f_oupt may crash the for() loop
+        //   3. the change of f_output may crash the for() loop
         //
         char const * nl = "";
         for(auto const & l : f_output)
@@ -1028,6 +1038,7 @@ private:
         }
 
         // batch refreshes and commit them with doupdate()
+        //
         win_output_redisplay(true);
         win_input_redisplay(true);
 
@@ -1236,6 +1247,9 @@ cui_connection *     ncurses_impl::g_cui_connection = nullptr;
  * If you pass an empty string, then the default is used. The tilde (~)
  * is replaced with the value found in `$HOME`.
  *
+ * It is not necessary, but customary to call the ready() function once
+ * you created an instance of the cui_connection.
+ *
  * \note
  * The connection uses stdin. If stdin is not a TTY, then the initialize
  * is likely to fail in various odd ways.
@@ -1262,6 +1276,12 @@ cui_connection::cui_connection(std::string const & history_filename)
 cui_connection::~cui_connection()
 {
     f_impl.reset();
+}
+
+
+void cui_connection::ready()
+{
+    f_impl->ready();
 }
 
 

@@ -79,6 +79,7 @@ public:
     // instead of the "command", so it is important to take
     // that callback in account
     //
+    virtual void    ready();
     virtual void    process_command(std::string const & command) = 0;
     virtual void    process_quit();
     virtual void    process_help();
