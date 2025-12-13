@@ -64,6 +64,7 @@ public:
     void            clear_output();
     void            refresh();
     void            set_prompt(std::string const & prompt);
+    void            prompt_to_output_command(std::string const & prompt);
 
     // implementation of snap_communicator::snap_fd_connection
     virtual void    process_read() override;

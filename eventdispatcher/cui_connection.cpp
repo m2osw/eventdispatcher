@@ -39,6 +39,7 @@
 //
 #include    <snapdev/not_reached.h>
 #include    <snapdev/not_used.h>
+#include    <snapdev/raii_generic_deleter.h>
 #include    <snapdev/tokenize_string.h>
 
 
@@ -300,6 +301,12 @@ public:
         //
         std::list<std::string> lines;
         snapdev::tokenize_string(lines, content, "\n");
+        if(!content.empty()
+        && content.back() == '\n'
+        && lines.back().empty())
+        {
+            lines.pop_back();
+        }
         for(auto const & l : lines)
         {
             p->f_output.push_back(l);
@@ -375,6 +382,11 @@ public:
     void set_prompt(std::string const & prompt)
     {
         rl_callback_handler_install(prompt.c_str(), got_command);
+    }
+
+    void prompt_to_output_command(std::string const & prompt)
+    {
+        f_command_prompt_in_output = prompt;
     }
 
 private:
@@ -846,6 +858,7 @@ private:
         }
         else
         {
+            snapdev::raii_buffer_t auto_free(line);
             std::string l(line);
             if(!l.empty())
             {
@@ -854,12 +867,10 @@ private:
                 add_history(line);
                 write_history(p->f_history_filename.c_str());
 
-                p->output(l);
+                p->output(p->f_command_prompt_in_output + l);
 
                 g_cui_connection->process_command(l);
             }
-            free(line);
-
             p->win_input_redisplay(false);
         }
     }
@@ -1208,6 +1219,7 @@ private:
     io_pipe_connection::pointer_t   f_stdout_pipe = io_pipe_connection::pointer_t();
     io_pipe_connection::pointer_t   f_stderr_pipe = io_pipe_connection::pointer_t();
     std::string                     f_history_filename = std::string("~/.snap_history");
+    std::string                     f_command_prompt_in_output = std::string();
     SCREEN *                        f_term = nullptr;
     WINDOW *                        f_win_main = nullptr;
     WINDOW *                        f_win_output = nullptr;
@@ -1312,6 +1324,12 @@ void cui_connection::refresh()
 void cui_connection::set_prompt(std::string const & prompt)
 {
     f_impl->set_prompt(prompt);
+}
+
+
+void cui_connection::prompt_to_output_command(std::string const & prompt)
+{
+    f_impl->prompt_to_output_command(prompt);
 }
 
 
