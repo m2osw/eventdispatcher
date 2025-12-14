@@ -144,6 +144,7 @@ target_link_libraries(${PROJECT_NAME}
     ${OPENSSL_LIBRARIES}
     ${SNAPLOGGER_LIBRARIES}
     ncurses
+    panel
     readline
 )
 

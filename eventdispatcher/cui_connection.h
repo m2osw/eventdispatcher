@@ -65,6 +65,8 @@ public:
     void            refresh();
     void            set_prompt(std::string const & prompt);
     void            prompt_to_output_command(std::string const & prompt);
+    int             get_screen_width() const;
+    int             get_screen_height() const;
 
     // implementation of snap_communicator::snap_fd_connection
     virtual void    process_read() override;

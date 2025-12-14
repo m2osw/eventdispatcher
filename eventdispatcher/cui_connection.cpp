@@ -52,7 +52,7 @@
 // C
 //
 #include    <fcntl.h>
-#include    <ncurses.h>
+#include    <panel.h>
 #include    <readline/history.h>
 #include    <readline/readline.h>
 #include    <unistd.h>
@@ -389,6 +389,16 @@ public:
         f_command_prompt_in_output = prompt;
     }
 
+    int get_screen_width() const
+    {
+        return f_screen_width;
+    }
+
+    int get_screen_height() const
+    {
+        return f_screen_height;
+    }
+
 private:
     /** \brief Duplicate one of stdout or stderr and create a pipe instead.
      *
@@ -634,10 +644,19 @@ private:
 
         // create two child windows
         //
+        // WARNING: the order is important for the panels get stacked from
+        //          bottom to top
+        //
         f_win_output = newwin(f_screen_height - 7, f_screen_width - 2, 1, 1);
         if(f_win_output == nullptr)
         {
             fatal_error("could not create output window");
+            snapdev::NOT_REACHED();
+        }
+        f_pan_output = new_panel(f_win_output);
+        if(f_pan_output == nullptr)
+        {
+            fatal_error("could not create output panel");
             snapdev::NOT_REACHED();
         }
 
@@ -645,6 +664,12 @@ private:
         if(f_win_input == nullptr)
         {
             fatal_error("could not create input window");
+            snapdev::NOT_REACHED();
+        }
+        f_pan_input = new_panel(f_win_input);
+        if(f_pan_input == nullptr)
+        {
+            fatal_error("could not create input panel");
             snapdev::NOT_REACHED();
         }
 
@@ -676,10 +701,22 @@ private:
     {
         if(f_visual_mode)
         {
+            if(f_pan_output != nullptr)
+            {
+                del_panel(f_pan_output);
+                f_pan_output = nullptr;
+            }
+
             if(f_win_output != nullptr)
             {
                 delwin(f_win_output);
                 f_win_output = nullptr;
+            }
+
+            if(f_pan_input != nullptr)
+            {
+                del_panel(f_pan_input);
+                f_pan_input = nullptr;
             }
 
             if(f_win_input != nullptr)
@@ -1223,7 +1260,9 @@ private:
     SCREEN *                        f_term = nullptr;
     WINDOW *                        f_win_main = nullptr;
     WINDOW *                        f_win_output = nullptr;
+    PANEL *                         f_pan_output = nullptr;
     WINDOW *                        f_win_input = nullptr;
+    PANEL *                         f_pan_input = nullptr;
     int                             f_screen_width = 0;
     int                             f_screen_height = 0;
     std::deque<std::string>         f_output = std::deque<std::string>();
@@ -1330,6 +1369,18 @@ void cui_connection::set_prompt(std::string const & prompt)
 void cui_connection::prompt_to_output_command(std::string const & prompt)
 {
     f_impl->prompt_to_output_command(prompt);
+}
+
+
+int cui_connection::get_screen_width() const
+{
+    return f_impl->get_screen_width();
+}
+
+
+int cui_connection::get_screen_height() const
+{
+    return f_impl->get_screen_height();
 }
 
 
