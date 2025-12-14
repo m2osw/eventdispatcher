@@ -107,6 +107,7 @@ public:
             : fd_buffer_connection(fd, ed::fd_connection::mode_t::FD_MODE_READ)
             , f_impl(impl)
         {
+            set_name("ncurses I/O pipe");
         }
 
         // avoid copies (simplify bare pointer management too)
@@ -1111,6 +1112,7 @@ private:
         //
         if(g_cui_connection->f_impl != nullptr)
         {
+            g_cui_connection->f_impl->close_readline();
             g_cui_connection->f_impl->close_ncurse();
             g_cui_connection->f_impl.reset();
         }
