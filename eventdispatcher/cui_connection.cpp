@@ -149,7 +149,7 @@ public:
     {
         if(g_cui_connection->f_impl == nullptr)
         {
-            ncurses_impl::fatal_error("ptr() called with g_cui_connection->f_impl set to nullptr");
+            ncurses_impl::fatal_error("ptr() called with g_cui_connection->f_impl set to nullptr.");
             snapdev::NOT_REACHED();
         }
         return g_cui_connection->f_impl;
@@ -266,6 +266,28 @@ public:
     {
     }
 
+    void process_page_up()
+    {
+        int const y(getmaxy(f_win_output));
+        f_yscroll += y;
+        int const max(std::max(0, static_cast<int>(f_output.size() - y)));
+        f_yscroll = std::min(f_yscroll, max);
+
+        // refresh the output window
+        //
+        win_output_redisplay(false);
+    }
+
+    void process_page_down()
+    {
+        int const y(getmaxy(f_win_output));
+        f_yscroll = std::max(0, f_yscroll - y);
+
+        // refresh the output window
+        //
+        win_output_redisplay(false);
+    }
+
     void ready()
     {
         output("Ready.\nType /help or F1 for help screen.");
@@ -318,7 +340,7 @@ public:
 
             if(wprintw(f_win_output, "%s%s", newline, l.c_str()) != OK)
             {
-                fatal_error("wprintw() to output window failed");
+                fatal_error("wprintw() to output window failed.");
                 snapdev::NOT_REACHED();
             }
 
@@ -334,7 +356,7 @@ public:
 
         if(wrefresh(p->f_win_output) != OK)
         {
-            fatal_error("wrefresh() to output window failed");
+            fatal_error("wrefresh() to output window failed.");
             snapdev::NOT_REACHED();
         }
 
@@ -345,7 +367,7 @@ public:
         set_cursor();
         if(wrefresh(f_win_input) != OK)
         {
-            fatal_error("wrefresh() failed");
+            fatal_error("wrefresh() failed.");
             snapdev::NOT_REACHED();
         }
     }
@@ -360,7 +382,7 @@ public:
         //
         if(clearok(curscr, TRUE) != OK)
         {
-            fatal_error("clearok() failed in clear_output()");
+            fatal_error("clearok() failed in clear_output().");
             snapdev::NOT_REACHED();
         }
 
@@ -432,7 +454,7 @@ private:
         int const d(dup(fileno(f)));
         if(d == -1)
         {
-            fatal_error("Could not duplicate file descriptor");
+            fatal_error("Could not duplicate file descriptor.");
             snapdev::NOT_REACHED();
         }
 
@@ -443,7 +465,7 @@ private:
         if(n == nullptr)
         {
             close(d);
-            fatal_error("Could not create FILE from new descriptor");
+            fatal_error("Could not create FILE from new descriptor.");
             snapdev::NOT_REACHED();
         }
 
@@ -455,7 +477,7 @@ private:
         {
             fclose(n);
             n = nullptr;
-            fatal_error("Could not create a pipe to replace stdout or stderr");
+            fatal_error("Could not create a pipe to replace stdout or stderr.");
             snapdev::NOT_REACHED();
         }
 
@@ -470,7 +492,7 @@ private:
             close(p[1]);
             fclose(n);
             n = nullptr;
-            fatal_error("Could not replace stdout or stderr with new fd from pipe");
+            fatal_error("Could not replace stdout or stderr with new fd from pipe.");
             snapdev::NOT_REACHED();
         }
         if(::close(p[1]) == -1)
@@ -495,7 +517,7 @@ private:
             close(p[0]);
             fclose(n);
             n = nullptr;
-            fatal_error("could not add stdout/stderr stream replacement");
+            fatal_error("could not add stdout/stderr stream replacement.");
             snapdev::NOT_REACHED();
         }
     }
@@ -506,7 +528,7 @@ private:
         //
         if(setlocale(LC_ALL, "") == nullptr)
         {
-            fatal_error("Failed to set locale attributes from environment");
+            fatal_error("Failed to set locale attributes from environment.");
             snapdev::NOT_REACHED();
         }
 
@@ -550,7 +572,7 @@ private:
         f_term = newterm(nullptr, f_ncurses_stdout, stdin);
         if(f_term == nullptr)
         {
-            fatal_error("newterm() failed to initialize ncurses");
+            fatal_error("newterm() failed to initialize ncurses.");
             snapdev::NOT_REACHED();
         }
         set_term(f_term);
@@ -558,7 +580,7 @@ private:
         f_win_main = stdscr;
         if(f_win_main == nullptr)
         {
-            fatal_error("initscr() failed to initialize ncurses");
+            fatal_error("initscr() failed to initialize ncurses.");
             snapdev::NOT_REACHED();
         }
 
@@ -572,12 +594,12 @@ private:
         {
             if(start_color() != OK)
             {
-                fatal_error("start_color() failed");
+                fatal_error("start_color() failed.");
                 snapdev::NOT_REACHED();
             }
             if(use_default_colors() != OK)
             {
-                fatal_error("use_default_colors() failed");
+                fatal_error("use_default_colors() failed.");
                 snapdev::NOT_REACHED();
             }
 
@@ -598,28 +620,28 @@ private:
         getmaxyx(f_win_main, f_screen_height, f_screen_width);
         if(f_screen_height < 5)
         {
-            fatal_error("your console is not tall enough for this application");
+            fatal_error("your console is not tall enough for this application.");
             snapdev::NOT_REACHED();
         }
 
         if(cbreak() != OK)
         {
-            fatal_error("cbreak() failed");
+            fatal_error("cbreak() failed.");
             snapdev::NOT_REACHED();
         }
         if(noecho() != OK)
         {
-            fatal_error("noecho() failed");
+            fatal_error("noecho() failed.");
             snapdev::NOT_REACHED();
         }
         if(nonl() != OK)
         {
-            fatal_error("nonl() failed");
+            fatal_error("nonl() failed.");
             snapdev::NOT_REACHED();
         }
         if(intrflush(nullptr, false) != OK)
         {
-            fatal_error("intrflush() failed");
+            fatal_error("intrflush() failed.");
             snapdev::NOT_REACHED();
         }
 
@@ -651,40 +673,40 @@ private:
         f_win_output = newwin(f_screen_height - 7, f_screen_width - 2, 1, 1);
         if(f_win_output == nullptr)
         {
-            fatal_error("could not create output window");
+            fatal_error("could not create output window.");
             snapdev::NOT_REACHED();
         }
         f_pan_output = new_panel(f_win_output);
         if(f_pan_output == nullptr)
         {
-            fatal_error("could not create output panel");
+            fatal_error("could not create output panel.");
             snapdev::NOT_REACHED();
         }
 
         f_win_input = newwin(4, f_screen_width - 2, f_screen_height - 5, 1);
         if(f_win_input == nullptr)
         {
-            fatal_error("could not create input window");
+            fatal_error("could not create input window.");
             snapdev::NOT_REACHED();
         }
         f_pan_input = new_panel(f_win_input);
         if(f_pan_input == nullptr)
         {
-            fatal_error("could not create input panel");
+            fatal_error("could not create input panel.");
             snapdev::NOT_REACHED();
         }
 
-        // allow strings longer than the message window and show only the
+        // allow strings longer than the output window and show only the
         // last part if the string doesn't fit
         //
         if(scrollok(f_win_output, TRUE) != OK)
         {
-            fatal_error("scrollok() failed; could not setup output window to scoll on large lines");
+            fatal_error("scrollok() failed; could not setup output window to scoll on large lines.");
             snapdev::NOT_REACHED();
         }
         //if(scrollok(f_win_input, TRUE) != OK) -- TBD
         //{
-        //    fatal_error("scrollok() failed; could not setup input window to scoll on large lines");
+        //    fatal_error("scrollok() failed; could not setup input window to scoll on large lines.");
         //    snapdev::NOT_REACHED();
         //}
 
@@ -769,6 +791,29 @@ private:
         g_cui_connection->process_help();
 
         // it worked, return 0
+        //
+        return 0;
+    }
+
+    static int page_up(int count, int c)
+    {
+        snapdev::NOT_USED(count, c);
+
+        g_cui_connection->process_page_up();
+
+        // it worked, return 0
+        //
+        return 0;
+    }
+
+    static int page_down(int count, int c)
+    {
+        snapdev::NOT_USED(count, c);
+
+        g_cui_connection->process_page_down();
+
+        // it worked, return 0
+        //
         return 0;
     }
 
@@ -778,13 +823,25 @@ private:
         //
         if(rl_bind_key('\t', rl_insert) != 0)
         {
-            fatal_error("invalid key passed to rl_bind_key()");
+            fatal_error("invalid key passed to rl_bind_key().");
             snapdev::NOT_REACHED();
         }
 
         if(rl_bind_keyseq("\\eOP" /* F1 */, &show_help) != 0)
         {
-            fatal_error("invalid key (^[OP a.k.a. F1) sequence passed to rl_bind_keyseq");
+            fatal_error("invalid key (^[OP a.k.a. F1) sequence passed to rl_bind_keyseq.");
+            snapdev::NOT_REACHED();
+        }
+
+        if(rl_bind_keyseq("\\e[5~" /* Page Up */, &page_up) != 0)
+        {
+            fatal_error("error: status window key (^[[5~ a.k.a. Page Up) binding failed.");
+            snapdev::NOT_REACHED();
+        }
+
+        if(rl_bind_keyseq("\\e[6~" /* Page Down */, &page_down) != 0)
+        {
+            fatal_error("error: status window key (^[[6~ a.k.a. Page Down) binding failed.");
             snapdev::NOT_REACHED();
         }
 
@@ -931,9 +988,26 @@ private:
         //   2. it will re-add the buffer to itself
         //   3. the change of f_output may crash the for() loop
         //
+        int y(getmaxy(f_win_output));
+        int skip(std::max(0, static_cast<int>(f_output.size() - y - f_yscroll)));
         char const * nl = "";
         for(auto const & l : f_output)
         {
+            if(skip > 0)
+            {
+                // we have a list so there isn't a really good way to skip
+                // lines than looping until skip == 0
+                //
+                --skip;
+                continue;
+            }
+            --y;
+            if(y < 0)
+            {
+                // we're done
+                //
+                break;
+            }
             if(wprintw(f_win_output, "%s%s", nl, l.c_str()) != OK)
             {
                 fatal_error("wprintw() to output window failed");
@@ -1268,6 +1342,7 @@ private:
     int                             f_screen_width = 0;
     int                             f_screen_height = 0;
     std::deque<std::string>         f_output = std::deque<std::string>();
+    int                             f_yscroll = 0;
     bool                            f_visual_mode = false;
     bool                            f_has_handlers = false;
     bool                            f_should_exit = false;
@@ -1430,6 +1505,31 @@ void cui_connection::process_quit()
 void cui_connection::process_help()
 {
 }
+
+
+/** \brief Called whenever the Page Up key is hit.
+ *
+ * This callback gives you the ability to capture the Page Up key although
+ * in most likelihood, you may want to keep the default do it's work. It
+ * will scroll the output window up by one page.
+ */
+void cui_connection::process_page_up()
+{
+    f_impl->process_page_up();
+}
+
+
+/** \brief Called whenever the Page Down key is hit.
+ *
+ * This callback gives you the ability to capture the Page Down key although
+ * in most likelihood, you may want to keep the default do it's work. It
+ * will scroll the output window down by one page.
+ */
+void cui_connection::process_page_down()
+{
+    f_impl->process_page_down();
+}
+
 
 
 } // namespace ed

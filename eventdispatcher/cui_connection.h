@@ -86,6 +86,8 @@ public:
     virtual void    process_command(std::string const & command) = 0;
     virtual void    process_quit();
     virtual void    process_help();
+    virtual void    process_page_up();
+    virtual void    process_page_down();
 
 private:
     friend detail::ncurses_impl;
