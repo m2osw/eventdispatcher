@@ -87,6 +87,13 @@ advgetopt::option const g_options[] =
         , advgetopt::DefaultValue("60")
         , advgetopt::Help("number of seconds to wait for the process to die.")
     ),
+    advgetopt::define_option(
+          advgetopt::Name("process-name")
+        , advgetopt::ShortName('p')
+        , advgetopt::Flags(advgetopt::all_flags<
+              advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
+        , advgetopt::Help("allow for a process to be searched by name.")
+    ),
     advgetopt::end_options()
 };
 
@@ -212,7 +219,7 @@ int main(int argc, char *argv[])
                 exit(1);
             }
             char buf[32];
-            size_t sz(fread(buf, 1, sizeof(buf), pid));
+            std::size_t sz(fread(buf, 1, sizeof(buf), pid));
             if(sz == 0)
             {
                 std::cerr
@@ -228,6 +235,10 @@ int main(int argc, char *argv[])
                     << service
                     << "\" looks too long.\n";
                 exit(1);
+            }
+            while(sz > 0 && std::isspace(buf[sz - 1]))
+            {
+                --sz;
             }
             buf[sz] = '\0';
 
@@ -245,6 +256,19 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
                 service_pid = service_pid * 10 + *s - '0';
+            }
+
+            if(service_pid == 0
+            && opt.is_defined("process-name"))
+            {
+                // user lets us check processes by name too
+                //
+                cppprocess::process_list list;
+                cppprocess::process_info::pointer_t p(list.find(service));
+                if(p != nullptr)
+                {
+                    service_pid = p->get_pid();
+                }
             }
 
             if(service_pid == 0)

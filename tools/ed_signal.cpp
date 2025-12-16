@@ -94,7 +94,7 @@ const advgetopt::option g_options[] =
         , advgetopt::Flags(advgetopt::all_flags<
               advgetopt::GETOPT_FLAG_REQUIRED
             , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
-        , advgetopt::Help("the IP address and port to connect to (IP:port; note that the port defaults to 4041) or a configuration filename and field name (<filename>@<field_name>).")
+        , advgetopt::Help("the IP address and port to connect to (IP:port; note that the port defaults to 4041, which is the UDP port) or a configuration filename and field name (<filename>@<field_name>).")
         , advgetopt::DefaultValue("127.0.0.1:4041")
     ),
     advgetopt::define_option(
