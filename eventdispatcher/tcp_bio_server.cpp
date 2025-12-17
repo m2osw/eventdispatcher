@@ -327,7 +327,8 @@ tcp_bio_server::tcp_bio_server(
     case mode_t::MODE_PLAIN:
         {
             std::shared_ptr<BIO> socket; // use reset(), see SNAP-507
-            socket.reset(BIO_new_accept(address.to_ipv4or6_string(addr::STRING_IP_BRACKET_ADDRESS | addr::STRING_IP_PORT).c_str()), detail::bio_deleter);
+            std::string addr_str(address.to_ipv4or6_string(addr::STRING_IP_BRACKET_ADDRESS | addr::STRING_IP_PORT));
+            socket.reset(BIO_new_accept(addr_str.c_str()), detail::bio_deleter);
             if(socket == nullptr)
             {
                 detail::bio_log_errors();
@@ -345,7 +346,10 @@ tcp_bio_server::tcp_bio_server(
             if(r <= 0)
             {
                 detail::bio_log_errors();
-                throw initialization_error("failed initializing the plain BIO server socket to listen for client connections");
+                throw initialization_error(
+                    "failed initializing the plain BIO server socket to listen for client connections ("
+                    + addr_str
+                    + ").");
             }
 
             int c(-1);
