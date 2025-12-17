@@ -183,7 +183,7 @@ local_stream_server_connection::local_stream_server_connection(
             if(force_reuse_addr)
             {
                 SNAP_LOG_WARNING
-                    << "attempting a contection to "
+                    << "attempting a connection to "
                     << f_address.to_uri()
                     << " as a client to see that the address is available for this server;"
                     << " on success this generates an expected fatal error which we catch here."
@@ -330,7 +330,7 @@ local_stream_server_connection::local_stream_server_connection(
         throw runtime_error(
                   "could not bind the socket to \""
                 + f_address.to_uri()
-                + "\"");
+                + "\".");
     }
 
     // start listening, we expect the caller to then call accept() to
@@ -341,7 +341,7 @@ local_stream_server_connection::local_stream_server_connection(
         throw runtime_error(
                   "could not listen to the socket bound to \""
                 + f_address.to_uri()
-                + "\"");
+                + "\".");
     }
 }
 

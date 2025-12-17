@@ -347,10 +347,24 @@ int child_status::stop_signal() const
  * SIGCHLD signal via a ed::signal connection. You can listen for the
  * death of your child by listening for its pid_t. It will get called
  * on various events (running, exited, signaled, stopped, continued).
+ *
+ * To add the connection to the communicator, make sure to call the
+ * add_connection(). That function makes sure the signal_child object
+ * is added only once. Once done with your instance, make sure to
+ * call the remove_connection() function. The number of add and
+ * remove must match one to one.
+ *
+ * \sa get_instance()
+ * \sa add_connection()
+ * \sa add_listener()
  */
 signal_child::signal_child()
     : signal(SIGCHLD)
 {
+    // since this is a singleton, the user should not set the name of this
+    // connection (since there is only one quite specific version)
+    //
+    set_name("signal_child");
 }
 
 
@@ -392,25 +406,27 @@ signal_child::pointer_t signal_child::get_instance()
 /** \brief Add this connection to the communicator.
  *
  * \note
- * You should not call this function. It automatically gets called when
+ * You cannot call this function. It automatically gets called when
  * you add a listener (see add_listener() in this class). After all, you
  * do not need to listen to anything until you ask for it and similarly
  * the remove gets called automatically when the listener gets removed
  * (which again is automatic once the child dies).
  *
  * This function adds this connection to the communicator. This function can
- * be called any number of times. It will increase a counter which will
- * then be decremented by the remove_connection().
+ * be called any number of times. It increases a counter which is
+ * equally decreased by the remove_connection().
  *
- * This is used because the communicator::add_connection() will not add the
+ * This is used because the communicator::add_connection() does not add the
  * signal_child connection more than once because many different functions
  * and libraries may need to add it and these would not know whether to
  * add or remove the connection and in the end we want it to be properly
  * accounted for.
  *
- * You actually will not be able to add it directly using the
- * communicator::add_connection(). It will throw if you try to do that.
+ * You actually are not able to add it directly using the
+ * communicator::add_connection(). It will throw if you try.
  * Instead, you must call this function.
+ *
+ * \sa remove_connection()
  */
 void signal_child::add_connection()
 {
@@ -428,7 +444,7 @@ void signal_child::add_connection()
 /** \brief Remove the connection from the communicator.
  *
  * \note
- * You do not need to call this function. The listener callback function
+ * You cannot call this function. The listener callback function
  * gets called and assuming the child died (i.e. a child that received a
  * signal that killed it or one that called _exit() to terminate) this
  * function gets called automatically.
@@ -454,7 +470,7 @@ void signal_child::remove_connection()
     {
         throw count_mismatch(
             "the signal_child::remove_connection() was called more times"
-            " than the add_connection()");
+            " than the add_connection().");
     }
 
     --f_count;
@@ -462,7 +478,7 @@ void signal_child::remove_connection()
     {
         // remove the connection to the communicator
         //
-        snapdev::safe_variable safe(f_removing_to_communicator, true, false);
+        snapdev::safe_variable safe(f_removing_from_communicator, true, false);
         ed::communicator::instance()->remove_connection(shared_from_this());
     }
 }
@@ -587,7 +603,7 @@ void signal_child::connection_added()
  */
 void signal_child::connection_removed()
 {
-    if(!f_removing_to_communicator)
+    if(!f_removing_from_communicator)
     {
         throw runtime_error(
             "it looks like you directly called communicator::remove_connection()"
@@ -637,7 +653,7 @@ void signal_child::add_listener(
         throw invalid_parameter(
               "the child parameter must be a valid pid_t (not "
             + std::to_string(child)
-            + ")");
+            + ").");
     }
     if(callback == nullptr)
     {
@@ -664,7 +680,7 @@ void signal_child::add_listener(
  * detects the death of a child and finds a corresponding listener.
  *
  * Further, this function automatically calls the remove_connection()
- * function when it indeeds removes the specifed \p child. If found
+ * function when it indeed removes the specified \p child. If found
  * more than once, then it gets called once for each instance.
  *
  * \warning
