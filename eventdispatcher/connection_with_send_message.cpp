@@ -285,11 +285,22 @@ void connection_with_send_message::msg_quitting(message & msg)
  * handled. This is when your daemon is expected to be ready to start
  * working. Some daemons start working immediately no matter what
  * (i.e. sitter and iplock do work either way), but those are rare.
+ * Yet others require more similar message as they need the clock to
+ * be synchronized (cluck) or the cluster lock service to be ready
+ * (prinbee) and yet others verify that the firewall is up before
+ * doing much of anything.
  *
  * The READY message has one parameter: "my_address", which is the IP
  * address of the computer. Use the get_my_address() function to retrieve
  * it. Just make sure to do that only after you received the READY
- * message.
+ * message. Also, the port in that address is the communicator daemon
+ * port used for connections between communicator daemons.
+ *
+ * \note
+ * You get that IP:port address even if you connect using the Unix
+ * connection. This IP address can be useful. For example, Prinbee
+ * also needs to listen on that IP address for connections from
+ * other Prinbee daemons.
  *
  * \param[in] msg  The READY message.
  *
@@ -297,7 +308,8 @@ void connection_with_send_message::msg_quitting(message & msg)
  */
 void connection_with_send_message::msg_ready(message & msg)
 {
-    // get this computer's address
+    // get this computer's address with port 4042 by default
+    // (the port is the "Remote Communicator Daemon Port")
     //
     if(msg.has_parameter(g_name_ed_param_my_address))
     {
