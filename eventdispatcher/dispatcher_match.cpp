@@ -31,6 +31,12 @@
 #include    "eventdispatcher/message_definition.h"
 
 
+// cppthread
+//
+#include    <cppthread/guard.h>
+#include    <cppthread/mutex.h>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -40,6 +46,19 @@
 namespace ed
 {
 
+
+
+namespace
+{
+
+
+
+cppthread::mutex            g_mutex = cppthread::mutex();
+ed::dispatcher_match::tag_t g_tag = ed::dispatcher_match::tag_t();
+
+
+
+} // no name namespace
 
 
 
@@ -380,6 +399,34 @@ bool dispatcher_match::match_is_one_to_one_callback_match() const
 bool dispatcher_match::match_is_callback_match() const
 {
     return f_match == &callback_match;
+}
+
+
+/** \brief Retrieve a unique tag number.
+ *
+ * This function generates a new tag number you can use to tag a dispatcher
+ * match. This is quite practical in order to remove all the matches that
+ * are attached to that one tag.
+ *
+ * \note
+ * The tags are unused 32 bit numbers. If you try to allocate more than
+ * 2^32-1 tag numbers, the counter starts over at 1. In other words, the
+ * function never returns 0 (DISPATCHER_MATCH_NO_TAG).
+ * \note
+ * Assuming you allocate one new tag number per second, it would still take
+ * over 68 years to wrap around.
+ *
+ * \return A tag number other than DISPATCHER_MATCH_NO_TAG.
+ */
+dispatcher_match::tag_t dispatcher_match::get_next_tag()
+{
+    cppthread::guard lock(g_mutex);
+    ++g_tag;
+    if(g_tag == ed::dispatcher_match::DISPATCHER_MATCH_NO_TAG)
+    {
+        g_tag = 1; // LCOV_EXCL_LINE
+    }
+    return g_tag;
 }
 
 

@@ -482,7 +482,7 @@ bool dispatcher::dispatch(message & msg)
  *
  * By default, the f_trace flag is set to false. You can change it to
  * true while debugging. You should remember to turn it back off once
- * you make an official version of your service to avoid the possibly
+ * you make a production version of your service to avoid the possibly
  * huge overhead of sending all those log messages. One way to do so
  * is to place the code within \#ifdef/\#endif as in:
  *
@@ -492,7 +492,12 @@ bool dispatcher::dispatch(message & msg)
  *     #endif
  * \endcode
  *
- * \param[in] trace  Set to true to get SNAP_LOG_TRACE() of each message.
+ * \note
+ * Turning on this feature when sending messages as a result of logging
+ * a message (i.e. through the snaplogger network implementation)
+ * creates a loop which means sending one log never ends.
+ *
+ * \param[in] trace  Set to true to get a SNAP_LOG_TRACE of each message.
  */
 void dispatcher::set_trace(bool trace)
 {

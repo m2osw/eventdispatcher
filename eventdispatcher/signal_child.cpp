@@ -625,15 +625,15 @@ void signal_child::connection_removed()
  *
  * At the time your \p callback function is called, the process is still
  * up (as a zombie). This gives you the opportunity to gather information
- * about the process. You can do so with the process_info class using
- * the callback child_info::child_pid() function to get the necessary
+ * about the process. You can do so with the cppprocess::process_info class
+ * using the callback child_info::child_pid() function to get the necessary
  * process identifier. (TODO: test that this is indeed true)
  *
  * The function can be called multiple times with the same child PID to
  * add multiple callbacks (useful if you vary the mask parameter).
  *
  * This function automatically calls the add_connection() function any
- * time it succeeeds in adding a new child/callback listener.
+ * time it succeeds in adding a new child/callback listener.
  *
  * \exception invalid_parameter
  * The mask cannot be set to zero, the child identifier must be positive,
@@ -677,15 +677,15 @@ void signal_child::add_listener(
  * singleton.
  *
  * This function automatically gets called whenever the signal_child
- * detects the death of a child and finds a corresponding listener.
+ * detects the death of a child.
  *
  * Further, this function automatically calls the remove_connection()
  * function when it indeed removes the specified \p child. If found
  * more than once, then it gets called once for each instance.
  *
  * \warning
- * All the listener that use the specified \p child parameter are
- * removed from the list of listeners.
+ * All the listeners that use the specified \p child parameter are
+ * removed from the list.
  *
  * \note
  * Whenever you create a child with fork(), make sure to add a listener
@@ -694,7 +694,7 @@ void signal_child::add_listener(
  * handling the listener are thread safe, a fork() is not. So you
  * should not use both together making everything very safe.
  *
- * \param[in] child  The child for which the listener has to be removed.
+ * \param[in] child  The child for which the listeners have to be removed.
  */
 void signal_child::remove_listener(pid_t child)
 {

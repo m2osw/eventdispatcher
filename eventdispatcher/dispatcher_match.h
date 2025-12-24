@@ -60,8 +60,8 @@ struct dispatcher_match
 {
     typedef std::vector<dispatcher_match>       vector_t;
     typedef std::function<void(message & msg)>  execute_callback_t;
-    typedef std::uint16_t                       tag_t;
-    typedef std::uint16_t                       priority_t;
+    typedef std::uint32_t                       tag_t;
+    typedef std::uint32_t                       priority_t;
 
     constexpr static tag_t const                DISPATCHER_MATCH_NO_TAG = 0;
 
@@ -75,6 +75,7 @@ struct dispatcher_match
     bool                match_is_always_match() const;
     bool                match_is_one_to_one_callback_match() const;
     bool                match_is_callback_match() const;
+    static tag_t        get_next_tag();
 
     char const *            f_expr = nullptr;
     execute_callback_t      f_callback = execute_callback_t();

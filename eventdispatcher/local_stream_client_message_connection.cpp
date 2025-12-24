@@ -142,6 +142,11 @@ bool local_stream_client_message_connection::send_message(
     // and transferred only later when the run() loop is hit again
     //
     std::string buf(msg.to_message());
+        SNAP_LOG_RECOVERABLE_ERROR
+                << "--- send message ["
+                << buf
+                << "] ---"
+                << SNAP_LOG_SEND;
     buf += '\n';
     return write(buf.c_str(), buf.length()) == static_cast<ssize_t>(buf.length());
 }

@@ -17,25 +17,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /** \file
- * \brief Implementation of the Snap Communicator class.
+ * \brief Implementation of the message class.
  *
- * This class wraps the C poll() interface in a C++ object with many types
- * of objects:
+ * This class handles the encoding and decoding of messages sent between
+ * services through the communicator daemon (although the communicator
+ * is not required, but makes it a lot easier to connect all the services
+ * together with minimal work by each client).
  *
- * \li Server Connections; for software that want to offer a port to
- *     which clients can connect to; the server will call accept()
- *     once a new client connection is ready; this results in a
- *     Server/Client connection object
- * \li Client Connections; for software that want to connect to
- *     a server; these expect the IP address and port to connect to
- * \li Server/Client Connections; for the server when it accepts a new
- *     connection; in this case the server gets a socket from accept()
- *     and creates one of these objects to handle the connection
- *
- * Using the poll() function is the easiest and allows us to listen
- * on pretty much any number of sockets (on my server it is limited
- * at 16,768 and frankly over 1,000 we probably will start to have
- * real slowness issues on small VPN servers.)
+ * The messages are text based. They can use JSON or our internal format.
+ * Our internal format is preferred because it uses a lot less space
+ * (no extra quotes everywhere).
  */
 
 
@@ -116,17 +107,17 @@ namespace ed
  * \endcode
  *
  * Note that the String and JSON formats are written on a single line.
- * Here it is shown on multiple line to make it easier to read.
+ * Here it is shown on multiple lines to make it easier to read.
  * In a String message, the last ';' is optional.
  *
  * The sender "\<sent-from-server:sent-from-service" names are added by
- * snapcommunicator when it receives a message which is destined for
+ * the communicator when it receives a message which is destined for
  * another service (i.e. not itself). This can be used by the receiver
  * to reply back to the exact same process if it is a requirement for that
  * message (i.e. a process that sends a LOCK message, for example,
- * expects to receive the LOCKED message back as an answer.) Note that
+ * expects to receive the LOCKED message back as an answer). Note that
  * it is assumed that there cannot be more than one service named
- * 'service' per server. This is enforced by the snapcommunicator
+ * 'service' per server. This is enforced by the communicator daemon
  * REGISTER function.
  *
  * \code
@@ -367,8 +358,7 @@ bool message::from_string(std::string const & original_message)
                 return false;
             }
 
-            if(*m == '\0'
-            || *m != '=')
+            if(*m != '=')
             {
                 // ?!?
                 //
@@ -402,12 +392,10 @@ bool message::from_string(std::string const & original_message)
                     // (note that we do not yet restore other backslashed
                     // characters, that's done below)
                     //
-                    if(*m == '\\' && m[1] != '\0' && m[1] == '"')
+                    if(*m == '\\' && m[1] == '"')
                     {
                         ++m;
                     }
-                    // here the character may be ';'
-                    //
                     param_value += *m;
                 }
 
