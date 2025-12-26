@@ -121,7 +121,8 @@ CATCH_TEST_CASE("certificate", "[certificate]")
         // Note: many issuers do not actually include a CN = <value> at all
         //
         if(cert.get_issuer_common_name() != "R11"
-        && cert.get_issuer_common_name() != "R12")
+        && cert.get_issuer_common_name() != "R12"
+        && cert.get_issuer_common_name() != "R13")
         {
             CATCH_REQUIRE(cert.get_issuer_common_name() == "unknown intermediate common name");
         }
