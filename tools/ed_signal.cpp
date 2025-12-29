@@ -188,13 +188,8 @@ advgetopt::options_environment const g_options_environment =
     .f_project_name = "ed-signal",
     .f_group_name = "eventdispatcher",
     .f_options = g_options,
-    .f_options_files_directory = nullptr,
     .f_environment_variable_name = "ED_SIGNAL",
-    .f_environment_variable_intro = nullptr,
-    .f_section_variables_name = nullptr,
     .f_configuration_files = g_configuration_files,
-    .f_configuration_filename = nullptr,
-    .f_configuration_directories = nullptr,
     .f_environment_flags = advgetopt::GETOPT_ENVIRONMENT_FLAG_PROCESS_SYSTEM_PARAMETERS,
     .f_help_header = "Usage: %p [-<opt>]\n"
                      "where -<opt> is one or more of:",
@@ -204,8 +199,6 @@ advgetopt::options_environment const g_options_environment =
     .f_copyright = "Copyright (c) 2012-"
                    SNAPDEV_STRINGIZE(UTC_BUILD_YEAR)
                    " by Made to Order Software Corporation -- All Rights Reserved",
-    .f_build_date = UTC_BUILD_DATE,
-    .f_build_time = UTC_BUILD_TIME,
     .f_groups = g_group_descriptions
 };
 
