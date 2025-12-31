@@ -922,6 +922,13 @@ private:
     void capture_winch()
     {
         f_winch_signal = std::make_shared<winch_signal>(this);
+        f_winch_signal->set_name("winch_signal");
+        if(!ed::communicator::instance()->add_connection(f_winch_signal))
+        {
+            // how do we let people know about that one?
+            // I don't want a fatal error here because in most cases you
+            // won't resize so it's not important that this failed...
+        }
     }
 
     void release_winch()
@@ -931,6 +938,8 @@ private:
 
     void process_window_change()
     {
+        endwin();
+        refresh();
         resize();
     }
 
