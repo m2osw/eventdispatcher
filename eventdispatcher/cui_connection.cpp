@@ -22,6 +22,7 @@
 #include    "eventdispatcher/cui_connection.h"
 
 #include    <eventdispatcher/fd_buffer_connection.h>
+#include    <eventdispatcher/signal.h>
 
 
 
@@ -55,6 +56,7 @@
 #include    <panel.h>
 #include    <readline/history.h>
 #include    <readline/readline.h>
+#include    <signal.h>
 #include    <unistd.h>
 
 
@@ -145,6 +147,28 @@ public:
         ncurses_impl *      f_impl;
     };
 
+    class winch_signal
+        : public signal
+    {
+    public:
+        winch_signal(ncurses_impl * impl)
+            : signal(SIGWINCH)
+            , f_impl(impl)
+        {
+        }
+
+        winch_signal(winch_signal const & rhs) = delete;
+        winch_signal & operator = (winch_signal const & rhs) = delete;
+
+        void process_signal()
+        {
+            f_impl->process_window_change();
+        }
+
+    private:
+        ncurses_impl *      f_impl;
+    };
+
     static pointer_t ptr()
     {
         if(g_cui_connection->f_impl == nullptr)
@@ -171,6 +195,7 @@ public:
             //
             p->open_ncurse();
             p->open_readline();
+            p->capture_winch();
         }
         return ce->f_impl;
     }
@@ -180,6 +205,7 @@ public:
 
     ~ncurses_impl()
     {
+        release_winch();
         close_readline();
         close_ncurse();
 
@@ -852,6 +878,9 @@ private:
 
         // let ncurses do all terminal and signal handling
         //
+        // (actually we capture the SIGWINCH because we cannot use the
+        // keypad() to make ncurses use it)
+        //
         rl_catch_signals = 0;
         rl_catch_sigwinch = 0;
         rl_deprep_term_function = nullptr;
@@ -888,6 +917,21 @@ private:
             rl_callback_handler_remove();
             f_has_handlers = false;
         }
+    }
+
+    void capture_winch()
+    {
+        f_winch_signal = std::make_shared<winch_signal>(this);
+    }
+
+    void release_winch()
+    {
+        f_winch_signal.reset();
+    }
+
+    void process_window_change()
+    {
+        resize();
     }
 
     void draw_borders()
@@ -1331,6 +1375,7 @@ private:
     FILE *                          f_ncurses_stderr = nullptr;
     io_pipe_connection::pointer_t   f_stdout_pipe = io_pipe_connection::pointer_t();
     io_pipe_connection::pointer_t   f_stderr_pipe = io_pipe_connection::pointer_t();
+    signal::pointer_t               f_winch_signal = signal::pointer_t();
     std::string                     f_history_filename = std::string("~/.snap_history");
     std::string                     f_command_prompt_in_output = std::string();
     SCREEN *                        f_term = nullptr;

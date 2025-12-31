@@ -196,6 +196,11 @@ signal::signal(int posix_signal)
         {
             // this could be fixed, but probably not worth the trouble...
             //
+            // actually it will be fixed once we use callbacks instead
+            // of virtual functions, then you can just add a callback to
+            // a given signal and the system knows how to do everything
+            // else properly to support any number of callbacks
+            //
             throw initialization_error("the same signal cannot be created more than once in your entire process.");
         }
 
