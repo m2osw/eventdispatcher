@@ -109,7 +109,7 @@ public:
             : fd_buffer_connection(fd, ed::fd_connection::mode_t::FD_MODE_READ)
             , f_impl(impl)
         {
-            set_name("ncurses I/O pipe");
+            set_name("ncurses_io_pipe");
         }
 
         // avoid copies (simplify bare pointer management too)
@@ -897,7 +897,7 @@ private:
 
         // Handle input by manually feeding characters to readline
         // (TODO: save those pointers so the close_readline() can restore
-        // what there wasthere instead of assuming the defaults.)
+        // what was there instead of assuming the defaults.)
         //
         f_has_handlers = true;
         rl_getc_function = readline_getc;
@@ -926,13 +926,15 @@ private:
         if(!ed::communicator::instance()->add_connection(f_winch_signal))
         {
             // how do we let people know about that one?
-            // I don't want a fatal error here because in most cases you
-            // won't resize so it's not important that this failed...
+            //
+            // I don't want a fatal error in this case because in most cases
+            // you won't resize so it's not important that this failed...
         }
     }
 
     void release_winch()
     {
+        ed::communicator::instance()->remove_connection(f_winch_signal);
         f_winch_signal.reset();
     }
 
@@ -1239,6 +1241,7 @@ private:
         //
         if(g_cui_connection->f_impl != nullptr)
         {
+            g_cui_connection->f_impl->release_winch();
             g_cui_connection->f_impl->close_readline();
             g_cui_connection->f_impl->close_ncurse();
             g_cui_connection->f_impl.reset();
