@@ -27,6 +27,7 @@
 //
 #include    <eventdispatcher/connection_with_send_message.h>
 #include    <eventdispatcher/dispatcher_support.h>
+#include    <eventdispatcher/pause_durations.h>
 #include    <eventdispatcher/timer.h>
 
 
@@ -60,7 +61,7 @@ public:
 
                                 local_stream_client_permanent_message_connection(
                                           addr::addr_unix const & address
-                                        , std::int64_t const pause = DEFAULT_PAUSE_BEFORE_RECONNECTING
+                                        , pause_durations const & durations = DEFAULT_PAUSE_BEFORE_RECONNECTING
                                         , bool const use_thread = true
                                         , bool const blocking = false
                                         , bool const close_on_exec = true
@@ -90,7 +91,7 @@ public:
 private:
     std::shared_ptr<detail::local_stream_client_permanent_message_connection_impl>
                                 f_impl = std::shared_ptr<detail::local_stream_client_permanent_message_connection_impl>();
-    std::int64_t                f_pause = 0;
+    pause_durations             f_pause_durations = pause_durations(0);
     bool const                  f_use_thread = true;
 };
 

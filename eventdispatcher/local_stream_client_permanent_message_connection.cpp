@@ -827,19 +827,19 @@ private:
  */
 local_stream_client_permanent_message_connection::local_stream_client_permanent_message_connection(
           addr::addr_unix const & address
-        , std::int64_t const pause
+        , pause_durations const & durations
         , bool const use_thread
         , bool const blocking
         , bool const close_on_exec
         , std::string const & service_name)
-    : timer(pause < 0 ? -pause : 0)
+    : timer(durations.initial_timer_value() * 1'000'000.0)
     , connection_with_send_message(service_name)
     , f_impl(std::make_shared<detail::local_stream_client_permanent_message_connection_impl>(
               this
             , address
             , blocking
             , close_on_exec))
-    , f_pause(llabs(pause))
+    , f_pause_durations(durations)
     , f_use_thread(use_thread)
 {
 }
@@ -998,15 +998,18 @@ void local_stream_client_permanent_message_connection::process_timeout()
         return;
     }
 
-    // change the timeout delay although we will not use it immediately
-    // if we start the thread or attempt an immediate connection, but
-    // that way the user can change it by calling set_timeout_delay()
-    // at any time after the first process_timeout() call
+    // setup the next timeout; note that if we went through all the
+    // entries in f_pause, then we stop calling the set_timeout_delay()
+    // function; as a result, the last timeout remains in place and
+    // also as a user of the class, you can change that delay to
+    // something else; however, if the connection is lost for a while,
+    // the counter is reset and we start with the first pause delay
+    // as defined in f_pause[0]
     //
-    if(f_pause > 0)
+    double delay(f_pause_durations.get_next_delay());
+    if(delay > 0.0)
     {
-        set_timeout_delay(f_pause);
-        f_pause = 0;
+        set_timeout_delay(delay * 1'000'000.0);
     }
 
     if(f_use_thread)
@@ -1157,15 +1160,16 @@ void local_stream_client_permanent_message_connection::process_connection_failed
  *
  * You should implement this virtual function if you have to initiate
  * the communication. For example, the snapserver has to send a
- * REGISTER to the snapcommunicator system and thus implements this
+ * REGISTER to the communicator daemon and thus implements this
  * function.
  *
  * The default implementation makes sure that the timer gets turned off
- * so we do not try to reconnect every minute or so. Make sure you call
- * the default function so you get the proper behavior.
+ * so we do not try to reconnect. Make sure you call the default function
+ * so you get the proper behavior.
  */
 void local_stream_client_permanent_message_connection::process_connected()
 {
+    f_pause_durations.restart();
     set_enable(false);
 }
 

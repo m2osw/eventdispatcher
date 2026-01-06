@@ -120,6 +120,7 @@ add_library(${PROJECT_NAME} SHARED
     # various
     certificate.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/names.cpp
+    pause_durations.cpp
     utils.cpp
     version.cpp
 )
@@ -205,6 +206,7 @@ install(
         message.h
         message_definition.h
         ${CMAKE_CURRENT_BINARY_DIR}/names.h
+        pause_durations.h
         pipe_buffer_connection.h
         pipe_connection.h
         pipe_message_connection.h

@@ -48,6 +48,12 @@
 #include    <snapdev/not_used.h>
 
 
+// advgetopt
+//
+#include    <advgetopt/utils.h>
+#include    <advgetopt/validator_duration.h>
+
+
 // cppthread
 //
 #include    <cppthread/exception.h>
@@ -818,14 +824,14 @@ private:
  * timer is used again to attempt a new connection. It will be reused
  * as long as the connection fails (as a delay). It has to be at least
  * 10 microseconds, although really you should not use less than 1
- * second (1000000). You may set the pause parameter to 0 in which case
+ * second (1'000'000). You may set the pause parameter to 0 in which case
  * you are responsible to set the delay (by default there will be no
- * delay and thus the timer will never time out.)
+ * delay and thus the timer never times out).
  *
  * To start with a delay, instead of trying to connect immediately,
  * you may pass a negative pause parameter. So for example to get the
  * first attempt 5 seconds after you created this object, you use
- * -5000000LL as the pause parameter.
+ * -5'000'000LL as the pause parameter.
  *
  * The \p use_thread parameter determines whether the connection should
  * be attempted in a thread (asynchronously) or immediately (which means
@@ -836,23 +842,26 @@ private:
  *
  * \param[in] address  The address and port to connect to.
  * \param[in] mode  The mode to use to open the connection.
- * \param[in] pause  The amount of time to wait before attempting a new
- *                   connection after a failure, in microseconds, or 0.
+ * \param[in] durations  The amount of time to wait before attempting a new
+ *                       connection after a failure, in microseconds, or 0.
  * \param[in] use_thread  Whether a thread is used to connect to the
  *                        server.
  * \param[in] service_name  The name of your daemon service. Only use once
- *                          on your permanent connection to snapcommunicator.
+ *                          on your permanent connection to communicator.
  */
 tcp_client_permanent_message_connection::tcp_client_permanent_message_connection(
             addr::addr const & address
           , mode_t mode
-          , std::int64_t const pause
+          , pause_durations const & durations
           , bool const use_thread
           , std::string const & service_name)
-    : timer(pause < 0 ? -pause : 0)
+    : timer(durations.initial_timer_value() * 1'000'000.0)
     , connection_with_send_message(service_name)
-    , f_impl(std::make_shared<detail::tcp_client_permanent_message_connection_impl>(this, addr::addr::vector_t{address}, mode))
-    , f_pause(llabs(pause))
+    , f_impl(std::make_shared<detail::tcp_client_permanent_message_connection_impl>(
+                      this
+                    , addr::addr::vector_t{address}
+                    , mode))
+    , f_pause_durations(durations)
     , f_use_thread(use_thread)
 {
 }
@@ -873,23 +882,26 @@ tcp_client_permanent_message_connection::tcp_client_permanent_message_connection
  *
  * \param[in] addresses  The addresses and ports to connect to.
  * \param[in] mode  The mode to use to open the connection.
- * \param[in] pause  The amount of time to wait before attempting a new
- *                   connection after a failure, in microseconds, or 0.
+ * \param[in] durations  The amount of time to wait before attempting a new
+ *                       connection after a failure, in microseconds, or 0.
  * \param[in] use_thread  Whether a thread is used to connect to the
  *                        server.
  * \param[in] service_name  The name of your daemon service. Only use once
- *                          on your permanent connection to snapcommunicator.
+ *                          on your permanent connection to communicator.
  */
 tcp_client_permanent_message_connection::tcp_client_permanent_message_connection(
             addr::addr::vector_t const & addresses
           , mode_t mode
-          , std::int64_t const pause
+          , pause_durations const & durations
           , bool const use_thread
           , std::string const & service_name)
-    : timer(pause < 0 ? -pause : 0)
+    : timer(durations.initial_timer_value() * 1'000'000.0)
     , connection_with_send_message(service_name)
-    , f_impl(std::make_shared<detail::tcp_client_permanent_message_connection_impl>(this, addresses, mode))
-    , f_pause(llabs(pause))
+    , f_impl(std::make_shared<detail::tcp_client_permanent_message_connection_impl>(
+                      this
+                    , addresses
+                    , mode))
+    , f_pause_durations(durations)
     , f_use_thread(use_thread)
 {
 }
@@ -906,26 +918,26 @@ tcp_client_permanent_message_connection::tcp_client_permanent_message_connection
  *
  * \param[in] address_ranges  The address ranges and ports to connect to.
  * \param[in] mode  The mode to use to open the connection.
- * \param[in] pause  The amount of time to wait before attempting a new
- *                   connection after a failure, in microseconds, or 0.
+ * \param[in] durations  The amount of time to wait before attempting a new
+ *                       connection after a failure, in microseconds, or 0.
  * \param[in] use_thread  Whether a thread is used to connect to the
  *                        server.
  * \param[in] service_name  The name of your daemon service. Only use once
- *                          on your permanent connection to snapcommunicator.
+ *                          on your permanent connection to communicator.
  */
 tcp_client_permanent_message_connection::tcp_client_permanent_message_connection(
             addr::addr_range::vector_t const & address_ranges
           , mode_t mode
-          , std::int64_t const pause
+          , pause_durations const & durations
           , bool const use_thread
           , std::string const & service_name)
-    : timer(pause < 0 ? -pause : 0)
+    : timer(durations.initial_timer_value() * 1'000'000.0)
     , connection_with_send_message(service_name)
     , f_impl(std::make_shared<detail::tcp_client_permanent_message_connection_impl>(
                       this
                     , addr::addr_range::to_addresses(address_ranges)
                     , mode))
-    , f_pause(llabs(pause))
+    , f_pause_durations(durations)
     , f_use_thread(use_thread)
 {
 }
@@ -947,7 +959,7 @@ tcp_client_permanent_message_connection::~tcp_client_permanent_message_connectio
  * Otherwise, it may be cached if the \p cache parameter is set to true.
  * A cached message is forwarded as soon as a new successful connection
  * happens, which can be a problem if messages need to happen in a very
- * specific order (For example, after a reconnection to snapcommunicator
+ * specific order (For example, after a reconnection to communicator
  * you first need to REGISTER or CONNECT...)
  *
  * \param[in] msg  The message to send to the connected server.
@@ -1087,15 +1099,18 @@ void tcp_client_permanent_message_connection::process_timeout()
         return;
     }
 
-    // change the timeout delay although we will not use it immediately
-    // if we start the thread or attempt an immediate connection, but
-    // that way the user can change it by calling set_timeout_delay()
-    // at any time after the first process_timeout() call
+    // setup the next timeout; note that if we went through all the
+    // entries in f_pause, then we stop calling the set_timeout_delay()
+    // function; as a result, the last timeout remains in place and
+    // also as a user of the class, you can change that delay to
+    // something else; however, if the connection is lost for a while,
+    // the counter is reset and we start with the first pause delay
+    // as defined in f_pause[0]
     //
-    if(f_pause > 0)
+    double delay(f_pause_durations.get_next_delay());
+    if(delay > 0.0)
     {
-        set_timeout_delay(f_pause);
-        f_pause = 0;
+        set_timeout_delay(delay * 1'000'000.0);
     }
 
     if(f_use_thread)
@@ -1254,6 +1269,7 @@ void tcp_client_permanent_message_connection::process_connection_failed(std::str
  */
 void tcp_client_permanent_message_connection::process_connected()
 {
+    f_pause_durations.restart();
     set_enable(false);
 }
 

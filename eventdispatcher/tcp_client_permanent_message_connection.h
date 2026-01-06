@@ -18,15 +18,23 @@
 #pragma once
 
 /** \file
- * \brief Event dispatch class.
+ * \brief A permanent TCP connection.
  *
- * Class used to handle events.
+ * The permanent TCP connection is used to keep the client connected
+ * "forever".
+ *
+ * The main class is actually just a timer. It creates a TCP connection
+ * as a sub-object and tries to connect to a server. If the connection
+ * fails, the timer is used to try again a little later. If the
+ * connection succeeds for a while and then dies, the timer is restarted
+ * and a new connection is restarted while we process the timeout.
  */
 
 // self
 //
 #include    <eventdispatcher/connection_with_send_message.h>
 #include    <eventdispatcher/dispatcher_support.h>
+#include    <eventdispatcher/pause_durations.h>
 #include    <eventdispatcher/tcp_bio_client.h>
 #include    <eventdispatcher/timer.h>
 
@@ -48,7 +56,6 @@ class tcp_client_permanent_message_connection_impl;
 // namespace detail
 
 
-constexpr std::int64_t const   DEFAULT_PAUSE_BEFORE_RECONNECTING = 60LL * 1'000'000LL;  // 1 minute
 
 
 class tcp_client_permanent_message_connection
@@ -62,19 +69,19 @@ public:
                                 tcp_client_permanent_message_connection(
                                           addr::addr const & address
                                         , mode_t mode = mode_t::MODE_PLAIN
-                                        , std::int64_t const pause = DEFAULT_PAUSE_BEFORE_RECONNECTING
+                                        , pause_durations const & durations = DEFAULT_PAUSE_BEFORE_RECONNECTING
                                         , bool const use_thread = true
                                         , std::string const & service_name = std::string());
                                 tcp_client_permanent_message_connection(
                                           addr::addr::vector_t const & addresses
                                         , mode_t mode = mode_t::MODE_PLAIN
-                                        , std::int64_t const pause = DEFAULT_PAUSE_BEFORE_RECONNECTING
+                                        , pause_durations const & durations = DEFAULT_PAUSE_BEFORE_RECONNECTING
                                         , bool const use_thread = true
                                         , std::string const & service_name = std::string());
                                 tcp_client_permanent_message_connection(
                                           addr::addr_range::vector_t const & address_ranges
                                         , mode_t mode = mode_t::MODE_PLAIN
-                                        , std::int64_t const pause = DEFAULT_PAUSE_BEFORE_RECONNECTING
+                                        , pause_durations const & durations = DEFAULT_PAUSE_BEFORE_RECONNECTING
                                         , bool const use_thread = true
                                         , std::string const & service_name = std::string());
     virtual                     ~tcp_client_permanent_message_connection() override;
@@ -105,7 +112,7 @@ public:
 private:
     std::shared_ptr<detail::tcp_client_permanent_message_connection_impl>
                                 f_impl = std::shared_ptr<detail::tcp_client_permanent_message_connection_impl>();
-    std::int64_t                f_pause = 0;
+    pause_durations             f_pause_durations = pause_durations(0);
     bool const                  f_use_thread = true;
 };
 
