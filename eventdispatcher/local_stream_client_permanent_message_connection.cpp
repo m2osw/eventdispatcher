@@ -1006,7 +1006,7 @@ void local_stream_client_permanent_message_connection::process_timeout()
     // the counter is reset and we start with the first pause delay
     // as defined in f_pause[0]
     //
-    double delay(f_pause_durations.get_next_delay());
+    double const delay(f_pause_durations.get_next_delay());
     if(delay > 0.0)
     {
         set_timeout_delay(delay * 1'000'000.0);

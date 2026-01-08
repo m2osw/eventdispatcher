@@ -32,6 +32,7 @@ usr/include/eventdispatcher/logrotate_udp_messenger.h
 usr/include/eventdispatcher/message.h
 usr/include/eventdispatcher/message_definition.h
 usr/include/eventdispatcher/names.h
+usr/include/eventdispatcher/pause_durations.h
 usr/include/eventdispatcher/pipe_buffer_connection.h
 usr/include/eventdispatcher/pipe_connection.h
 usr/include/eventdispatcher/pipe_message_connection.h

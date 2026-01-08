@@ -82,13 +82,15 @@ namespace ed
 
 pause_durations::pause_durations(std::int64_t value)
 {
-    f_pause.push_back(static_cast<double>(llabs(value)) / 1'000'000.0);
+    f_pause.push_back(static_cast<double>(value) / 1'000'000.0);
+    restart();
 }
 
 
 pause_durations::pause_durations(std::string const & value)
 {
     parse_pause_list(value);
+    restart();
 }
 
 
@@ -136,7 +138,7 @@ double pause_durations::get_next_delay()
 {
     if(f_pause_pos < f_pause.size())
     {
-        double const delay(fabs(f_pause[f_pause_pos]) * 1'000'000.0);
+        double const delay(fabs(f_pause[f_pause_pos]));
         ++f_pause_pos;
         return delay;
     }
@@ -147,7 +149,15 @@ double pause_durations::get_next_delay()
 
 void pause_durations::restart()
 {
-    f_pause_pos = 0;
+    if(f_pause.size() == 1
+    || f_pause[0] > 0.0)
+    {
+        f_pause_pos = 0;
+    }
+    else
+    {
+        f_pause_pos = 1;
+    }
 }
 
 
