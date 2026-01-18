@@ -68,14 +68,15 @@ struct dispatcher_match
     constexpr static priority_t const           DISPATCHER_MATCH_MIN_PRIORITY = 0;
     constexpr static priority_t const           DISPATCHER_MATCH_CALLBACK_PRIORITY = 0;
     constexpr static priority_t const           DISPATCHER_MATCH_DEFAULT_PRIORITY = 7;
+    constexpr static priority_t const           DISPATCHER_MATCH_SYSTEM_PRIORITY = 10;
     constexpr static priority_t const           DISPATCHER_MATCH_MAX_PRIORITY = 15;
 
-    bool                execute(message & msg) const;
-    bool                match_is_one_to_one_match() const;
-    bool                match_is_always_match() const;
-    bool                match_is_one_to_one_callback_match() const;
-    bool                match_is_callback_match() const;
-    static tag_t        get_next_tag();
+    bool                    execute(message & msg) const;
+    bool                    match_is_one_to_one_match() const;
+    bool                    match_is_always_match() const;
+    bool                    match_is_one_to_one_callback_match() const;
+    bool                    match_is_callback_match() const;
+    static tag_t            get_next_tag();
 
     char const *            f_expr = nullptr;
     execute_callback_t      f_callback = execute_callback_t();

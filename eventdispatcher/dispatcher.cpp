@@ -234,49 +234,60 @@ void dispatcher::add_communicator_commands(bool auto_catch_all)
     f_matches.reserve(f_matches.size() + 11);
 
     add_matches({
-        ::ed::define_match(
-              ::ed::Expression(g_name_ed_cmd_alive)
-            , ::ed::Callback(std::bind(&connection_with_send_message::msg_alive, f_connection, std::placeholders::_1))
+        define_match(
+              Expression(g_name_ed_cmd_alive)
+            , Callback(std::bind(&connection_with_send_message::msg_alive, f_connection, std::placeholders::_1))
+            , Priority(dispatcher_match::DISPATCHER_MATCH_SYSTEM_PRIORITY)
         ),
-        ::ed::define_match(
-              ::ed::Expression(g_name_ed_cmd_help)
-            , ::ed::Callback(std::bind(&connection_with_send_message::msg_help, f_connection, std::placeholders::_1))
+        define_match(
+              Expression(g_name_ed_cmd_help)
+            , Callback(std::bind(&connection_with_send_message::msg_help, f_connection, std::placeholders::_1))
+            , Priority(dispatcher_match::DISPATCHER_MATCH_SYSTEM_PRIORITY)
         ),
-        ::ed::define_match(
-              ::ed::Expression(g_name_ed_cmd_invalid)
-            , ::ed::Callback(std::bind(&connection_with_send_message::msg_log_unknown, f_connection, std::placeholders::_1))
+        define_match(
+              Expression(g_name_ed_cmd_invalid)
+            , Callback(std::bind(&connection_with_send_message::msg_log_unknown, f_connection, std::placeholders::_1))
+            , Priority(dispatcher_match::DISPATCHER_MATCH_SYSTEM_PRIORITY)
         ),
-        ::ed::define_match(
-              ::ed::Expression(g_name_ed_cmd_leak)
-            , ::ed::Callback(std::bind(&connection_with_send_message::msg_leak, f_connection, std::placeholders::_1))
+        define_match(
+              Expression(g_name_ed_cmd_leak)
+            , Callback(std::bind(&connection_with_send_message::msg_leak, f_connection, std::placeholders::_1))
+            , Priority(dispatcher_match::DISPATCHER_MATCH_SYSTEM_PRIORITY)
         ),
-        ::ed::define_match(
-              ::ed::Expression(g_name_ed_cmd_log_rotate)
-            , ::ed::Callback(std::bind(&connection_with_send_message::msg_log_rotate, f_connection, std::placeholders::_1))
+        define_match(
+              Expression(g_name_ed_cmd_log_rotate)
+            , Callback(std::bind(&connection_with_send_message::msg_log_rotate, f_connection, std::placeholders::_1))
+            , Priority(dispatcher_match::DISPATCHER_MATCH_SYSTEM_PRIORITY)
         ),
-        ::ed::define_match(
-              ::ed::Expression(g_name_ed_cmd_quitting)
-            , ::ed::Callback(std::bind(&connection_with_send_message::msg_quitting, f_connection, std::placeholders::_1))
+        define_match(
+              Expression(g_name_ed_cmd_quitting)
+            , Callback(std::bind(&connection_with_send_message::msg_quitting, f_connection, std::placeholders::_1))
+            , Priority(dispatcher_match::DISPATCHER_MATCH_SYSTEM_PRIORITY)
         ),
-        ::ed::define_match(
-              ::ed::Expression(g_name_ed_cmd_ready)
-            , ::ed::Callback(std::bind(&connection_with_send_message::msg_ready, f_connection, std::placeholders::_1))
+        define_match(
+              Expression(g_name_ed_cmd_ready)
+            , Callback(std::bind(&connection_with_send_message::msg_ready, f_connection, std::placeholders::_1))
+            , Priority(dispatcher_match::DISPATCHER_MATCH_SYSTEM_PRIORITY)
         ),
-        ::ed::define_match(
-              ::ed::Expression(g_name_ed_cmd_restart)
-            , ::ed::Callback(std::bind(&connection_with_send_message::msg_restart, f_connection, std::placeholders::_1))
+        define_match(
+              Expression(g_name_ed_cmd_restart)
+            , Callback(std::bind(&connection_with_send_message::msg_restart, f_connection, std::placeholders::_1))
+            , Priority(dispatcher_match::DISPATCHER_MATCH_SYSTEM_PRIORITY)
         ),
-        ::ed::define_match(
-              ::ed::Expression(g_name_ed_cmd_service_unavailable)
-            , ::ed::Callback(std::bind(&connection_with_send_message::msg_service_unavailable, f_connection, std::placeholders::_1))
+        define_match(
+              Expression(g_name_ed_cmd_service_unavailable)
+            , Callback(std::bind(&connection_with_send_message::msg_service_unavailable, f_connection, std::placeholders::_1))
+            , Priority(dispatcher_match::DISPATCHER_MATCH_SYSTEM_PRIORITY)
         ),
-        ::ed::define_match(
-              ::ed::Expression(g_name_ed_cmd_stop)
-            , ::ed::Callback(std::bind(&connection_with_send_message::msg_stop, f_connection, std::placeholders::_1))
+        define_match(
+              Expression(g_name_ed_cmd_stop)
+            , Callback(std::bind(&connection_with_send_message::msg_stop, f_connection, std::placeholders::_1))
+            , Priority(dispatcher_match::DISPATCHER_MATCH_SYSTEM_PRIORITY)
         ),
-        ::ed::define_match(
-              ::ed::Expression(g_name_ed_cmd_unknown)
-            , ::ed::Callback(std::bind(&connection_with_send_message::msg_log_unknown, f_connection, std::placeholders::_1))
+        define_match(
+              Expression(g_name_ed_cmd_unknown)
+            , Callback(std::bind(&connection_with_send_message::msg_log_unknown, f_connection, std::placeholders::_1))
+            , Priority(dispatcher_match::DISPATCHER_MATCH_SYSTEM_PRIORITY)
         ),
     });
 
@@ -341,7 +352,6 @@ void dispatcher::add_match(dispatcher_match const & m)
     else
     {
         // insert taking the priority in account
-        // (very important for callbacks)
         //
         auto it(std::find_if(
               f_matches.begin()

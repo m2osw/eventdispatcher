@@ -333,21 +333,21 @@ void connection_with_send_message::msg_ready(message & msg)
  * to some file or the system environment somehow affects your service
  * in such a way that it requires a restart. For example, after an
  * upgrade of the eventdispatcher library, you should restart all the
- * services that make use of it. For this reason, we have a RESTART
- * message.
+ * services that make use of it. For this reason, the system supports
+ * a RESTART message.
  *
- * The message comes with one parameter named `reason` which describes
- * why the RESTART was sent:
+ * The message comes with one parameter named `reason` describing
+ * why the RESTART is being sent:
  *
  * \li `reason=upgrade` -- something (library/tools) was upgraded
  * \li `reason=config` -- a configuration file was updated
  *
  * \note
- * At the time we created this message, a live configuration was not
- * available. Now that we have the fluid-settings service, that changed
- * and in most cases, `reason=config` should not be necessary anymore.
+ * At the time we created this message, a live configuration (fluid
+ * settings) was not available. Now that the fluid-settings service is
+ * available, `reason=config` should not be necessary anymore.
  * (only for fluid-settings itself and for some parameters not found
- * in the fluid-settings).
+ * in the fluid-settings--i.e. an IP address specific to a system).
  *
  * \note
  * There are currently some services that make use of a CONFIG message
@@ -357,10 +357,6 @@ void connection_with_send_message::msg_ready(message & msg)
  * it would be very complicated to allow for changes to occur on the fly).
  * \note
  * In those existing implementations, we really just do a restart anyway.
- * \note
- * New versions will be using fluid-settings. We can still support
- * a RESTART message, but a RELOADCONFIG (as we had in the communicator
- * daemon) should not be used.
  *
  * \param[in] msg  The RESTART message.
  *

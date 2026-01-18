@@ -17,9 +17,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /** \file
- * \brief Implementation of the dispatcher class.
+ * \brief Implementation of the dispatcher match class.
  *
- * Class used to handle messages received from clients and services.
+ * Class used to define message callbacks.
  */
 
 
