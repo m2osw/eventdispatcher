@@ -1,4 +1,19 @@
 
+* Double add of the system commands fails tests
+
+  This test:
+
+      communicator_client_connection: test communicator client (regular stop)
+
+  would fail because it was still calling the system function like so:
+
+      get_dispatcher()->add_communicator_commands();
+
+  for which we got zero feedback (i.e. I was surprised because I thought I
+  checked the `one_to_one` entries to make sure the same one was not
+  being added twice; that I really want to make sure of because it's a
+  type of bug that's otherwise really difficult to notice.)
+
 * Full IPv6 Support
 
   We need to make sure that all our classes support IPv6 as expected.
@@ -137,7 +152,13 @@
 
 * Update all the `\file documentation` to match the corresponding class.
   These were copied/pasted in all the files when I did the big break up
-  and most are still not updated.
+  and most are still not updated. Although considering version 2.x may
+  be better at first since many files will change then... (i.e. v2 is
+  the one where we create transport classes such as TCP/IP, UDP/IP, Unix
+  socket, etc. and then the other functionality as different classes that
+  can somehow be plugged together as required, i.e. read data to a buffer,
+  transform the buffer into a message, allow messages to be dispatched,
+  etc.)
 
 * Update the dispatcher classes documentation to match the new scheme (the
   callback instead of a function offset in one class).
@@ -173,9 +194,9 @@
   a POLLOUT event once the socket is connected; this can be useful in some
   situations, many times it's probably not that necessary, except that has
   been a bottleneck in the permanent TCP connection implementation and is
-  why we use a thread for the connect to happen in parallel... that would
-  not be required anymore (but it adds a new state "in-limbo while
-  connecting").
+  why we use a thread for the connect() to happen in parallel... that would
+  not be required anymore (but the objects have a new state "in-limbo" while
+  connecting).
 
   From the `connect()` man page:
 
@@ -195,11 +216,15 @@
 
   See: https://stackoverflow.com/questions/2597608/c-socket-connection-timeout
 
-* Add support for any number of timers in a connection. I often run in
-  problems with this because I need two or three different timers then
-  I have to create sub-objects, which are separate connection timers by
-  themselves. We can have an identifier to recognize which timer times
-  out and pass that parameter to the `process_timeout()` function.
+* Add support for any number of timers in a connection.
+
+  The callback version of this is implemented and works.
+
+  I often run in problems with this because I need two or three different
+  timers then I have to create sub-objects, which are separate connection
+  timers by themselves. We can have an identifier to recognize which timer
+  times out and pass that parameter to the `process_timeout()` function.
+
   Another solution would be to have a way to quickly create a timer
   without having to create a sub-class, so that way we could keep it
   separate (clean) and have a callback instead of a virtual function
