@@ -332,7 +332,9 @@ void dispatcher::add_match(dispatcher_match const & m)
         SNAP_LOG_CONFIG
             << "add_match() with command expression \""
             << (m.f_expr == nullptr ? "<match all>" : m.f_expr)
-            << "\"."
+            << "\" (priority: "
+            << m.f_priority
+            << ")."
             << SNAP_LOG_SEND;
     }
 
@@ -566,7 +568,7 @@ bool dispatcher::get_commands(advgetopt::string_set_t & commands)
     {
         if(m.f_expr == nullptr)
         {
-            if(!m.match_is_always_match() // this one should not happend here (such ends up in f_end instead)
+            if(!m.match_is_always_match() // this one should not happen here (such ends up in f_end instead)
             && !m.match_is_callback_match())
             {
                 // this is a "special case" where the user has
@@ -588,6 +590,9 @@ bool dispatcher::get_commands(advgetopt::string_set_t & commands)
             auto inserted(commands.insert(m.f_expr));
             if(!inserted.second)
             {
+                // TODO: memorize the matches so we can test whether this
+                //       warning is warranted or not
+                //
                 // tell the user that his configuration includes duplicates
                 // which is fine if those are CALLBACKs as in the match()
                 // functions return match_t::MATCH_CALLBACK
