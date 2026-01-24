@@ -22,6 +22,8 @@
 
 * A permanent connection makes use of the connection timer
 
+  (see next point)
+
   I have had many problems with that one, I am actually thinking that
   maybe having a timer in each connection is not a good idea at all
   (i.e. that functionality should probably be 100% separate).
@@ -32,6 +34,37 @@
   connection timer itself so the users of that connection could now
   make use of said timer (although from the statement above, we probably
   should 100% stop such uses).
+
+* Add support for any number of timers in a connection.
+
+  The callback version of this is implemented and works.
+
+  * Multiple timers
+
+    I often run in problems with this because I need two or three different
+    timers then I have to create sub-objects, which are separate connection
+    timers by themselves. We can have an identifier to recognize which timer
+    times out and pass that parameter to the `process_timeout()` function.
+
+    However, the more I'm thinking about timers, the more I'm thinking it
+    would make more sense to have those as a separate thing, not a
+    connection at all. You could add a callback to the communicator attached
+    to either a specific date when the timer should be triggered or an
+    interval and last trigger time. Then we can add all the timers we want
+    as objects that call that callback which can use an std::bind() or
+    such to hold the shared pointer of the object (or a lambda if we want
+    to keep a weak pointer only). Since you would still create an object,
+    it's still possible to add/remove the object from the communicator.
+    But by not making it part of the ed::connection class, we avoid the
+    overlap we are having issues with today.
+
+  * Callback instead of virtual function (DONE)
+
+    Another solution would be to have a way to quickly create a timer
+    without having to create a sub-class, so that way we could keep it
+    separate (clean) and have a callback instead of a virtual function
+    (and we have a callback thingy to manage lists of callbacks in snapdev).
+    This is what version 2 would be about!
 
 * Over time, update the address array of a permanent connection
 
@@ -185,7 +218,7 @@
   or view the connection as a timer (i.e. we still need to wait some more).
   The current use of the timer right now is a form of Inclusive OR, this other
   method would make it a form of Exclusive OR. But we probably want to use a
-  different timestamp tracker which get reassigned a "now + N" whenever a
+  different timestamp tracker which gets reassigned a "now + N" whenever a
   write happened. But for the limit to work properly, we need to know the
   amount of data sent and whether we can send more and how much more...
 
@@ -215,21 +248,6 @@
                  `connect()` returns `EINPROGRESS`.
 
   See: https://stackoverflow.com/questions/2597608/c-socket-connection-timeout
-
-* Add support for any number of timers in a connection.
-
-  The callback version of this is implemented and works.
-
-  I often run in problems with this because I need two or three different
-  timers then I have to create sub-objects, which are separate connection
-  timers by themselves. We can have an identifier to recognize which timer
-  times out and pass that parameter to the `process_timeout()` function.
-
-  Another solution would be to have a way to quickly create a timer
-  without having to create a sub-class, so that way we could keep it
-  separate (clean) and have a callback instead of a virtual function
-  (and we have a callback thingy to manage lists of callbacks in snapdev).
-  This is what version 2 would be about!
 
 * Consider removing the stop() and ready() functions because it would be
   as easy to use a CALLBACK which means anyone receives a call whenever
