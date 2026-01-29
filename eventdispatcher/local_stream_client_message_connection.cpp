@@ -146,7 +146,9 @@ bool local_stream_client_message_connection::send_message(
     // this has proven very useful so I think I'll keep it
     //
     SNAP_LOG_DEBUG
-            << "local stream: send message ["
+            << "local stream:"
+            << get_name()
+            << ": send message ["
             << buf
             << "]"
             << SNAP_LOG_SEND;

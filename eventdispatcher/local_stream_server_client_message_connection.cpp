@@ -138,7 +138,9 @@ bool local_stream_server_client_message_connection::send_message(
     std::string buf(msg.to_message());
 
     SNAP_LOG_DEBUG
-            << "local server client: send message ["
+            << "local server client:"
+            << get_name()
+            << ": send message ["
             << buf
             << "]"
             << SNAP_LOG_SEND;

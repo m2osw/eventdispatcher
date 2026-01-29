@@ -161,7 +161,9 @@ bool tcp_server_client_message_connection::send_message(
     std::string buf(msg.to_message());
 
     SNAP_LOG_DEBUG
-            << "tcp server client: send message ["
+            << "tcp server client:"
+            << get_name()
+            << ": send message ["
             << buf
             << "]"
             << SNAP_LOG_SEND;
