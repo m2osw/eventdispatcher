@@ -89,6 +89,7 @@ int main(int argc, char * argv[])
     snaplogger::logger::pointer_t l(snaplogger::logger::get_instance());
     l->add_console_appender();
     l->set_severity(snaplogger::severity_t::SEVERITY_ALL);
+    snaplogger::mark_ready(); // we do not process options, so we have to explicitly call mark_ready()
 
     ed::bio_auto_cleanup auto_bio_cleanup;
 
