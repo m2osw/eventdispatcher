@@ -315,6 +315,12 @@ void bio_cleanup()
  * This function reads all existing errors from the OpenSSL library
  * and send them to our logs.
  *
+ * \note
+ * To see whether the libcrypto was compiled with error strings, you
+ * can check the output of `openssl version -a`. That includes the
+ * `gcc` command line and thus whether the `-DOPENSSL_NO_ERR` was
+ * defined.
+ *
  * \return The number of errors that the function found.
  */
 int bio_log_errors()
