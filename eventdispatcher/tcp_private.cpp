@@ -351,11 +351,11 @@ int bio_log_errors()
         //
         // Note: current OpenSSL documentation on Ubuntu says errmsg[]
         //       should be at least 120 characters BUT the code actually
-        //       use a limit of 256...
+        //       use a limit of 256... (this was fixed in 24.04, the docs
+        //       say 256 bytes)
         //
         char errmsg[256];
         ERR_error_string_n(bio_errno, errmsg, sizeof(errmsg) / sizeof(errmsg[0]));
-        // WARNING: the ERR_error_string() function is NOT multi-thread safe
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -364,12 +364,26 @@ int bio_log_errors()
         int const func_num(ERR_GET_FUNC(bio_errno));
 #endif
 #pragma GCC diagnostic pop
-        char const * lib_name(ERR_lib_error_string(lib_num));
+        char const * lib_name(ERR_lib_error_string(bio_errno));
 #if OPENSSL_VERSION_NUMBER < 0x30000020L
-        func_name = ERR_func_error_string(func_num);
+        func_name = ERR_func_error_string(bio_errno);
 #endif
         int const reason_num(ERR_GET_REASON(bio_errno));
-        char const * reason(ERR_reason_error_string(reason_num));
+        char const * reason(nullptr);
+        if(lib_num == ERR_LIB_SYS)
+        {
+            // in this case the "reason" is actually 'errno'
+            //
+            reason = strerror(reason_num);
+        }
+        else
+        {
+            // warning: errors are assigned a library number and to retrieve
+            //          the string that number is necessary which is why this
+            //          function takes the whole number, not just the reason
+            //
+            reason = ERR_reason_error_string(bio_errno);
+        }
 
         if(lib_name == nullptr)
         {
