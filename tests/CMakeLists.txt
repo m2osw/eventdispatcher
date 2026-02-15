@@ -153,4 +153,19 @@ target_link_libraries(${PROJECT_NAME}
     eventdispatcher
 )
 
+
+##
+## Timer Test
+##
+project(timer-test)
+
+add_executable(${PROJECT_NAME}
+    timer_test.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}
+    eventdispatcher
+)
+
+
 # vim: ts=4 sw=4 et

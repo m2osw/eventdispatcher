@@ -810,7 +810,7 @@ bool communicator::run()
 //    << SNAP_LOG_SEND;
 
                         // move the timeout as required first
-                        // (because the callback may move it again)
+                        // (because the callback may move it too)
                         //
                         c->calculate_next_tick();
 

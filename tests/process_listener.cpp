@@ -79,7 +79,7 @@ public:
     process_listener const &
                         operator = (process_listener const &) = delete;
 
-    // process_changed implementation
+    // process_event implementation
     //
     virtual void        process_event(ed::process_changed_event const & event) override;
 

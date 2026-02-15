@@ -62,8 +62,9 @@ namespace ed
  * of microseconds.
  *
  * \todo
- * This is also defined in snap_child::get_current_date() so we should
- * unify that in some way...
+ * At some point, we want to replace all the time handling with the
+ * snap::timespec_ex. That is compatible with the newer poll() and
+ * more precise and will last a very long time (i.e. it uses 128 bits).
  *
  * \return The time in microseconds.
  */

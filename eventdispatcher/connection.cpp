@@ -552,7 +552,7 @@ void connection::calculate_next_tick()
     //
     if(now < f_timeout_next_date)
     {
-        // somehow we got called even though now is still larger
+        // somehow we got called even though now is still smaller
         // than f_timeout_next_date
         //
         // This message happens all the time, it is not helpful at the moment
@@ -573,7 +573,7 @@ void connection::calculate_next_tick()
     // unlikely that the tick has happened right on time, and took
     // less than 1ms, this is rather unlikely all around...
     //
-    f_timeout_next_date += ticks * f_timeout_delay;
+    f_timeout_next_date = f_timeout_delay_start_date + ticks * f_timeout_delay;
 }
 
 
@@ -589,7 +589,7 @@ void connection::calculate_next_tick()
  *
  * \return This function returns the timeout date in microseconds.
  */
-int64_t connection::get_timeout_date() const
+std::int64_t connection::get_timeout_date() const
 {
     return f_timeout_date;
 }
