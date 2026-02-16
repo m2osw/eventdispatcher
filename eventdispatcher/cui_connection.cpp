@@ -34,6 +34,7 @@
 // advgetopt
 //
 #include    <advgetopt/exception.h>
+#include    <advgetopt/utils.h>
 
 
 // snapdev
@@ -72,6 +73,11 @@ namespace ed
 
 namespace detail
 {
+
+
+
+constexpr char const g_default_history_filename[] = "~/.snap_history";
+
 
 /** \brief This is the actual implementation of the ncurses application.
  *
@@ -380,22 +386,7 @@ public:
             wattroff(f_win_output, COLOR_PAIR(pair));
         }
 
-        if(wrefresh(p->f_win_output) != OK)
-        {
-            fatal_error("wrefresh() to output window failed.");
-            snapdev::NOT_REACHED();
-        }
-
-        // TODO: we could use a timer on this object that will
-        //       instantly timeout on the next run() loop so that
-        //       that way the cursor gets set only once
-        //
-        set_cursor();
-        if(wrefresh(f_win_input) != OK)
-        {
-            fatal_error("wrefresh() failed.");
-            snapdev::NOT_REACHED();
-        }
+        refresh();
     }
 
     void clear_output()
@@ -424,8 +415,18 @@ public:
 
     void refresh()
     {
-        wrefresh(f_win_output);
-        wrefresh(f_win_input);
+        update_panels();
+        if(doupdate() != OK)
+        {
+            fatal_error("doupdate() in refresh() failed");
+            snapdev::NOT_REACHED();
+        }
+
+        // TODO: we could use a timer on this object that will
+        //       instantly timeout on the next run() loop so that
+        //       that way the cursor gets set only once
+        //
+        set_cursor();
     }
 
     void set_prompt(std::string const & prompt)
@@ -941,7 +942,6 @@ private:
     void process_window_change()
     {
         endwin();
-        refresh();
         resize();
     }
 
@@ -955,7 +955,6 @@ private:
         mvwaddch(f_win_main, f_screen_height - 6, f_screen_width - 1, ACS_RTEE);
         mvwprintw(f_win_main, 0, 2, " Output ");
         mvwprintw(f_win_main, f_screen_height - 6, 2, " Console (Ctrl-D on empty line to exit) ");
-        wrefresh(f_win_main);
     }
 
     static int readline_getc(FILE * dummy)
@@ -1075,6 +1074,7 @@ private:
         //
         if(for_resize)
         {
+            // TODO: review with panesl, can we just call refresh()?
             if(wnoutrefresh(f_win_output) != OK)
             {
                 fatal_error("wnoutrefresh() of output window failed");
@@ -1083,11 +1083,7 @@ private:
         }
         else
         {
-            if(wrefresh(f_win_output) != OK)
-            {
-                fatal_error("wrefresh() of output window failed");
-                snapdev::NOT_REACHED();
-            }
+            refresh();
         }
     }
 
@@ -1114,12 +1110,10 @@ private:
             snapdev::NOT_REACHED();
         }
 
-        // this might write a string wider than the terminal currently,
+        // this might write a string wider than the terminal currently is,
         // so don't check for errors
         //
         mvwprintw(f_win_input, 0, 0, "%s%s", rl_display_prompt, rl_line_buffer);
-
-        set_cursor();
 
         // we batch window updates when resizing
         //
@@ -1133,11 +1127,7 @@ private:
         }
         else
         {
-            if(wrefresh(f_win_input) != OK)
-            {
-                fatal_error("wrefresh() failed");
-                snapdev::NOT_REACHED();
-            }
+            refresh();
         }
     }
 
@@ -1148,11 +1138,6 @@ private:
      */
     void set_cursor()
     {
-        // WARNING: we have two test because if the prompt includes a
-        //          tab then the size is different than without a tab
-        //          in there (at least that's the only thing that could
-        //          affect the calculation done in strnwidth())
-        //
         size_t const prompt_width = strnwidth(rl_display_prompt, SIZE_MAX, 0);
         size_t const cursor_col = prompt_width +
                             strnwidth(rl_line_buffer, rl_point, prompt_width);
@@ -1174,8 +1159,27 @@ private:
                 snapdev::NOT_REACHED();
             }
             curs_set(2);
-        }
 
+            // although we're told not to call this function when using
+            // panels, the only way to force the cursor in the correct
+            // window is by refreshing that window in this way; this
+            // actually happens in the wgetch() call in exactly this
+            // way but we are not calling that function until after we
+            // receive a character on that file descriptor
+            //
+            // TODO: proper handling of a terminal resize
+            //
+            //if(wnoutrefresh(f_win_input) != OK)
+            //{
+            //    fatal_error("wnoutrefresh() failed");
+            //    snapdev::NOT_REACHED();
+            //}
+            if(wrefresh(f_win_input) != OK)
+            {
+                fatal_error("wrefresh() failed");
+                snapdev::NOT_REACHED();
+            }
+        }
     }
 
     /** \brief We got a resize signal, make sure to redraw everything.
@@ -1215,16 +1219,12 @@ private:
             snapdev::NOT_REACHED();
         }
 
-        // batch refreshes and commit them with doupdate()
+        // batch refreshes and commit them with doupdate() in refresh()
         //
         win_output_redisplay(true);
         win_input_redisplay(true);
 
-        if(doupdate() != OK)
-        {
-            fatal_error("doupdate() after wresize() failed");
-            snapdev::NOT_REACHED();
-        }
+        refresh();
     }
 
     /** \brief End this software with an error.
@@ -1280,18 +1280,14 @@ private:
      *
      * \param[in] s  The string for which we calculate the width.
      * \param[in] n  The maximum number of characters to count or SIZE_MAX.
-     * \param[in] offset The offset at which to start calculating the size.
+     * \param[in] offset The column at which to start calculating the size.
      */
     size_t strnwidth(char const * s, size_t n, size_t offset)
     {
         mbstate_t shift_state = mbstate_t();
-
-        // Start in the initial shift state
-        //memset(&shift_state, '\0', sizeof(shift_state));
-
-        size_t width(0);
-        size_t wc_len(0);
-        for(size_t i(0); i < n; i += wc_len)
+        std::size_t width(0);
+        std::size_t wc_len(0);
+        for(std::size_t i(0); i < n; i += wc_len)
         {
             // Extract the next multibyte character
             wchar_t wc(0);
@@ -1347,37 +1343,21 @@ private:
      *
      * \param[in] ce  The `cui_connection` pointer.
      * \param[in] history_filename  Name of a file where ncurses saves the
-     * history. Can be empty for not history saving.
+     * history. Can be empty to use the default.
      */
     ncurses_impl(cui_connection * ce, std::string const & history_filename)
     {
         g_cui_connection = ce;
 
-        // keep the default is not specified
+        // use the default if no history file specified by caller
         //
-        if(!history_filename.empty())
-        {
-            f_history_filename = history_filename;
-        }
-
-        // if it starts with "~/", consider changing the "~" with "$HOME"
-        //
-        if(f_history_filename.length() > 1
-        && f_history_filename[0] == '~'
-        && f_history_filename[1] == '/')
-        {
-            char * home = getenv("HOME");
-            if(home != nullptr
-            && *home != '\0')
-            {
-                // replace the '~' with the $HOME contents
-                //
-                f_history_filename = home + f_history_filename.substr(1);
-            }
-        }
+        f_history_filename = advgetopt::handle_user_directory(
+                    history_filename.empty()
+                        ? g_default_history_filename 
+                        : history_filename);
 
         // WARNING: our initialization required g_cui_connection to be defined
-        //          so better not have anything in the constructor
+        //          so better not have much at all in the constructor
         //          at this point...
     }
 
@@ -1388,7 +1368,7 @@ private:
     io_pipe_connection::pointer_t   f_stdout_pipe = io_pipe_connection::pointer_t();
     io_pipe_connection::pointer_t   f_stderr_pipe = io_pipe_connection::pointer_t();
     signal::pointer_t               f_winch_signal = signal::pointer_t();
-    std::string                     f_history_filename = std::string("~/.snap_history");
+    std::string                     f_history_filename = std::string();
     std::string                     f_command_prompt_in_output = std::string();
     SCREEN *                        f_term = nullptr;
     WINDOW *                        f_win_main = nullptr;
@@ -1449,7 +1429,7 @@ cui_connection *     ncurses_impl::g_cui_connection = nullptr;
  * it, and then re-create a new console connection later.
  *
  * \param[in] history_filename  The name of the history file used to
- * save each command.
+ * save each command. If left empty, use the default.
  */
 cui_connection::cui_connection(std::string const & history_filename)
     : fd_connection(fileno(stdin), mode_t::FD_MODE_READ)
