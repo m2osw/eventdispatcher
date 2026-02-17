@@ -71,7 +71,10 @@
   The `wclrtoeol()` function clears the border to the right side. One way
   to fix that issue, and make rendering fast, is to create two windows. The
   "normal" window and then a subwindow within the borders. That way we can
-  clear the inside without having to redraw the borders.
+  clear the inside without having to redraw the borders. This would give us
+  the opportunity to offer a Title feature too and even some status that
+  can appear at the bottom (instead of a border, you write in inverse mode
+  and the status is text within that inverted line).
 
   So this would also *fix* the wclear(), werase(), and wclrtobot().
 
