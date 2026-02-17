@@ -66,6 +66,15 @@
     (and we have a callback thingy to manage lists of callbacks in snapdev).
     This is what version 2 would be about!
 
+* Add a "border window" in the `cui_connection.cpp`
+
+  The `wclrtoeol()` function clears the border to the right side. One way
+  to fix that issue, and make rendering fast, is to create two windows. The
+  "normal" window and then a subwindow within the borders. That way we can
+  clear the inside without having to redraw the borders.
+
+  So this would also *fix* the wclear(), werase(), and wclrtobot().
+
 * Over time, update the address array of a permanent connection
 
   The `tcp_client_permanent_message_connection` class supports any number
