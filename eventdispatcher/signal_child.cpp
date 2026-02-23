@@ -218,7 +218,7 @@ bool child_status::is_stopped() const
 }
 
 
-/** \brief The process was sent the SIGCONT signal.
+/** \brief The child process was sent the SIGCONT signal.
  *
  * The process was previously stopped by a SIGSTOP or a trap or some other
  * similar signal. It was then continued. This signals the continuation.

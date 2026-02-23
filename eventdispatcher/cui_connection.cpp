@@ -161,10 +161,71 @@ public:
             : signal(SIGWINCH)
             , f_impl(impl)
         {
+            set_name("winch_signal");
         }
 
         winch_signal(winch_signal const & rhs) = delete;
         winch_signal & operator = (winch_signal const & rhs) = delete;
+
+        void process_signal()
+        {
+            f_impl->process_window_change();
+        }
+
+    private:
+        ncurses_impl *      f_impl;
+    };
+
+    class tstp_signal
+        : public signal
+    {
+    public:
+        tstp_signal(ncurses_impl * impl)
+            : signal(SIGTSTP)
+            , f_impl(impl)
+        {
+            set_name("tstp_signal");
+        }
+
+        tstp_signal(tstp_signal const & rhs) = delete;
+        tstp_signal & operator = (tstp_signal const & rhs) = delete;
+
+        void process_signal()
+        {
+            // restore the console before exiting
+            //
+            endwin();
+
+            // now we need to actually stop and that's done by tweaking
+            // the signals; this is rather ugly...
+            //
+            sigset_t set;
+            sigemptyset(&set);
+            sigaddset(&set, SIGTSTP);
+            sigset_t save_set;
+            sigprocmask(SIG_UNBLOCK, &set, &save_set);
+            ::signal(SIGTSTP, SIG_DFL);
+            raise(SIGTSTP);
+            sigprocmask(SIG_BLOCK, &save_set, NULL);
+        }
+
+    private:
+        ncurses_impl *      f_impl;
+    };
+
+    class cont_signal
+        : public signal
+    {
+    public:
+        cont_signal(ncurses_impl * impl)
+            : signal(SIGCONT)
+            , f_impl(impl)
+        {
+            set_name("cont_signal");
+        }
+
+        cont_signal(cont_signal const & rhs) = delete;
+        cont_signal & operator = (cont_signal const & rhs) = delete;
 
         void process_signal()
         {
@@ -195,13 +256,15 @@ public:
 
             pointer_t p(ptr());
 
-            // we call the open from here instead of the constructor
-            // because we need g_cui_connection->f_impl to be defined for
-            // fatal_error() to work properly
+            // we continue the initialization from here instead of the
+            // constructor because we need `g_cui_connection->f_impl` to
+            // be defined for fatal_error() to work properly
             //
             p->open_ncurse();
             p->open_readline();
             p->capture_winch();
+            p->capture_tstp();
+            p->capture_cont();
         }
         return ce->f_impl;
     }
@@ -211,6 +274,8 @@ public:
 
     ~ncurses_impl()
     {
+        release_cont();
+        release_tstp();
         release_winch();
         close_readline();
         close_ncurse();
@@ -923,7 +988,6 @@ private:
     void capture_winch()
     {
         f_winch_signal = std::make_shared<winch_signal>(this);
-        f_winch_signal->set_name("winch_signal");
         if(!ed::communicator::instance()->add_connection(f_winch_signal))
         {
             // how do we let people know about that one?
@@ -937,6 +1001,42 @@ private:
     {
         ed::communicator::instance()->remove_connection(f_winch_signal);
         f_winch_signal.reset();
+    }
+
+    void capture_tstp()
+    {
+        f_tstp_signal = std::make_shared<tstp_signal>(this);
+        if(!ed::communicator::instance()->add_connection(f_tstp_signal))
+        {
+            // how do we let people know about that one?
+            //
+            // I don't want a fatal error in this case because in most cases
+            // you won't use Ctrl-Z + fg so it's not that important...
+        }
+    }
+
+    void release_tstp()
+    {
+        ed::communicator::instance()->remove_connection(f_tstp_signal);
+        f_tstp_signal.reset();
+    }
+
+    void capture_cont()
+    {
+        f_cont_signal = std::make_shared<cont_signal>(this);
+        if(!ed::communicator::instance()->add_connection(f_cont_signal))
+        {
+            // how do we let people know about that one?
+            //
+            // I don't want a fatal error in this case because in most cases
+            // you won't use Ctrl-Z + fg so it's not that important...
+        }
+    }
+
+    void release_cont()
+    {
+        ed::communicator::instance()->remove_connection(f_cont_signal);
+        f_cont_signal.reset();
     }
 
     void process_window_change()
@@ -1241,6 +1341,8 @@ private:
         //
         if(g_cui_connection->f_impl != nullptr)
         {
+            g_cui_connection->f_impl->release_cont();
+            g_cui_connection->f_impl->release_tstp();
             g_cui_connection->f_impl->release_winch();
             g_cui_connection->f_impl->close_readline();
             g_cui_connection->f_impl->close_ncurse();
@@ -1368,6 +1470,8 @@ private:
     io_pipe_connection::pointer_t   f_stdout_pipe = io_pipe_connection::pointer_t();
     io_pipe_connection::pointer_t   f_stderr_pipe = io_pipe_connection::pointer_t();
     signal::pointer_t               f_winch_signal = signal::pointer_t();
+    signal::pointer_t               f_tstp_signal = signal::pointer_t();
+    signal::pointer_t               f_cont_signal = signal::pointer_t();
     std::string                     f_history_filename = std::string();
     std::string                     f_command_prompt_in_output = std::string();
     SCREEN *                        f_term = nullptr;
