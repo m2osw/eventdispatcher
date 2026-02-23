@@ -199,6 +199,10 @@ public:
             // now we need to actually stop and that's done by tweaking
             // the signals; this is rather ugly...
             //
+            // TODO: we probably want that in the signal.cpp implementation?
+            //       although at this point this is probably the only case
+            //       in the whole of Snap! where we'd need to do this...
+            //
             sigset_t set;
             sigemptyset(&set);
             sigaddset(&set, SIGTSTP);
