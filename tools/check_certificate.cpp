@@ -63,7 +63,7 @@
 //
 #include    <advgetopt/conf_file.h>
 #include    <advgetopt/exception.h>
-#include    <advgetopt/validator_double.h>
+#include    <advgetopt/validator_duration.h>
 
 
 // snapdev
@@ -105,7 +105,8 @@ const advgetopt::option g_options[] =
               advgetopt::GETOPT_FLAG_REQUIRED
             , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
         , advgetopt::DefaultValue("14")
-        , advgetopt::Help("number of days under which the certificate is considered in need of renewal.")
+        , advgetopt::Validator("duration(large, days, 1d..1y)")
+        , advgetopt::Help("duration under which the certificate is considered in need of renewal; by default a number represents days; minimum is 1 day.")
     ),
 
     // DEFAULT
@@ -221,9 +222,13 @@ int check_certificate::run()
     if(f_opts.is_defined("limit"))
     {
         std::string const limit(f_opts.get_string("limit"));
-        if(!advgetopt::validator_double::convert_string(limit, f_limit))
+        if(!advgetopt::validator_duration::convert_string(
+                  limit
+                , advgetopt::validator_duration::VALIDATOR_DURATION_DEFAULT_FLAGS
+                , 86400.0
+                , f_limit))
         {
-            throw ed::invalid_parameter("limit must be a valid decimal number, it can include a decimal point (i.e. 3.5).");
+            throw ed::invalid_parameter("limit must be a valid decimal number, it can include a decimal point (i.e. 3.5). By default it is viewed as a number of days.");
         }
     }
 

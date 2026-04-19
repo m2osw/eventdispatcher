@@ -109,6 +109,7 @@ void pause_durations::parse_pause_list(std::string const & pause)
         if(!advgetopt::validator_duration::convert_string(
                   d
                 , advgetopt::validator_duration::VALIDATOR_DURATION_DEFAULT_FLAGS
+                , 1.0
                 , seconds))
         {
             throw invalid_parameter(
