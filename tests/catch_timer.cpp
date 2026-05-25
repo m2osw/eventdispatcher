@@ -157,7 +157,7 @@ bool timer_test::get_expect_remove() const
 
 CATCH_TEST_CASE("timer", "[timer]")
 {
-    CATCH_START_SECTION("Timer connection")
+    CATCH_START_SECTION("timer: timer connection")
     {
         ed::communicator::pointer_t communicator(ed::communicator::instance());
 
@@ -235,7 +235,7 @@ CATCH_TEST_CASE("timer", "[timer]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("Timer add/remove connection")
+    CATCH_START_SECTION("timer: add/remove connection")
     {
         ed::communicator::pointer_t communicator(ed::communicator::instance());
 
@@ -255,7 +255,7 @@ CATCH_TEST_CASE("timer", "[timer]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("Timer add connection, remove on process_error()")
+    CATCH_START_SECTION("timer: add connection, remove on process_error()")
     {
         ed::communicator::pointer_t communicator(ed::communicator::instance());
 
@@ -271,7 +271,7 @@ CATCH_TEST_CASE("timer", "[timer]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("Timer add connection, expect process_timeout()")
+    CATCH_START_SECTION("timer: add connection, expect process_timeout()")
     {
         ed::communicator::pointer_t communicator(ed::communicator::instance());
 
@@ -293,7 +293,7 @@ CATCH_TEST_CASE("timer", "[timer]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("Timer add connection, remove on process_hup()")
+    CATCH_START_SECTION("timer: add connection, remove on process_hup()")
     {
         ed::communicator::pointer_t communicator(ed::communicator::instance());
 
@@ -309,7 +309,7 @@ CATCH_TEST_CASE("timer", "[timer]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("Timer add connection, remove on process_invalid()")
+    CATCH_START_SECTION("timer: add connection, remove on process_invalid()")
     {
         ed::communicator::pointer_t communicator(ed::communicator::instance());
 
@@ -329,7 +329,7 @@ CATCH_TEST_CASE("timer", "[timer]")
 
 CATCH_TEST_CASE("timer_errors", "[timer][error]")
 {
-    CATCH_START_SECTION("timer: invalid priority (too small)")
+    CATCH_START_SECTION("timer_errors: invalid priority (too small)")
     {
         timer_test::pointer_t t(std::make_shared<timer_test>());
         for(ed::priority_t p(ed::EVENT_MIN_PRIORITY - 100); p < ed::EVENT_MIN_PRIORITY; ++p)
@@ -347,7 +347,7 @@ CATCH_TEST_CASE("timer_errors", "[timer][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("timer: invalid priority (too large)")
+    CATCH_START_SECTION("timer_errors: invalid priority (too large)")
     {
         timer_test::pointer_t t(std::make_shared<timer_test>());
         for(ed::priority_t p(ed::EVENT_MAX_PRIORITY + 1); p < ed::EVENT_MAX_PRIORITY + 100; ++p)
@@ -365,7 +365,7 @@ CATCH_TEST_CASE("timer_errors", "[timer][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("timer: invalid timeout delay (too small)")
+    CATCH_START_SECTION("timer_errors: invalid timeout delay (too small)")
     {
         timer_test::pointer_t t(std::make_shared<timer_test>());
         for(std::int64_t us(-100); us < 10; ++us)
@@ -388,7 +388,7 @@ CATCH_TEST_CASE("timer_errors", "[timer][error]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("timer: invalid timeout date (too small)")
+    CATCH_START_SECTION("timer_errors: invalid timeout date (too small)")
     {
         timer_test::pointer_t t(std::make_shared<timer_test>());
         for(std::int64_t date(-100); date < -1; ++date)
