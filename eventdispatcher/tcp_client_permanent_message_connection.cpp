@@ -460,7 +460,7 @@ public:
         {
             f_thread.stop();
         }
-        catch(cppthread::mutex_failed_error const &)
+        catch(cppthread::mutex_failed const &)
         {
         }
         catch(cppthread::invalid_error const &)
