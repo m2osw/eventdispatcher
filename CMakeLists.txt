@@ -39,6 +39,13 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+
+file(GLOB CMAKE_DEPENDENCIES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/*.cmake")
+set_property(DIRECTORY APPEND PROPERTY
+    CMAKE_CONFIGURE_DEPENDS ${CMAKE_DEPENDENCIES}
+)
+
+
 add_subdirectory(eventdispatcher   )
 add_subdirectory(eventdispatcher_qt)
 add_subdirectory(doc               )

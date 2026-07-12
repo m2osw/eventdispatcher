@@ -87,9 +87,7 @@ if(SnapCatch2_FOUND)
 
     target_link_libraries(${PROJECT_NAME}
         eventdispatcher
-        #reporter
         cppprocess
-        #${SNAPCATCH2_LIBRARIES}
     )
 
 else(SnapCatch2_FOUND)

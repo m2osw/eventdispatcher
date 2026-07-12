@@ -149,6 +149,7 @@ add_custom_command(
 
     COMMAND
         ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/eventdispatcher"
+            "LSAN_OPTIONS=suppressions=${CMAKE_BINARY_DIR}/../../dist/share/snaplogger/suppress-leaks.txt"
             "${CMAKE_BINARY_DIR}/tools/verify-message-definitions"
                 "--path-to-message-definitions"
                     "${CMAKE_SOURCE_DIR}/snaplogger/network/message-definitions:${CMAKE_SOURCE_DIR}/eventdispatcher/message-definitions"
