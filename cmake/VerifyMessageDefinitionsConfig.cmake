@@ -78,7 +78,7 @@ function(VerifyMessageDefinitions PATH_TO_MESSAGE_DEFINITIONS)
             echo "--- verifying message definitions ---"
 
         COMMAND
-            "LSAN_OPTIONS=suppressions=${CMAKE_BINARY_DIR}/../../dist/share/snaplogger/suppress-leaks.txt"
+            "LSAN_OPTIONS=suppressions=${CMAKE_INSTALL_PREFIX}/share/snaplogger/suppress-leaks.txt"
             "${VERIFY_MESSAGE_DEFINITIONS_PROGRAM}"
                 "--path-to-message-definitions"
                     "${PATH_TO_MESSAGE_DEFINITIONS}"
