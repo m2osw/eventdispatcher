@@ -1,6 +1,22 @@
 eventdispatcher (1.1.61.0~noble) noble; urgency=high
 
+  * Added the get_result() to the process object.
+  * Enhance handling of environment variables.
+  * Added an idle counter so we know how much time run() waits.
+  * Fixed a write() call when the object is marked as "done".
+  * Updated the snaplogger network plugin to support fallbacks.
+  * Replaced an exit(1) with an exception.
+  * Fixed potential leaks in the CUI connection.
+  * Offer the programmer a way to change the ready message.
+  * Added support for CUI panels.
+  * Added support for scrolling with PgUp/PgDown in the CUI.
+  * Added support for the WINCH signal for the CUI.
+  * Made it possible to pass a list of durations for permanent connections.
+  * Name the signal_child connection.
+  * Moved the get_next_tag() here from cluck.
+  * Added --process-name option to ed::signal to name the process to signal.
   * Updated the license to GPL v3.
+  * Fixes to the doxygen documentation.
   * Small clean ups.
 
  -- Alexis Wilke <alexis@m2osw.com>  Sun, 27 Jul 2025 10:36:08 -0700
