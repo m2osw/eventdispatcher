@@ -105,7 +105,7 @@ const advgetopt::option g_options[] =
               advgetopt::GETOPT_FLAG_REQUIRED
             , advgetopt::GETOPT_FLAG_GROUP_OPTIONS>())
         , advgetopt::DefaultValue("14")
-        , advgetopt::Validator("duration(large, days, 1d..1y)")
+        , advgetopt::Validator("duration(large, days, 1d...1y)")
         , advgetopt::Help("duration under which the certificate is considered in need of renewal; by default a number represents days; minimum is 1 day.")
     ),
 
