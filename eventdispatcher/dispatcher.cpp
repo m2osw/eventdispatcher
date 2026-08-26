@@ -409,6 +409,16 @@ void dispatcher::remove_matches(dispatcher_match::tag_t tag)
     {
         if(it->f_tag == tag)
         {
+            if(f_show_matches)
+            {
+                SNAP_LOG_CONFIG
+                    << "remove_matches() with command expression \""
+                    << (it->f_expr == nullptr ? "<match all>" : it->f_expr)
+                    << "\" (priority: "
+                    << it->f_priority
+                    << ")."
+                    << SNAP_LOG_SEND;
+            }
             it = f_matches.erase(it);
         }
         else

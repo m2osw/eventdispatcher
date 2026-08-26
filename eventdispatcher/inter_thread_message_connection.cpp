@@ -51,11 +51,6 @@
 #include    "eventdispatcher/exception.h"
 
 
-// cppthread
-//
-#include    <cppthread/thread.h>
-
-
 // snapdev
 //
 #include    <snapdev/not_reached.h>
@@ -107,7 +102,7 @@ namespace ed
  */
 inter_thread_message_connection::inter_thread_message_connection()
 {
-    f_creator_id = cppthread::gettid();
+    f_creator_id = gettid();
 
     f_thread_a.reset(eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK | EFD_SEMAPHORE));
     if(!f_thread_a)
@@ -331,7 +326,7 @@ bool inter_thread_message_connection::is_reader() const
  */
 int inter_thread_message_connection::get_socket() const
 {
-    if(f_creator_id == cppthread::gettid())
+    if(f_creator_id == gettid())
     {
         return f_thread_a.get();
     }
@@ -359,7 +354,7 @@ void inter_thread_message_connection::process_read()
 {
     message msg;
 
-    bool const is_thread_a(f_creator_id == cppthread::gettid());
+    bool const is_thread_a(f_creator_id == gettid());
 
     // retrieve the message
     //
@@ -421,7 +416,7 @@ bool inter_thread_message_connection::send_message(
 {
     snapdev::NOT_USED(cache);
 
-    if(f_creator_id == cppthread::gettid())
+    if(f_creator_id == gettid())
     {
         f_message_b.push_back(msg);
         uint64_t const value(1);
