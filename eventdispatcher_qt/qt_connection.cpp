@@ -28,19 +28,26 @@
 
 // Qt
 //
-#include    <QX11Info>
-#include    <QEventLoop>
+//#include    <QX11Info>
 #include    <QApplication>
-
-
-// C
-//
-#include    <xcb/xcb.h>
+#include    <QEventLoop>
+#include    <QtCore/qnativeinterface.h>
+#ifdef HAS_QT_WAYLAND
+#include    <QtGui/qwaylandapplication.h>
+#endif
 
 
 // X11
 //
+#ifdef HAS_QT_X11
 #include    <X11/Xlib.h>
+#include    <xcb/xcb.h> // X11 C Binding
+#endif
+
+
+// Wayland
+//
+#include    <wayland-client-core.h>
 
 
 // last include
@@ -157,22 +164,38 @@ qt_connection::qt_connection()
 
     set_name("qt");
 
-    if(QX11Info::isPlatformX11())
+    // Get file descriptor to listen on
+
+#ifdef HAS_QT_X11
+    // First try X11
+    //
+    QNativeInterface::QX11Application * x11_app(qGuiApp->nativeInterface<QNativeInterface::QX11Application>());
+    if(x11_app != nullptr)
     {
-        Display * d(QX11Info::display());
+        Display * d(x11_app->display());
         if(d != nullptr)
         {
             f_fd = XConnectionNumber(d);
         }
-        else
+    }
+#endif
+
+#ifdef HAS_QT_WAYLAND
+    // If not X11, try Wayland
+    //
+    if(f_fd == -1)
+    {
+        QNativeInterface::QWaylandApplication * wayland_app(qGuiApp->nativeInterface<QNativeInterface::QWaylandApplication>());
+        if(wayland_app != nullptr)
         {
-            xcb_connection_t * c(QX11Info::connection());
-            if(c != nullptr)
+            struct wl_display * wl_disp(wayland_app->display());
+            if(wl_disp != nullptr)
             {
-                f_fd = xcb_get_file_descriptor(c);
+                f_fd = wl_display_get_fd(wl_disp);
             }
         }
     }
+#endif
 
     if(f_fd == -1)
     {

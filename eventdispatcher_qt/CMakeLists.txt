@@ -27,28 +27,41 @@
 project(eventdispatcher_qt)
 
 
+set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
-find_package(Qt5Core      REQUIRED)
-find_package(Qt5Widgets   REQUIRED)
-find_package(Qt5X11Extras REQUIRED)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
 
 add_library(${PROJECT_NAME} SHARED
-    qt_connection.cpp                    # qt connection extension
+    qt_connection.cpp
 )
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    AUTOMOC TRUE
+    AUTORCC TRUE
+    AUTOUIC TRUE
+)
+
+if(QT_FEATURE_xcb)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE HAS_QT_X11)
+endif()
+
+if(QT_FEATURE_wayland)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE HAS_QT_WAYLAND)
+endif()
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${SNAPDEV_INCLUDE_DIRS}
-        ${Qt5Core_INCLUDE_DIRS}
-        ${Qt5Widgets_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}
     eventdispatcher
     ${LIBEXCEPT_LIBRARIES}
     ${LIBUTF8_LIBRARIES}
-    ${Qt5X11Extras_LIBRARIES}
+
+    Qt6::Core
+    Qt6::Widgets
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
