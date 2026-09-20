@@ -53,7 +53,8 @@ public:
     messenger_tcp_server_client &
                             operator = (messenger_tcp_server_client const &) = delete;
 
-    // ed::connection implementation
+    // dispatcher_support implementation
+    //
     virtual void            process_message(ed::message & msg) override;
 
 private:

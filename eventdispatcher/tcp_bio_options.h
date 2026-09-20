@@ -34,6 +34,11 @@
 #define OPENSSL_THREAD_DEFINES
 
 
+// advgetopt
+//
+#include    <advgetopt/utils.h>
+
+
 // C++
 //
 #include    <cstdint>
@@ -80,6 +85,13 @@ public:
     void                        set_sni(bool sni = true);
     bool                        get_sni() const;
 
+    void                        add_alpn(std::string const & protocol, bool mark_as_default = false);
+    void                        clear_alpn();
+    advgetopt::string_list_t const &
+                                get_alpn() const;
+    std::string                 get_alpn_buffer() const;
+    std::string const &         get_default_alpn() const;
+
     void                        set_host(std::string const & host);
     std::string const &         get_host() const;
 
@@ -89,6 +101,8 @@ private:
     std::string                 f_ssl_certificate_path = std::string("/etc/ssl/certs");
     bool                        f_keepalive = true;
     bool                        f_sni = true;
+    advgetopt::string_list_t    f_alpn = advgetopt::string_list_t();
+    std::string                 f_default_alpn = std::string();
     std::string                 f_host = std::string();
 };
 

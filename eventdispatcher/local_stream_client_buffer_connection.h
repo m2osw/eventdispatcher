@@ -44,7 +44,8 @@ public:
                                 local_stream_client_buffer_connection(
                                           addr::addr_unix const & address
                                         , bool const blocking = false
-                                        , bool const close_on_exec = true);
+                                        , bool const close_on_exec = true
+                                        , std::size_t input_buffer_size = 1024);
 
     bool                        has_input() const;
     bool                        has_output() const;
@@ -58,6 +59,7 @@ public:
 
     // local_stream_client_connection implementation
     //
+    virtual void                close() override;
     virtual ssize_t             write(void const * data, size_t length) override;
 
     // new callback
@@ -66,8 +68,11 @@ public:
 
 private:
     std::string                 f_line = std::string();
+    std::vector<char>           f_input = std::vector<char>();
+    int                         f_input_position = 0;
+    int                         f_input_size = 0;
     std::vector<char>           f_output = std::vector<char>();
-    size_t                      f_position = 0;
+    std::size_t                 f_output_position = 0;
 };
 
 

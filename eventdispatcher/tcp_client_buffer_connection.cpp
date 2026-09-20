@@ -84,12 +84,17 @@ namespace ed
  * \param[in] address  The address to connect to.
  * \param[in] mode  The mode to connect as (PLAIN or SECURE).
  * \param[in] blocking  If true, keep a blocking socket, other non-blocking.
+ * \param[in] opt  Additional options.
+ * \param[in] input_buffer_size  Size of the memory input buffer in bytes.
  */
 tcp_client_buffer_connection::tcp_client_buffer_connection(
               addr::addr const & address
             , mode_t const mode
-            , bool const blocking)
-    : tcp_client_connection(address, mode)
+            , bool const blocking
+            , tcp_bio_options const & opt
+            , std::size_t input_buffer_size)
+    : tcp_client_connection(address, mode, opt)
+    , f_input(input_buffer_size)
 {
     if(!blocking)
     {
@@ -241,37 +246,39 @@ bool tcp_client_buffer_connection::is_writer() const
  */
 void tcp_client_buffer_connection::process_read()
 {
-    // we read one character at a time until we get a '\n'
-    // since we have a non-blocking socket we can read as
-    // much as possible and then check for a '\n' and keep
-    // any extra data in a cache.
-    //
     if(valid_socket())
     {
         int count_lines(0);
         std::int64_t const date_limit(get_current_date() + get_processing_time_limit());
-        std::vector<char> buffer;
-        buffer.resize(1024);
-        for(;;)
+        bool more(true);
+        do
         {
             errno = 0;
-            ssize_t const r(read(&buffer[0], buffer.size()));
-            if(r > 0)
+            if(f_input_position >= f_input_size)
             {
-                for(ssize_t position(0); position < r; )
+                f_input_size = read(f_input.data(), f_input.size());
+                f_input_position = 0;
+            }
+            if(f_input_size > 0)
+            {
+                while(f_input_position < f_input_size)
                 {
-                    std::vector<char>::const_iterator it(std::find(buffer.begin() + position, buffer.begin() + r, '\n'));
-                    if(it == buffer.begin() + r)
+                    std::vector<char>::const_iterator it(std::find(f_input.begin() + f_input_position, f_input.begin() + f_input_size, '\n'));
+                    if(it == f_input.begin() + f_input_size)
                     {
-                        // no newline, just add the whole thing
-                        f_line += std::string(&buffer[position], r - position);
-                        break; // do not waste time, we know we are done
+                        // no newline, just add the whole thing and wait
+                        // for more data
+                        //
+                        f_line += std::string(f_input.data() + f_input_position, f_input_size - f_input_position);
+                        f_input_size = 0;
+                        f_input_position = 0;
+                        break;
                     }
 
                     // retrieve the characters up to the newline
                     // character and process the line
                     //
-                    f_line += std::string(&buffer[position], it - buffer.begin() - position);
+                    f_line += std::string(f_input.data() + f_input_position, it - f_input.begin() - f_input_position);
                     process_line(f_line);
                     ++count_lines;
 
@@ -282,34 +289,31 @@ void tcp_client_buffer_connection::process_read()
                     // we had a newline, we may still have some data
                     // in that buffer; (+1 to skip the '\n' itself)
                     //
-                    position = it - buffer.begin() + 1;
-                }
+                    f_input_position = it - f_input.begin() + 1;
 
-                // when we reach here all the data read in `buffer` is
-                // now either fully processed or in f_line
-                //
-                // TODO: change the way this works so we can test the
-                //       limit after each process_line() call
-                //
-                if(count_lines >= get_event_limit()
-                || get_current_date() >= date_limit)
-                {
-                    // we reach one or both limits, stop processing so
-                    // the other events have a chance to run
-                    //
-                    break;
+                    if(count_lines >= get_event_limit()
+                    || get_current_date() >= date_limit)
+                    {
+                        // we reach one or both limits, stop processing so
+                        // the other events have a chance to run
+                        //
+                        if(f_input_position < f_input_size)
+                        {
+                            add_yield(YIELD_READ);
+                        }
+                        more = false;
+                        break;
+                    }
                 }
             }
-            else if(r == 0 || errno == 0 || errno == EAGAIN || errno == EWOULDBLOCK)
+            else if(f_input_size == 0 || errno == 0 || errno == EAGAIN || errno == EWOULDBLOCK)
             {
                 // no more data available at this time
                 //
                 break;
             }
-            else //if(r < 0)
+            else //if(f_input_size < 0)
             {
-                // TODO: do something about the error
-                //
                 int const e(errno);
                 SNAP_LOG_ERROR
                     << "an error occurred while reading from socket (errno: "
@@ -322,10 +326,9 @@ void tcp_client_buffer_connection::process_read()
                 return;
             }
         }
+        while(more);
     }
 
-    // process next level too
-    //
     tcp_client_connection::process_read();
 }
 
@@ -349,16 +352,16 @@ void tcp_client_buffer_connection::process_write()
     if(valid_socket())
     {
         errno = 0;
-        ssize_t const r(tcp_client_connection::write(&f_output[f_position], f_output.size() - f_position));
+        ssize_t const r(tcp_client_connection::write(&f_output[f_output_position], f_output.size() - f_output_position));
         if(r > 0)
         {
             // some data was written
             //
-            f_position += r;
-            if(f_position >= f_output.size())
+            f_output_position += r;
+            if(f_output_position >= f_output.size())
             {
                 f_output.clear();
-                f_position = 0;
+                f_output_position = 0;
                 process_empty_buffer();
             }
         }
@@ -402,6 +405,19 @@ void tcp_client_buffer_connection::process_hup()
     // process next level too
     //
     tcp_client_connection::process_hup();
+}
+
+
+void tcp_client_buffer_connection::close()
+{
+    tcp_bio_client::close();
+
+    f_input.clear();
+    f_input.shrink_to_fit();
+    f_output.clear();
+    f_output.shrink_to_fit();
+    f_line.clear();
+    f_line.shrink_to_fit();
 }
 
 

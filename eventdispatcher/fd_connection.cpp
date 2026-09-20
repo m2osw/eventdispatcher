@@ -129,7 +129,7 @@ void fd_connection::close()
     if(f_fd != -1)
     {
         ::close(f_fd);
-        f_fd = -1;
+        mark_closed();
     }
 }
 

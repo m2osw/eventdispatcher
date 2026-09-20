@@ -76,9 +76,12 @@ namespace ed
  * classes are expected to be able to send and receive. The input
  * or ouptut only pipes are expected to be used as replacements to the
  * stdin, stdout, and stderr streams which are unidirectional.
+ *
+ * \param[in] input_buffer_size  Size of the memory input buffer in bytes.
  */
-pipe_buffer_connection::pipe_buffer_connection()
+pipe_buffer_connection::pipe_buffer_connection(std::size_t input_buffer_size)
     : pipe_connection(pipe_t::PIPE_BIDIRECTIONAL)
+    , f_input(input_buffer_size)
 {
 }
 
@@ -93,7 +96,20 @@ pipe_buffer_connection::pipe_buffer_connection()
  */
 bool pipe_buffer_connection::is_writer() const
 {
-    return get_socket() != -1 && !f_output.empty();
+    return valid_socket() && !f_output.empty();
+}
+
+
+void pipe_buffer_connection::close()
+{
+    pipe_connection::close();
+
+    f_input.clear();
+    f_input.shrink_to_fit();
+    f_output.clear();
+    f_output.shrink_to_fit();
+    f_line.clear();
+    f_line.shrink_to_fit();
 }
 
 
@@ -112,7 +128,7 @@ bool pipe_buffer_connection::is_writer() const
  */
 ssize_t pipe_buffer_connection::write(void const * data, size_t length)
 {
-    if(get_socket() == -1)
+    if(!valid_socket())
     {
         errno = EBADF;
         return -1;
@@ -141,7 +157,7 @@ ssize_t pipe_buffer_connection::write(void const * data, size_t length)
  */
 void pipe_buffer_connection::process_read()
 {
-    if(get_socket() != -1)
+    if(valid_socket())
     {
         // we could read one character at a time until we get a '\n'
         // but since we have a non-blocking socket we can read as
@@ -149,29 +165,36 @@ void pipe_buffer_connection::process_read()
         // any extra data in a cache.
         //
         int count_lines(0);
-        int64_t const date_limit(get_current_date() + get_processing_time_limit());
-        std::vector<char> buffer;
-        buffer.resize(1024);
-        for(;;)
+        std::int64_t const date_limit(get_current_date() + get_processing_time_limit());
+        bool more(true);
+        do
         {
             errno = 0;
-            ssize_t const r(read(&buffer[0], buffer.size()));
-            if(r > 0)
+            if(f_input_position >= f_input_size)
             {
-                for(ssize_t position(0); position < r; )
+                f_input_size = read(f_input.data(), f_input.size());
+                f_input_position = 0;
+            }
+            if(f_input_size > 0)
+            {
+                while(f_input_position < f_input_size)
                 {
-                    std::vector<char>::const_iterator it(std::find(buffer.begin() + position, buffer.begin() + r, '\n'));
-                    if(it == buffer.begin() + r)
+                    std::vector<char>::const_iterator it(std::find(f_input.begin() + f_input_position, f_input.begin() + f_input_size, '\n'));
+                    if(it == f_input.begin() + f_input_size)
                     {
-                        // no newline, just add the whole thing
-                        f_line += std::string(&buffer[position], r - position);
-                        break; // do not waste time, we know we are done
+                        // no newline, just add the whole thing and wait
+                        // for more data
+                        //
+                        f_line += std::string(f_input.data() + f_input_position, f_input_size - f_input_position);
+                        f_input_size = 0;
+                        f_input_position = 0;
+                        break;
                     }
 
                     // retrieve the characters up to the newline
                     // character and process the line
                     //
-                    f_line += std::string(&buffer[position], it - buffer.begin() - position);
+                    f_line += std::string(f_input.data() + f_input_position, it - f_input.begin() - f_input_position);
                     process_line(f_line);
                     ++count_lines;
 
@@ -182,31 +205,30 @@ void pipe_buffer_connection::process_read()
                     // we had a newline, we may still have some data
                     // in that buffer; (+1 to skip the '\n' itself)
                     //
-                    position = it - buffer.begin() + 1;
-                }
+                    f_input_position = it - f_input.begin() + 1;
 
-                // when we reach here all the data read in `buffer` is
-                // now either fully processed or in f_line
-                //
-                // TODO: change the way this works so we can test the
-                //       limit after each process_line() call
-                //
-                if(count_lines >= get_event_limit()
-                || get_current_date() >= date_limit)
-                {
-                    // we reach one or both limits, stop processing so
-                    // the other events have a chance to run
-                    //
-                    break;
+                    if(count_lines >= get_event_limit()
+                    || get_current_date() >= date_limit)
+                    {
+                        // we reach one or both limits, stop processing so
+                        // the other events have a chance to run
+                        //
+                        if(f_input_position < f_input_size)
+                        {
+                            add_yield(YIELD_READ);
+                        }
+                        more = false;
+                        break;
+                    }
                 }
             }
-            else if(r == 0 || errno == 0 || errno == EAGAIN || errno == EWOULDBLOCK)
+            else if(f_input_size == 0 || errno == 0 || errno == EAGAIN || errno == EWOULDBLOCK)
             {
                 // no more data available at this time
                 //
                 break;
             }
-            else //if(r < 0)
+            else //if(f_input_size < 0)
             {
                 // this happens all the time (i.e. another process quits)
                 // so we make it a debug and not a warning or an error...
@@ -223,10 +245,9 @@ void pipe_buffer_connection::process_read()
                 return;
             }
         }
+        while(more);
     }
-    //else -- TBD: should we at least log an error when process_read() is called without a valid socket?
 
-    // process the next level
     pipe_connection::process_read();
 }
 
@@ -245,18 +266,18 @@ void pipe_buffer_connection::process_read()
  */
 void pipe_buffer_connection::process_write()
 {
-    if(get_socket() != -1)
+    if(valid_socket())
     {
         errno = 0;
-        ssize_t const r(pipe_connection::write(&f_output[f_position], f_output.size() - f_position));
+        ssize_t const r(pipe_connection::write(&f_output[f_output_position], f_output.size() - f_output_position));
         if(r > 0)
         {
             // some data was written
-            f_position += r;
-            if(f_position >= f_output.size())
+            f_output_position += r;
+            if(f_output_position >= f_output.size())
             {
                 f_output.clear();
-                f_position = 0;
+                f_output_position = 0;
                 process_empty_buffer();
             }
         }
@@ -292,7 +313,6 @@ void pipe_buffer_connection::process_write()
 void pipe_buffer_connection::process_hup()
 {
     close();
-
     pipe_connection::process_hup();
 }
 

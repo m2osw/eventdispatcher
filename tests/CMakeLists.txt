@@ -27,6 +27,7 @@ if(SnapCatch2_FOUND)
         catch_main.cpp
 
         catch_certificate.cpp
+        catch_communicator_yield.cpp
         catch_dispatcher.cpp
         catch_file_changed.cpp
         catch_message.cpp

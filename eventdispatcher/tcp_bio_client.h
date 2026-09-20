@@ -73,11 +73,12 @@ public:
 
     tcp_bio_client &    operator = (tcp_bio_client const & rhs) = delete;
 
-    void                close();
+    virtual void        close();
 
     int                 get_socket() const;
     addr::addr const &  get_remote_address() const;
     addr::addr const &  get_client_address();
+    std::string const & get_selected_alpn() const;
     std::size_t         get_sent_bytes() const;
     std::size_t         get_received_bytes() const;
 
@@ -96,6 +97,7 @@ private:
                         f_impl = std::shared_ptr<detail::tcp_bio_client_impl>();
     std::size_t         f_sent_bytes = 0;
     std::size_t         f_received_bytes = 0;
+    std::string         f_alpn = std::string();
 };
 
 

@@ -40,24 +40,31 @@ class pipe_buffer_connection
 public:
     typedef std::shared_ptr<pipe_buffer_connection>    pointer_t;
 
-                                pipe_buffer_connection();
+                                pipe_buffer_connection(std::size_t input_buffer_size = 1024);
 
     // connection
+    //
     virtual bool                is_writer() const override;
 
     // pipe_connection implementation
+    //
+    virtual void                close() override;
     virtual ssize_t             write(void const * data, size_t length) override;
     virtual void                process_read() override;
     virtual void                process_write() override;
     virtual void                process_hup() override;
 
     // new callback
+    //
     virtual void                process_line(std::string const & line) = 0;
 
 private:
-    std::string                 f_line = std::string(); // do NOT use QString because UTF-8 would break often... (since we may only receive part of messages)
+    std::string                 f_line = std::string();
+    std::vector<char>           f_input = std::vector<char>();
+    int                         f_input_position = 0;
+    int                         f_input_size = 0;
     std::vector<char>           f_output = std::vector<char>();
-    size_t                      f_position = 0;
+    std::size_t                 f_output_position = 0;
 };
 
 

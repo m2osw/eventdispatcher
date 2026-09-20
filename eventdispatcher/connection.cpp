@@ -238,6 +238,103 @@ void connection::set_enable(bool enabled)
 }
 
 
+/** \brief Mark the connection as yielded.
+ *
+ * When a connection process function yields back control to the event
+ * loop (see communicator::run(),) it calls add_yield(). This tells the
+ * event loop that this process is not complete and that function needs
+ * to be called again later even if no events actually occur.
+ *
+ * For example, a TCP connection may receive an uninterrupted stream of
+ * messages to a point where all the other connections (signals, thread
+ * communication, etc.) are starved. This would in part be due to the
+ * fact that the messages get executed in the same thread. To avoid
+ * such starvation, the TCP connection check how much time it already
+ * spent on processing messages and it also checks the number of
+ * messages it already processed. If larger than a certain number,
+ * the loop stops by first calling add_yield(yield_t::YIELD_READ) and
+ * then returning.
+ *
+ * The communicator::run() loop, on its end, uses has_yield() to determine
+ * whether the connection yielded. If so it has some special handling to
+ * ensure that the corresponding process function gets called again
+ * immediately after the loop is done with the other connections and called
+ * poll() again. Note that call to poll() allows the system to update the
+ * list of connections that may have received data in the meantime. It
+ * otherwise doesn't block (the sleep time is set to 0).
+ *
+ * The communicator::run() loop clears the flags just before calling
+ * the corresponding functions (the read flag before call process_read(),
+ * for example).
+ *
+ * \code
+ * // from tcp_client_buffer_connection.cpp
+ * //
+ * if(count_lines >= get_event_limit()
+ * || get_current_date() >= date_limit)
+ * {
+ *     if(r != position)
+ *     {
+ *         // buffer still has unprocessed data
+ *         //
+ *         f_line += std::string(&buffer[position], r - position);
+ *     }
+ *     if(!f_line.empty())
+ *     {
+ *         add_yield(yield_t::YIELD_READ);
+ *     }
+ *     more = false;
+ *     break;
+ * }
+ * \endcode
+ *
+ * \param[in] flags  The flags to add to the current yield value.
+ *
+ * \sa remove_yield()
+ * \sa has_yield()
+ */
+void connection::add_yield(yield_t flags)
+{
+    f_yield |= flags;
+}
+
+
+/** \brief Remove a yield flag.
+ *
+ * This is the opposite of the add_yield() function. For example, you can
+ * remove the read flag like so:
+ *
+ * \code
+ * remove_yield(yield_t::YIELD_READ);
+ * \endcode
+ *
+ * At this time, the communicator::run() loop makes this call just before
+ * calling the process_read() or process_write() callbacks.
+ *
+ * \param[in] flags  The flags to remove from the current yield value.
+ */
+void connection::remove_yield(yield_t flags)
+{
+    f_yield &= ~flags;
+}
+
+
+/** \brief Check whether a set of yield flags are set.
+ *
+ * This function checks one or more yield flags. If multiple flags are
+ * specified, then the function returns true if at least one of those
+ * flags is set.
+ *
+ * \param[in] flags  The set of flags to check.
+ *
+ * \return Whether one or more of the \p flags are currently set.
+ */
+bool connection::has_yield(yield_t flags) const
+{
+    return (f_yield & flags) != 0;
+}
+
+
 /** \brief Define the priority of this connection object.
  *
  * By default connection objects have a priority of 100.
@@ -737,7 +834,7 @@ std::int64_t connection::save_timeout_timestamp()
  * this function was frozen so if the user calls various timeout
  * functions that could completely change the timeout stamp that
  * the get_timeout_timestamp() would return just at the time we
- * want to know whether th timeout callback needs to be called
+ * want to know whether the timeout callback needs to be called
  * will be ignored by the loop.
  *
  * \return The saved timeout stamp as returned by save_timeout_timestamp().

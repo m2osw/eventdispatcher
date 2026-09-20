@@ -56,6 +56,14 @@ constexpr priority_t                    EVENT_DEFAULT_PRIORITY = 100;
 constexpr priority_t                    EVENT_MAX_PRIORITY = 255;
 
 
+typedef std::uint8_t                    yield_t;
+
+constexpr yield_t                       YIELD_NONE  = 0;
+constexpr yield_t                       YIELD_READ  = 0x01;
+constexpr yield_t                       YIELD_WRITE = 0x02;
+constexpr yield_t                       YIELD_ALL   = 0xFF;
+
+
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
@@ -88,6 +96,9 @@ public:
 
     bool                        is_enabled() const;
     virtual void                set_enable(bool enabled);
+    void                        add_yield(yield_t flags);
+    void                        remove_yield(yield_t flags);
+    bool                        has_yield(yield_t flags) const;
 
     priority_t                  get_priority() const;
     void                        set_priority(priority_t priority);
@@ -146,6 +157,7 @@ private:
 
     std::string                 f_name = std::string();
     bool                        f_enabled = true;
+    yield_t                     f_yield = YIELD_NONE;
     bool                        f_done = false;
     mutable non_blocking_state_t
                                 f_non_blocking_state = non_blocking_state_t::NON_BLOCKING_STATE_UNKNOWN;

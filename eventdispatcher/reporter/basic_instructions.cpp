@@ -864,6 +864,10 @@ public:
         for(auto & c : connections)
         {
             int e(0);
+            if(c->has_yield(ed::YIELD_ALL))
+            {
+                throw std::runtime_error("got a yield!"); // TODO: implement here too
+            }
             if(c->is_listener() || c->is_signal())
             {
                 e |= POLLIN;
@@ -896,7 +900,7 @@ public:
             return 0;
         }
 
-        int const r(ppoll(&fds[0], fds.size(), &timeout_duration, nullptr));
+        int const r(ppoll(fds.data(), fds.size(), &timeout_duration, nullptr));
         if(r < 0)
         {
             // LCOV_EXCL_START
@@ -2840,6 +2844,10 @@ public:
         for(auto & c : connections)
         {
             int e(0);
+            if(c->has_yield(ed::YIELD_ALL))
+            {
+                throw std::runtime_error("got a yield!"); // TODO: implement here too
+            }
             if(mode != mode_t::MODE_DRAIN)
             {
                 if(c->is_listener() || c->is_signal())
@@ -2876,7 +2884,7 @@ public:
 
         for(;;)
         {
-            int const r(ppoll(&fds[0], fds.size(), &timeout_duration, nullptr));
+            int const r(ppoll(fds.data(), fds.size(), &timeout_duration, nullptr));
             if(r < 0)
             {
                 // LCOV_EXCL_START
@@ -2884,7 +2892,7 @@ public:
                 if(e == EINTR)
                 {
                     std::cerr
-                        << "error: got an interrupt while ppoll() in reporter. Trying again.\n";
+                        << "error: got an interrupt while ppoll()'ing in reporter. Trying again.\n";
                     continue;
                 }
                 throw ed::runtime_error(

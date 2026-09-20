@@ -264,7 +264,7 @@ void unix_dgram_server::msg_reply_with_unknown(ed::message & msg)
 
 CATCH_TEST_CASE("local_dgram_messaging", "[local-dgram]")
 {
-    CATCH_START_SECTION("Create a Server, Client, Connect & Send Messages")
+    CATCH_START_SECTION("local_dgram_messaging: Create a Server, Client, Connect & Send Messages")
     {
         ed::communicator::pointer_t communicator(ed::communicator::instance());
 

@@ -114,18 +114,14 @@ CATCH_TEST_CASE("certificate", "[certificate]")
 //    << "/E:" << cert.get_subject_email_address()
 //    << SNAP_LOG_SEND;
 
-        // in case of Let's Encrypt, the common name is an intermediary name
-        // which is represented by one of the following; if we do not
-        // recognize any one of them, then we fail
+        // in case of Let's Encrypt, the common name is an intermediary
+        // certificate name which is changes all the time; so we just make
+        // sure it's not empty
         //
         // Note: many issuers do not actually include a CN = <value> at all
         //
-        if(cert.get_issuer_common_name() != "R11"
-        && cert.get_issuer_common_name() != "R12"
-        && cert.get_issuer_common_name() != "R13")
-        {
-            CATCH_REQUIRE(cert.get_issuer_common_name() == "unknown intermediate common name");
-        }
+        CATCH_REQUIRE_FALSE(cert.get_issuer_common_name().empty());
+
         CATCH_REQUIRE(cert.get_issuer_country_name() == "US");
         CATCH_REQUIRE(cert.get_issuer_locality_name() == "");
         CATCH_REQUIRE(cert.get_issuer_state_or_province_name() == "");

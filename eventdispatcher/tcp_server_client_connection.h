@@ -49,15 +49,17 @@ public:
                                 tcp_server_client_connection(tcp_bio_client::pointer_t client);
     virtual                     ~tcp_server_client_connection() override;
 
-    void                        close();
     addr::addr const &          get_client_address();
     addr::addr const &          get_remote_address();
 
     // connection implementation
+    //
     virtual bool                is_reader() const override;
     virtual int                 get_socket() const override;
 
     // new callbacks
+    //
+    virtual void                close();
     virtual ssize_t             read(void * buf, size_t count);
     virtual ssize_t             write(void const * buf, size_t count);
 

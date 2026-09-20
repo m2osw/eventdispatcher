@@ -45,15 +45,18 @@ public:
 
                                 tcp_client_connection(
                                       addr::addr const & address
-                                    , mode_t mode = mode_t::MODE_PLAIN);
+                                    , mode_t mode = mode_t::MODE_PLAIN
+                                    , tcp_bio_options const & opt = tcp_bio_options());
 
     addr::addr const &          get_remote_address() const;
 
     // connection implementation
+    //
     virtual bool                is_reader() const override;
     virtual int                 get_socket() const override;
 
     // new callbacks
+    //
     virtual ssize_t             read(void * buf, std::size_t count);
     virtual ssize_t             write(void const * buf, std::size_t count);
 

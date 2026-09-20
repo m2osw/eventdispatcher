@@ -82,9 +82,13 @@ namespace ed
  * the reader and writer capabilities.
  *
  * \param[in] client  The client to be used for reading and writing.
+ * \param[in] input_buffer_size  Size of the memory input buffer in bytes.
  */
-tcp_server_client_buffer_connection::tcp_server_client_buffer_connection(tcp_bio_client::pointer_t client)
+tcp_server_client_buffer_connection::tcp_server_client_buffer_connection(
+          tcp_bio_client::pointer_t client
+        , std::size_t input_buffer_size)
     : tcp_server_client_connection(client)
+    , f_input(input_buffer_size)
 {
     non_blocking();
 }
@@ -225,41 +229,45 @@ ssize_t tcp_server_client_buffer_connection::write(void const * data, size_t con
  * process_read() of the tcp_client_buffer_connection and
  * the pipe_buffer_connection classes. (See TODO.txt file
  * about templates.)
+ *
+ * \sa process_write()
+ * \sa process_line()
  */
 void tcp_server_client_buffer_connection::process_read()
 {
-    // we read one character at a time until we get a '\n'
-    // since we have a non-blocking socket we can read as
-    // much as possible and then check for a '\n' in our
-    // buffer and keep any extra data in a cache.
-    //
     if(valid_socket())
     {
         int count_lines(0);
         std::int64_t const date_limit(get_current_date() + get_processing_time_limit());
-        std::vector<char> buffer;
-        buffer.resize(1024);
-        for(;;)
+        bool more(true);
+        do
         {
             errno = 0;
-            ssize_t const r(read(&buffer[0], buffer.size()));
-            if(r > 0)
+            if(f_input_position >= f_input_size)
             {
-                for(ssize_t position(0); position < r; )
+                f_input_size = read(f_input.data(), f_input.size());
+                f_input_position = 0;
+            }
+            if(f_input_size > 0)
+            {
+                while(f_input_position < f_input_size)
                 {
-                    std::vector<char>::const_iterator it(std::find(buffer.begin() + position, buffer.begin() + r, '\n'));
-                    if(it == buffer.begin() + r)
+                    std::vector<char>::const_iterator it(std::find(f_input.begin() + f_input_position, f_input.begin() + f_input_size, '\n'));
+                    if(it == f_input.begin() + f_input_size)
                     {
-                        // no newline, just add the whole thing
+                        // no newline, just add the whole thing and wait
+                        // for more data
                         //
-                        f_line += std::string(&buffer[position], r - position);
+                        f_line += std::string(f_input.data() + f_input_position, f_input_size - f_input_position);
+                        f_input_size = 0;
+                        f_input_position = 0;
                         break;
                     }
 
                     // retrieve the characters up to the newline
                     // character and process the line
                     //
-                    f_line += std::string(&buffer[position], it - buffer.begin() - position);
+                    f_line += std::string(f_input.data() + f_input_position, it - f_input.begin() - f_input_position);
                     process_line(f_line);
                     ++count_lines;
 
@@ -270,34 +278,33 @@ void tcp_server_client_buffer_connection::process_read()
                     // we had a newline, we may still have some data
                     // in that buffer; (+1 to skip the '\n' itself)
                     //
-                    position = it - buffer.begin() + 1;
-                }
+                    f_input_position = it - f_input.begin() + 1;
 
-                // when we reach here all the data read in `buffer` is
-                // now either fully processed or in f_line
-                //
-                // TODO: change the way this works so we can test the
-                //       limit after each process_line() call
-                //
-                if(count_lines >= get_event_limit()
-                || get_current_date() >= date_limit)
-                {
-                    // we reach one or both limits, stop processing so
-                    // the other events have a chance to run
-                    //
-                    break;
+                    if(count_lines >= get_event_limit()
+                    || get_current_date() >= date_limit)
+                    {
+                        // we reach one or both limits, stop processing so
+                        // the other events have a chance to run
+                        //
+                        if(f_input_position < f_input_size)
+                        {
+                            add_yield(YIELD_READ);
+                        }
+                        more = false;
+                        break;
+                    }
                 }
             }
-            else if(r == 0 || errno == 0 || errno == EAGAIN || errno == EWOULDBLOCK)
+            else if(f_input_size == 0 || errno == 0 || errno == EAGAIN || errno == EWOULDBLOCK)
             {
                 // no more data available at this time
                 //
                 break;
             }
-            else //if(r < 0)
+            else //if(f_input_size < 0)
             {
                 int const e(errno);
-                SNAP_LOG_WARNING
+                SNAP_LOG_ERROR
                     << "an error occurred while reading from socket (errno: "
                     << e
                     << " -- "
@@ -308,10 +315,9 @@ void tcp_server_client_buffer_connection::process_read()
                 return;
             }
         }
+        while(more);
     }
 
-    // process next level too
-    //
     tcp_server_client_connection::process_read();
 }
 
@@ -329,15 +335,15 @@ void tcp_server_client_buffer_connection::process_write()
     if(valid_socket())
     {
         errno = 0;
-        ssize_t const r(tcp_server_client_connection::write(&f_output[f_position], f_output.size() - f_position));
+        ssize_t const r(tcp_server_client_connection::write(&f_output[f_output_position], f_output.size() - f_output_position));
         if(r > 0)
         {
             // some data was written
-            f_position += r;
-            if(f_position >= f_output.size())
+            f_output_position += r;
+            if(f_output_position >= f_output.size())
             {
                 f_output.clear();
-                f_position = 0;
+                f_output_position = 0;
                 process_empty_buffer();
             }
         }
@@ -360,7 +366,6 @@ void tcp_server_client_buffer_connection::process_write()
         }
     }
 
-    // process next level too
     tcp_server_client_connection::process_write();
 }
 
@@ -371,11 +376,26 @@ void tcp_server_client_buffer_connection::process_write()
  */
 void tcp_server_client_buffer_connection::process_hup()
 {
-    // this connection is dead...
-    //
     close();
-
     tcp_server_client_connection::process_hup();
+}
+
+
+/** \brief Reset buffers once they are not necessary anymore.
+ *
+ * This function clears the buffers so memory is saved immediately instead
+ * of when the connection gets deleted.
+ */
+void tcp_server_client_buffer_connection::close()
+{
+    tcp_server_client_connection::close();
+
+    f_input.clear();
+    f_input.shrink_to_fit();
+    f_output.clear();
+    f_output.shrink_to_fit();
+    f_line.clear();
+    f_line.shrink_to_fit();
 }
 
 

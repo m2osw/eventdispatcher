@@ -133,13 +133,13 @@ namespace ed
  *          //
  *          virtual void process_message(message & message)
  *          {
- *              QString const command(message.get_command());
+ *              std::string const & command(message.get_command());
  *              if(command == "LOCKED")
  *              {
  *                  // the lock worked, release hand back to the user
  *                  done();
  *              }
- *              else if(command == "READY")
+ *              else if(command == ed::g_name_ed_cmd_ready)
  *              {
  *                  // the REGISTER worked
  *                  // send the LOCK now
@@ -148,7 +148,7 @@ namespace ed
  *                  ...
  *                  blocking_connection.send_message(lock_message);
  *              }
- *              else if(command == "HELP")
+ *              else if(command == ed::g_name_ed_cmd_help)
  *              {
  *                  // snapcommunicator wants us to tell it what commands
  *                  // we accept

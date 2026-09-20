@@ -43,6 +43,7 @@
 // C++
 //
 #include    <memory>
+#include    <numeric>
 
 
 // last include
@@ -315,6 +316,130 @@ void tcp_bio_options::set_sni(bool sni)
 bool tcp_bio_options::get_sni() const
 {
     return f_sni;
+}
+
+
+/** \brief Add one protocol supported by a client.
+ *
+ * This function adds one protocol that the client trying to connect to
+ * an HTTP server knows.
+ *
+ * Some of the known protocol:
+ * * "h2" for HTTP/2
+ * * "http/1.1" for HTTP/1.1
+ * * "grpc-exp" for gRPC communication over HTTP/2
+ * * "x-amzn-mqtt-ca" (or "mqtt") for Amazon Web Services IoT Core Standard
+ * * "STARTTLS" for SMTP/IMAP/POP3
+ *
+ * The idea is to avoid trying an HTTP/1.1 and Upgrade: ... to HTTP/2.
+ * That does not work well with modern HTTP servers.
+ *
+ * You want to call the function once per protocol that your client
+ * supports.
+ *
+ * \note
+ * The \p mark_as_default flag can always be set to true in which case the
+ * last protocol added is marked as the default. It is wise to only mark
+ * one protocol as the default to make it clear which one is the default.
+ * If none of the protocols are marked as the default, then no default
+ * gets defined.
+ *
+ * \param[in] protocol  The name of one protocol.
+ * \param[in] mark_as_default  Whether to mark that protocol as the default.
+ */
+void tcp_bio_options::add_alpn(std::string const & protocol, bool mark_as_default)
+{
+    if(protocol.empty())
+    {
+        throw invalid_parameter("an ALPN protocol name cannot be the empty string.");
+    }
+    if(protocol.length() > 255)
+    {
+        throw invalid_parameter(
+              "an ALPN protocol name cannot be more than 255 characters; \""
+            + protocol
+            + "\" is invalid.");
+    }
+
+    f_alpn.push_back(protocol);
+
+    if(mark_as_default)
+    {
+        f_default_alpn = protocol;
+    }
+}
+
+
+/** \brief Clear all the ALPN entries.
+ *
+ * This function clears all the ALPN that added earlier. It also clears
+ * the default protocol.
+ */
+void tcp_bio_options::clear_alpn()
+{
+    f_alpn.clear();
+    f_default_alpn.clear();
+}
+
+
+/** \brief Retrieve the list of protocols.
+ *
+ * This function returns a reference to the list of protocols defined
+ * in ALPN list.
+ *
+ * \return A reference to the internal list of ALPN protocol names.
+ */
+advgetopt::string_list_t const & tcp_bio_options::get_alpn() const
+{
+    return f_alpn;
+}
+
+
+/** \brief Get the ALPN buffer to send via SSL.
+ *
+ * The ALPN list of strings is transferred to the server as a block
+ * of P-strings (like a Pascal ShortString). This function generates
+ * that block.
+ *
+ * \return A buffer with all the ALPN strings transformed in P-strings.
+ */
+std::string tcp_bio_options::get_alpn_buffer() const
+{
+    std::string result;
+
+    if(!f_alpn.empty())
+    {
+        std::size_t const size(std::accumulate(
+              f_alpn.begin()
+            , f_alpn.end()
+            , f_alpn.size()
+            , [](std::size_t init, std::string const & alpn)
+            {
+                return init + alpn.length();
+            }));
+        result.reserve(size);
+
+        for(auto const & alpn : f_alpn)
+        {
+            result += static_cast<char>(alpn.size());
+            result += alpn;
+        }
+    }
+
+    return result;
+}
+
+
+/** \brief Return the protocol marked as the default.
+ *
+ * When you add protocols, one of them can be marked as the default.
+ * This function returns that string.
+ *
+ * \return The protocol marked as the default in add_alpn().
+ */
+std::string const & tcp_bio_options::get_default_alpn() const
+{
+    return f_default_alpn;
 }
 
 

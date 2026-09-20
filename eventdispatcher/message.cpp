@@ -280,7 +280,7 @@ bool message::from_string(std::string const & original_message)
                 // we also cannot have a ':' after the '/'
                 //
                 SNAP_LOG_ERROR
-                    << "a server name cannot be empty when specified, also it cannot include two server names and a server name after a service name was specified."
+                    << "a server name cannot be empty when specified, also a message cannot include two server names, or a server name after a service name was specified."
                     << SNAP_LOG_SEND;
                 return false;
             }

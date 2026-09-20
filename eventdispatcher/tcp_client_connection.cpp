@@ -74,11 +74,13 @@ namespace ed
  *
  * \param[in] address  The address of the server to connect to.
  * \param[in] mode  Type of connection: plain or secure.
+ * \param[in] opt  Additional options.
  */
 tcp_client_connection::tcp_client_connection(
           addr::addr const & address
-        , mode_t mode)
-    : tcp_bio_client(address, mode)
+        , mode_t mode
+        , tcp_bio_options const & opt)
+    : tcp_bio_client(address, mode, opt)
     , f_remote_address(get_client_address())
 {
 }

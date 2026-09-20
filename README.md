@@ -43,6 +43,7 @@ found in this library:
   - unix pipe (read/write)
   - thread done
   - listen to file changes on your local storage devices
+    + including /dev/... devices such as USB or serial ports
   - any number of timers
 * priority control -- objects can be given a priority
 * easy enable/disable of objects

@@ -54,17 +54,18 @@ public:
 
                                 fd_connection(int fd, mode_t mode);
 
-    void                        close();
-    void                        mark_closed();
-
     // connection implementation
+    //
     virtual bool                is_reader() const override;
     virtual bool                is_writer() const override;
     virtual int                 get_socket() const override;
 
     // new callbacks
+    //
     virtual ssize_t             read(void * buf, size_t count);
     virtual ssize_t             write(void const * buf, size_t count);
+    virtual void                close();
+    virtual void                mark_closed();
 
 private:
     int                         f_fd = -1;

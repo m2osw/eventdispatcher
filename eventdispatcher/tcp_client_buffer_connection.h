@@ -44,25 +44,36 @@ public:
                                 tcp_client_buffer_connection(
                                           addr::addr const & address
                                         , mode_t const mode = mode_t::MODE_PLAIN
-                                        , bool const blocking = false);
+                                        , bool const blocking = false
+                                        , tcp_bio_options const & opt = tcp_bio_options()
+                                        , std::size_t input_buffer_size = 1024);
 
     bool                        has_input() const;
     bool                        has_output() const;
 
     // ed::tcp_client_connection implementation
+    //
     virtual ssize_t             write(void const * buf, std::size_t count) override;
     virtual bool                is_writer() const override;
     virtual void                process_read() override;
     virtual void                process_write() override;
     virtual void                process_hup() override;
 
+    // tcp_bio_client implementation
+    //
+    virtual void                close() override;
+
     // new callback
+    //
     virtual void                process_line(std::string const & line) = 0;
 
 private:
     std::string                 f_line = std::string();
+    std::vector<char>           f_input = std::vector<char>();
+    int                         f_input_position = 0;
+    int                         f_input_size = 0;
     std::vector<char>           f_output = std::vector<char>();
-    std::size_t                 f_position = 0;
+    std::size_t                 f_output_position = 0;
 };
 
 

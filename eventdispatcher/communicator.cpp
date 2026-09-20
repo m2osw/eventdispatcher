@@ -507,11 +507,12 @@ bool communicator::run()
         // with that here...
         //
         connection::vector_t connections(f_connections);
-        size_t max_connections(connections.size());
+        std::size_t max_connections(connections.size());
 
         // timeout is do not time out by default
         //
         std::int64_t next_timeout_timestamp(std::numeric_limits<std::int64_t>::max());
+        //snapdev::timespec_ex next_timeout_timestamp(snapdev::timespec_ex::max()); -- one day...
 
         // clear() is not supposed to delete the buffer of vectors
         //
@@ -547,13 +548,21 @@ bool communicator::run()
 //    << max_connections
 //    << ". '"
 //    << c->get_name()
-//    << "' since it is enabled..."
+//    << "' ("
+//    << c->get_socket()
+//    << ") since it is enabled..."
 //    << SNAP_LOG_SEND;
 
             // check whether a timeout is defined in this connection
             //
             std::int64_t const timestamp(c->save_timeout_timestamp());
-            if(timestamp != -1)
+            if(c->has_yield(YIELD_ALL))
+            {
+                // timeout immediately so we can quickly go on with the yields
+                //
+                next_timeout_timestamp = 0;
+            }
+            else if(timestamp != -1)
             {
                 // the timeout event gives us a time when to tick
                 //
@@ -564,6 +573,7 @@ bool communicator::run()
             }
 
             // is there any events to listen on?
+            //
             int e(0);
             if(c->is_listener() || c->is_signal())
             {
@@ -704,7 +714,7 @@ bool communicator::run()
             //
             // and execute the corresponding callbacks
             //
-            for(size_t idx(0); idx < connections.size(); ++idx)
+            for(std::size_t idx(0); idx < connections.size(); ++idx)
             {
                 connection::pointer_t c(connections[idx]);
 
@@ -735,6 +745,19 @@ bool communicator::run()
                 if(c->f_fds_position >= 0)
                 {
                     struct pollfd * fd(&fds[c->f_fds_position]);
+
+                    // simulate a READ or WRITE event if the connection
+                    // yielded to give a chance to other connections
+                    //
+                    if(c->has_yield(YIELD_READ))
+                    {
+                        fd->revents |= POLLIN;
+                    }
+                    if(c->has_yield(YIELD_WRITE))
+                    {
+                        fd->revents |= POLLOUT;
+                    }
+                    c->remove_yield(YIELD_ALL);
 
                     // if any events were found by poll(), process them now
                     //

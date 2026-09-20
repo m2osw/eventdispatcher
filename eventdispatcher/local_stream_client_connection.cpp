@@ -170,22 +170,6 @@ local_stream_client_connection::~local_stream_client_connection()
 }
 
 
-/** \brief Close this connection.
- *
- * A connction automatically gets closed when it gets destroyed. There are
- * times, though, when it is useful to close the connection early
- * (specifically, when you receive an error).
- *
- * This function can be used to close the connection at any time. Many
- * of the other functions will stop working once the connection is
- * officially closed.
- */
-void local_stream_client_connection::close()
-{
-    f_socket.reset();
-}
-
-
 /** \brief Get the Unix server address.
  *
  * This function returns the address used when creating the Unix server.
@@ -228,6 +212,22 @@ bool local_stream_client_connection::is_reader() const
 int local_stream_client_connection::get_socket() const
 {
     return f_socket.get();
+}
+
+
+/** \brief Close this connection.
+ *
+ * A connection automatically gets closed when it gets destroyed. There are
+ * times, though, when it is useful to close the connection early
+ * (specifically, when you receive an error).
+ *
+ * This function can be used to close the connection at any time. Many
+ * of the other functions will stop working once the connection is
+ * officially closed.
+ */
+void local_stream_client_connection::close()
+{
+    f_socket.reset();
 }
 
 

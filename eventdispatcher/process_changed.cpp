@@ -1026,6 +1026,7 @@ void process_changed::process_read()
         else if(r == 0 || errno == 0 || errno == EAGAIN || errno == EWOULDBLOCK)
         {
             // no more data available at this time
+            //
             break;
         }
         else //if(r < 0)

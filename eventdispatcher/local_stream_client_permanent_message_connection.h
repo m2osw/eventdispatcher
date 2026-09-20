@@ -75,9 +75,11 @@ public:
     addr::addr_unix             get_address() const;
 
     // connection_with_send_message implementation
+    //
     virtual bool                send_message(message & msg, bool cache = false) override;
 
     // connection implementation
+    //
     virtual void                process_timeout() override;
     virtual void                process_error() override;
     virtual void                process_hup() override;
@@ -85,6 +87,7 @@ public:
     virtual void                connection_removed() override;
 
     // new callbacks
+    //
     virtual void                process_connection_failed(std::string const & error_message);
     virtual void                process_connected();
 

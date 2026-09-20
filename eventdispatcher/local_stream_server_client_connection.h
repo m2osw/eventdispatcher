@@ -58,7 +58,6 @@ public:
 
                                 local_stream_server_client_connection(snapdev::raii_fd_t client);
 
-    void                        close();
     addr::addr_unix             get_client_address() const;
 
     // connection implementation
@@ -66,6 +65,8 @@ public:
     virtual int                 get_socket() const override;
 
     // new callbacks
+    //
+    virtual void                close();
     virtual ssize_t             read(void * buf, size_t count);
     virtual ssize_t             write(void const * buf, size_t count);
 

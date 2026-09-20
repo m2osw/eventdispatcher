@@ -62,10 +62,12 @@ public:
     int                         get_other_socket() const;
 
     // connection implementation
+    //
     virtual bool                is_reader() const override;
     virtual int                 get_socket() const override;
 
     // new callbacks
+    //
     virtual ssize_t             read(void * buf, size_t count);
     virtual ssize_t             write(void const * buf, size_t count);
     virtual void                forked();

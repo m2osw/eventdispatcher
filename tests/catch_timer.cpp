@@ -112,7 +112,7 @@ void timer_test::connection_removed()
 {
     if(!f_expect_remove)
     {
-        throw std::runtime_error("unexpectedly got removed to communicator.");
+        throw std::runtime_error("unexpectedly got removed from communicator.");
     }
     f_expect_remove = false;
 

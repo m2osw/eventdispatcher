@@ -40,7 +40,9 @@ class local_stream_server_client_buffer_connection
 public:
     typedef std::shared_ptr<local_stream_server_client_buffer_connection>    pointer_t;
 
-                                local_stream_server_client_buffer_connection(snapdev::raii_fd_t client);
+                                local_stream_server_client_buffer_connection(
+                                      snapdev::raii_fd_t client
+                                    , std::size_t input_buffer_size = 1024);
 
     bool                        has_input() const;
     bool                        has_output() const;
@@ -48,13 +50,14 @@ public:
     // connection implementation
     //
     virtual bool                is_writer() const override;
-
-    // local_stream_server_client_connection implementation
-    //
-    virtual ssize_t             write(void const * data, size_t const length) override;
     virtual void                process_read() override;
     virtual void                process_write() override;
     virtual void                process_hup() override;
+
+    // local_stream_server_client_connection implementation
+    //
+    virtual void                close() override;
+    virtual ssize_t             write(void const * data, size_t const length) override;
 
     // new callback
     //
@@ -62,8 +65,11 @@ public:
 
 private:
     std::string                 f_line = std::string();
+    std::vector<char>           f_input = std::vector<char>();
+    int                         f_input_position = 0;
+    int                         f_input_size = 0;
     std::vector<char>           f_output = std::vector<char>();
-    size_t                      f_position = 0;
+    std::size_t                 f_output_position = 0;
 };
 
 

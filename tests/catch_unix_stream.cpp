@@ -82,7 +82,7 @@ public:
 
     // connection implementation
     //
-    void                    process_hup();
+    virtual void            process_hup() override;
 
 private:
     unix_server *           f_server = nullptr;
@@ -207,7 +207,10 @@ void unix_server_client::msg_down(ed::message & msg)
 
 void unix_server_client::process_hup()
 {
+    local_stream_server_client_message_connection::process_hup();
+
     // make sure the server is gone too
+    //
     f_server->done();
 }
 
@@ -221,6 +224,7 @@ void unix_server_client::process_hup()
 unix_server::unix_server(addr::addr_unix const & address)
     : local_stream_server_connection(address)
 {
+    set_name("unix-server");
 }
 
 
@@ -255,9 +259,9 @@ void unix_server::process_accept()
 
 
 
-CATCH_TEST_CASE("local_stream_messaging", "[local-stream]")
+CATCH_TEST_CASE("local_stream_messaging", "[local_stream]")
 {
-    CATCH_START_SECTION("Create a Server, Client, Connect & Send Messages")
+    CATCH_START_SECTION("local_stream_messaging: Create a Server, Client, Connect & Send Messages")
     {
         ed::communicator::pointer_t communicator(ed::communicator::instance());
 

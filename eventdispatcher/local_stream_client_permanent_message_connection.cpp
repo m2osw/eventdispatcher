@@ -105,35 +105,40 @@ public:
         messenger & operator = (messenger const & rhs) = delete;
 
         // connection implementation
-        virtual void process_empty_buffer()
+        //
+        virtual void process_empty_buffer() override
         {
             local_stream_client_message_connection::process_empty_buffer();
             f_parent->process_empty_buffer();
         }
 
         // connection implementation
-        virtual void process_error()
+        //
+        virtual void process_error() override
         {
             local_stream_client_message_connection::process_error();
             f_parent->process_error();
         }
 
         // connection implementation
-        virtual void process_hup()
+        //
+        virtual void process_hup() override
         {
             local_stream_client_message_connection::process_hup();
             f_parent->process_hup();
         }
 
         // connection implementation
-        virtual void process_invalid()
+        //
+        virtual void process_invalid() override
         {
             local_stream_client_message_connection::process_invalid();
             f_parent->process_invalid();
         }
 
         // local_stream_server_client_message_connection implementation
-        virtual void process_message(message & msg)
+        //
+        virtual void process_message(message & msg) override
         {
             // We call the dispatcher from our parent since the child
             // (this messenger) is not given a dispatcher

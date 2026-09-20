@@ -138,7 +138,7 @@ namespace ed
  *          //
  *          virtual void process_message(message & message)
  *          {
- *              QString const command(message.get_command());
+ *              std::string const & command(message.get_command());
  *              if(command == "LOCKED")
  *              {
  *                  // the lock worked, release hand back to the user

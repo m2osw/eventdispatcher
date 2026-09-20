@@ -395,6 +395,15 @@ tcp_bio_client::tcp_bio_client(
             //SSL_CTX_set_msg_callback(ssl_ctx.get(), ssl_trace);
             //SSL_CTX_set_msg_callback_arg(ssl_ctx.get(), this);
 
+            std::string const alpn(opt.get_alpn_buffer());
+            if(!alpn.empty())
+            {
+                SSL_CTX_set_alpn_protos(
+                      ssl_ctx.get()
+                    , reinterpret_cast<unsigned char const *>(alpn.data())
+                    , alpn.length());
+            }
+
             // create a BIO connected to SSL ciphers
             //
             std::shared_ptr<BIO> bio;
@@ -521,6 +530,25 @@ tcp_bio_client::tcp_bio_client(
                     << SNAP_LOG_SEND;
             }
 
+            if(!alpn.empty())
+            {
+                // check what the server picked
+                //
+                unsigned char const * selected_alpn(nullptr);
+                unsigned int selected_alpn_size(0);
+                SSL_get0_alpn_selected(ssl, &selected_alpn, &selected_alpn_size);
+
+                if(selected_alpn != nullptr
+                && selected_alpn_size > 0)
+                {
+                    f_alpn = std::string(reinterpret_cast<char const *>(selected_alpn), selected_alpn_size);
+                }
+                else
+                {
+                    f_alpn = opt.get_default_alpn();
+                }
+            }
+
             // it worked, save the results
             //
             f_impl->f_ssl_ctx.swap(ssl_ctx);
@@ -582,11 +610,7 @@ tcp_bio_client::tcp_bio_client(
         // retrieve the socket (we are still in the constructor so avoid
         // calling other functions...)
         //
-        int socket(-1);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-        BIO_get_fd(f_impl->f_bio.get(), &socket);
-#pragma GCC diagnostic pop
+        int const socket(get_socket());
         if(socket >= 0)
         {
             // if this call fails, we ignore the error, but still log the event
@@ -721,6 +745,25 @@ addr::addr const & tcp_bio_client::get_client_address()
     }
 
     return f_client_address;
+}
+
+
+/** \brief Retrieve the server selected ALPN entry.
+ *
+ * When you create a tcp_bio_client object, you can pass a list of ALPN
+ * names via the tcp_bio_options. The server is expected to select one
+ * of them. This function returns that selection or the one ALPN you
+ * marked as the default if the server did not choose anything.
+ *
+ * If you did not specify any ALPN names, then this function returns
+ * an empty string.
+ *
+ * \return The ALPN selected by the remote server or the default ALPN or
+ * an empty string.
+ */
+std::string const & tcp_bio_client::get_selected_alpn() const
+{
+    return f_alpn;
 }
 
 

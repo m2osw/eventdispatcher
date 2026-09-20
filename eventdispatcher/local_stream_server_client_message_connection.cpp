@@ -150,5 +150,6 @@ bool local_stream_server_client_message_connection::send_message(
 }
 
 
+
 } // namespace ed
 // vim: ts=4 sw=4 et

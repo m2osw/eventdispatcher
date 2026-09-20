@@ -261,6 +261,19 @@
 
   See: https://stackoverflow.com/questions/2597608/c-socket-connection-timeout
 
+* "Similarly" it is possible to use the `BIO_do_connect()` with a non-blocking
+  socket so the SSL handshake happens asynchronously. You may then have to
+  call the `BIO_should_retry()` to know whether it's done or not.
+
+  And as above we need to know the current "in-limbo" state if the connection
+  did not happen instantly. In effect, we'll have 3 states for all of our
+  connections:
+
+    * Connecting
+    * Connected
+    * Disconnected (we could also distinguish an error state where we got
+      disconnected through an error rather than a clean shutdown)
+
 * Consider removing the stop() and ready() functions because it would be
   as easy to use a CALLBACK which means anyone receives a call whenever
   those messages arrive without the lower level systems having to do

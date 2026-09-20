@@ -60,7 +60,6 @@ public:
                                 , bool close_on_exec = true);
     virtual             ~local_stream_client_connection() override;
 
-    void                close();
     addr::addr_unix     get_address() const;
 
     // connection implementation
@@ -70,6 +69,7 @@ public:
 
     // new callbacks
     //
+    virtual void        close();
     virtual ssize_t     read(char * buf, size_t size);
     virtual ssize_t     write(void const * buf, size_t size);
 
