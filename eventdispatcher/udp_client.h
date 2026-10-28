@@ -43,7 +43,11 @@ public:
                         udp_client(addr::addr const & address);
                         ~udp_client();
 
-    int                 send(char const * msg, size_t size);
+    ssize_t             send(char const * msg, std::size_t size);
+    ssize_t             send(
+                              char const * msg
+                            , std::size_t size
+                            , addr::addr const & address);
 
 private:
 };

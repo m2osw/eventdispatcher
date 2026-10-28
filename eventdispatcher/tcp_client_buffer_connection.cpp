@@ -68,18 +68,20 @@ namespace ed
 
 
 
-/** \brief Initialize a client socket.
+/** \brief Initialize a TCP socket.
  *
- * The client socket gets initialized with the specified 'socket'
- * parameter.
+ * This class creates an object which automatically reads and writes to
+ * a TCP socket.
  *
- * This constructor creates a writer connection too. This gives you
- * a read/write connection. You can get the writer with the writer()
- * function. So you may write data with:
+ * The process_read() function automatically reads input and send it to
+ * the process_line() function each time a new line is found.
  *
- * \code
- *      my_reader.writer().write(buf, buf_size);
- * \endcode
+ * To send data, use the write() function.
+ *
+ * Note that in most cases you do not directly use a buffer connection.
+ * Instead, you probably want to use the message connection which
+ * automatically sends and receives messages and received messages
+ * can automatically be dispatcher to your callbacks.
  *
  * \param[in] address  The address to connect to.
  * \param[in] mode  The mode to connect as (PLAIN or SECURE).
@@ -216,7 +218,7 @@ ssize_t tcp_client_buffer_connection::write(void const * buf, std::size_t length
 }
 
 
-/** \brief The buffer is a writer when the output buffer is not empty.
+/** \brief The connection is a writer when the output buffer is not empty.
  *
  * This function returns true as long as the output buffer of this
  * client connection is not empty.
@@ -384,8 +386,6 @@ void tcp_client_buffer_connection::process_write()
         }
     }
 
-    // process next level too
-    //
     tcp_client_connection::process_write();
 }
 
@@ -398,12 +398,7 @@ void tcp_client_buffer_connection::process_write()
  */
 void tcp_client_buffer_connection::process_hup()
 {
-    // this connection is dead...
-    //
     close();
-
-    // process next level too
-    //
     tcp_client_connection::process_hup();
 }
 

@@ -774,6 +774,7 @@ public:
         // memory
         //
         f_message_cache.clear();
+        f_message_cache.shrink_to_fit();
 
         if(f_messenger != nullptr)
         {
@@ -794,8 +795,7 @@ private:
 
 
 
-}
-// namespace detail
+} // namespace detail
 
 
 
@@ -935,7 +935,7 @@ tcp_client_permanent_message_connection::tcp_client_permanent_message_connection
     , connection_with_send_message(service_name)
     , f_impl(std::make_shared<detail::tcp_client_permanent_message_connection_impl>(
                       this
-                    , addr::addr_range::to_addresses(address_ranges)
+                    , addr::to_addresses(address_ranges)
                     , mode))
     , f_pause_durations(durations)
     , f_use_thread(use_thread)

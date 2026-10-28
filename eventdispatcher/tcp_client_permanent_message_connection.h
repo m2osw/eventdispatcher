@@ -52,8 +52,7 @@ namespace ed
 namespace detail
 {
 class tcp_client_permanent_message_connection_impl;
-}
-// namespace detail
+} // namespace detail
 
 
 

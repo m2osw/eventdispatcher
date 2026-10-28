@@ -42,26 +42,22 @@ namespace ed
 /** \brief Initialize a UDP client object.
  *
  * This function initializes the UDP client object using the address and the
- * port as specified.
+ * port as specified, although it is possible to use this object to send
+ * packets to other addresses and ports (see the
+ * send(char const * msg, std::size_t size, addr::addr const & address)
+ * function).
  *
- * The port is expected to be a host side port number (i.e. 59200).
+ * The port is expected to be a host side port number (i.e. on destination
+ * port on the server side, where the packets will be sent).
  *
- * The \p addr parameter is a textual address. It may be an IPv4 or IPv6
- * address and it can represent a host name or an address defined with
- * just numbers. If the address cannot be resolved then an error occurs
- * and the constructor throws.
+ * The \p address parameter is an IPv4 or IPv6 address.
  *
  * \note
  * The socket is open in this process. If you fork() or exec() then the
  * socket will be closed by the operating system.
  *
- * \warning
- * We only make use of the first address found by getaddrinfo(). All
- * the other addresses are ignored.
- *
- * \exception udp_client_server_runtime_error
- * The server could not be initialized properly. Either the address cannot be
- * resolved, the port is incompatible or not available, or the socket could
+ * \exception runtime_error
+ * The server could not be initialized properly: the socket could
  * not be created.
  *
  * \param[in] address  The address and port.
@@ -126,31 +122,59 @@ udp_client::~udp_client()
  * \return -1 if an error occurs, otherwise the number of bytes sent. errno
  * is set accordingly on error.
  */
-int udp_client::send(char const * msg, size_t size)
+ssize_t udp_client::send(char const * msg, std::size_t size)
 {
-    if(f_address.is_ipv4())
+    return send(msg, size, f_address);
+}
+
+
+/** \brief Send a message over the UDP socket.
+ *
+ * This function allows you to send a message over the UDP socket held
+ * by this udp_client. The function accepts a message and the destination
+ * address.
+ *
+ * \param[in] msg  The message to send.
+ * \param[in] size  The number of bytes representing this message.
+ * \param[in] address  The address to send the message to.
+ *
+ * \return -1 if an error occurs, otherwise the number of bytes sent. errno
+ * is set accordingly on error.
+ */
+ssize_t udp_client::send(
+      char const * msg
+    , std::size_t size
+    , addr::addr const & address)
+{
+    if(address.is_default())
+    {
+        errno = EDESTADDRREQ;
+        return -1;
+    }
+
+    if(address.is_ipv4())
     {
         sockaddr_in a;
         f_address.get_ipv4(a);
-        return static_cast<int>(sendto(
+        return sendto(
                       f_socket.get()
                     , msg
                     , size
                     , 0
                     , reinterpret_cast<sockaddr const *>(&a)
-                    , sizeof(a)));
+                    , sizeof(a));
     }
     else
     {
         sockaddr_in6 a;
-        f_address.get_ipv6(a);
-        return static_cast<int>(sendto(
+        address.get_ipv6(a);
+        return sendto(
                       f_socket.get()
                     , msg
                     , size
                     , 0
                     , reinterpret_cast<sockaddr const *>(&a)
-                    , sizeof(a)));
+                    , sizeof(a));
     }
 }
 
