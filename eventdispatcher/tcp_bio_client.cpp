@@ -668,6 +668,37 @@ void tcp_bio_client::close()
 }
 
 
+/** \brief Check whether this client is using a secure connection.
+ *
+ * This function returns true if it was opened to use encryption.
+ *
+ * \warning
+ * This function tells you that the connection is encrypted. Depending
+ * on how it was opened, it may or may not have been able to verify the
+ * certificate authenticity.
+ *
+ * \return true if the socket was opened with encryption (has an SSL object).
+ */
+bool tcp_bio_client::is_secure() const
+{
+    if(f_impl->f_ssl_ctx != nullptr)
+    {
+        return true;
+    }
+
+    // the tcp_bio_server sets the BIO pointer but no SSL_CTX so we need
+    // to verify like so; at the moment, this function is rarely called
+    // hence this rather slow way to check...
+    //
+    SSL * ssl(nullptr);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+    BIO_get_ssl(f_impl->f_bio.get(), &ssl);
+#pragma GCC diagnostic pop
+    return ssl != nullptr;
+}
+
+
 /** \brief Get the socket descriptor.
  *
  * This function returns the TCP client socket descriptor. This can be

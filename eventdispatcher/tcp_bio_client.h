@@ -75,6 +75,7 @@ public:
 
     virtual void        close();
 
+    bool                is_secure() const;
     int                 get_socket() const;
     addr::addr const &  get_remote_address() const;
     addr::addr const &  get_client_address();
