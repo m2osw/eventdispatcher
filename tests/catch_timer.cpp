@@ -218,7 +218,7 @@ CATCH_TEST_CASE("timer", "[timer]")
         t->set_timeout_delay(duration);
         CATCH_REQUIRE(t->get_timeout_delay() == 11'345'678);
 
-        snapdev::timespec_ex const date(snapdev::now() + snapdev::timespec_ex(30, 500'000'000));
+        snapdev::timespec_ex const date(snapdev::now(CLOCK_MONOTONIC) + snapdev::timespec_ex(30, 500'000'000));
         t->set_timeout_date(date);
         CATCH_REQUIRE(t->get_timeout_date() == date.to_usec());
 
@@ -281,13 +281,13 @@ CATCH_TEST_CASE("timer", "[timer]")
         CATCH_REQUIRE(communicator->add_connection(t));
         CATCH_REQUIRE_FALSE(t->get_expect_add());
 
-        snapdev::timespec_ex const start(snapdev::now());
+        snapdev::timespec_ex const start(snapdev::now(CLOCK_MONOTONIC));
         t->set_expect_timeout(true);
         t->set_expect_remove(true);
         communicator->run();
         t->set_expect_timeout(false);
         CATCH_REQUIRE_FALSE(t->get_expect_remove());
-        snapdev::timespec_ex const end(snapdev::now());
+        snapdev::timespec_ex const end(snapdev::now(CLOCK_MONOTONIC));
         snapdev::timespec_ex const duration(end - start);
         CATCH_REQUIRE(duration.tv_sec >= 1);
     }

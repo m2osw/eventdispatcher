@@ -687,9 +687,9 @@ bool communicator::run()
         //       with nearly no additional work from us
         //
         errno = 0;
-        snapdev::timespec_ex start_on(snapdev::now());
+        snapdev::timespec_ex start_on(snapdev::now(CLOCK_MONOTONIC));
         int const r(poll(fds.empty() ? nullptr : &fds[0], fds.size(), timeout));
-        snapdev::timespec_ex end_on(snapdev::now());
+        snapdev::timespec_ex end_on(snapdev::now(CLOCK_MONOTONIC));
         f_idle += end_on - start_on;
         if(r >= 0)
         {
